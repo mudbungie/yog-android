@@ -1,0 +1,65 @@
+[package]
+name = "yog-android"
+version = "0.0.0"
+edition = "2024"
+description = "Android seat for yog: a wire client of the remote boundary"
+license = "MIT"
+repository = "https://github.com/mudbungie/yog-android"
+readme = "README.md"
+# NOT PUBLISHED, structurally. The deliverable is an APK, not a crate, so
+# `publish = false` makes an accidental `cargo publish` impossible rather than
+# merely gated — yog's 0.0.1 lesson is that a registry publication cannot be
+# recalled (a yanked version stays downloadable). If this crate ever ships to
+# a registry, that is a deliberate operator decision that replaces this line
+# AND adds an `include` allowlist audited via `cargo package --list`.
+publish = false
+
+[lib]
+name = "yog_android"
+path = "src/lib.rs"
+
+[dependencies]
+# None yet, deliberately. The codec ball brings serde_json (the server's own
+# framing dependency); the transport ball brings rustls (`default-features =
+# false` with `ring`, never aws-lc — deny.toml bans the sys crate already).
+# Zero new dependencies without explicit operator approval.
+
+[lints.rust]
+warnings = "deny"
+# No unsafe anywhere, yet. The Android shell will likely need FFI glue one
+# day; that ball relaxes this deliberately — yog's precedent is an ast-grep
+# location rule confining `unsafe` to one named file — never casually.
+unsafe_code = "forbid"
+
+# Clippy gate. `pedantic` runs at deny with priority -1 so the specific allows
+# below (default priority 0) override the group. The allow-list is sanctioned
+# and each entry justified; NEVER inline `#[allow]` — the no-lint-suppression
+# ast-grep rule forbids it, this manifest is the only home for a suppression.
+[lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+
+# Bootstrap five (Rust Bootstrap v3): owned signatures and self-describing
+# errors are house style; the doc/must_use nags are advisory only.
+needless_pass_by_value = "allow"   # owned params are a deliberate rule, not an oversight
+module_name_repetitions = "allow"  # module-qualified type names read clearer than terse ones
+missing_errors_doc = "allow"       # error enums are self-descriptive; no prose to duplicate
+missing_panics_doc = "allow"       # prod is panic-free (restriction lints below) — nothing to note
+must_use_candidate = "allow"       # advisory; not decorating every getter with #[must_use]
+
+# Site-specific, each genuinely wrong for this code.
+cast_possible_truncation = "allow" # the frame header's len-as-u32 is bounded by MAX_FRAME before the cast (src/frame.rs); a try_from there is an untestable error arm
+
+# Restriction lints: prod code is panic-free and bounds-checked. These deny
+# the panic family (unwrap/expect/panic!/todo!/unimplemented!), leftover
+# `dbg!`, and unchecked indexing/string slicing. The gate (`clippy
+# --all-targets -- -D warnings`) picks them up; the test carve-outs live in
+# clippy.toml (allow-*-in-tests). Locks use
+# `unwrap_or_else(PoisonError::into_inner)`; fallible reads use `.get()`/`?`.
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+indexing_slicing = "deny"
+string_slice = "deny"

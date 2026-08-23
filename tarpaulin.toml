@@ -1,0 +1,26 @@
+# Repo-wide tarpaulin defaults: applied by every `cargo tarpaulin` run,
+# including the pre-commit hook and CI.
+#
+# Pinned tarpaulin version: 0.35.2 (same pin as yog and lernie). 0.35.3 was
+# yanked, and 0.35.4+ silently excludes inline `#[cfg(test)] mod tests;` files
+# from the coverable denominator. The 100% floor only means the same thing on
+# every machine if everyone is on the same tarpaulin — upgrade in lockstep
+# (this file + the Makefile preflight) or the floor gets quietly weaker on
+# whichever side moves first.
+#
+# One `exclude-files` entry, and it is not source: `rules/fixtures/*.rs` is
+# the ast-grep violation corpus — deliberately non-compiling, never part of
+# the crate (nothing declares it as a module), but tarpaulin analyzes loose
+# .rs files it can parse and would count it as 0-covered denominator. yog
+# dodges the same hazard only because its fixture happens not to parse;
+# excluding it by name is the honest spelling. Everything under `src/` is in:
+# the crate is a pure library and all of it is host-testable. The Android
+# shell ball will exclude its platform glue the way yog excludes
+# `src/main.rs` and `src/shell/*` — an exclusion is added WITH its reasoning,
+# here, never to make a number.
+#
+# `ignore-panics` excludes branches that only fire on programmer-error panics.
+[default]
+exclude-files = ["rules/fixtures/*"]
+ignore-panics = true
+timeout = "300s"

@@ -1,0 +1,45 @@
+# cargo-deny supply-chain policy for yog-android.
+#
+# Verified against cargo-deny 0.20.2 (CI pins this exact version). The license
+# allow-list is empirically derived from `cargo deny list` over the committed
+# Cargo.lock — every license that actually appears in the tree, nothing
+# speculative. Today the graph is the crate itself (zero dependencies), so the
+# list is one entry. Re-run `cargo deny check` after any dependency change and
+# fix drift here by config, never by patching dependencies.
+
+[advisories]
+# Reject crates whose published version has been yanked from the registry.
+yanked = "deny"
+# No ignored advisories. An entry lands here only with a reason recorded
+# beside it, and an entry that stops matching any crate is a warning telling
+# you to drop it.
+ignore = []
+
+[licenses]
+allow = [
+    "MIT",
+]
+
+[bans]
+# Duplicate versions are informational; a bare "*" version requirement is a
+# hard error.
+multiple-versions = "warn"
+wildcards = "deny"
+# TLS stack ban, rustls-only (Rust Bootstrap v3 rule 6, and yog's amended
+# adaptation verbatim). The client's mTLS transport will be rustls with
+# `default-features = false` and `ring` — rustls' defaults select `aws-lc-rs`,
+# whose `aws-lc-sys` builds C, and a manifest edit that dropped the flag would
+# pull a C toolchain back in silently. Banning the three sys/bridge crates
+# makes that edit fail HERE instead. All three match nothing today, by design:
+# the ban predates the dependency so the first TLS ball cannot get it wrong.
+deny = [
+    { crate = "openssl-sys" },
+    { crate = "native-tls" },
+    { crate = "aws-lc-sys" },
+]
+
+[sources]
+# Every crate must come from a known registry (crates.io) — no unvetted
+# registries and no ad-hoc git sources. There is no `allow-git` list, and
+# nothing goes on one; a `path` dependency is never lawful (yog AGENTS.md rule
+# 6, which governs this repo's dependency posture too).

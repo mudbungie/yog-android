@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+# yog-android gate — the complete build gate, factored out of
+# .githooks/pre-commit so it is content-addressable: bl-speculate's verdict
+# cache fingerprints the gate as the content of THIS file,
+# scripts/check-line-lengths.sh, scripts/check-coverage.sh and the Makefile,
+# plus `rustc -V` — change any of them and every stored verdict silently stops
+# matching, which is exactly the invalidation a gate upgrade must cause.
+#
+# Steps, cheap first, one make-target home each so hook, `make check` and CI
+# cannot drift:
+#   0. make leak-scan — BEFORE the verdict cache, and never skipped
+#   1. make fmt-check
+#   2. make lint     — line-cap, leak-scan, clippy -D warnings, rules-audit,
+#                      cargo-deny
+#   3. coverage      — scripts/check-coverage.sh (tarpaulin --fail-under 100)
+#
+# THE EXIT CODE IS A CONTRACT (yog bl-673a), because verdict-cache writers
+# read it:
+#   0        the tree passed this gate — recordable as a PASS for (tree, gate).
+#   75       NO VERDICT. scripts/check-coverage.sh saw tarpaulin signaled on
+#            both attempts: something outside the gate killed the run. Nothing
+#            may be cached from this code.
+#   nonzero  the gate failed on the tree's own merits — a FAIL, and a cached
+#            FAIL is permanent for that tree.
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+# When git invokes the hook it exports GIT_DIR, GIT_INDEX_FILE and friends;
+# they leak into every git subprocess the gates spawn and silently retarget it
+# at THIS repo. Scrub so the tools run as from a clean shell.
+unset $(git rev-parse --local-env-vars)
+
+if ! command -v cargo >/dev/null 2>&1; then
+  echo "error: cargo not installed; cannot run the gate." >&2
+  exit 1
+fi
+
+# THE DISCLOSURE GATE IS NEVER CACHED (yog bl-167d). Everything below this
+# line may be skipped on a verdict-cache hit; this may not. The gate
+# fingerprint is a fixed file list that cannot name the scanner, and a verdict
+# can arrive from somewhere else — every other gate step re-derives a build,
+# this one decides whether something leaves the building. It runs on the tree
+# in hand, under the scanner in hand, every time; and it runs FIRST, so a leak
+# fails before a compile starts.
+echo "gate: leak-scan (make leak-scan)..." >&2
+make leak-scan >&2
+
+# Verdict cache: the gate verdict is a pure function of the tree it tests and
+# the gate that tests it. If this exact worktree tree already passed this
+# exact gate, the run below would re-execute a known result, so skip it. An
+# absent binary, an absent verdict, or any error all fall through to the stock
+# gate (fail-open): deleting the cache restores stock behavior exactly.
+if command -v bl-speculate >/dev/null 2>&1 && bl-speculate check 2>/dev/null; then
+  echo "gate: verdict cache hit — this exact tree already passed this exact gate." >&2
+  exit 0
+fi
+
+echo "gate: fmt (make fmt-check)..." >&2
+make fmt-check >&2
+
+echo "gate: lint (make lint)..." >&2
+make lint >&2
+
+echo "gate: coverage (scripts/check-coverage.sh)..." >&2
+"$ROOT/scripts/check-coverage.sh"
+
+# Warm the cache with the verdict just earned. Fail-open: recording is never
+# allowed to block a pass.
+if command -v bl-speculate >/dev/null 2>&1; then
+  bl-speculate record pass 2>/dev/null || true
+fi
+
+echo "gate: OK." >&2

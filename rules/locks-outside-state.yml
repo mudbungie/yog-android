@@ -1,0 +1,33 @@
+# Bootstrap rule 7: `Mutex`/`RwLock` live only in the crate's lock chokepoint,
+# `src/state.rs` (create it when the first lock is needed). Every other
+# shared-mutable lock in the tree is an error — reach for the chokepoint so
+# the whole-crate lock inventory stays auditable in one file.
+#
+# Carve-outs (`ignores`): test scaffolding only. Test-double interior
+# mutability and suite serialization locks are not app state. yog carries four
+# additional sanctioned code carve-outs, each bought by a measured coverage
+# hazard; this repo starts with none — a new one is added here with its
+# reasoning, never inline (rule 5).
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser
+# (`--debug-query`): a bare `Mutex`/`RwLock` is a `type_identifier` in type
+# position (`Mutex<T>`, a field or return type) and an `identifier` in path or
+# `use` position (`Mutex::new`, `use std::sync::Mutex`). Matching both kinds
+# catches every spelling; the anchored regex leaves `Arc`/`Atomic*` clear.
+id: locks-outside-state
+language: rust
+severity: error
+message: "Mutex/RwLock live only in src/state.rs, the crate lock chokepoint (see rules/locks-outside-state.yml)"
+ignores:
+  - "**/state.rs"
+  - "**/test_support.rs"
+  - "**/test_support/**"
+  - "**/tests/**"
+  - "**/tests.rs"
+  - "**/*tests.rs"
+rule:
+  any:
+    - kind: type_identifier
+      regex: '^(Mutex|RwLock)$'
+    - kind: identifier
+      regex: '^(Mutex|RwLock)$'

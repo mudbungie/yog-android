@@ -1,0 +1,22 @@
+# Bootstrap rule 7 (second half): no `Rc`/`RefCell` anywhere in the tree —
+# tests included (there is deliberately no test carve-out, unlike the lock
+# rule). `Rc` is a single-thread-only shared pointer and `RefCell` a
+# runtime-checked borrow; both are dissolved in favor of `Arc`/`Mutex`
+# (thread-safe, and — for the lock — confined to `src/state.rs`). Contained
+# Rust keeps shared mutability at one auditable chokepoint, never scattered
+# behind interior-mutability cells. Bare `Cell` counters are tolerated (a
+# `Cell<usize>` is a scalar tally, not shared state) and are not matched.
+#
+# Node kinds verified against ast-grep 0.44.1 (`--debug-query`): matches the
+# `type_identifier` in type position and the `identifier` in path/`use`
+# position; the anchored regex leaves `Arc` and any user `*Cell` type clear.
+id: no-rc-refcell
+language: rust
+severity: error
+message: "no Rc/RefCell anywhere — use Arc/Mutex, locks confined to src/state.rs (see rules/no-rc-refcell.yml)"
+rule:
+  any:
+    - kind: type_identifier
+      regex: '^(Rc|RefCell)$'
+    - kind: identifier
+      regex: '^(Rc|RefCell)$'

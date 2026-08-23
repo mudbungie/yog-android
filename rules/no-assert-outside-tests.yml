@@ -1,0 +1,55 @@
+# Bootstrap rule: `assert!`/`assert_eq!`/`assert_ne!` are a test vocabulary — a
+# runtime `panic!` dressed as a check. Prod code states its invariants in the
+# type system or handles the failure; it never asserts. So an assert anywhere
+# outside test code is an error. `debug_assert!` and variants are permitted
+# (compiled out of release builds; they are a development aid, not a panic
+# path).
+#
+# "Test code" takes TWO physical shapes, and the carve-out must cover both
+# (verified against ast-grep 0.44.1):
+#
+#   1. INLINE `#[cfg(test)] mod tests { … }` blocks living in a prod source
+#      file. Here the assert IS in a scanned `src` file, so a glob cannot
+#      exempt it — it is exempted structurally: the assert is `inside` a
+#      `mod_item` that `follows` a `#[cfg(test)]` attribute. NOTE the attribute
+#      is a *preceding sibling* of the `mod_item`, not a child
+#      (tree-sitter-rust) — so the carve-out is `inside … follows`, NOT
+#      `inside … has`.
+#
+#   2. SIBLING test files declared `#[cfg(test)] mod NAME;` — the body lives in
+#      a separate file whose own AST has NO `#[cfg(test)] mod` ancestor (the
+#      attribute sits in the parent file). The `follows` carve-out cannot reach
+#      across the file split, so these are exempted by `ignores` globs on the
+#      test-file naming: `foo/tests.rs`, `foo/tests/*.rs`, `foo/*_tests.rs`,
+#      and `test_support`. (The top-level `tests/` integration crate is out of
+#      scope already: the audit scans `src` only — see the `rules-audit`
+#      Makefile target.)
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser
+# (`--debug-query=ast`): `assert!(…)` is a `macro_invocation` whose `macro`
+# field is an `identifier`; `#[cfg(test)]` is an `attribute_item`. `stopBy:
+# end` walks every ancestor so a nested inner `mod` inside the test mod is
+# covered.
+id: no-assert-outside-tests
+language: rust
+severity: error
+message: "assert! is a test vocabulary; prod states invariants in types or handles the failure (see rules/no-assert-outside-tests.yml)"
+ignores:
+  - "**/test_support.rs"
+  - "**/test_support/**"
+  - "**/tests/**"
+  - "**/tests.rs"
+  - "**/*tests.rs"
+rule:
+  kind: macro_invocation
+  all:
+    - has:
+        field: macro
+        regex: "^(assert|assert_eq|assert_ne)$"
+    - not:
+        inside:
+          kind: mod_item
+          stopBy: end
+          follows:
+            kind: attribute_item
+            regex: "cfg\\(test\\)"

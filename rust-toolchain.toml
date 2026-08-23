@@ -1,0 +1,7 @@
+# Pinned toolchain — the same pin on every box and in CI, or gate verdicts and
+# coverage floors silently stop meaning the same thing. Bump only as a
+# deliberate, isolated change (and in lockstep with yog's pin where possible:
+# the two repos share the gate design).
+[toolchain]
+channel = "1.95.0"
+components = ["rustfmt", "clippy"]

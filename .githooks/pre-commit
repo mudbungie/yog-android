@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# yog-android pre-commit hook. Two jobs, split deliberately (yog bl-1a5b):
+#
+#   1. The COMMIT-CONTEXT guard, which only a hook can do: no direct commits
+#      to mainline (main/master). Squash-merges from bl delivery are
+#      permitted; detected via presence of MERGE_MSG or SQUASH_MSG.
+#   2. The BUILD GATE — delegated whole to scripts/pre-commit, where it is
+#      content-addressable for bl-speculate's verdict cache. Anything that
+#      runs the gate outside a commit context runs scripts/pre-commit
+#      directly, so nothing but the guard may live here.
+#
+# Bypass is intentionally not supported. If something is broken, fix it.
+
+set -euo pipefail
+
+branch="$(git symbolic-ref --short HEAD 2>/dev/null || echo DETACHED)"
+git_dir="$(git rev-parse --git-dir)"
+
+case "$branch" in
+  main|master)
+    if [ ! -f "$git_dir/MERGE_MSG" ] && [ ! -f "$git_dir/SQUASH_MSG" ]; then
+      echo "error: direct commits to '$branch' are not permitted." >&2
+      echo "       use 'bl claim <task>' to work in a worktree, then 'bl close'." >&2
+      exit 1
+    fi
+    ;;
+esac
+
+exec "$(git rev-parse --show-toplevel)/scripts/pre-commit"
