@@ -18,6 +18,12 @@ ignore = []
 [licenses]
 allow = [
     "MIT",
+    # The rustls/ring tree (bl-48d9, the operator-approved TLS set).
+    # serde_json's subtree is dual MIT-or-Apache and rides on the MIT arm;
+    # ring is "Apache-2.0 AND ISC", so both of its arms must be allowed.
+    "Apache-2.0",    # ring (AND-arm)
+    "ISC",           # ring (AND-arm), rustls-webpki, untrusted
+    "BSD-3-Clause",  # subtle
 ]
 
 [bans]

@@ -12,3 +12,10 @@
 
 pub mod codec;
 pub mod frame;
+pub mod material;
+pub mod transport;
+
+pub(crate) mod tls;
+
+#[cfg(test)]
+pub(crate) mod test_support;
