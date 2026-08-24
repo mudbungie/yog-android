@@ -123,11 +123,14 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 
 | module | role | status |
 |---|---|---|
-| `src/frame.rs` (+ `frame/tests.rs`) | REMOTE §3 framing, bytes only | landed (bl-c747) |
-| `src/codec/*` | strict decode of `Reply`, encode of `Act`/`Ask` | future |
-| `src/transport/*` | rustls mTLS dial, one connection per gesture until upstream rules otherwise | future |
+| `src/frame.rs` | REMOTE §3 framing, bytes only | landed (bl-c747) |
+| `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
+| `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
+| `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
+| `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
+| `src/test_support.rs` | tests only: openssl-minted PKI + one-shot mTLS answering server | landed (bl-48d9) |
 | `src/seat/*` | the view model: snapshots in, gestures out | future |
-| shell | egui on android-activity/NativeActivity: insets, GLES, IME glue (O1, bl-8d03) | ruled, unbuilt |
+| shell | egui on android-activity: insets, GLES, IME glue (O1, bl-8d03; InputConnection via GameActivity under bl-014e) | ruled, unbuilt |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
 
