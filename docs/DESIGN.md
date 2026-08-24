@@ -61,25 +61,45 @@ dependency; serde *derive* stays a non-dependency, as upstream.
 core — framing, codec, transport, the seat's view model — is plain host-
 testable Rust under the 100% floor. That much is ruled.
 
-**O1 (open): the Android shell mechanism.** Two candidates, deliberately not
-yet chosen, because the table does not depend on the answer:
+**O1 (ruled, bl-8d03): egui via `android-activity`'s NativeActivity backend,
+no Gradle.** Spiked on real glass (a current-generation Pixel, Android 16-era
+SDK 35) with a typing-heavy screen; the kill criterion — the soft keyboard —
+did not kill it: the keyboard appears on field focus, IME-committed text
+lands, Enter submits and dismisses, and the chat shape (a composer anchored
+above the keyboard) works. The thin-Kotlin candidate loses on its own costs
+(a second language, an FFI boundary, a Gradle toolchain) now that nothing
+remains only Kotlin could buy. **No egui fork is needed**: every problem the
+spike hit was dodged in app-side glue, none in egui itself.
 
-- egui via `android-activity`/eframe: one language, shares yog's paint
-  idioms; its soft-keyboard/IME story on Android is the known risk, and the
-  seat is a typing-heavy surface.
-- a thin Kotlin activity over the Rust core through FFI: native input and
-  lifecycle; costs a second language and an FFI boundary in a repo whose
-  rules forbid casual `unsafe`.
+Four findings the shell module must carry, each learned the hard way:
 
-Whichever lands, the shell is a thin paint-and-input layer over the tested
-core, excluded from coverage the way yog excludes `src/shell/*` — the
-exclusion is added with its reasoning in `tarpaulin.toml` when the shell
-exists, not before. Deciding O1 is its own ball (bl-8d03) with a spike
-behind it — egui first, the soft keyboard as the kill criterion — and the
-loser's argument gets recorded here. The spike also weighs **forking egui**:
-the house already has one egui PR sitting unreviewed upstream, so an IME fix
-that needs patches cannot plan on upstream review; the fork's maintenance
-cost is part of O1's ledger, weighed against the Kotlin shell.
+1. **Vulkan is not usable on Imagination-GPU Pixels.** The vendor driver
+   segfaults inside `vkCreateGraphicsPipelines` while egui-wgpu builds its
+   pipeline (tombstoned, reproducible). Force wgpu's GLES backend
+   (`WGPU_BACKEND=gles` or the explicit `InstanceDescriptor`); revisit only
+   with a device matrix in hand.
+2. **SDK 35 is forced edge-to-edge, and the IME inset must be fetched by
+   JNI.** `windowSoftInputMode=adjustResize` is ignored, and NativeActivity's
+   `content_rect()` never tracks the keyboard — the working answer is
+   `decorView.getRootWindowInsets().getInsets(WindowInsets.Type.ime()).bottom`
+   over JNI (~60 lines). Two traps inside those lines:
+   `AndroidApp::activity_as_ptr()` IS the Activity jobject (the
+   `ndk_context` context is the Application — its `getWindow()` lookup
+   throws), and every failed JNI lookup must `exception_clear()` or the next
+   call is a CheckJNI abort.
+3. **All insets are the shell's job**: content otherwise draws under the
+   status bar, and a flush-bottom widget sits in the gesture-nav zone where
+   taps never reach the app.
+4. **The upstream era moved**: eframe 0.36 replaced `App::update(ctx)` with
+   `App::ui(&mut Ui)`; yog sits on 0.29. The client tracks current eframe and
+   does not wait for yog to catch up.
+
+Named residual, deliberately narrow: **composition/preedit** (glide typing,
+autocorrect-heavy input, selection handles) was not exercised by the
+automated pass — a human pass on the installed spike covers it, and a failure
+there reopens only the fork question, not this ruling. The shell stays a thin
+paint-and-input layer over the tested core, excluded from coverage with its
+reasoning in `tarpaulin.toml` when it lands.
 
 ## 4. Module map
 
@@ -92,7 +112,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/*` | strict decode of `Reply`, encode of `Act`/`Ask` | future |
 | `src/transport/*` | rustls mTLS dial, one connection per gesture until upstream rules otherwise | future |
 | `src/seat/*` | the view model: snapshots in, gestures out | future |
-| shell (O1) | paint and input only | future |
+| shell | egui on android-activity/NativeActivity: insets, GLES, IME glue (O1, bl-8d03) | ruled, unbuilt |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
 
