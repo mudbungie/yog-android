@@ -10,4 +10,5 @@
 //! (yog REMOTE §3) and mirrored here — where the two implementations
 //! disagree, one of them is a bug.
 
+pub mod codec;
 pub mod frame;
