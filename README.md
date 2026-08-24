@@ -13,10 +13,11 @@ is the working discipline.
 
 ## Status
 
-Table-set, pre-client. The gates, CI, and the frame layer (`src/frame.rs`)
-are in; codec, transport, seat model, and the Android shell are tracked as
-`bl` balls. The shell mechanism (egui-on-android vs a thin Kotlin activity
-over the Rust core) is an open design question — DESIGN §3.
+Client standing, seat model pending. The frame layer, the chat-loop codec
+slice, mTLS transport, key material, and the Android shell (egui via
+GameActivity — DESIGN §3) are landed; the seat view model is the tracked
+next ball. On-device verification is operator-assisted; an unregistered
+leaf correctly sees empty rows.
 
 ## Dev loop
 
@@ -25,8 +26,16 @@ make check          # the complete local gate == CI == pre-commit hook
 make test           # cargo test
 make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
 make lint           # line-cap + leak-scan + clippy + ast-grep + cargo-deny
+make apk            # cargo-ndk (aarch64) + gradle assembleDebug
 make install-hooks  # seat the pre-commit / commit-msg hooks, once
 ```
+
+The APK build needs the Android NDK, `cargo-ndk`, the
+`aarch64-linux-android` target (pinned in `rust-toolchain.toml`), and a
+**system gradle** (8.7+, JDK 17). There is deliberately no gradle wrapper:
+the wrapper is a committed jar, and the disclosure gate refuses any binary
+it cannot read — correctly. The release profile is load-bearing, not an
+optimization (see the Makefile `apk` target).
 
 Task tracking is [balls](https://crates.io/crates/balls-cli) (`bl`): `bl prime
 --as YOU`, `bl list`, claim → work in the worktree → close.

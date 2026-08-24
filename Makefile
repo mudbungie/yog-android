@@ -1,4 +1,4 @@
-.PHONY: all build release test coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks
+.PHONY: all build release test coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk
 
 all: check
 
@@ -7,6 +7,27 @@ build:
 
 release:
 	cargo build --release
+
+# The APK, two stages: cargo-ndk cross-builds the cdylib into the Gradle
+# module's jniLibs, then Gradle assembles the debug APK (debug-keystore
+# signing; a release channel gets its own checklist ball before the first
+# APK leaves this box — AGENTS.md).
+#
+# RELEASE PROFILE IS LOAD-BEARING, not an optimization: android-activity
+# 0.6.1 aborts under debug-assertions on GameTextInput's pre-IME null buffer
+# — instant close-on-launch on frame one (bl-014e; the one-line upstream
+# null guard is tracked under bl-2958).
+#
+# Requires: the Android NDK + cargo-ndk (`cargo install cargo-ndk`), the
+# aarch64-linux-android target (rust-toolchain.toml pins it), and a SYSTEM
+# `gradle` (8.7+, JDK 17). There is deliberately no gradle wrapper: the
+# wrapper is a committed jar, and the leak gate refuses any binary it cannot
+# read (BINARY_ALLOWED matches nothing) — which is correct, so the pin lives
+# in this comment and the README instead of a jar.
+apk:
+	cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release
+	cd android && gradle assembleDebug
+	@echo "apk: android/app/build/outputs/apk/debug/app-debug.apk"
 
 test:
 	cargo test

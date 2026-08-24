@@ -1,0 +1,34 @@
+# `unsafe` is confined to the single audited process-edge file
+# `src/shell/sys.rs` (bl-c761, replacing the manifest's founding
+# `unsafe_code = "forbid"` — AGENTS.md rule 3 anticipated exactly this
+# relaxation, yog's precedent). Three raw effects live there: the
+# `unsafe(no_mangle)` on `android_main` (the symbol android-activity's glue
+# resolves), the pre-boot `WGPU_BACKEND` env fold (edition-2024 `set_var` is
+# unsafe; it runs on the main thread before any other thread exists), and
+# the JNI `JavaVM`/`JObject` raw-pointer conversions off android-activity's
+# documented handles. The soundness arguments are written IN that file.
+# Every other `unsafe` block, fn, impl or attribute in the tree is an error:
+# reach for safe std first, and if an irreducible raw call is genuinely
+# needed, add it to sys.rs (rather than extending this rule's `ignores`) so
+# the whole-crate unsafe inventory stays auditable in one place.
+#
+# Node kinds verified against ast-grep 0.44.1's Rust tree-sitter parser:
+#   - `unsafe { ... }`          -> node kind `unsafe_block`
+#   - `unsafe fn` / modifiers   -> node kind `function_modifiers` containing
+#                                  the `unsafe` keyword (regex `\bunsafe\b`)
+#   - `#[unsafe(no_mangle)]`    -> node kind `attribute_item` whose text
+#                                  contains `unsafe(` (the edition-2024
+#                                  unsafe-attribute spelling)
+id: unsafe-outside-sys
+language: rust
+severity: error
+message: "unsafe is confined to src/shell/sys.rs (see rules/unsafe-outside-sys.yml)"
+ignores:
+  - "**/shell/sys.rs"
+rule:
+  any:
+    - kind: unsafe_block
+    - kind: function_modifiers
+      regex: '\bunsafe\b'
+    - kind: attribute_item
+      regex: 'unsafe\('

@@ -1,0 +1,5 @@
+// AGP pinned; Gradle itself is the SYSTEM gradle (8.7+, JDK 17) on purpose —
+// there is deliberately no gradle wrapper, because the wrapper is a committed
+// jar and the leak gate refuses binaries it cannot read (BINARY_ALLOWED
+// matches nothing), which is correct. See the Makefile `apk` target.
+plugins { id 'com.android.application' version '8.6.0' apply false }

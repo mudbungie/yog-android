@@ -88,6 +88,18 @@ pub fn bounded_fn<T: Clone>(t: T) -> T {
     t
 }
 
+// ===========================================================================
+// POSITIVE: unsafe-outside-sys (this file is NOT src/shell/sys.rs)
+// ===========================================================================
+unsafe fn raw_call() {}
+
+fn uses_unsafe_block() {
+    unsafe { raw_call() }
+}
+
+#[unsafe(no_mangle)]
+fn exported_unmangled() {}
+
 pub fn where_fn<T>(t: T) -> T
 where
     T: Clone,

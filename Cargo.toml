@@ -17,6 +17,11 @@ publish = false
 [lib]
 name = "yog_android"
 path = "src/lib.rs"
+# `cdylib` is the Android deliverable: `make apk` builds `libyog_android.so`
+# via cargo-ndk and the Gradle shell loads it (`android.app.lib_name`). `rlib`
+# stays so the host test suite and a future integration crate keep linking the
+# ordinary way.
+crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 # Each entry names its approval. Zero new dependencies without one.
@@ -32,12 +37,39 @@ serde_json = "1"
 # the server's own rustls line exactly.
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 
+# The shell set (operator ruling 2026-08-23, recorded on bl-c761: eframe,
+# winit, jni, log, android_logger — the versions the bl-8d03/bl-014e spikes
+# proved on glass). Target-gated so the host gate (clippy, tarpaulin, the
+# whole 100%-floor suite) never compiles the paint stack: the shell is
+# Android-only glue, excluded from coverage with its reasoning in
+# tarpaulin.toml, and CI's android leg is its compile check.
+[target.'cfg(target_os = "android")'.dependencies]
+# eframe: the ruled UI stack (DESIGN §3, O1/bl-8d03). `android-game-activity`
+# and NEVER `android-native-activity` — the two backends conflict, and
+# GameActivity is what gives the IME a real InputConnection (bl-014e).
+eframe = { version = "0.36", default-features = false, features = [
+    "wgpu",
+    "default_fonts",
+    "android-game-activity",
+] }
+# winit: eframe's own windowing layer, named directly for the AndroidApp
+# handle type and the activity input types the bridge speaks.
+winit = { version = "0.30", features = ["android-game-activity"] }
+# jni: the IME-inset probe (DESIGN §3 finding 2) — SDK 35 is forced
+# edge-to-edge and the keyboard inset is only readable via WindowInsets.
+jni = "0.21"
+# log/android_logger: logcat is the only stdout an APK has.
+log = "0.4"
+android_logger = "0.15"
+
 [lints.rust]
 warnings = "deny"
-# No unsafe anywhere, yet. The Android shell will likely need FFI glue one
-# day; that ball relaxes this deliberately — yog's precedent is an ast-grep
-# location rule confining `unsafe` to one named file — never casually.
-unsafe_code = "forbid"
+# `unsafe` is confined, not forbidden (the bl-c761 relaxation AGENTS.md rule 3
+# anticipated): the shell's JNI probe needs raw-pointer conversions and the
+# process entry needs `unsafe(no_mangle)` + a pre-boot `set_var`. The
+# confinement is `rules/unsafe-outside-sys.yml` — every unsafe block, fn and
+# attribute lives in src/shell/sys.rs, where the soundness argument is written.
+unsafe_code = "allow"
 
 # Clippy gate. `pedantic` runs at deny with priority -1 so the specific allows
 # below (default priority 0) override the group. The allow-list is sanctioned
@@ -56,6 +88,7 @@ must_use_candidate = "allow"       # advisory; not decorating every getter with 
 
 # Site-specific, each genuinely wrong for this code.
 cast_possible_truncation = "allow" # the frame header's len-as-u32 is bounded by MAX_FRAME before the cast (src/frame.rs); a try_from there is an untestable error arm
+cast_precision_loss = "allow"      # the shell's JNI inset pixels (i32, bounded by screen geometry far below f32's 24-bit integer range) cross into egui's f32 point space
 struct_excessive_bools = "allow"   # ConvRow mirrors the server row: its four bools are orthogonal, independently-written wire facts (yog's own manifest carries the same allow for the same shape)
 
 # Restriction lints: prod code is panic-free and bounds-checked. These deny

@@ -5,3 +5,6 @@
 [toolchain]
 channel = "1.95.0"
 components = ["rustfmt", "clippy"]
+# The APK's ABI. arm64 only, matching the spike's device matrix of one; a
+# second ABI is added when a device that needs it exists, not speculatively.
+targets = ["aarch64-linux-android"]

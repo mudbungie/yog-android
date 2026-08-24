@@ -1,1 +1,9 @@
 /target
+# Gradle's working state and outputs. jniLibs is where `make apk` deposits the
+# cargo-ndk build — a generated binary, and the leak gate correctly refuses
+# any committed binary (BINARY_ALLOWED matches nothing).
+/android/.gradle
+/android/build
+/android/app/build
+/android/app/src/main/jniLibs
+/android/local.properties

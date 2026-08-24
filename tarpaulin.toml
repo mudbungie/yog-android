@@ -8,19 +8,31 @@
 # (this file + the Makefile preflight) or the floor gets quietly weaker on
 # whichever side moves first.
 #
-# One `exclude-files` entry, and it is not source: `rules/fixtures/*.rs` is
-# the ast-grep violation corpus — deliberately non-compiling, never part of
-# the crate (nothing declares it as a module), but tarpaulin analyzes loose
-# .rs files it can parse and would count it as 0-covered denominator. yog
-# dodges the same hazard only because its fixture happens not to parse;
-# excluding it by name is the honest spelling. Everything under `src/` is in:
-# the crate is a pure library and all of it is host-testable. The Android
-# shell ball will exclude its platform glue the way yog excludes
-# `src/main.rs` and `src/shell/*` — an exclusion is added WITH its reasoning,
-# here, never to make a number.
+# Two classes of `exclude-files` entry, each with its reasoning:
+#
+# `rules/fixtures/*.rs` is the ast-grep violation corpus — deliberately
+# non-compiling, never part of the crate (nothing declares it as a module),
+# but tarpaulin analyzes loose .rs files it can parse and would count it as
+# 0-covered denominator. yog dodges the same hazard only because its fixture
+# happens not to parse; excluding it by name is the honest spelling.
+#
+# The four named `src/shell/` files are the Android platform glue (bl-c761)
+# — `cfg(target_os = "android")`, never compiled by the host suite, so no
+# host test can reach a line of them; CI's android leg is their compile
+# check, and on-device verification is operator-assisted (DESIGN §3). Named
+# file by file rather than `src/shell/*` because the shell also holds
+# host-testable pure code (`src/shell/span.rs`, the UTF-16 span math) that
+# stays UNDER the 100% floor — an exclusion is added with its reasoning,
+# never to make a number, and never wider than the reasoning covers.
 #
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
 [default]
-exclude-files = ["rules/fixtures/*"]
+exclude-files = [
+    "rules/fixtures/*",
+    "src/shell/app.rs",
+    "src/shell/bridge.rs",
+    "src/shell/inset.rs",
+    "src/shell/sys.rs",
+]
 ignore-panics = true
 timeout = "300s"

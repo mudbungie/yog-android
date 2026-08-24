@@ -10,10 +10,16 @@
 [advisories]
 # Reject crates whose published version has been yanked from the registry.
 yanked = "deny"
-# No ignored advisories. An entry lands here only with a reason recorded
-# beside it, and an entry that stops matching any crate is a warning telling
-# you to drop it.
-ignore = []
+# An entry lands here only with a reason recorded beside it, and an entry
+# that stops matching any crate is a warning telling you to drop it.
+ignore = [
+    # ttf-parser: unmaintained (author's statement), no fix shipped. It is
+    # egui's own font-parsing substrate (ab_glyph -> owned_ttf_parser ->
+    # ttf-parser), reachable only through the pinned eframe 0.36 — replacing
+    # it is upstream egui's migration, not a choice this manifest can make.
+    # Drop this entry when an eframe release moves off it.
+    "RUSTSEC-2026-0192",
+]
 
 [licenses]
 allow = [
@@ -24,6 +30,14 @@ allow = [
     "Apache-2.0",    # ring (AND-arm)
     "ISC",           # ring (AND-arm), rustls-webpki, untrusted
     "BSD-3-Clause",  # subtle
+    # The eframe 0.36 tree (bl-c761, the operator-approved shell set) —
+    # empirical over the lockfile, one crate class per line, like the rest.
+    "BSD-2-Clause",     # arrayref (via blake3, wgpu's shader hashing)
+    "BSL-1.0",          # clipboard-win, error-code (egui's clipboard glue)
+    "Zlib",             # slotmap, foldhash (egui's containers)
+    "Unicode-3.0",      # unicode-ident (AND-arm beside MIT-or-Apache)
+    "OFL-1.1",          # epaint_default_fonts (AND-arm: the embedded fonts)
+    "Ubuntu-font-1.0",  # epaint_default_fonts (AND-arm: the Ubuntu face)
 ]
 
 [bans]

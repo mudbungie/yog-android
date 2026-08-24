@@ -27,10 +27,13 @@ Machine-enforced by ast-grep (`rules/*.yml`), the manifest (`Cargo.toml
 2. **A `pub fn` returns an owned, concrete type** — never `&T`/`&mut T` nor
    `impl Trait`. Demote internals to `pub(crate)` rather than clone-to-own.
    Enforced: `rules/no-pub-borrow-return.yml`.
-3. **No `unsafe`** — `unsafe_code = "forbid"` in the manifest. The Android
-   shell may one day need FFI glue; that ball replaces `forbid` with a
-   location rule confining `unsafe` to one named file (yog's precedent),
-   deliberately and with the soundness argument written in that file.
+3. **`unsafe` is confined, not forbidden** (relaxed from `forbid` under
+   bl-c761, yog's precedent): every `unsafe` block, fn or attribute lives in
+   `src/shell/sys.rs`, where the soundness arguments are written — the
+   `unsafe(no_mangle)` entry symbol, the pre-boot `WGPU_BACKEND` env fold,
+   and the JNI handle conversions. The rule's `ignores` list is the one
+   location authority — add a site to sys.rs rather than widening it.
+   Enforced: `rules/unsafe-outside-sys.yml`.
 4. **No panic paths outside tests.** unwrap/expect/panic!/todo!/
    unimplemented!/dbg! and unchecked indexing/slicing are `deny` in the
    manifest; the whole assert family — `debug_assert!` included — is banned

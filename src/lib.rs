@@ -13,6 +13,7 @@
 pub mod codec;
 pub mod frame;
 pub mod material;
+pub mod shell;
 pub mod transport;
 
 pub(crate) mod tls;

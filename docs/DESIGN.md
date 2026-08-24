@@ -106,18 +106,34 @@ key-event mode. Latency is wake-driven, not polled: game-activity's own
 declines to make a frame of it, and a three-line `TextEvent` arm (vendored
 in the spike, upstreamable as-is) closes the gap. Measured on glass: ~80 ms
 tap-to-glyph dominated by the injection harness, backspace repeat at ~52 ms
-per char. Two upstream defects are carried until fixed there: winit's
-missing wake arm (this repo cannot take a git dep, so until the upstream
-release lands the in-repo shell uses a focus-gated fast repaint, or the
-operator rules an interim exception); and games-activity 4.4.0 calling
-`restartInput()` on every key — which destroys the connection Gboard's
-delete-repeat runs against — shimmed by a ~40-line Java OnKeyListener in the
-Gradle shell. The IME action key (Send) is a known residual: GameActivity
-writes the action where the enter key does not read it, so enter stays a
-newline until upstream moves.
+per char. Two upstream defects are carried until fixed there (both, plus the
+null-buffer abort, tracked as bl-2958): winit's missing wake arm, and
+games-activity 4.4.0 calling `restartInput()` on every key — which destroys
+the connection Gboard's delete-repeat runs against — shimmed by a ~40-line
+Java OnKeyListener in the Gradle shell. The IME action key (Send) is a known
+residual: GameActivity writes the action where the enter key does not read
+it, so enter stays a newline until upstream moves.
 
-The shell stays a thin paint-and-input layer over the tested core, excluded
-from coverage with its reasoning in `tarpaulin.toml` when it lands.
+**The input-wake question is ruled (bl-c761): focus-gated fast repaint, no
+vendored winit.** This repo is registry-only with no exception standing, so
+the wake arm cannot ship here until a winit release carries it. The shell
+polls the GameTextInput buffer each frame and paces itself: 16 ms repaints
+while a field holds focus, 250 ms idle, 8 ms only inside a push's echo
+window (a push the shell made itself generates no wake). The one trap,
+recorded because it silently reverted the fix once: the focus flag is read
+AT the repaint decision from egui's settled memory, never remembered from
+earlier in the frame. A winit release with the wake arm dissolves this poll;
+consuming it is bl-2958's exit.
+
+The shell is a thin paint-and-input layer over the tested core (bl-c761):
+`src/shell/{sys,inset,bridge,app}.rs` are `cfg(target_os = "android")`,
+excluded from coverage with their reasoning in `tarpaulin.toml`, and CI's
+android leg is their compile check; the UTF-16 span math
+(`src/shell/span.rs`) is host-tested under the 100% floor. `unsafe` is
+confined to `src/shell/sys.rs` (`rules/unsafe-outside-sys.yml`), where the
+soundness arguments are written. The Gradle shell lives in `android/` — no
+wrapper jar (the leak gate refuses binaries, correctly); the system-gradle
+requirement is documented in the Makefile `apk` target.
 
 ## 4. Module map
 
@@ -133,7 +149,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
 | `src/test_support.rs` | tests only: openssl-minted PKI + one-shot mTLS answering server | landed (bl-48d9) |
 | `src/seat/*` | the view model: snapshots in, gestures out | future |
-| shell | egui on android-activity: insets, GLES, IME glue (O1, bl-8d03; InputConnection via GameActivity under bl-014e) | ruled, unbuilt |
+| `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
+| `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
+| `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
 
