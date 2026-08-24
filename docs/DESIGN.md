@@ -94,12 +94,27 @@ Four findings the shell module must carry, each learned the hard way:
    `App::ui(&mut Ui)`; yog sits on 0.29. The client tracks current eframe and
    does not wait for yog to catch up.
 
-Named residual, deliberately narrow: **composition/preedit** (glide typing,
-autocorrect-heavy input, selection handles) was not exercised by the
-automated pass — a human pass on the installed spike covers it, and a failure
-there reopens only the fork question, not this ruling. The shell stays a thin
-paint-and-input layer over the tested core, excluded from coverage with its
-reasoning in `tarpaulin.toml` when it lands.
+The composition residual is now a **finding** (bl-3ef4; the operator drove
+the installed spike): the IME runs in **raw-key mode** — glide typing is
+disabled, tap-only like a password field, and autocorrect, suggestions and
+composing text (CJK, voice-to-field) are off with it. The cause is
+structural, not an egui defect: NativeActivity offers the IME no
+`InputConnection`, and everything beyond raw keys is delivered as composing
+text through one. Consequences, ruled:
+
+- **The egui ruling stands.** Tap typing is fully functional; degraded, not
+  broken, and acceptable for first light.
+- **The "no Gradle" clause is conditional, not settled.** Restoring glide
+  and composition means a real `InputConnection`, and the ecosystem path is
+  the GameActivity backend + androidx `game-text-input` — an AAR, i.e. a
+  minimal Gradle packaging shell over cargo-ndk. That spike is bl-014e; it
+  must also verify winit translates GameTextInput composition into the Ime
+  events egui consumes, which is the one place a (winit) fork question could
+  genuinely reopen. Until bl-014e rules, the shell ball builds on plain
+  cargo-apk and tap-only input.
+
+The shell stays a thin paint-and-input layer over the tested core, excluded
+from coverage with its reasoning in `tarpaulin.toml` when it lands.
 
 ## 4. Module map
 
