@@ -33,8 +33,10 @@ Machine-enforced by ast-grep (`rules/*.yml`), the manifest (`Cargo.toml
    deliberately and with the soundness argument written in that file.
 4. **No panic paths outside tests.** unwrap/expect/panic!/todo!/
    unimplemented!/dbg! and unchecked indexing/slicing are `deny` in the
-   manifest; `assert!` in prod is banned (`rules/no-assert-outside-tests.yml`);
-   `debug_assert!` is fine. Tests get carve-outs via `clippy.toml`.
+   manifest; the whole assert family — `debug_assert!` included — is banned
+   in prod (`rules/no-assert-outside-tests.yml`, bl-383b: with no unsafe to
+   guard and a 100% floor, a debug assertion is just a panic a test finds
+   the hard way). Tests get carve-outs via `clippy.toml`.
 5. **No `#[allow]` in prod.** Policy lives in `Cargo.toml [lints]`, justified,
    one line each. Test code may relax a lint. Enforced:
    `rules/no-lint-suppression.yml`.

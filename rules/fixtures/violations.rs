@@ -65,6 +65,15 @@ fn uses_mutex() {
 }
 
 // ===========================================================================
+// POSITIVE: no-assert-outside-tests (debug_ variants — banned too, bl-383b)
+// ===========================================================================
+fn debug_asserts_in_prod(n: u32) {
+    debug_assert!(n > 0);
+    debug_assert_eq!(n, 1);
+    debug_assert_ne!(n, 2);
+}
+
+// ===========================================================================
 // POSITIVE: no-rc-refcell
 // ===========================================================================
 fn uses_rc_refcell() {
@@ -136,12 +145,6 @@ pub fn unbounded_pub<T>(t: T) -> T {
 // pub fn returning an owned concrete type is fine.
 pub fn owned_return() -> String {
     String::new()
-}
-
-// debug_assert! is legal outside tests.
-fn debug_asserts(n: u32) {
-    debug_assert!(n > 0);
-    debug_assert_eq!(n, 1);
 }
 
 // Arc is fine (only Rc/RefCell are banned; Cow is not a borrow return here).

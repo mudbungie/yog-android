@@ -1,9 +1,12 @@
 # Bootstrap rule: `assert!`/`assert_eq!`/`assert_ne!` are a test vocabulary — a
 # runtime `panic!` dressed as a check. Prod code states its invariants in the
 # type system or handles the failure; it never asserts. So an assert anywhere
-# outside test code is an error. `debug_assert!` and variants are permitted
-# (compiled out of release builds; they are a development aid, not a panic
-# path).
+# outside test code is an error. The `debug_` variants are banned too
+# (bl-383b, operator ruling: ship tight): their one strong use is guarding
+# unsafe preconditions, this crate forbids unsafe outright, and under the
+# 100% coverage floor any invariant a debug_assert would check is reachable
+# by a test — which then dies as an unstructured panic instead of a named
+# assertion. State the invariant in types or handle the failure.
 #
 # "Test code" takes TWO physical shapes, and the carve-out must cover both
 # (verified against ast-grep 0.44.1):
@@ -45,7 +48,7 @@ rule:
   all:
     - has:
         field: macro
-        regex: "^(assert|assert_eq|assert_ne)$"
+        regex: "^(assert|assert_eq|assert_ne|debug_assert|debug_assert_eq|debug_assert_ne)$"
     - not:
         inside:
           kind: mod_item
