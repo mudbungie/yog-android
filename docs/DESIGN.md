@@ -147,10 +147,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
 | `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
-| `src/test_support.rs` | tests only: openssl-minted PKI + one-shot mTLS answering server | landed (bl-48d9) |
-| `src/seat/*` | the view model: snapshots in, gestures out | future |
+| `src/test_support.rs` + `test_support/serve.rs` | tests only: openssl-minted PKI; the one-shot and scripted multi-connection mTLS answering servers | landed (bl-48d9, split bl-5a98) |
+| `src/seat.rs` + `seat/model.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
+| `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)

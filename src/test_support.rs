@@ -1,16 +1,15 @@
 //! Test scaffolding for the wire: a throwaway PKI minted with the `openssl`
 //! CLI (the same recipe the server's own provisioning shells out to — this
-//! crate links no certificate library, in tests as in prod), and a one-shot
-//! mTLS answering server built from rustls' server half, which prod here
-//! deliberately does not have (the phone never listens; DESIGN §1).
+//! crate links no certificate library, in tests as in prod). The answering
+//! servers live in `serve` (re-exported here), split out when the seat
+//! model's scripted multi-connection server joined the one-shot original.
 
-use rustls::pki_types::pem::PemObject;
-use rustls::pki_types::{CertificateDer, PrivateKeyDer};
-use std::net::TcpListener;
 use std::path::Path;
 use std::process::Command;
-use std::sync::Arc;
-use std::thread::JoinHandle;
+
+pub mod serve;
+
+pub use serve::{serve_many, serve_once};
 
 /// Mint a CA under `dir` as `<name>.pem`/`<name>.key`.
 pub fn mint_ca(dir: &Path, name: &str) {
@@ -93,57 +92,6 @@ fn run(dir: &Path, args: &[&str]) {
         "openssl {args:?}: {}",
         String::from_utf8_lossy(&out.stderr)
     );
-}
-
-/// A one-shot mTLS server on loopback: accepts one connection, requires a
-/// client certificate chaining to `ca`, reads one frame, answers with each of
-/// `replies` then the terminator. Returns the bound address and the join
-/// handle carrying the request it read.
-pub fn serve_once(
-    dir: &Path,
-    ca: &str,
-    leaf: &str,
-    replies: Vec<Vec<u8>>,
-) -> (String, JoinHandle<Vec<u8>>) {
-    let mut store = rustls::RootCertStore::empty();
-    for anchor in CertificateDer::pem_file_iter(dir.join(format!("{ca}.pem"))).unwrap() {
-        store.add(anchor.unwrap()).unwrap();
-    }
-    let provider = Arc::new(rustls::crypto::ring::default_provider());
-    let verifier = rustls::server::WebPkiClientVerifier::builder_with_provider(
-        Arc::new(store),
-        Arc::clone(&provider),
-    )
-    .build()
-    .unwrap();
-    let chain: Vec<CertificateDer<'static>> =
-        CertificateDer::pem_file_iter(dir.join(format!("{leaf}.pem")))
-            .unwrap()
-            .collect::<Result<_, _>>()
-            .unwrap();
-    let key = PrivateKeyDer::from_pem_file(dir.join(format!("{leaf}.key"))).unwrap();
-    let config = Arc::new(
-        rustls::ServerConfig::builder_with_provider(provider)
-            .with_safe_default_protocol_versions()
-            .unwrap()
-            .with_client_cert_verifier(verifier)
-            .with_single_cert(chain, key)
-            .unwrap(),
-    );
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let address = format!("127.0.0.1:{}", listener.local_addr().unwrap().port());
-    let handle = std::thread::spawn(move || {
-        let (tcp, _) = listener.accept().unwrap();
-        let conn = rustls::ServerConnection::new(config).unwrap();
-        let mut tls = rustls::StreamOwned::new(conn, tcp);
-        let request = crate::frame::read_frame(&mut tls).unwrap().unwrap();
-        for reply in &replies {
-            crate::frame::write_frame(&mut tls, reply).unwrap();
-        }
-        crate::frame::write_end(&mut tls).unwrap();
-        request
-    });
-    (address, handle)
 }
 
 /// The provisioned-material shape over minted files, addressed at `address`.

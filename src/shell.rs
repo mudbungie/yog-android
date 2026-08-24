@@ -19,4 +19,6 @@ mod bridge;
 #[cfg(target_os = "android")]
 mod inset;
 #[cfg(target_os = "android")]
+mod screens;
+#[cfg(target_os = "android")]
 mod sys;

@@ -32,6 +32,7 @@ exclude-files = [
     "src/shell/app.rs",
     "src/shell/bridge.rs",
     "src/shell/inset.rs",
+    "src/shell/screens.rs",
     "src/shell/sys.rs",
 ]
 ignore-panics = true

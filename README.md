@@ -13,11 +13,11 @@ is the working discipline.
 
 ## Status
 
-Client standing, seat model pending. The frame layer, the chat-loop codec
-slice, mTLS transport, key material, and the Android shell (egui via
-GameActivity — DESIGN §3) are landed; the seat view model is the tracked
-next ball. On-device verification is operator-assisted; an unregistered
-leaf correctly sees empty rows.
+Client standing. The frame layer, the chat-loop codec slice, mTLS
+transport, key material, the Android shell (egui via GameActivity — DESIGN
+§3), and the seat view model (workspaces → conversations → transcript +
+composer) are landed. On-device verification is operator-assisted; an
+unregistered leaf correctly sees empty rows.
 
 ## Dev loop
 

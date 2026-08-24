@@ -1,20 +1,26 @@
 //! The frame loop: eframe boot, the inset pads, the IME mirror, and the
-//! skeleton screen the seat model (bl-5a98) replaces with real rows. Every
-//! frame renders owned state and blocks on nothing — the wire never runs on
-//! this thread.
+//! seat model the screens paint from. Every frame renders owned state and
+//! blocks on nothing — the wire runs only on the model's worker thread.
+
+use std::time::Duration;
 
 use eframe::egui;
 use winit::platform::android::activity::AndroidApp;
 
 use super::bridge::{Bridge, Field, FieldKind};
 use super::inset::InsetPx;
+use crate::seat::Model;
 
-/// The one editable field the skeleton carries. The id string is the egui
+/// The one editable field the shell carries. The id string is the egui
 /// widget id AND the bridge's address for it — one definition, used twice.
-const COMPOSER: Field = Field {
+pub(crate) const COMPOSER: Field = Field {
     id: "composer",
     kind: FieldKind::Composer,
 };
+
+/// How long the model rests between unprompted refreshes — the human
+/// cadence of a chat glanced at, not a terminal streamed to.
+const CADENCE: Duration = Duration::from_secs(2);
 
 /// Boot eframe over the Activity. `sys::android_main` is the only caller;
 /// everything before this call is sys.rs's.
@@ -38,27 +44,28 @@ pub(crate) fn run(app: AndroidApp) {
     }
 }
 
-struct Shell {
+pub(crate) struct Shell {
     android: AndroidApp,
     bridge: Bridge,
-    composer: String,
-    /// Placeholder transcript pane until the seat model paints real rows.
-    submitted: Vec<String>,
+    /// The seat model, or the sentence explaining why there is none
+    /// (unprovisioned material; provisioning is an operator act, DESIGN §5).
+    pub(crate) model: Result<Model, String>,
+    pub(crate) composer: String,
     t0: std::time::Instant,
     /// The inset pads and when they were last probed — the JNI walk is
     /// throttled to 200ms for numbers that change only when the keyboard
     /// slides (bl-014e).
-    inset: InsetPx,
+    pub(crate) inset: InsetPx,
     inset_at: u128,
 }
 
 impl Shell {
     fn new(android: AndroidApp) -> Self {
         Self {
+            model: open_model(&android),
             android,
             bridge: Bridge::default(),
             composer: String::new(),
-            submitted: Vec::new(),
             t0: std::time::Instant::now(),
             inset: InsetPx::default(),
             inset_at: 0,
@@ -77,6 +84,19 @@ impl Shell {
     }
 }
 
+/// The seat over the provisioned material in the app's private `files/wire`
+/// (DESIGN §5: adb, remote exec or QR put it there; this app never mints).
+fn open_model(android: &AndroidApp) -> Result<Model, String> {
+    let dir = android
+        .internal_data_path()
+        .ok_or("no internal data path")?
+        .join("wire");
+    let material = crate::material::read_dir(&dir)?
+        .ok_or_else(|| format!("nothing provisioned at {}", dir.display()))?;
+    let seat = crate::transport::Seat::open(&material)?;
+    Ok(Model::start(seat, CADENCE))
+}
+
 impl eframe::App for Shell {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
@@ -92,36 +112,7 @@ impl eframe::App for Shell {
 
         let ppp = ctx.pixels_per_point();
         ui.add_space(self.inset.top as f32 / ppp);
-        ui.heading("yog");
-        ui.separator();
-
-        // Bottom-up: the composer rides above the keyboard (or the
-        // gesture-nav bar when the keyboard is down), then the transcript
-        // placeholder takes whatever height remains.
-        ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            ui.add_space((self.inset.bottom as f32 / ppp).max(8.0));
-            let r = ui.add(
-                egui::TextEdit::singleline(&mut self.composer)
-                    .id(egui::Id::new(COMPOSER.id))
-                    .desired_width(f32::INFINITY)
-                    .hint_text("message"),
-            );
-            if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                let taken = std::mem::take(&mut self.composer);
-                if !taken.is_empty() {
-                    self.submitted.push(taken);
-                }
-                r.request_focus();
-            }
-            ui.add_space(4.0);
-            egui::ScrollArea::vertical()
-                .stick_to_bottom(true)
-                .show(ui, |ui| {
-                    for line in &self.submitted {
-                        ui.label(line);
-                    }
-                });
-        });
+        self.screens(ui);
 
         // The input-wake ruling (DESIGN §3, decided under bl-c761): no
         // vendored winit, so the commit wake winit drops (bl-2958) is
@@ -132,6 +123,6 @@ impl eframe::App for Shell {
         // dissolves this poll.
         let focused = ctx.memory(egui::Memory::focused).is_some();
         let delay = if focused { 16 } else { 250 };
-        ctx.request_repaint_after(std::time::Duration::from_millis(delay));
+        ctx.request_repaint_after(Duration::from_millis(delay));
     }
 }
