@@ -44,29 +44,42 @@ pub fn mint_leaf(dir: &Path, ca: &str, name: &str, ip_san: bool) {
             "req", "-newkey", "rsa:2048", "-nodes", "-keyout", &key, "-out", &csr, "-subj", &subj,
         ],
     );
+    // EVERY leaf gets an extensions file, not only the server's: webpki
+    // requires X.509 v3, and `openssl x509 -req` emits v1 when no extensions
+    // are present — OpenSSL forces v3 unconditionally only since 3.2, so a
+    // bare mint is v3 on one box and v1 on another (an older-openssl runner
+    // minted v1 client leaves and every handshake test refused them with
+    // UnsupportedCertVersion, bl-afe2). A fixture must not lean on a tool's
+    // version-dependent default.
     let ext = dir.join(format!("{name}.ext"));
-    std::fs::write(&ext, "subjectAltName=IP:127.0.0.1\n").unwrap();
+    let extensions = if ip_san {
+        "basicConstraints=CA:FALSE\nsubjectAltName=IP:127.0.0.1\n"
+    } else {
+        "basicConstraints=CA:FALSE\n"
+    };
+    std::fs::write(&ext, extensions).unwrap();
     let (ca_key, ca_pem, _) = names(ca);
     let extfile = ext.display().to_string();
-    let mut args = vec![
-        "x509",
-        "-req",
-        "-days",
-        "2",
-        "-in",
-        csr.as_str(),
-        "-out",
-        pem.as_str(),
-        "-CA",
-        ca_pem.as_str(),
-        "-CAkey",
-        ca_key.as_str(),
-        "-CAcreateserial",
-    ];
-    if ip_san {
-        args.extend_from_slice(&["-extfile", extfile.as_str()]);
-    }
-    run(dir, &args);
+    run(
+        dir,
+        &[
+            "x509",
+            "-req",
+            "-days",
+            "2",
+            "-in",
+            csr.as_str(),
+            "-out",
+            pem.as_str(),
+            "-CA",
+            ca_pem.as_str(),
+            "-CAkey",
+            ca_key.as_str(),
+            "-CAcreateserial",
+            "-extfile",
+            extfile.as_str(),
+        ],
+    );
 }
 
 fn run(dir: &Path, args: &[&str]) {
