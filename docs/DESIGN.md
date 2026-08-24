@@ -94,24 +94,27 @@ Four findings the shell module must carry, each learned the hard way:
    `App::ui(&mut Ui)`; yog sits on 0.29. The client tracks current eframe and
    does not wait for yog to catch up.
 
-The composition residual is now a **finding** (bl-3ef4; the operator drove
-the installed spike): the IME runs in **raw-key mode** — glide typing is
-disabled, tap-only like a password field, and autocorrect, suggestions and
-composing text (CJK, voice-to-field) are off with it. The cause is
-structural, not an egui defect: NativeActivity offers the IME no
-`InputConnection`, and everything beyond raw keys is delivered as composing
-text through one. Consequences, ruled:
-
-- **The egui ruling stands.** Tap typing is fully functional; degraded, not
-  broken, and acceptable for first light.
-- **The "no Gradle" clause is conditional, not settled.** Restoring glide
-  and composition means a real `InputConnection`, and the ecosystem path is
-  the GameActivity backend + androidx `game-text-input` — an AAR, i.e. a
-  minimal Gradle packaging shell over cargo-ndk. That spike is bl-014e; it
-  must also verify winit translates GameTextInput composition into the Ime
-  events egui consumes, which is the one place a (winit) fork question could
-  genuinely reopen. Until bl-014e rules, the shell ball builds on plain
-  cargo-apk and tap-only input.
+**The input mechanism is settled (bl-014e, closed with the spike's full
+trap ledger in its comments).** The shell is GameActivity behind a minimal
+Gradle shell, with a **two-way mirror bridge**: the GameTextInput buffer is
+adopted into the focused field, the field is pushed back when they drift
+(`set_text_input_state` is asynchronous — guard the echo window or a focus
+change blanks a field), and `set_ime_editor_info` is set per field, because
+the default `inputType` is TYPE_NULL and that alone puts the IME in degraded
+key-event mode. Latency is wake-driven, not polled: game-activity's own
+`onTextInputEvent` already wakes the looper on every commit — winit merely
+declines to make a frame of it, and a three-line `TextEvent` arm (vendored
+in the spike, upstreamable as-is) closes the gap. Measured on glass: ~80 ms
+tap-to-glyph dominated by the injection harness, backspace repeat at ~52 ms
+per char. Two upstream defects are carried until fixed there: winit's
+missing wake arm (this repo cannot take a git dep, so until the upstream
+release lands the in-repo shell uses a focus-gated fast repaint, or the
+operator rules an interim exception); and games-activity 4.4.0 calling
+`restartInput()` on every key — which destroys the connection Gboard's
+delete-repeat runs against — shimmed by a ~40-line Java OnKeyListener in the
+Gradle shell. The IME action key (Send) is a known residual: GameActivity
+writes the action where the enter key does not read it, so enter stays a
+newline until upstream moves.
 
 The shell stays a thin paint-and-input layer over the tested core, excluded
 from coverage with its reasoning in `tarpaulin.toml` when it lands.
