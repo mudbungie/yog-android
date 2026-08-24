@@ -12,7 +12,10 @@ The **phone seat** from REMOTE §1's canonical scene: a home server runs the
 yog engine and keeps every log; this client talks to conversations from a
 phone. In REMOTE's nouns it is a **client** (a machine holding an
 operator-issued certificate) acting as a **seat** (asks queries, paints
-replies, dispatches gestures). It is not a tool host in v1.
+replies, dispatches gestures) — and, by the bl-ae9d ruling, a **tool host**
+in direction: remote administration of the phone is a stated goal, with
+tools invoked from the laptop running ON the phone and vice versa. The seat
+lands first; hosting is the second act, not a maybe (§5).
 
 What follows from that, and is invariant:
 
@@ -27,9 +30,12 @@ What follows from that, and is invariant:
   added to the boundary, upstream in yog — never invented here.
 - **The client is always the asker** (REMOTE §3, the routing ruling). No
   listening socket on the phone, ever; the seat polls.
-- **Bootstrap is out-of-channel** (REMOTE §1.4). The operator provisions the
-  phone's leaf certificate by an act performed on the boxes; this app carries
-  no enrollment, pairing, or account protocol, ever.
+- **Bootstrap rides existing trust, never the new device's own connection**
+  (REMOTE §1.4, widened by bl-ae9d — §5). The app carries no enrollment,
+  pairing, or account protocol reachable over its own unauthenticated
+  connection, ever. What §1.4's "an act the operator performs on the boxes"
+  now includes: an already-trusted device performing that act on the
+  operator's behalf.
 
 ## 2. The wire, mirrored
 
@@ -68,8 +74,12 @@ yet chosen, because the table does not depend on the answer:
 Whichever lands, the shell is a thin paint-and-input layer over the tested
 core, excluded from coverage the way yog excludes `src/shell/*` — the
 exclusion is added with its reasoning in `tarpaulin.toml` when the shell
-exists, not before. Deciding O1 is its own ball with a spike behind it, and
-the loser's argument gets recorded here.
+exists, not before. Deciding O1 is its own ball (bl-8d03) with a spike
+behind it — egui first, the soft keyboard as the kill criterion — and the
+loser's argument gets recorded here. The spike also weighs **forking egui**:
+the house already has one egui PR sitting unreviewed upstream, so an IME fix
+that needs patches cannot plan on upstream review; the fork's maintenance
+cost is part of O1's ledger, weighed against the Kotlin shell.
 
 ## 4. Module map
 
@@ -83,3 +93,47 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/transport/*` | rustls mTLS dial, one connection per gesture until upstream rules otherwise | future |
 | `src/seat/*` | the view model: snapshots in, gestures out | future |
 | shell (O1) | paint and input only | future |
+
+## 5. The trust model and new-device bootstrap (bl-ae9d)
+
+**The device mesh is a very-high-trust execution environment**, by explicit
+operator ruling 2026-08-23. Every certificate is operator-grade within its
+registrations (REMOTE §2's own words: "v1 has one human, and every
+certificate is operator-grade"), and the consequence is stated rather than
+implied: **one trusted device can bootstrap another.** A desktop client can
+mint a new leaf and hand it to a phone; a laptop can drive tools on the
+phone; the phone can drive tools on the laptop. Workspace registration
+(REMOTE §1.5) remains the only partition inside the mesh.
+
+**Three delivery channels for a new device's key material, all supported:**
+
+1. **adb push** — the operator (or an agent the operator hands the cable to)
+   places the leaf into the app's storage over a debug bridge. Zero new
+   code; the channel is the physically attached, developer-authorized
+   bridge.
+2. **remote exec** — an already-registered client advertises tools that can
+   write files on the new device (the remote-administration goal, pointed at
+   provisioning). The trust carrying the cert is the existing authenticated
+   tool route, not anything the new device asserts.
+3. **QR** — a trusted client mints and *displays* the credential; the new
+   device scans it with its camera. The trust is the operator's own eyes and
+   hands: whoever can photograph that screen was shown it.
+
+What all three share, and the line that must never move: **the new device
+itself never enrolls over its own unauthenticated connection.** REMOTE §1.4
+stands — there is no pairing protocol in the wire, no token exchange a
+stranger on the network could initiate. Bootstrap is always an act performed
+*through existing trust* (a cable, an authenticated route, a screen), and
+the first thing the new device does with its material is an ordinary mTLS
+dial like any other client.
+
+**Upstream dependency, named:** minting from a seat requires the CA holder —
+the engine — to expose a mint act. REMOTE §3 rules that a capability a
+client needs is added to the boundary, never to the wire, so that is a
+boundary `Action` in yog, tracked as a yog ball. Until it lands, minting
+stays where it is today: `yog wire-certs` on the engine's own box, with adb
+or remote exec carrying the result.
+
+**What the phone durably holds** stays exactly §1's list: its key material,
+and nothing else. A lost phone costs one certificate distrust at the CA
+(REMOTE §4), never a history — the logs live on the engine.
