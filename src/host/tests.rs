@@ -65,7 +65,7 @@ fn host_against(scripts: Vec<Vec<Vec<u8>>>) -> (Host, std::thread::JoinHandle<Ve
     let dir = pki();
     let (address, served) = serve_many(&dir, "ca", "server", scripts);
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
-    (Host::start(seat, table(), dispatch), served)
+    (Host::start(seat, table(), Box::new(dispatch)), served)
 }
 
 /// Poll until a standing satisfies `pass` — the host publishes on its own
@@ -267,7 +267,7 @@ fn a_frame_that_goes_away_mid_run_stops_the_host_after_it_answers() {
         ],
     );
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
-    let mut host = Host::start(seat, table(), slow_dispatch);
+    let mut host = Host::start(seat, table(), Box::new(slow_dispatch));
     // Waiting for the advertisement is what puts the drop INSIDE the run: the
     // publish that failed is the loop's, not the one right after presenting.
     settle(&mut host, |s| s.advertised);

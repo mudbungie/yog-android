@@ -23,4 +23,4 @@ mod inset;
 #[cfg(target_os = "android")]
 mod screens;
 #[cfg(target_os = "android")]
-mod sys;
+pub(crate) mod sys;

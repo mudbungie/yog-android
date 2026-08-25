@@ -111,10 +111,17 @@ fn open_model(android: &AndroidApp) -> Result<Model, String> {
 /// already saying why, and a second copy of that sentence would be noise.
 fn open_host(android: &AndroidApp) -> Option<Host> {
     let seat = open_seat(android).ok()?;
+    // The dispatch closes over this app's own storage, which is where a
+    // screenshot goes when a caller names no path — the one directory this
+    // uid can always write.
+    let data_dir = android
+        .internal_data_path()
+        .map(|p| p.display().to_string())
+        .unwrap_or_default();
     Some(Host::start(
         seat,
         crate::tools::advertisement(),
-        crate::tools::run,
+        Box::new(move |tool, input| crate::tools::run_in(tool, input, &data_dir)),
     ))
 }
 

@@ -32,6 +32,11 @@ use crate::codec::reply::Reply;
 use crate::codec::{Act, Ask, Capture, Gesture, Invocation, encode};
 use crate::transport::Seat;
 
+/// What a host runs an invocation with: the tool's name and the model's own
+/// arguments in, a capture out. Owned and `Send` because it crosses onto the
+/// worker thread and outlives the frame that built it.
+pub type Dispatch = Box<dyn Fn(&str, &serde_json::Value) -> Capture + Send>;
+
 /// What the frame paints about this device's tool hosting: what is presented,
 /// what has been run, and the sentence that stopped it if one did.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -61,14 +66,12 @@ pub struct Host {
 impl Host {
     /// Start the host over an opened seat, presenting `tools` and dispatching
     /// through `run`. Both are parameters rather than reads of
-    /// [`crate::tools`] so the loop is testable against a table a test wrote.
-    pub fn start(
-        seat: Seat,
-        tools: Vec<crate::codec::Tool>,
-        run: fn(&str, &serde_json::Value) -> Capture,
-    ) -> Self {
+    /// [`crate::tools`] so the loop is testable against a table a test wrote,
+    /// and `run` is boxed rather than a bare `fn` because the real dispatch
+    /// closes over this app's own storage path (`crate::tools::run_in`).
+    pub fn start(seat: Seat, tools: Vec<crate::codec::Tool>, run: Dispatch) -> Self {
         let (tx, standings) = mpsc::channel();
-        let worker = std::thread::spawn(move || serve(&seat, tools, run, &tx));
+        let worker = std::thread::spawn(move || serve(&seat, tools, &run, &tx));
         Self {
             standings,
             last: Standing::default(),
@@ -101,7 +104,7 @@ impl Drop for Host {
 fn serve(
     seat: &Seat,
     tools: Vec<crate::codec::Tool>,
-    run: fn(&str, &serde_json::Value) -> Capture,
+    run: &Dispatch,
     out: &mpsc::Sender<Standing>,
 ) {
     let mut standing = Standing {
@@ -120,7 +123,7 @@ fn serve(
 fn hold(
     seat: &Seat,
     tools: Vec<crate::codec::Tool>,
-    run: fn(&str, &serde_json::Value) -> Capture,
+    run: &Dispatch,
     out: &mpsc::Sender<Standing>,
     standing: &mut Standing,
 ) -> String {

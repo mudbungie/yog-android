@@ -22,7 +22,10 @@
 # check, and on-device verification is operator-assisted (DESIGN §3). Named
 # file by file rather than `src/shell/*` because the shell also holds
 # host-testable pure code (`src/shell/span.rs`, the UTF-16 span math) that
-# stays UNDER the 100% floor — an exclusion is added with its reasoning,
+# stays UNDER the 100% floor. `src/tools/ui/bridge.rs` is the same class and
+# is named for the same reason: it is the JNI call itself, and the seam is
+# drawn so everything up to it — the schemas, the argument reading, the
+# two-line answer protocol — stays testable without a device — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
 #
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
@@ -35,6 +38,7 @@ exclude-files = [
     "src/shell/inset.rs",
     "src/shell/screens.rs",
     "src/shell/sys.rs",
+    "src/tools/ui/bridge.rs",
 ]
 ignore-panics = true
 timeout = "300s"

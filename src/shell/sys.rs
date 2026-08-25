@@ -43,9 +43,34 @@ pub(crate) fn vm(app: &AndroidApp) -> Result<jni::JavaVM, String> {
     if raw.is_null() {
         return Err("null JavaVM".to_owned());
     }
-    // SAFETY: `vm_as_ptr()` is documented as this process's JavaVM*, checked
-    // non-null above, and the VM outlives all native code.
+    vm_from(raw)
+}
+
+/// The same conversion from a raw pointer another holder of it already
+/// checked — `ndk_context`'s global, which is what the tool-host worker has
+/// (it holds no activity handle, and a tool whose availability tracked the UI
+/// would be the wrong shape). The cast lives here rather than there because
+/// this file is the crate's one location for raw handle conversions.
+pub(crate) fn vm_from(raw: *mut std::ffi::c_void) -> Result<jni::JavaVM, String> {
+    if raw.is_null() {
+        return Err("null JavaVM".to_owned());
+    }
+    // SAFETY: both callers pass a pointer their own source documents as this
+    // process's JavaVM* — android-activity's `vm_as_ptr`, and `ndk_context`'s
+    // global, which android-activity itself fills before `android_main` — and
+    // both are checked non-null above. The VM outlives all native code.
     unsafe { jni::JavaVM::from_raw(raw.cast()) }.map_err(|e| e.to_string())
+}
+
+/// Any JNI object this process was handed as a raw pointer — the
+/// application object `ndk_context` carries, which the interface bridge needs
+/// to reach this app's own class loader. Null-checked by the caller, because
+/// what a null means differs there.
+pub(crate) fn object_from(raw: *mut std::ffi::c_void) -> jni::objects::JObject<'static> {
+    // SAFETY: the pointer is `ndk_context`'s application object, filled by
+    // android-activity before `android_main` and live for the process; a
+    // `JObject` does not delete the reference on drop.
+    unsafe { jni::objects::JObject::from_raw(raw.cast()) }
 }
 
 /// The Activity as a JNI object.

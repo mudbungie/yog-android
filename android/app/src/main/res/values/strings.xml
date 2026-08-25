@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">yog</string>
+    <!-- Shown in Settings > Accessibility, where the operator enables this. -->
+    <string name="accessibility_description">Lets a yog session read what is on this screen and drive it: dump the interface as text, tap, type, press back or home, and take screenshots. Every action is one a session explicitly invoked over the seat\'s authenticated connection.</string>
+</resources>

@@ -152,6 +152,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
 | `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete | landed (bl-d366) |
+| `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
+| `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
+| `android/…/{YogAccessibilityService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
 | `src/seat.rs` + `seat/model.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
@@ -266,9 +269,38 @@ stderr and an exit code and nothing downstream carries a second shape.
 **What is offered is bounded by what an app uid can actually do**, established
 by probe on a current device rather than assumed: a shell (`sh -c`, under this
 machine's own 60-second bound, terminated and reported as the shell's own
-`timeout` verdict), and file read / write / list. A screenshot and the
-interface itself need a platform service the operator must enable, which is
-its own ball. The honest limits are written into the descriptions a model
+`timeout` verdict), and file read / write / list.
+
+**The interface tools need a platform service, and enabling it is the
+operator's act** (bl-1511, and §5's trust model unchanged): an app uid cannot
+screenshot — `screencap` wants a signature-level permission — and cannot see
+another app's views at all. An `AccessibilityService` carries reading, gesture
+dispatch and screenshots in one place, and the app never grants itself
+anything: the operator turns it on in system settings, or a trusted device
+does it over the physically attached debug bridge, the same channel that
+carries this seat's key material. **Sideloaded apps meet a second gate** —
+Android's restricted-settings block silently reverts the enable — and lifting
+it is one more act on that same cable (`appops set … ACCESS_RESTRICTED_SETTINGS
+allow`), recorded here because the failure presents as a setting that will not
+stick rather than as a refusal.
+
+The five are `ui_read` (the node tree in front, as text — the form a model can
+act on), `ui_tap` (a coordinate, or the first clickable node matching text),
+`ui_type`, `ui_key` (back / home / recents / notifications / quick-settings)
+and `screenshot`. **A screenshot answers with a path, never the image**: a
+capture is text (REMOTE §5.3), and encoding one would be this client adding a
+shape to the boundary. They are advertised whether or not the service is on,
+because an advertisement is a fact about what this machine offers and being
+able to act is a fact about right now — two tables would put a right-now fact
+into a durable document, which is the defect §5 was amended to remove; a
+disabled service refuses in band with the sentence that names the fix.
+
+**One JNI trap, paid for once:** a thread the JVM did not create resolves
+class names against the SYSTEM class loader, which knows nothing an APK
+shipped — so `FindClass` from the tool-host worker throws
+`ClassNotFoundException` for this app's own class. The application object's
+own loader is what resolves it, and one global reference to the result
+outlives the attach that found it (`src/tools/ui/bridge.rs`). The honest limits are written into the descriptions a model
 reads — REMOTE §5's containment paragraph in this client's own terms: what
 runs here runs as this app's user, and the design does not claim otherwise.
 

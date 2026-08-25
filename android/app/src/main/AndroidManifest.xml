@@ -4,7 +4,7 @@
          not, and Android reports permissionless DNS as no-address-for-
          hostname — a first-class red herring, not a permission denial. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <application android:label="yog"
+    <application android:label="@string/app_name"
                  android:theme="@style/Theme.AppCompat.NoActionBar">
         <activity android:name=".MainActivity"
                   android:exported="true"
@@ -17,5 +17,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- The interface tools (bl-1511). The operator enables it; the app
+             never grants itself anything. BIND_ACCESSIBILITY_SERVICE is
+             held by the SYSTEM, not requested by us: declaring it here is
+             what stops any other app from binding this service. -->
+        <service android:name=".YogAccessibilityService"
+                 android:exported="true"
+                 android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice"
+                       android:resource="@xml/accessibility_service_config" />
+        </service>
     </application>
 </manifest>

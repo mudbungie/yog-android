@@ -55,6 +55,9 @@ eframe = { version = "0.36", default-features = false, features = [
 # winit: eframe's own windowing layer, named directly for the AndroidApp
 # handle type and the activity input types the bridge speaks.
 winit = { version = "0.30", features = ["android-game-activity"] }
+# ndk-context: the process JavaVM the tool-host worker reaches the interface
+# service through — it holds no activity handle and must not (bl-1511).
+ndk-context = "0.1"
 # jni: the IME-inset probe (DESIGN §3 finding 2) — SDK 35 is forced
 # edge-to-edge and the keyboard inset is only readable via WindowInsets.
 jni = "0.21"

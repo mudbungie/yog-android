@@ -2,7 +2,13 @@
 //! in a scratch directory — because a tool that only a mock ever exercised is
 //! a tool nothing verified.
 
-use super::{BAD_INPUT, NO_SUCH_TOOL, advertisement, run};
+use super::{BAD_INPUT, NO_SUCH_TOOL, advertisement, run_in};
+
+/// The table's dispatch, with a scratch directory standing in for the app's
+/// own storage — no test here reaches the arm that uses it.
+fn run(tool: &str, input: &serde_json::Value) -> crate::codec::Capture {
+    run_in(tool, input, "/nonexistent")
+}
 use crate::test_support::scratch;
 use serde_json::json;
 use std::time::Duration;
@@ -11,7 +17,20 @@ use std::time::Duration;
 fn the_advertisement_is_the_table_and_every_element_is_three_facts() {
     let set = advertisement();
     let names: Vec<&str> = set.iter().map(|t| t.name.as_str()).collect();
-    assert_eq!(names, ["shell", "read_file", "write_file", "list_dir"]);
+    assert_eq!(
+        names,
+        [
+            "shell",
+            "read_file",
+            "write_file",
+            "list_dir",
+            "ui_read",
+            "ui_tap",
+            "ui_type",
+            "ui_key",
+            "screenshot"
+        ]
+    );
     for tool in &set {
         assert!(
             !tool.description.is_empty(),

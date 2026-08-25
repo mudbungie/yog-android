@@ -28,6 +28,7 @@ use crate::codec::{Capture, Tool};
 
 mod files;
 mod shell;
+mod ui;
 
 #[cfg(test)]
 mod tests;
@@ -44,13 +45,21 @@ pub const BAD_INPUT: i32 = 2;
 
 /// What this machine presents on connect. Order is the table's, which is the
 /// order an operator reads them in; nothing downstream depends on it.
+///
+/// The interface tools are here whether or not their platform service is
+/// enabled: an advertisement is a fact about what this machine offers, and
+/// whether it can act right now is a refusal in band (REMOTE §5's own
+/// staleness correction). Two tables would put a right-now fact into a
+/// durable document.
 pub fn advertisement() -> Vec<Tool> {
-    vec![
+    let mut set = vec![
         shell::tool(),
         files::read_tool(),
         files::write_tool(),
         files::list_tool(),
-    ]
+    ];
+    set.extend(ui::tools());
+    set
 }
 
 /// Run one invocation locally. **Total**: every outcome is a capture, because
@@ -58,7 +67,10 @@ pub fn advertisement() -> Vec<Tool> {
 /// exists to exclude. A name this machine does not carry, and a call whose
 /// arguments it cannot read, are two exit codes and two sentences — never two
 /// kinds of failure a caller must tell apart.
-pub fn run(tool: &str, input: &Value) -> Capture {
+///
+/// `data_dir` is this app's own storage — the one directory this uid can
+/// always write, and where a screenshot goes when the caller names no path.
+pub fn run_in(tool: &str, input: &Value, data_dir: &str) -> Capture {
     let Some(o) = input.as_object() else {
         return refused(BAD_INPUT, "the arguments are not a JSON object");
     };
@@ -67,6 +79,7 @@ pub fn run(tool: &str, input: &Value) -> Capture {
         files::READ => files::read(o),
         files::WRITE => files::write(o),
         files::LIST => files::list(o),
+        ui::READ | ui::TAP | ui::TYPE | ui::KEY | ui::SHOT => ui::run(tool, o, data_dir),
         other => refused(
             NO_SUCH_TOOL,
             &format!("this machine carries no tool called {other:?}"),

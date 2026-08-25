@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the interface tools need, and nothing else (bl-1511).
+
+     No `accessibilityEventTypes` and no `notificationTimeout`: nothing here is
+     driven by events. Every tool is a question asked at the moment a session
+     asks it, so a service that subscribed to the event firehose would be
+     woken constantly to do nothing.
+
+     The three flags are the three tools: retrieve the window content
+     (`ui_read`, `ui_tap` by text), take a screenshot, and perform gestures
+     (`ui_tap`). `canRequestFilterKeyEvents` is deliberately absent — reading
+     every keystroke on the device is not something any tool here needs. -->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/accessibility_description"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="true"
+    android:canTakeScreenshot="true"
+    android:canPerformGestures="true" />
