@@ -148,12 +148,15 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
 | `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
 | `src/test_support.rs` + `test_support/serve.rs` | tests only: openssl-minted PKI; the one-shot and scripted multi-connection mTLS answering servers | landed (bl-48d9, split bl-5a98) |
+| `src/rows.rs` + `rows/{build,compacted,project,project/blocks}.rs` | the transcript's one-line row projection: the row vocabulary (class, tone, role, fold), the per-entry match and its labels, the preview/body split — pure, no paint | landed (bl-0ed6) |
+| `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
 | `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete | landed (bl-d366) |
 | `src/seat.rs` + `seat/model.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
+| `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
@@ -199,6 +202,42 @@ or remote exec carrying the result.
 **What the phone durably holds** stays exactly §1's list: its key material,
 and nothing else. A lost phone costs one certificate distrust at the CA
 (REMOTE §4), never a history — the logs live on the engine.
+
+## 7. The chat screen, and where its mechanics live (bl-0ed6)
+
+The transcript is painted the way the window paints it — collapsing
+included — because a tool-heavy conversation is unreadable at a phone's width
+without it, and because two clients of one engine showing the same
+conversation two different ways is two readings of one fact.
+
+**The projection is pure and the paint is thin, and that seam is the point.**
+`src/rows/*` turns decoded entries into rows — the label, the collapsed
+one-line preview, the expanded body, whether the row folds at all, and the
+turn rollup that replaces a finished turn's machinery with a single census
+line. It is ordinary Rust with no egui in it, so all of it sits under the
+100% floor and the mechanics are verified without a device;
+`src/shell/chat.rs` maps a row's `Tone` and `Role` to hues and draws it. A
+row is a **block**, not an entry: a model message that says something and
+then calls two tools is three rows.
+
+**Expansion is derived, never stored** (the desktop's own rule): a row is
+expanded when `(in-flight OR its class's knob) XOR the operator flipped it`.
+So the override set holds *flips* rather than states, a row that appears
+mid-frame is already in its configured state, and a tool call that completes
+returns to it with nothing to invalidate. The two knobs are policy and the
+flips are viewport ephemera — durable per-seat state belongs on the engine
+(REMOTE §7) and is a later ball, so the phone keeps neither.
+
+**The spellings are the desktop's, byte for byte** — the glyphs, the
+`· N chars` size hint on a folded tool result, the compaction sentence built
+client-side from the counters that crossed the wire, the 160-character
+preview cap. They are asserted in this crate's own tests, so a divergence is
+a red test here rather than two clients that disagree in front of an
+operator.
+
+**One deliberate difference, and its reason:** the desktop pulses an
+in-flight row's colour. A phone repaints on a budget it is also spending on
+the IME mirror, so the label says `running` and the hue holds still.
 
 ## 6. Tool hosting, and the one deviation from REMOTE §5.2 (bl-d366)
 

@@ -10,6 +10,7 @@ use winit::platform::android::activity::AndroidApp;
 use super::bridge::{Bridge, Field, FieldKind};
 use super::inset::InsetPx;
 use crate::host::Host;
+use crate::rows::AutoExpand;
 use crate::seat::Model;
 
 /// The one editable field the shell carries. The id string is the egui
@@ -56,6 +57,12 @@ pub(crate) struct Shell {
     /// seat opened — a device that cannot dial cannot host either.
     pub(crate) host: Option<Host>,
     pub(crate) composer: String,
+    /// Which KINDS of row open by default (the desktop's two knobs).
+    pub(crate) auto: AutoExpand,
+    /// The rows the operator has flipped by hand — overrides, never states:
+    /// membership FLIPS a row's auto-state, so an empty set is "everything as
+    /// configured" and the knobs above keep meaning what they say.
+    pub(crate) folds: std::collections::BTreeSet<String>,
     t0: std::time::Instant,
     /// The inset pads and when they were last probed — the JNI walk is
     /// throttled to 200ms for numbers that change only when the keyboard
@@ -72,6 +79,8 @@ impl Shell {
             android,
             bridge: Bridge::default(),
             composer: String::new(),
+            auto: AutoExpand::default(),
+            folds: std::collections::BTreeSet::new(),
             t0: std::time::Instant::now(),
             inset: InsetPx::default(),
             inset_at: 0,

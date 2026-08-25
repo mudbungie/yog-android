@@ -17,6 +17,8 @@ mod app;
 #[cfg(target_os = "android")]
 mod bridge;
 #[cfg(target_os = "android")]
+mod chat;
+#[cfg(target_os = "android")]
 mod inset;
 #[cfg(target_os = "android")]
 mod screens;

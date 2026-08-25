@@ -16,7 +16,7 @@
 # 0-covered denominator. yog dodges the same hazard only because its fixture
 # happens not to parse; excluding it by name is the honest spelling.
 #
-# The four named `src/shell/` files are the Android platform glue (bl-c761)
+# The named `src/shell/` files are the Android platform glue (bl-c761)
 # — `cfg(target_os = "android")`, never compiled by the host suite, so no
 # host test can reach a line of them; CI's android leg is their compile
 # check, and on-device verification is operator-assisted (DESIGN §3). Named
@@ -31,6 +31,7 @@ exclude-files = [
     "rules/fixtures/*",
     "src/shell/app.rs",
     "src/shell/bridge.rs",
+    "src/shell/chat.rs",
     "src/shell/inset.rs",
     "src/shell/screens.rs",
     "src/shell/sys.rs",

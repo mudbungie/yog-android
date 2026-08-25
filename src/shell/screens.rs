@@ -6,7 +6,7 @@
 use eframe::egui;
 
 use super::app::{COMPOSER, Shell};
-use crate::codec::{Block, Entry, EntryKind};
+use crate::rows::rows;
 use crate::seat::Snapshot;
 
 impl Shell {
@@ -70,15 +70,25 @@ impl Shell {
     }
 
     fn transcript(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str, agent: &str) {
-        if ui.button("< conversations").clicked() {
-            self.focus_workspace(Some(workspace.to_owned()));
-        }
-        ui.heading(agent);
+        ui.horizontal(|ui| {
+            if ui.button("< conversations").clicked() {
+                self.focus_workspace(Some(workspace.to_owned()));
+            }
+            // The two auto knobs, the desktop's own pair: which KINDS open by
+            // default. They are policy; a hand-flipped row is the override
+            // set below and dies with the screen.
+            ui.checkbox(&mut self.auto.responses, "talk");
+            ui.checkbox(&mut self.auto.others, "steps");
+        });
+        ui.heading(super::chat::speaker_of(snap, agent));
         ui.separator();
+        let speaker = super::chat::speaker_of(snap, agent);
+        let painted = rows(&snap.transcript, &speaker, self.auto, &self.folds);
         // Bottom-up: the composer rides above the keyboard (or the gesture-
         // nav bar), then the transcript takes whatever height remains.
         let inset = self.inset.bottom;
         let ppp = ui.ctx().pixels_per_point();
+        let mut flipped = None;
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
             ui.add_space((inset as f32 / ppp).max(8.0));
             let r = ui.add(
@@ -100,11 +110,25 @@ impl Shell {
             egui::ScrollArea::vertical()
                 .stick_to_bottom(true)
                 .show(ui, |ui| {
-                    for entry in &snap.transcript {
-                        ui.label(line(entry));
-                    }
+                    // Top-down inside the scroller: the rows are in message
+                    // order and the bottom-up layout above is about where the
+                    // composer sits, not about which way a transcript reads.
+                    ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                        for row in &painted {
+                            if super::chat::row(ui, row) {
+                                flipped = Some(row.key.clone());
+                            }
+                        }
+                    });
                 });
         });
+        // Applied after the walk: flipping mid-iteration would re-project the
+        // rows the loop is still reading.
+        if let Some(key) = flipped
+            && !self.folds.remove(&key)
+        {
+            self.folds.insert(key);
+        }
     }
 
     /// What this device offers a session, one line (REMOTE §5). It rides the
@@ -136,31 +160,5 @@ impl Shell {
         if let Ok(model) = &self.model {
             model.focus_workspace(workspace);
         }
-    }
-}
-
-/// One transcript entry as the line the phone paints — the smallest honest
-/// rendering; richer surfaces grow per consumer, never speculatively.
-fn line(entry: &Entry) -> String {
-    match &entry.kind {
-        EntryKind::Delivered { sender, body, .. } => format!("{sender}: {body}"),
-        EntryKind::Model { blocks, .. } => blocks
-            .iter()
-            .filter_map(|b| match b {
-                Block::Text(text) => Some(text.clone()),
-                Block::Thinking(_) | Block::ToolUse { .. } => None,
-            })
-            .collect::<Vec<_>>()
-            .join("\n"),
-        EntryKind::ToolResult { content, .. } => format!("[tool] {content}"),
-        EntryKind::Streaming { thinking, text } => {
-            if text.is_empty() {
-                thinking.clone()
-            } else {
-                text.clone()
-            }
-        }
-        EntryKind::Compacted { summary, .. } => format!("[compacted] {summary}"),
-        EntryKind::Raw => entry.raw.clone(),
     }
 }

@@ -14,6 +14,7 @@ pub mod codec;
 pub mod frame;
 pub mod host;
 pub mod material;
+pub mod rows;
 pub mod seat;
 pub mod shell;
 pub mod tools;
