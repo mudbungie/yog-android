@@ -37,6 +37,7 @@ impl Shell {
 
     fn roster(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         ui.heading("workspaces");
+        self.hosting(ui);
         ui.separator();
         egui::ScrollArea::vertical().show(ui, |ui| {
             for row in &snap.workspaces {
@@ -104,6 +105,31 @@ impl Shell {
                     }
                 });
         });
+    }
+
+    /// What this device offers a session, one line (REMOTE §5). It rides the
+    /// roster because that is the screen an operator lands on, and a tool host
+    /// nobody can see is one nobody can tell has stopped.
+    fn hosting(&mut self, ui: &mut egui::Ui) {
+        let Some(host) = &mut self.host else { return };
+        let standing = host.standing();
+        let line = match (&standing.stopped, &standing.last) {
+            (Some(why), _) => format!("tools stopped: {why}"),
+            (None, Some(last)) => format!(
+                "tools: {} · served {} · {last}",
+                standing.tools.join(", "),
+                standing.served
+            ),
+            (None, None) if standing.advertised => {
+                format!("tools: {} · waiting", standing.tools.join(", "))
+            }
+            (None, None) => "tools: presenting…".to_owned(),
+        };
+        if standing.stopped.is_some() {
+            ui.colored_label(egui::Color32::LIGHT_RED, line);
+        } else {
+            ui.weak(line);
+        }
     }
 
     fn focus_workspace(&self, workspace: Option<String>) {

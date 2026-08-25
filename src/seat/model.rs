@@ -178,11 +178,5 @@ fn deposit(seat: &Seat, focus: &Focus, content: String) -> Result<(), String> {
 
 /// The wrong-kind sentence names the kind, never the rows it carried.
 fn kind_err(asked: &str, got: &Reply) -> String {
-    let kind = match got {
-        Reply::Outcome { .. } => "outcome",
-        Reply::Workspaces { .. } => "workspaces",
-        Reply::Conversations(_) => "conversations",
-        Reply::Transcript(_) => "transcript",
-    };
-    format!("{asked}: the engine answered {kind} instead")
+    format!("{asked}: the engine answered {} instead", got.kind())
 }

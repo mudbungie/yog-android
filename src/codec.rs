@@ -20,14 +20,17 @@ use serde_json::{Value, json};
 mod conv;
 pub(crate) mod fields;
 pub mod reply;
+pub mod tools;
 mod transcript;
 mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
+pub use tools::{Capture, Invocation, Tool};
 pub use transcript::{Block, Entry, EntryKind};
 pub use ws::{ConfigTip, WsKind, WsRow};
 
-/// The mutating half this seat spends. One variant today: the §8.2 deposit.
+/// The mutating half this device spends: the §8.2 deposit, and the two acts
+/// a tool host owns (REMOTE §5.1, §5.3).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Act {
     /// The plain send: `{"op":"message", workspace, agent, content}`.
@@ -35,6 +38,17 @@ pub enum Act {
         workspace: String,
         agent: String,
         content: String,
+    },
+    /// What this machine can run, presented on connect. **It names no
+    /// client**, and that is the gesture (REMOTE §5.1): the identity a set
+    /// lands under is the intake's — the connection's certificate common name
+    /// — and a `client` field would let any connection overwrite any other's.
+    Advertise { tools: Vec<Tool> },
+    /// One invocation answered with what running it captured. Only the client
+    /// it was addressed to may post one, so this too names no client.
+    Complete {
+        invocation: String,
+        capture: Capture,
     },
 }
 
@@ -47,6 +61,11 @@ pub enum Ask {
     Conversations { workspace: String },
     /// One conversation's transcript, in message order.
     Transcript { workspace: String, agent: String },
+    /// **The follow-class read**: this machine's next work, answered when
+    /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
+    /// only into a stream this device asked for — so a tool host waits here
+    /// rather than listening on a socket it would have to open.
+    Invocations,
 }
 
 /// A gesture: act or ask, the boundary's whole grammar.
@@ -73,6 +92,15 @@ pub fn encode(gesture: &Gesture) -> Value {
         Gesture::Ask(Ask::Transcript { workspace, agent }) => {
             json!({ "op": "transcript", "workspace": workspace, "agent": agent })
         }
+        Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
+        Gesture::Act(Act::Advertise { tools }) => {
+            json!({ "op": "advertise", "tools": tools::encode_tools(tools) })
+        }
+        Gesture::Act(Act::Complete {
+            invocation,
+            capture,
+        }) => json!({ "op": "complete", "invocation": invocation,
+                      "capture": tools::capture_value(capture) }),
     }
 }
 

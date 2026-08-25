@@ -109,3 +109,81 @@ fn malformed_envelopes_earn_the_outer_error() {
         "missing or non-array field \"rows\""
     );
 }
+
+#[test]
+fn every_answer_names_its_own_kind() {
+    use super::super::{Capture, Invocation};
+    let named = [
+        (
+            Reply::Outcome {
+                ok: true,
+                exit: 0,
+                stdout: String::new(),
+                stderr: String::new(),
+            },
+            "outcome",
+        ),
+        (
+            Reply::Workspaces {
+                rows: vec![],
+                stale: None,
+                growth: None,
+            },
+            "workspaces",
+        ),
+        (Reply::Conversations(vec![]), "conversations"),
+        (Reply::Transcript(vec![]), "transcript"),
+        (Reply::Advertised, "advertised"),
+        (
+            Reply::Invocations(vec![Invocation {
+                id: "i".into(),
+                tool: "t".into(),
+                input: json!({}),
+            }]),
+            "invocations",
+        ),
+        (
+            Reply::Routed {
+                invocation: "i".into(),
+                capture: Some(Capture::default()),
+            },
+            "routed",
+        ),
+    ];
+    for (reply, kind) in named {
+        assert_eq!(reply.kind(), kind);
+    }
+}
+
+#[test]
+fn the_routing_legs_replies_read_back() {
+    assert_eq!(
+        decode(&json!({ "ok": true, "kind": "advertised" }))
+            .unwrap()
+            .unwrap(),
+        Reply::Advertised
+    );
+    let work = json!({ "ok": true, "kind": "invocations",
+                       "rows": [{ "invocation": "i1", "tool": "shell",
+                                  "input": { "command": "id" } }] });
+    let Reply::Invocations(rows) = decode(&work).unwrap().unwrap() else {
+        panic!("wrong reply");
+    };
+    assert_eq!(rows[0].id, "i1");
+    // A capture is ABSENT while the far machine still runs it — a reader must
+    // not have to tell "not finished" from "finished saying nothing".
+    let waiting = json!({ "ok": true, "kind": "routed", "invocation": "i1" });
+    assert_eq!(
+        decode(&waiting).unwrap().unwrap(),
+        Reply::Routed {
+            invocation: "i1".into(),
+            capture: None
+        }
+    );
+    let done = json!({ "ok": true, "kind": "routed", "invocation": "i1",
+                       "capture": { "stdout": "o", "stderr": "", "exit_code": 0 } });
+    let Reply::Routed { capture, .. } = decode(&done).unwrap().unwrap() else {
+        panic!("wrong reply");
+    };
+    assert_eq!(capture.unwrap_or_default().stdout, "o");
+}

@@ -9,6 +9,7 @@ use winit::platform::android::activity::AndroidApp;
 
 use super::bridge::{Bridge, Field, FieldKind};
 use super::inset::InsetPx;
+use crate::host::Host;
 use crate::seat::Model;
 
 /// The one editable field the shell carries. The id string is the egui
@@ -50,6 +51,10 @@ pub(crate) struct Shell {
     /// The seat model, or the sentence explaining why there is none
     /// (unprovisioned material; provisioning is an operator act, DESIGN §5).
     pub(crate) model: Result<Model, String>,
+    /// This device as a machine a session can call (REMOTE §5). It rides its
+    /// own connection on the same material, so it is `Some` exactly when the
+    /// seat opened — a device that cannot dial cannot host either.
+    pub(crate) host: Option<Host>,
     pub(crate) composer: String,
     t0: std::time::Instant,
     /// The inset pads and when they were last probed — the JNI walk is
@@ -63,6 +68,7 @@ impl Shell {
     fn new(android: AndroidApp) -> Self {
         Self {
             model: open_model(&android),
+            host: open_host(&android),
             android,
             bridge: Bridge::default(),
             composer: String::new(),
@@ -87,14 +93,31 @@ impl Shell {
 /// The seat over the provisioned material in the app's private `files/wire`
 /// (DESIGN §5: adb, remote exec or QR put it there; this app never mints).
 fn open_model(android: &AndroidApp) -> Result<Model, String> {
+    Ok(Model::start(open_seat(android)?, CADENCE))
+}
+
+/// The tool host, on its own connection over the same material — one
+/// identity, two connections, which REMOTE §5's refcounted presence expects.
+/// A device that cannot dial simply does not host: the seat's own banner is
+/// already saying why, and a second copy of that sentence would be noise.
+fn open_host(android: &AndroidApp) -> Option<Host> {
+    let seat = open_seat(android).ok()?;
+    Some(Host::start(
+        seat,
+        crate::tools::advertisement(),
+        crate::tools::run,
+    ))
+}
+
+/// One dial's worth of material, resolved the same way for both connections.
+fn open_seat(android: &AndroidApp) -> Result<crate::transport::Seat, String> {
     let dir = android
         .internal_data_path()
         .ok_or("no internal data path")?
         .join("wire");
     let material = crate::material::read_dir(&dir)?
         .ok_or_else(|| format!("nothing provisioned at {}", dir.display()))?;
-    let seat = crate::transport::Seat::open(&material)?;
-    Ok(Model::start(seat, CADENCE))
+    crate::transport::Seat::open(&material)
 }
 
 impl eframe::App for Shell {

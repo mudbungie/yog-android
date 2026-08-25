@@ -12,9 +12,11 @@
 
 pub mod codec;
 pub mod frame;
+pub mod host;
 pub mod material;
 pub mod seat;
 pub mod shell;
+pub mod tools;
 pub mod transport;
 
 pub(crate) mod tls;

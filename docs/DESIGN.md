@@ -148,6 +148,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
 | `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
 | `src/test_support.rs` + `test_support/serve.rs` | tests only: openssl-minted PKI; the one-shot and scripted multi-connection mTLS answering servers | landed (bl-48d9, split bl-5a98) |
+| `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
+| `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete | landed (bl-d366) |
 | `src/seat.rs` + `seat/model.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
@@ -197,3 +199,41 @@ or remote exec carrying the result.
 **What the phone durably holds** stays exactly §1's list: its key material,
 and nothing else. A lost phone costs one certificate distrust at the CA
 (REMOTE §4), never a history — the logs live on the engine.
+
+## 6. Tool hosting, and the one deviation from REMOTE §5.2 (bl-d366)
+
+The phone is a **tool host** as well as a seat: it presents what it can run,
+rides the `invocations` follow-class read for its next work, runs it, and
+posts the capture with `complete` (REMOTE §5, §5.3). The loop is the server's
+own `src/wire/host.rs` mirrored — one loop, three gestures, all of them
+ordinary boundary verbs, the engine never speaking first — and it rides its
+own connection beside the seat model's, on the same material and therefore
+the same certificate common name, which §5's refcounted presence map already
+expects of one client.
+
+**The deviation, and why it is lawful.** REMOTE §5.2 derives a host's
+advertisement from an operator-authored `<yog-data-root>/tools.json` naming an
+argv per tool, and spawns that argv. This client's deliverable is an APK:
+there is no operator-authored argv on a phone and nowhere to install one, and
+a config file naming executables that do not exist on the device would be a
+fiction the advertisement then published. So **the table is built into the
+app** (`src/tools.rs`) — the same three advertised facts per tool
+(REMOTE §5.1: name, description, and the JSON Schema verbatim), projected from
+that table, and dispatch to a Rust function rather than a spawn. Nothing the
+wire sees changes, which is the test of whether a deviation is lawful; the
+capture stays REMOTE §5.3's three facts, so every tool answers in stdout,
+stderr and an exit code and nothing downstream carries a second shape.
+
+**What is offered is bounded by what an app uid can actually do**, established
+by probe on a current device rather than assumed: a shell (`sh -c`, under this
+machine's own 60-second bound, terminated and reported as the shell's own
+`timeout` verdict), and file read / write / list. A screenshot and the
+interface itself need a platform service the operator must enable, which is
+its own ball. The honest limits are written into the descriptions a model
+reads — REMOTE §5's containment paragraph in this client's own terms: what
+runs here runs as this app's user, and the design does not claim otherwise.
+
+**The table is host-testable and is tested.** It is ordinary Rust over the
+standard library, so the same code the device runs is the code the suite runs;
+a tool whose behaviour only the phone could witness would be a tool nothing
+verifies.

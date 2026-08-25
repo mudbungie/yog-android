@@ -12,7 +12,8 @@
 
 use serde_json::{Map, Value};
 
-use super::fields::{arr_of, bool_of, i64_of, opt, str_of};
+use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
+use super::tools::{Capture, Invocation, capture_of, invocation_of};
 use super::{ConvRow, Entry, WsRow, conv, transcript, ws};
 
 /// The typed answer this seat's gestures earn.
@@ -37,6 +38,39 @@ pub enum Reply {
     Conversations(Vec<ConvRow>),
     /// One conversation's transcript rows, in message order.
     Transcript(Vec<Entry>),
+    /// The receipt an advertisement earns. It carries nothing: what was
+    /// presented is what was sent, and echoing it back would be a second
+    /// spelling of a fact the sender holds.
+    Advertised,
+    /// The follow-class read's rows — this machine's work.
+    Invocations(Vec<Invocation>),
+    /// One invocation's standing after a call (REMOTE §5.3). `capture` is
+    /// **absent** rather than empty while the far side still runs it, so a
+    /// reader never has to tell "not finished" from "finished saying
+    /// nothing".
+    Routed {
+        invocation: String,
+        capture: Option<Capture>,
+    },
+}
+
+impl Reply {
+    /// This answer's `kind` token — the word the engine wrote. Named here
+    /// rather than at each caller because two readers already need it (the
+    /// seat model and the tool host both say "the engine answered X instead")
+    /// and a second table of these words would drift from the decoder's own.
+    pub fn kind(&self) -> String {
+        match self {
+            Self::Outcome { .. } => "outcome",
+            Self::Workspaces { .. } => "workspaces",
+            Self::Conversations(_) => "conversations",
+            Self::Transcript(_) => "transcript",
+            Self::Advertised => "advertised",
+            Self::Invocations(_) => "invocations",
+            Self::Routed { .. } => "routed",
+        }
+        .to_owned()
+    }
 }
 
 /// Read one reply body off the wire.
@@ -60,6 +94,12 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         },
         "conversations" => Reply::Conversations(rows(o, conv::row)?),
         "transcript" => Reply::Transcript(rows(o, transcript::entry)?),
+        "advertised" => Reply::Advertised,
+        "invocations" => Reply::Invocations(rows(o, invocation_of)?),
+        "routed" => Reply::Routed {
+            invocation: str_of(o, "invocation")?,
+            capture: opt_val(o, "capture", capture_of)?,
+        },
         other => return Err(format!("unknown reply kind {other:?}")),
     };
     Ok(Ok(reply))
