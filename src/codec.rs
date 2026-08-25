@@ -20,11 +20,13 @@ use serde_json::{Value, json};
 mod conv;
 pub(crate) mod fields;
 pub mod reply;
+pub mod start;
 pub mod tools;
 mod transcript;
 mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
+pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
 pub use transcript::{Block, Entry, EntryKind};
 pub use ws::{ConfigTip, WsKind, WsRow};
@@ -50,6 +52,11 @@ pub enum Act {
         invocation: String,
         capture: Capture,
     },
+    /// **Stage a new conversation** (§8.1): everything it needs before it is
+    /// prompted. Answers a prepared body, which [`Act::Prompt`] carries back.
+    Prepare { workspace: String },
+    /// **Fire a staged conversation** with the goal it is being given.
+    Prompt { prepared: Prepared, goal: String },
 }
 
 /// The populating reads this seat spends.
@@ -101,6 +108,8 @@ pub fn encode(gesture: &Gesture) -> Value {
             capture,
         }) => json!({ "op": "complete", "invocation": invocation,
                       "capture": tools::capture_value(capture) }),
+        Gesture::Act(Act::Prepare { workspace }) => start::encode_prepare(workspace),
+        Gesture::Act(Act::Prompt { prepared, goal }) => start::encode_prompt(prepared, goal),
     }
 }
 

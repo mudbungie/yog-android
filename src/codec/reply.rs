@@ -13,6 +13,7 @@
 use serde_json::{Map, Value};
 
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
+use super::start::{self, Prepared};
 use super::tools::{Capture, Invocation, capture_of, invocation_of};
 use super::{ConvRow, Entry, WsRow, conv, transcript, ws};
 
@@ -44,6 +45,9 @@ pub enum Reply {
     Advertised,
     /// The follow-class read's rows — this machine's work.
     Invocations(Vec<Invocation>),
+    /// A staged conversation, as the engine stated it (§8.1). It is carried
+    /// whole into the firing gesture; nothing here is re-derived.
+    Prepared(Prepared),
     /// One invocation's standing after a call (REMOTE §5.3). `capture` is
     /// **absent** rather than empty while the far side still runs it, so a
     /// reader never has to tell "not finished" from "finished saying
@@ -68,6 +72,7 @@ impl Reply {
             Self::Advertised => "advertised",
             Self::Invocations(_) => "invocations",
             Self::Routed { .. } => "routed",
+            Self::Prepared(_) => "prepared",
         }
         .to_owned()
     }
@@ -95,6 +100,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "conversations" => Reply::Conversations(rows(o, conv::row)?),
         "transcript" => Reply::Transcript(rows(o, transcript::entry)?),
         "advertised" => Reply::Advertised,
+        "prepared" => Reply::Prepared(start::reply_of(o)?),
         "invocations" => Reply::Invocations(rows(o, invocation_of)?),
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,

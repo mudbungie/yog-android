@@ -24,6 +24,7 @@ enum Cmd {
     Workspace(Option<String>),
     Conversation(String, String),
     Deposit(String),
+    Start(String),
     Stop,
 }
 
@@ -68,6 +69,14 @@ impl Model {
     pub fn deposit(&self, content: String) {
         let _ = self.cmds.send(Cmd::Deposit(content));
     }
+
+    /// Start a new conversation in the focused workspace with `goal` as its
+    /// first instruction. The staging and the firing are one gesture from
+    /// here because they are one act to the operator; the engine's two-step
+    /// is the wire's business, not the composer's.
+    pub fn start_conversation(&self, goal: String) {
+        let _ = self.cmds.send(Cmd::Start(goal));
+    }
 }
 
 impl Drop for Model {
@@ -101,6 +110,7 @@ fn run(seat: &Seat, cadence: Duration, cmds: &mpsc::Receiver<Cmd>, out: &mpsc::S
                 };
             }
             Ok(Cmd::Deposit(content)) => note = deposit(seat, &focus, content).err(),
+            Ok(Cmd::Start(goal)) => note = started(seat, &focus, goal).err(),
             Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
             Err(mpsc::RecvTimeoutError::Timeout) => {}
         }
@@ -173,6 +183,32 @@ fn deposit(seat: &Seat, focus: &Focus, content: String) -> Result<(), String> {
         Reply::Outcome { ok: true, .. } => Ok(()),
         Reply::Outcome { stderr, .. } => Err(format!("deposit refused: {stderr}")),
         other => Err(kind_err("deposit", &other)),
+    }
+}
+
+/// Stage a conversation and fire it — the §8.1 pair, run as one act. Named
+/// for the wire's own word rather than the handle's, which is `Model::start`
+/// for the worker and cannot be this.
+///
+/// The prepared body the engine answers with is carried into the firing
+/// gesture **whole**: it is the engine's own statement about what was staged,
+/// and a client that re-derived any field of it would be inventing world
+/// state it does not own.
+fn started(seat: &Seat, focus: &Focus, goal: String) -> Result<(), String> {
+    let Some(workspace) = focus.workspace.clone() else {
+        return Err("start: no workspace is focused".to_owned());
+    };
+    let staged = match seat.answered(&encode(&Gesture::Act(Act::Prepare { workspace })))? {
+        Reply::Prepared(prepared) => prepared,
+        other => return Err(kind_err("start", &other)),
+    };
+    match seat.answered(&encode(&Gesture::Act(Act::Prompt {
+        prepared: staged,
+        goal,
+    })))? {
+        Reply::Outcome { ok: true, .. } | Reply::Prepared(_) => Ok(()),
+        Reply::Outcome { stderr, .. } => Err(format!("start refused: {stderr}")),
+        other => Err(kind_err("start", &other)),
     }
 }
 

@@ -56,17 +56,54 @@ impl Shell {
         }
         ui.heading(workspace);
         ui.separator();
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            for row in &snap.conversations {
-                let mark = if row.attention > 0 { " ●" } else { "" };
-                let label = format!("{}{mark}\n{}", row.display, row.preview);
-                if ui.button(label).clicked()
-                    && let Ok(model) = &self.model
-                {
-                    model.focus_conversation(workspace.to_owned(), row.root_id.clone());
-                }
-            }
+        // The starter rides the BOTTOM of this screen, where the composer
+        // sits on the next one: starting a conversation and speaking into one
+        // are the same gesture to a thumb, so they are in the same place.
+        let inset = self.inset.bottom;
+        let ppp = ui.ctx().pixels_per_point();
+        ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+            ui.add_space((inset as f32 / ppp).max(8.0));
+            self.starter(ui);
+            ui.add_space(4.0);
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                    if snap.conversations.is_empty() {
+                        ui.weak("nothing here yet — say what to start below");
+                    }
+                    for row in &snap.conversations {
+                        let mark = if row.attention > 0 { " ●" } else { "" };
+                        let label = format!("{}{mark}\n{}", row.display, row.preview);
+                        if ui.button(label).clicked()
+                            && let Ok(model) = &self.model
+                        {
+                            model.focus_conversation(workspace.to_owned(), row.root_id.clone());
+                        }
+                    }
+                });
+            });
         });
+    }
+
+    /// The one field that starts a conversation. It shares the composer's
+    /// widget id with the chat screen's, and deliberately: only one of the
+    /// two is ever on screen, they are the same gesture at two depths, and
+    /// the IME bridge addresses exactly one field by that id (bl-014e).
+    fn starter(&mut self, ui: &mut egui::Ui) {
+        let r = ui.add(
+            egui::TextEdit::singleline(&mut self.composer)
+                .id(egui::Id::new(COMPOSER.id))
+                .desired_width(f32::INFINITY)
+                .hint_text("start a conversation"),
+        );
+        if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+            let goal = std::mem::take(&mut self.composer);
+            if !goal.is_empty()
+                && let Ok(model) = &self.model
+            {
+                model.start_conversation(goal);
+            }
+            r.request_focus();
+        }
     }
 
     fn transcript(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str, agent: &str) {

@@ -149,6 +149,16 @@ fn every_answer_names_its_own_kind() {
             },
             "routed",
         ),
+        (
+            Reply::Prepared(crate::codec::Prepared {
+                workspace: "home".into(),
+                binding: None,
+                lineage: None,
+                goal: "g".into(),
+                origin: "world".into(),
+            }),
+            "prepared",
+        ),
     ];
     for (reply, kind) in named {
         assert_eq!(reply.kind(), kind);

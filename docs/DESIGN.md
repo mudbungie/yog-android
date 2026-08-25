@@ -143,6 +143,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | module | role | status |
 |---|---|---|
 | `src/frame.rs` | REMOTE §3 framing, bytes only | landed (bl-c747) |
+| `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
@@ -155,7 +156,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{YogAccessibilityService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
-| `src/seat.rs` + `seat/model.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
+| `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start}.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
@@ -205,42 +206,6 @@ or remote exec carrying the result.
 **What the phone durably holds** stays exactly §1's list: its key material,
 and nothing else. A lost phone costs one certificate distrust at the CA
 (REMOTE §4), never a history — the logs live on the engine.
-
-## 7. The chat screen, and where its mechanics live (bl-0ed6)
-
-The transcript is painted the way the window paints it — collapsing
-included — because a tool-heavy conversation is unreadable at a phone's width
-without it, and because two clients of one engine showing the same
-conversation two different ways is two readings of one fact.
-
-**The projection is pure and the paint is thin, and that seam is the point.**
-`src/rows/*` turns decoded entries into rows — the label, the collapsed
-one-line preview, the expanded body, whether the row folds at all, and the
-turn rollup that replaces a finished turn's machinery with a single census
-line. It is ordinary Rust with no egui in it, so all of it sits under the
-100% floor and the mechanics are verified without a device;
-`src/shell/chat.rs` maps a row's `Tone` and `Role` to hues and draws it. A
-row is a **block**, not an entry: a model message that says something and
-then calls two tools is three rows.
-
-**Expansion is derived, never stored** (the desktop's own rule): a row is
-expanded when `(in-flight OR its class's knob) XOR the operator flipped it`.
-So the override set holds *flips* rather than states, a row that appears
-mid-frame is already in its configured state, and a tool call that completes
-returns to it with nothing to invalidate. The two knobs are policy and the
-flips are viewport ephemera — durable per-seat state belongs on the engine
-(REMOTE §7) and is a later ball, so the phone keeps neither.
-
-**The spellings are the desktop's, byte for byte** — the glyphs, the
-`· N chars` size hint on a folded tool result, the compaction sentence built
-client-side from the counters that crossed the wire, the 160-character
-preview cap. They are asserted in this crate's own tests, so a divergence is
-a red test here rather than two clients that disagree in front of an
-operator.
-
-**One deliberate difference, and its reason:** the desktop pulses an
-in-flight row's colour. A phone repaints on a budget it is also spending on
-the IME mirror, so the label says `running` and the hue holds still.
 
 ## 6. Tool hosting, and the one deviation from REMOTE §5.2 (bl-d366)
 
@@ -308,3 +273,67 @@ runs here runs as this app's user, and the design does not claim otherwise.
 standard library, so the same code the device runs is the code the suite runs;
 a tool whose behaviour only the phone could witness would be a tool nothing
 verifies.
+
+## 7. The chat screen, and where its mechanics live (bl-0ed6)
+
+The transcript is painted the way the window paints it — collapsing
+included — because a tool-heavy conversation is unreadable at a phone's width
+without it, and because two clients of one engine showing the same
+conversation two different ways is two readings of one fact.
+
+**The projection is pure and the paint is thin, and that seam is the point.**
+`src/rows/*` turns decoded entries into rows — the label, the collapsed
+one-line preview, the expanded body, whether the row folds at all, and the
+turn rollup that replaces a finished turn's machinery with a single census
+line. It is ordinary Rust with no egui in it, so all of it sits under the
+100% floor and the mechanics are verified without a device;
+`src/shell/chat.rs` maps a row's `Tone` and `Role` to hues and draws it. A
+row is a **block**, not an entry: a model message that says something and
+then calls two tools is three rows.
+
+**Expansion is derived, never stored** (the desktop's own rule): a row is
+expanded when `(in-flight OR its class's knob) XOR the operator flipped it`.
+So the override set holds *flips* rather than states, a row that appears
+mid-frame is already in its configured state, and a tool call that completes
+returns to it with nothing to invalidate. The two knobs are policy and the
+flips are viewport ephemera — durable per-seat state belongs on the engine
+(REMOTE §7) and is a later ball, so the phone keeps neither.
+
+**The spellings are the desktop's, byte for byte** — the glyphs, the
+`· N chars` size hint on a folded tool result, the compaction sentence built
+client-side from the counters that crossed the wire, the 160-character
+preview cap. They are asserted in this crate's own tests, so a divergence is
+a red test here rather than two clients that disagree in front of an
+operator.
+
+**One deliberate difference, and its reason:** the desktop pulses an
+in-flight row's colour. A phone repaints on a budget it is also spending on
+the IME mirror, so the label says `running` and the hue holds still.
+
+## 8. Starting a conversation (bl-b64e)
+
+A client that can read every conversation and speak into one, and cannot make
+one, is a chat app whose first screen is a list you can only watch. The
+boundary already has the act and the wire adds nothing (REMOTE §3): §8.1's
+start family is `prepare` — everything a new conversation needs before it is
+prompted — answering a **prepared body**, then `prompt`, which carries that
+body back with the goal and fires it.
+
+**The prepared body rides through this client whole.** Every field is carried
+rather than re-derived: it is the engine's own statement about what was
+staged, and a client that recomputed one would be inventing world state it
+does not own and would drift the first time the engine's policy moved.
+`binding` and `lineage` cross as **real nulls** — the field is present and its
+absence is the value — so what came off the wire goes back on it unchanged.
+
+**One rung, and the other two are not omissions.** The bare rung is the whole
+slice: a phone is not where a work directory is chosen or a ball is bound. The
+richer rungs grow here when a surface on this device needs them, which is the
+rule the codec has kept since it landed.
+
+**Two gestures on the wire, one act at the glass.** The staging and the firing
+are one thing to the operator — a sentence typed into the field at the bottom
+of the conversation list — so the seat model runs both and the composer knows
+nothing about the pair. That field shares the chat composer's widget id
+deliberately: only one of the two is ever on screen, and the IME mirror
+addresses exactly one field by that id (bl-014e).
