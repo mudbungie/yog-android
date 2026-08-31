@@ -56,7 +56,7 @@ pub(crate) enum Running {
 pub(crate) fn boot(android: &AndroidApp) -> Running {
     let dir = wire_dir(android);
     let cold = |refusal: Option<String>| Running::Cold {
-        offers: offers(&dir),
+        offers: offers(),
         refusal,
         dir: dir.display().to_string(),
     };

@@ -24,12 +24,8 @@ impl Shell {
     /// a surface its own certificate refuses.
     pub(crate) fn screens(&mut self, ui: &mut egui::Ui) {
         match &self.running {
-            Running::Cold {
-                offers,
-                refusal,
-                dir,
-            } => {
-                super::enroll::surface(ui, &offers.clone(), refusal.clone().as_ref(), &dir.clone());
+            Running::Cold { .. } => {
+                self.cold(ui);
                 return;
             }
             Running::Foot { .. } => {

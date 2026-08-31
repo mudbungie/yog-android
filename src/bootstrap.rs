@@ -122,70 +122,9 @@ fn first_certificate(material: &Material) -> Result<Vec<u8>, String> {
     Ok(leaf.as_ref().to_vec())
 }
 
-/// One bootstrap the first-run surface offers.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Offer {
-    pub component: Component,
-    /// What taking this makes this device.
-    pub title: String,
-    /// The act, in the operator's own terms. Every one of them happens
-    /// **outside this app**, which is the point rather than a limitation.
-    pub how: String,
-    /// Whether this is the ruling's default path. Exactly the two enrollments
-    /// carry it: the server is *"allowed but … the deliberate, non-default
-    /// choice."*
-    pub default: bool,
-}
+mod offer;
 
-/// The three offers, each naming the act that takes it. `dir` is where
-/// material lands, and it is named in full because it is the single most
-/// useful fact on a first-run screen — an operator with a cable in their hand
-/// needs the path, not a description of one.
-pub fn offers(dir: &Path) -> Vec<Offer> {
-    let at = dir.display();
-    vec![
-        Offer {
-            component: Component::Seat,
-            title: "enroll as a seat".to_owned(),
-            how: format!(
-                "Put an operator-grade leaf at {at}: ca.pem, client.pem, \
-                 client.key and an address file holding one host:port. \
-                 The engine's own box mints it; a cable, an already-trusted \
-                 device's tools, or a screen you photographed carries it \
-                 here. This app never mints and never enrolls itself."
-            ),
-            default: true,
-        },
-        Offer {
-            component: Component::Foot,
-            title: "enroll as a tool host".to_owned(),
-            how: format!(
-                "The same four files at {at}, on a leaf minted with OU=foot. \
-                 A foot advertises what this machine can run, waits for work \
-                 addressed to it, and hands back what happened — and may say \
-                 nothing else about the world, which is why it is the right \
-                 grade for a phone."
-            ),
-            default: true,
-        },
-        Offer {
-            component: Component::Server,
-            title: "run the engine here".to_owned(),
-            how: "Not yet, and here is exactly why. The engine cross-compiles \
-                  to this architecture and links — that rung is walked. Two \
-                  are not. An engine founds its world with git, commits every \
-                  workspace and keeps its tasks in a git repository, and \
-                  Android ships no git. And the world seeds shell shims its \
-                  own agents run, which land in this app's private storage — \
-                  where Android refuses to execute anything, by policy, since \
-                  API 29. Both are upstream shapes, not settings. A button \
-                  that started an engine which refuses every act would be \
-                  worse than this sentence."
-                .to_owned(),
-            default: false,
-        },
-    ]
-}
+pub use offer::{Offer, channels, offers};
 
 #[cfg(test)]
 mod tests;

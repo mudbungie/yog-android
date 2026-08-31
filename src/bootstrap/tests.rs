@@ -1,7 +1,7 @@
 //! The standing, over real minted material — the derivation is the design, so
 //! it is proved against certificates rather than against a stored flag.
 
-use super::{Component, Offer, Standing, offers, standing};
+use super::{Component, Offer, Standing, channels, offers, standing};
 use crate::test_support::{mint_ca, mint_foot, mint_leaf, scratch};
 use std::path::Path;
 
@@ -81,27 +81,45 @@ fn a_chain_with_no_certificate_in_it_refuses() {
     assert!(e.contains("client.pem"), "{e}");
 }
 
-/// The first-run surface's content. Two enrollments carry the default emphasis
-/// and the server does not — the ruling's own words — and every offer names
-/// the directory material lands in, because an operator holding a cable needs
-/// the path rather than a description of one.
+/// The first-run surface's content. Three branded choices in the ruling's
+/// order, two of them the default path and the server not — the ruling's own
+/// words — and each naming the grade of leaf that takes it, because the grade
+/// is the whole difference between the two enrollments (REMOTE §4.2).
 #[test]
-fn the_offers_are_the_three_bootstraps_with_enrollment_emphasised() {
-    let dir = Path::new("/home/u/files/wire");
-    let offers = offers(dir);
+fn the_offers_are_three_branded_bootstraps_with_enrollment_emphasised() {
+    let offers = offers();
     let components: Vec<Component> = offers.iter().map(|o| o.component).collect();
     assert_eq!(
         components,
         vec![Component::Seat, Component::Foot, Component::Server]
     );
+    // The brand is the name on the control, and it is what the operator picks
+    // by — a screen listing "seat / tool host / server" is a taxonomy, not a
+    // choice.
+    let brands: Vec<&str> = offers.iter().map(|o| o.brand.as_str()).collect();
+    assert_eq!(brands, vec!["Lernie", "Thrall", "Yog"]);
+    // Every choice says what taking it makes this device, under its own name.
+    for offer in &offers {
+        assert!(!offer.tagline.is_empty(), "{}", offer.brand);
+    }
     let default: Vec<Component> = offers
         .iter()
         .filter(|o| o.default)
         .map(|o| o.component)
         .collect();
     assert_eq!(default, vec![Component::Seat, Component::Foot]);
+    // Each enrollment names the grade of leaf that takes it, and says that
+    // this app never mints one — the §1.4 line, on the screen an operator
+    // reads rather than only in a design document.
     for offer in offers.iter().filter(|o| o.default) {
-        assert!(offer.how.contains("/home/u/files/wire"), "{}", offer.how);
+        assert!(offer.how.contains("OU=foot"), "{}", offer.how);
+        assert!(offer.how.contains("never mints"), "{}", offer.how);
+    }
+    // No path in this prose. Where material lands is the shell's own fact,
+    // painted from the boot standing beside `material::WANTED`; an earlier
+    // shape folded it in here too and the screen said it twice.
+    for offer in &offers {
+        assert!(!offer.how.contains('/'), "{}", offer.how);
     }
     // The server offer states what it needs and starts nothing (bl-d6c6).
     let server: Vec<&Offer> = offers
@@ -114,6 +132,18 @@ fn the_offers_are_the_three_bootstraps_with_enrollment_emphasised() {
     // them is a shrug (DESIGN §10).
     assert!(server[0].how.contains("git"), "{}", server[0].how);
     assert!(server[0].how.contains("API 29"), "{}", server[0].how);
+}
+
+/// DESIGN §5's three delivery channels, and the invariant under all three:
+/// the material is carried here through existing trust, never fetched by a
+/// device asserting something about itself.
+#[test]
+fn the_enrollment_screen_names_the_three_delivery_channels() {
+    let channels = channels();
+    assert_eq!(channels.len(), 3);
+    assert!(channels[0].contains("cable"), "{}", channels[0]);
+    assert!(channels[1].contains("already-trusted"), "{}", channels[1]);
+    assert!(channels[2].contains("screen"), "{}", channels[2]);
 }
 
 #[test]

@@ -219,10 +219,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
-| `src/bootstrap.rs` | which component this device is, derived from the leaf on disk; the three offers a cold device paints | landed (bl-7714) |
+| `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
+| `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
 | `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
 | `src/shell/boot.rs` | android-only: the bootstrap gate — read the standing, start exactly that component, start nothing otherwise | landed (bl-7714) |
-| `src/shell/enroll.rs` | android-only: the first-run surface — the three bootstraps, and no button | landed (bl-7714) |
+| `src/shell/enroll.rs` | android-only: the first-run surface — the three branded choices, and the screen behind each tap | landed (bl-0d3c) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
@@ -470,14 +471,41 @@ is what this machine offers and what it has run. The **structural** narrowing
 landed with it (bl-2040, §6): `src/foot.rs` is the three gestures and there is
 no path from the host loop to a fourth.
 
-**The first-run surface has no button, deliberately.** REMOTE §1.4 stands:
-*"there is no pairing protocol in the wire, no token exchange a stranger on
-the network could initiate. Bootstrap is always an act performed through
-existing trust."* Every widget on that screen reads; none acts. A tap that
-"started enrollment" would be the unauthenticated connection §1.4 forbids,
-dressed as a convenience. What the screen carries is what each bootstrap makes
-this device, the act that takes it, and the directory material lands in — the
-fact an operator holding a cable is actually there for.
+**The first-run surface is three branded, tappable choices** (bl-0d3c,
+amending this section). It shipped with *no button, deliberately*, reasoning
+from REMOTE §1.4 — and the operator, opening the app, found "no buttons or
+anything to do either of the activities". **The reading was too strong.** §1.4
+stands and says what it says:
+
+> *"there is no pairing protocol in the wire, no token exchange a stranger on
+> the network could initiate. Bootstrap is always an act performed through
+> existing trust."*
+
+What that forbids is the app **dialling unauthenticated**. It never forbade a
+control. An operator who opens the app is entitled to be told what each
+bootstrap is and taken to the screen that explains it, and no widget on this
+surface opens a socket. So: **the buttons choose and inform; the material
+still arrives out of channel.**
+
+Each choice wears the name of the component it makes this device — **Lernie**
+the seat (*operate your conversations*), **Thrall** the foot (*let
+conversations use this device's tools*), **Yog** the server (*run the engine
+here*) — because a screen listing "seat / tool host / server" is a taxonomy
+rather than a choice. A tap opens a real screen: for the two enrollments, what
+material is needed, the directory it lands in, and DESIGN §5's three delivery
+channels; for the server, §10's recorded blockers.
+
+**Component-derived-from-material is untouched, and that is the load-bearing
+half.** A tap stores nothing. It opens the flow that acquires the matching
+material, and the component that comes up is still read off the leaf on disk
+by `standing()` at every boot. There is no chosen-mode field and there must
+never be one — the paragraph above this one is the reason. What the screen
+carries is navigation, no more durable than a scroll position.
+
+**One control acts, and it acts on this app's own storage:** *check for
+material* re-runs the derivation, so a leaf pushed over a cable comes up
+without killing and relaunching the process. Re-reading a directory this uid
+owns is not a bootstrap and reaches no network.
 
 **The server offer states its dependency chain and starts nothing** (bl-d6c6).
 A button that started an engine which refuses every act would be worse than a

@@ -29,6 +29,12 @@ pub const KEY: &str = "client.key";
 /// The file naming the `host:port` this seat dials.
 pub const ADDRESS: &str = "address";
 
+/// **Every file a provisioned device holds**, in the order a screen should
+/// read them out. One definition: [`read_dir`] checks exactly this list and
+/// the enrollment screen names exactly this list, so a fifth file cannot be
+/// required by the reader and unnamed by the screen that asks for it.
+pub const WANTED: [&str; 4] = [ANCHORS, CHAIN, KEY, ADDRESS];
+
 /// One seat's provisioned material.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Material {
@@ -46,7 +52,7 @@ pub struct Material {
 /// answers; the `Err` names every missing file at once, because a remedy that
 /// reveals one gap per run is a remedy run four times.
 pub fn read_dir(dir: &Path) -> Result<Option<Material>, String> {
-    let wanted = [ANCHORS, CHAIN, KEY, ADDRESS];
+    let wanted = WANTED;
     let missing: Vec<&str> = wanted
         .iter()
         .filter(|f| !dir.join(f).is_file())

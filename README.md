@@ -13,7 +13,9 @@ refuses to execute the shell shims the world seeds into app-private storage.
 DESIGN §10 is the whole chain, rung by rung.
 
 **Which component runs is read off the leaf, never stored.** No material and
-nothing runs — the first screen is the three bootstraps. A leaf with `OU=foot`
+nothing runs — the first screen is the three bootstraps as branded choices:
+**Lernie** the seat, **Thrall** the foot, **Yog** the server. A tap opens the
+screen that explains one; it never dials and never stores a mode. A leaf with `OU=foot`
 runs the tool host; any other leaf runs the seat (REMOTE §4.2). The foot's
 wire surface is a type with three methods, so a gesture outside the foot set
 is a compile error here rather than a refusal at the engine.

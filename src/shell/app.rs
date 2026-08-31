@@ -47,6 +47,12 @@ pub(crate) struct Shell {
     android: AndroidApp,
     bridge: Bridge,
     pub(crate) running: Running,
+    /// Which first-run screen is open, when nothing is provisioned. It is
+    /// navigation and nothing else — no more durable than a scroll position,
+    /// and deliberately not a chosen mode: the component this device runs is
+    /// derived from the leaf on disk every boot (`crate::bootstrap`), so a
+    /// stored choice would be a second authority for one fact (DESIGN §9).
+    pub(crate) chose: Option<crate::bootstrap::Component>,
     pub(crate) composer: String,
     /// Which KINDS of row open by default (the desktop's two knobs).
     pub(crate) auto: AutoExpand,
@@ -66,6 +72,7 @@ impl Shell {
     fn new(android: AndroidApp) -> Self {
         Self {
             running: boot(&android),
+            chose: None,
             android,
             bridge: Bridge::default(),
             composer: String::new(),
@@ -75,6 +82,14 @@ impl Shell {
             inset: InsetPx::default(),
             inset_at: 0,
         }
+    }
+
+    /// Re-read what is provisioned and start whatever it now names. A read of
+    /// this app's own storage — never a dial — and the act that makes material
+    /// pushed over a cable land without relaunching the process.
+    pub(crate) fn reboot(&mut self) {
+        self.running = boot(&self.android);
+        self.chose = None;
     }
 
     /// The seat model, when this launch is running one.
@@ -141,7 +156,14 @@ impl eframe::App for Shell {
 
         let ppp = ctx.pixels_per_point();
         ui.add_space(self.inset.top as f32 / ppp);
-        self.screens(ui);
+        // A gutter on both sides. The platform insets carry only top and
+        // bottom (`inset.rs`: the status bar and the taller of keyboard and
+        // gesture-nav), so nothing else was holding content off the display's
+        // own edge — the first-run heading was painting with its first glyph
+        // half off the glass, and every full-width button ran edge to edge.
+        egui::Frame::NONE
+            .inner_margin(egui::Margin::symmetric(10, 0))
+            .show(ui, |ui| self.screens(ui));
 
         // The input-wake ruling (DESIGN §3, decided under bl-c761): no
         // vendored winit, so the commit wake winit drops (bl-2958) is
