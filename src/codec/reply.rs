@@ -45,6 +45,12 @@ pub enum Reply {
     Advertised,
     /// The follow-class read's rows — this machine's work.
     Invocations(Vec<Invocation>),
+    /// **A conversation that is now running** (§8.1) — what firing a staged
+    /// conversation earns, carrying the name the engine gave it. This is the
+    /// answer to `prompt` and the last frame of the two-gesture start, so a
+    /// client that could not read it could stage a conversation and never
+    /// learn that it started.
+    Started { conversation: String },
     /// A staged conversation, as the engine stated it (§8.1). It is carried
     /// whole into the firing gesture; nothing here is re-derived.
     Prepared(Prepared),
@@ -73,6 +79,7 @@ impl Reply {
             Self::Invocations(_) => "invocations",
             Self::Routed { .. } => "routed",
             Self::Prepared(_) => "prepared",
+            Self::Started { .. } => "started",
         }
         .to_owned()
     }
@@ -101,6 +108,9 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "transcript" => Reply::Transcript(rows(o, transcript::entry)?),
         "advertised" => Reply::Advertised,
         "prepared" => Reply::Prepared(start::reply_of(o)?),
+        "started" => Reply::Started {
+            conversation: str_of(o, "conversation")?,
+        },
         "invocations" => Reply::Invocations(rows(o, invocation_of)?),
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,

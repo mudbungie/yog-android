@@ -1,0 +1,10 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "clear-trail"
+    }
+  ],
+  "protocol": 1,
+  "shape": "clear-trail"
+}

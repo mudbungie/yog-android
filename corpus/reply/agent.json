@@ -1,0 +1,113 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "agent": "r-0-c-1",
+      "ancestors": [
+        "r-0"
+      ],
+      "context": {
+        "model": "claude-x",
+        "percent": 2,
+        "prompt_tokens": 4000,
+        "window": 200000
+      },
+      "display": "pennant",
+      "display_only": true,
+      "flight": "tools",
+      "held": {
+        "reason": "unconfined",
+        "tool": "Bash",
+        "tool_use_id": "toolu_1"
+      },
+      "kind": "agent",
+      "marks": [
+        "notified",
+        "budget-exhausted",
+        "conflicted",
+        "held",
+        "abandoned"
+      ],
+      "nudgeable": false,
+      "ok": true,
+      "present": true,
+      "root": "r-0",
+      "seats": [
+        {
+          "doing": "waiting",
+          "name": "pennant"
+        },
+        {
+          "doing": "thinking",
+          "name": "kid-a"
+        },
+        {
+          "doing": "inference",
+          "name": "kid-b"
+        },
+        {
+          "doing": "tools",
+          "name": "kid-c"
+        },
+        {
+          "doing": "idle",
+          "name": "kid-d"
+        }
+      ],
+      "spend": {
+        "attribution": {
+          "count": 3,
+          "kind": "conversations",
+          "label": "over 3 conversations"
+        },
+        "micro_usd": 4000000,
+        "tokens": {
+          "cache_read": 0,
+          "cache_write": 0,
+          "input": 120,
+          "output": 0,
+          "total": 120
+        },
+        "unpriced_tokens": 1,
+        "usd": "$4.00"
+      },
+      "state": "in-flight",
+      "stop_children": true,
+      "stoppable": true,
+      "strip": {
+        "class": "tools",
+        "facts": "Bash · 5s"
+      },
+      "tip": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "agent": "r-0",
+      "display": "r-0",
+      "display_only": false,
+      "kind": "agent",
+      "nudgeable": false,
+      "ok": true,
+      "present": false,
+      "root": "r-0",
+      "spend": {
+        "attribution": {
+          "kind": "workspace",
+          "label": "workspace-wide"
+        },
+        "tokens": {
+          "cache_read": 0,
+          "cache_write": 0,
+          "input": 0,
+          "output": 0,
+          "total": 0
+        }
+      },
+      "state": "stopped",
+      "stop_children": false,
+      "stoppable": false,
+      "tip": ""
+    }
+  ],
+  "protocol": 1,
+  "shape": "agent"
+}

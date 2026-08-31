@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "scan",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "scan"
+}

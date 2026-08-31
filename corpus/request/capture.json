@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "invocation": "inv-1",
+      "op": "capture"
+    }
+  ],
+  "protocol": 1,
+  "shape": "capture"
+}

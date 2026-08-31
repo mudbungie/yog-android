@@ -197,3 +197,24 @@ fn the_routing_legs_replies_read_back() {
     };
     assert_eq!(capture.unwrap_or_default().stdout, "o");
 }
+
+/// **The answer to a firing** (§8.1), and the last frame of the two-gesture
+/// start. It was missing until the conformance corpus said so: this client
+/// could stage a conversation and then read the engine's `started` as an
+/// unknown kind, so the one gesture that makes a conversation reported a
+/// failure over a conversation that was in fact running.
+#[test]
+fn a_fired_conversation_reads_back_with_the_name_the_engine_gave_it() {
+    let frame = json!({ "ok": true, "kind": "started", "conversation": "brave-fox" });
+    let started = decode(&frame).unwrap().unwrap();
+    assert_eq!(
+        started,
+        Reply::Started {
+            conversation: "brave-fox".into()
+        }
+    );
+    assert_eq!(started.kind(), "started");
+    // Strict, like every other kind: the name is the reply's whole content.
+    let e = decode(&json!({ "ok": true, "kind": "started" })).unwrap_err();
+    assert_eq!(e, "missing or non-string field \"conversation\"");
+}

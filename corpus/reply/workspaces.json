@@ -1,0 +1,75 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "growth": "brave-fox +12 branches",
+      "kind": "workspaces",
+      "ok": true,
+      "rows": [
+        {
+          "agents": 5,
+          "attention": 2,
+          "config_tip": {
+            "oid": "cccccccccccccccccccccccccccccccccccccccc",
+            "short_oid": "cccccccc"
+          },
+          "kind": "named",
+          "pinned": 1,
+          "running": true,
+          "workspace": "alba"
+        },
+        {
+          "agents": 0,
+          "attention": 0,
+          "kind": "foreign",
+          "running": false,
+          "workspace": "f"
+        },
+        {
+          "agents": 1,
+          "attention": 0,
+          "kind": "replay",
+          "pinned": 0,
+          "running": false,
+          "workspace": "r"
+        }
+      ],
+      "stale": "derivation 31 s behind"
+    },
+    {
+      "kind": "workspaces",
+      "ok": true,
+      "rows": [
+        {
+          "agents": 5,
+          "attention": 2,
+          "config_tip": {
+            "oid": "cccccccccccccccccccccccccccccccccccccccc",
+            "short_oid": "cccccccc"
+          },
+          "kind": "named",
+          "pinned": 1,
+          "running": true,
+          "workspace": "alba"
+        },
+        {
+          "agents": 0,
+          "attention": 0,
+          "kind": "foreign",
+          "running": false,
+          "workspace": "f"
+        },
+        {
+          "agents": 1,
+          "attention": 0,
+          "kind": "replay",
+          "pinned": 0,
+          "running": false,
+          "workspace": "r"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "workspaces"
+}

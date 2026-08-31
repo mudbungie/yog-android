@@ -1,0 +1,22 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "lineages",
+      "ok": true,
+      "rows": [
+        {
+          "committed": 1700000000,
+          "files": [
+            "workflow.yaml"
+          ],
+          "name": "main",
+          "oid": "abcdef1234",
+          "short_oid": "abcdef1"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "lineages"
+}

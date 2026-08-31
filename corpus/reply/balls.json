@@ -1,0 +1,26 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "balls",
+      "ok": true,
+      "rows": [
+        {
+          "ball_id": "bl-1",
+          "claimant": "alba",
+          "project": "p",
+          "state": "delivered",
+          "title": "t",
+          "workspace": "ws"
+        },
+        {
+          "ball_id": "bl-2",
+          "project": "p",
+          "state": "ready"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "balls"
+}

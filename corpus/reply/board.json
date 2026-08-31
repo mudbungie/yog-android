@@ -1,0 +1,95 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "fleet": [
+        {
+          "cap": 4,
+          "ceiling": "over budget",
+          "count": 1,
+          "label": "1/4 drones · tick 1m · last 30s ago · lease 10m",
+          "last_act_secs_ago": 30,
+          "lease_secs": 600,
+          "project": "p",
+          "room": false,
+          "tick_secs": 90,
+          "workspace": "/ws"
+        }
+      ],
+      "kind": "board",
+      "ok": true,
+      "rows": [
+        {
+          "claimant": "alba",
+          "column": "gated",
+          "drones": [
+            {
+              "name": "Cobalt",
+              "root_id": "c-1"
+            }
+          ],
+          "gates": [
+            {
+              "id": "bl-gate",
+              "mints": "close",
+              "title": "g"
+            }
+          ],
+          "id": "bl-1",
+          "parent": "bl-epic",
+          "priority": 2,
+          "project": "p",
+          "rollup": {
+            "attribution": {
+              "count": 1,
+              "kind": "conversations"
+            },
+            "tokens": {
+              "cache_read": 33,
+              "cache_write": 44,
+              "input": 11,
+              "output": 22,
+              "total": 99
+            }
+          },
+          "spend": {
+            "attribution": {
+              "kind": "workspace",
+              "label": "workspace-wide"
+            },
+            "micro_usd": 1500000,
+            "tokens": {
+              "cache_read": 33,
+              "cache_write": 44,
+              "input": 11,
+              "output": 22,
+              "total": 99
+            },
+            "unpriced_tokens": 4,
+            "usd": "$1.50"
+          },
+          "state": "bound",
+          "title": "t",
+          "workspace": "ws"
+        },
+        {
+          "column": "ready",
+          "drones": [],
+          "gates": [],
+          "id": "bl-2",
+          "priority": 0,
+          "project": "p",
+          "state": "ready",
+          "title": "u"
+        }
+      ]
+    },
+    {
+      "kind": "board",
+      "ok": true,
+      "rows": []
+    }
+  ],
+  "protocol": 1,
+  "shape": "board"
+}

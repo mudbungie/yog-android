@@ -1,0 +1,12 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "branch": "marks/alba",
+      "kind": "marks",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "marks"
+}

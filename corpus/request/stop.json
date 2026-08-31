@@ -1,0 +1,13 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "children": true,
+      "op": "stop",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "stop"
+}

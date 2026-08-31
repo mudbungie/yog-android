@@ -1,0 +1,16 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "client": "laptop",
+      "input": {
+        "command": "ls -l",
+        "timeout": 30
+      },
+      "op": "invoke",
+      "tool": "Bash"
+    }
+  ],
+  "protocol": 1,
+  "shape": "invoke"
+}

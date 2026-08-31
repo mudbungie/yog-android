@@ -1,0 +1,66 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "body": "",
+      "id": "bl-1",
+      "name": "alba",
+      "note": "n",
+      "op": "update",
+      "project": "proj",
+      "title": "t"
+    },
+    {
+      "id": "bl-1",
+      "name": "alba",
+      "op": "update",
+      "project": "proj"
+    },
+    {
+      "fields": [
+        {
+          "field": "priority",
+          "value": -2
+        },
+        {
+          "field": "priority",
+          "value": null
+        },
+        {
+          "field": "tag",
+          "on": true,
+          "value": "boundary"
+        },
+        {
+          "field": "tag",
+          "on": false,
+          "value": "stale"
+        },
+        {
+          "field": "parent",
+          "value": "bl-1a2b"
+        },
+        {
+          "field": "parent",
+          "value": null
+        },
+        {
+          "field": "needs",
+          "on": true,
+          "value": "bl-9:close"
+        },
+        {
+          "field": "needs",
+          "on": false,
+          "value": "bl-8"
+        }
+      ],
+      "id": "bl-1",
+      "name": "alba",
+      "op": "update",
+      "project": "proj"
+    }
+  ],
+  "protocol": 1,
+  "shape": "update"
+}

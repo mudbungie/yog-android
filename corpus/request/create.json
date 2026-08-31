@@ -1,0 +1,64 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "body": "the body",
+      "name": "alba",
+      "op": "create",
+      "project": "proj",
+      "title": "a title"
+    },
+    {
+      "name": "alba",
+      "op": "create",
+      "project": "proj",
+      "title": "a title"
+    },
+    {
+      "fields": [
+        {
+          "field": "priority",
+          "value": -2
+        },
+        {
+          "field": "priority",
+          "value": null
+        },
+        {
+          "field": "tag",
+          "on": true,
+          "value": "boundary"
+        },
+        {
+          "field": "tag",
+          "on": false,
+          "value": "stale"
+        },
+        {
+          "field": "parent",
+          "value": "bl-1a2b"
+        },
+        {
+          "field": "parent",
+          "value": null
+        },
+        {
+          "field": "needs",
+          "on": true,
+          "value": "bl-9:close"
+        },
+        {
+          "field": "needs",
+          "on": false,
+          "value": "bl-8"
+        }
+      ],
+      "name": "alba",
+      "op": "create",
+      "project": "proj",
+      "title": "a title"
+    }
+  ],
+  "protocol": 1,
+  "shape": "create"
+}

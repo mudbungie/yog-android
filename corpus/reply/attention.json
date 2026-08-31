@@ -1,0 +1,44 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "attention",
+      "ok": true,
+      "rows": [
+        {
+          "age_secs": 5,
+          "agent": "c-1",
+          "display": "Cobalt",
+          "held": {
+            "reason": "writes",
+            "tool": "Bash",
+            "tool_use": "toolu_1"
+          },
+          "pending": 2,
+          "preview": "p",
+          "signals": [
+            "held",
+            "mail"
+          ],
+          "state": "stopped",
+          "uncertain": false,
+          "workspace": "ws"
+        },
+        {
+          "age_secs": 0,
+          "agent": "c-2",
+          "display": "Dun",
+          "held": null,
+          "pending": 0,
+          "preview": "",
+          "signals": [],
+          "state": "live",
+          "uncertain": true,
+          "workspace": "ws"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "attention"
+}

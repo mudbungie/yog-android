@@ -1,0 +1,11 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "error": "unknown op \"fhtagn\"",
+      "ok": false
+    }
+  ],
+  "protocol": 1,
+  "shape": "refusal"
+}

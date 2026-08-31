@@ -1,0 +1,31 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "inbox",
+      "ok": true,
+      "rows": [
+        {
+          "deposit": {
+            "body": "hi",
+            "deposited_at": "t0",
+            "epitaph": "sideways",
+            "from": "user",
+            "terminal_ref": "refs/x"
+          },
+          "name": "user-001.md",
+          "raw": "---\nfrom: user\n---\nhi"
+        },
+        {
+          "deposit": {
+            "body": ""
+          },
+          "name": "raw.md",
+          "raw": "bare"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "inbox"
+}

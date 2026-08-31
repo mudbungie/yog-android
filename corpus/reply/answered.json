@@ -1,0 +1,15 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "advanced": false,
+      "kind": "answered",
+      "ok": true,
+      "tool": "Bash",
+      "tool_use": "toolu_1",
+      "verdict": "hold"
+    }
+  ],
+  "protocol": 1,
+  "shape": "answered"
+}

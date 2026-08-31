@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "lineages",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "lineages"
+}

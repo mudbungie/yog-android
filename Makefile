@@ -1,4 +1,4 @@
-.PHONY: all build release test coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk
 
 all: check
 
@@ -31,6 +31,12 @@ apk:
 
 test:
 	cargo test
+
+# The wire conformance corpus, replayed (REMOTE §3). Part of `test` and so of
+# `check` — this target is the named hand-run, for the loop where the corpus
+# has just been re-vendored from a yog checkout and only its verdict matters.
+conformance:
+	cargo test --test conformance
 
 TARPAULIN_PIN := 0.35.2
 

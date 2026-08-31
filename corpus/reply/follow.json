@@ -1,0 +1,29 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "follow",
+      "ok": true,
+      "stream": {}
+    },
+    {
+      "kind": "follow",
+      "ok": true,
+      "stream": {
+        "delta": "thinking",
+        "thinking": "first I"
+      }
+    },
+    {
+      "kind": "follow",
+      "ok": true,
+      "stream": {
+        "delta": "text",
+        "text": "then this",
+        "thinking": "first I"
+      }
+    }
+  ],
+  "protocol": 1,
+  "shape": "follow"
+}

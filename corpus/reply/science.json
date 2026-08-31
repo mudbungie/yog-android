@@ -1,0 +1,162 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "science",
+      "ok": true,
+      "rows": [
+        {
+          "base": "f00dbeef",
+          "compacted": 12,
+          "conversation": "20260815T101112Z-abcd1234",
+          "diff": {
+            "ball_id": "bl-1",
+            "project": "p",
+            "state": "unreadable"
+          },
+          "goal": "ship it",
+          "governing": "deadbeef",
+          "outcome": {
+            "commit": "ccc",
+            "state": "accepted"
+          },
+          "pins": [
+            "instructions/00-AGENTS.md=/p/AGENTS.md"
+          ],
+          "response": "done, tests green",
+          "steps": 4,
+          "usage": {
+            "cache_read_tokens": 33,
+            "cache_write_tokens": 44,
+            "input_tokens": 11,
+            "output_tokens": 22
+          },
+          "verdicts": [
+            {
+              "body": "candidate B reads cleaner",
+              "sender": "judge-one"
+            }
+          ],
+          "wall_secs": 90
+        },
+        {
+          "diff": {
+            "ball_id": "bl-2",
+            "missing": [
+              "work/bl-2"
+            ],
+            "project": "p",
+            "source": "work/bl-2",
+            "state": "absent",
+            "target": "main"
+          },
+          "outcome": {
+            "by": "at-0badcafe",
+            "state": "rejected"
+          },
+          "pins": [],
+          "steps": 4,
+          "usage": {
+            "cache_read_tokens": 33,
+            "cache_write_tokens": 44,
+            "input_tokens": 11,
+            "output_tokens": 22
+          },
+          "verdicts": [],
+          "wall_secs": 90
+        },
+        {
+          "diff": {
+            "ball_id": "bl-3",
+            "files": [
+              {
+                "added": 3,
+                "path": "src/a.rs",
+                "removed": 1
+              },
+              {
+                "binary": true,
+                "path": "assets/x.png"
+              }
+            ],
+            "project": "p",
+            "source": "work/bl-3",
+            "source_oid": "bbb",
+            "state": "diff",
+            "target": "main",
+            "target_oid": "aaa",
+            "truncated": true
+          },
+          "outcome": {
+            "state": "rejected"
+          },
+          "pins": [],
+          "steps": 4,
+          "usage": {
+            "cache_read_tokens": 33,
+            "cache_write_tokens": 44,
+            "input_tokens": 11,
+            "output_tokens": 22
+          },
+          "verdicts": [],
+          "wall_secs": 90
+        },
+        {
+          "diff": {
+            "ball_id": "bl-3",
+            "delivered": "ccc",
+            "files": [],
+            "handle": "at-0badcafe",
+            "project": "p",
+            "source": "attempt/at-0badcafe",
+            "source_oid": "ddd",
+            "state": "diff",
+            "target": "work/bl-3",
+            "target_oid": "ccc",
+            "truncated": false
+          },
+          "outcome": {
+            "state": "reworked"
+          },
+          "pins": [],
+          "steps": 4,
+          "usage": {
+            "cache_read_tokens": 33,
+            "cache_write_tokens": 44,
+            "input_tokens": 11,
+            "output_tokens": 22
+          },
+          "verdicts": [],
+          "wall_secs": 90
+        },
+        {
+          "diff": {
+            "ball_id": "bl-1",
+            "project": "p",
+            "state": "unreadable"
+          },
+          "outcome": {
+            "state": "pending"
+          },
+          "pins": [],
+          "steps": 4,
+          "usage": {
+            "cache_read_tokens": 33,
+            "cache_write_tokens": 44,
+            "input_tokens": 11,
+            "output_tokens": 22
+          },
+          "verdicts": [],
+          "wall_secs": 90
+        }
+      ]
+    },
+    {
+      "kind": "science",
+      "ok": true,
+      "rows": []
+    }
+  ],
+  "protocol": 1,
+  "shape": "science"
+}

@@ -1,0 +1,12 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "discarded": true,
+      "kind": "retired",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "retired"
+}

@@ -1,0 +1,31 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "op": "files",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "at": "abcdef1234",
+      "op": "files",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "files",
+      "path": "src/a.rs",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "at": "abcdef1234",
+      "op": "files",
+      "path": "src/a.rs",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "files"
+}

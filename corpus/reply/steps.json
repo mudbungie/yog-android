@@ -1,0 +1,94 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "steps",
+      "ok": true,
+      "orphan": "mail",
+      "orphan_reason": "driver died",
+      "rows": [
+        {
+          "attempts": 1,
+          "auth_failed": false,
+          "commit": "abc",
+          "ended_at": "t1",
+          "framing": "complete",
+          "seq": "001",
+          "started_at": "t0",
+          "tokens": {
+            "cache_read": 33,
+            "cache_write": 44,
+            "input": 11,
+            "output": 22,
+            "total": 99
+          },
+          "wound": "none"
+        },
+        {
+          "attempts": 1,
+          "auth_failed": true,
+          "auth_row": "anthropic",
+          "framing": "failed",
+          "seq": "002",
+          "tokens": {
+            "cache_read": 33,
+            "cache_write": 44,
+            "input": 11,
+            "output": 22,
+            "total": 99
+          },
+          "wound": "no_response",
+          "wound_reason": "no bytes"
+        },
+        {
+          "attempts": 1,
+          "auth_failed": true,
+          "commit": "abc",
+          "ended_at": "t1",
+          "framing": "killed",
+          "seq": "003",
+          "started_at": "t0",
+          "tokens": {
+            "cache_read": 33,
+            "cache_write": 44,
+            "input": 11,
+            "output": 22,
+            "total": 99
+          },
+          "wound": "no_response"
+        },
+        {
+          "attempts": 1,
+          "auth_failed": false,
+          "commit": "abc",
+          "ended_at": "t1",
+          "framing": "complete",
+          "seq": "004",
+          "started_at": "t0",
+          "tokens": {
+            "cache_read": 33,
+            "cache_write": 44,
+            "input": 11,
+            "output": 22,
+            "total": 99
+          },
+          "wound": "output_limit"
+        }
+      ]
+    },
+    {
+      "kind": "steps",
+      "ok": true,
+      "orphan": "tool_window",
+      "rows": []
+    },
+    {
+      "kind": "steps",
+      "ok": true,
+      "orphan": "none",
+      "rows": []
+    }
+  ],
+  "protocol": 1,
+  "shape": "steps"
+}

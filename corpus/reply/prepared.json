@@ -1,0 +1,18 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "prepared",
+      "ok": true,
+      "prepared": {
+        "binding": "/target",
+        "goal": "g",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      }
+    }
+  ],
+  "protocol": 1,
+  "shape": "prepared"
+}

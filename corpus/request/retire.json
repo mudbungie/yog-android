@@ -1,0 +1,18 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "ball": "bl-1f2a",
+      "handle": "at-0badcafe",
+      "op": "retire",
+      "project": "dev/proj"
+    },
+    {
+      "handle": "at-0badcafe",
+      "op": "retire",
+      "project": "dev/proj"
+    }
+  ],
+  "protocol": 1,
+  "shape": "retire"
+}

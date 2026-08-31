@@ -1,0 +1,21 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "branch": "balls/tasks",
+      "op": "marks",
+      "workspace": "ws"
+    },
+    {
+      "branch": "balls/agents/corp",
+      "op": "marks",
+      "workspace": "ws"
+    },
+    {
+      "op": "marks",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "marks"
+}

@@ -1,0 +1,14 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "exit": 3,
+      "kind": "outcome",
+      "ok": false,
+      "stderr": "err",
+      "stdout": "out"
+    }
+  ],
+  "protocol": 1,
+  "shape": "outcome"
+}

@@ -1,0 +1,11 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "acked",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "acked"
+}

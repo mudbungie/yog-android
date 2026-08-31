@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "clients",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "clients"
+}

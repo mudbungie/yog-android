@@ -1,0 +1,28 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "work-diff",
+      "workspace": "ws"
+    },
+    {
+      "file": {
+        "ball": "bl-1",
+        "path": "src/a.rs"
+      },
+      "op": "work-diff",
+      "workspace": "ws"
+    },
+    {
+      "file": {
+        "ball": "bl-1",
+        "handle": "at-1a2b3c4d",
+        "path": "src/a.rs"
+      },
+      "op": "work-diff",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "work-diff"
+}

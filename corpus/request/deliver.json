@@ -1,0 +1,20 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "ball": "bl-1f2a",
+      "handle": "at-0badcafe",
+      "op": "deliver",
+      "project": "dev/proj",
+      "summary": "take the winner — spaces stay"
+    },
+    {
+      "handle": "at-0badcafe",
+      "op": "deliver",
+      "project": "dev/proj",
+      "summary": "take the winner — spaces stay"
+    }
+  ],
+  "protocol": 1,
+  "shape": "deliver"
+}

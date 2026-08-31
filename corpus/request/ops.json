@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "max": 32,
+      "op": "ops"
+    }
+  ],
+  "protocol": 1,
+  "shape": "ops"
+}

@@ -1,0 +1,1474 @@
+{
+  "protocol": 1,
+  "shapes": {
+    "reply/acked": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/advertised": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/agent": {
+      "signature": [
+        "/agent:string",
+        "/ancestors/[]:string",
+        "/ancestors:array",
+        "/context/model:string",
+        "/context/percent:number",
+        "/context/prompt_tokens:number",
+        "/context/window:number",
+        "/context:object",
+        "/display:string",
+        "/display_only:bool",
+        "/flight:string",
+        "/held/reason:string",
+        "/held/tool:string",
+        "/held/tool_use_id:string",
+        "/held:object",
+        "/kind:string",
+        "/marks/[]:string",
+        "/marks:array",
+        "/nudgeable:bool",
+        "/ok:bool",
+        "/present:bool",
+        "/root:string",
+        "/seats/[]/doing:string",
+        "/seats/[]/name:string",
+        "/seats/[]:object",
+        "/seats:array",
+        "/spend/attribution/count:number",
+        "/spend/attribution/kind:string",
+        "/spend/attribution/label:string",
+        "/spend/attribution:object",
+        "/spend/micro_usd:number",
+        "/spend/tokens/cache_read:number",
+        "/spend/tokens/cache_write:number",
+        "/spend/tokens/input:number",
+        "/spend/tokens/output:number",
+        "/spend/tokens/total:number",
+        "/spend/tokens:object",
+        "/spend/unpriced_tokens:number",
+        "/spend/usd:string",
+        "/spend:object",
+        "/state:string",
+        "/stop_children:bool",
+        "/stoppable:bool",
+        "/strip/class:string",
+        "/strip/facts:string",
+        "/strip:object",
+        "/tip:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/answered": {
+      "signature": [
+        "/advanced:bool",
+        "/kind:string",
+        "/ok:bool",
+        "/tool:string",
+        "/tool_use:string",
+        "/verdict:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/applied": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/armed": {
+      "signature": [
+        "/armed:bool",
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/attention": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/age_secs:number",
+        "/rows/[]/agent:string",
+        "/rows/[]/display:string",
+        "/rows/[]/held/reason:string",
+        "/rows/[]/held/tool:string",
+        "/rows/[]/held/tool_use:string",
+        "/rows/[]/held:null",
+        "/rows/[]/held:object",
+        "/rows/[]/pending:number",
+        "/rows/[]/preview:string",
+        "/rows/[]/signals/[]:string",
+        "/rows/[]/signals:array",
+        "/rows/[]/state:string",
+        "/rows/[]/uncertain:bool",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/balls": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/ball_id:string",
+        "/rows/[]/claimant:string",
+        "/rows/[]/project:string",
+        "/rows/[]/state:string",
+        "/rows/[]/title:string",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/board": {
+      "signature": [
+        "/fleet/[]/cap:number",
+        "/fleet/[]/ceiling:string",
+        "/fleet/[]/count:number",
+        "/fleet/[]/label:string",
+        "/fleet/[]/last_act_secs_ago:number",
+        "/fleet/[]/lease_secs:number",
+        "/fleet/[]/project:string",
+        "/fleet/[]/room:bool",
+        "/fleet/[]/tick_secs:number",
+        "/fleet/[]/workspace:string",
+        "/fleet/[]:object",
+        "/fleet:array",
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/claimant:string",
+        "/rows/[]/column:string",
+        "/rows/[]/drones/[]/name:string",
+        "/rows/[]/drones/[]/root_id:string",
+        "/rows/[]/drones/[]:object",
+        "/rows/[]/drones:array",
+        "/rows/[]/gates/[]/id:string",
+        "/rows/[]/gates/[]/mints:string",
+        "/rows/[]/gates/[]/title:string",
+        "/rows/[]/gates/[]:object",
+        "/rows/[]/gates:array",
+        "/rows/[]/id:string",
+        "/rows/[]/parent:string",
+        "/rows/[]/priority:number",
+        "/rows/[]/project:string",
+        "/rows/[]/rollup/attribution/count:number",
+        "/rows/[]/rollup/attribution/kind:string",
+        "/rows/[]/rollup/attribution:object",
+        "/rows/[]/rollup/tokens/cache_read:number",
+        "/rows/[]/rollup/tokens/cache_write:number",
+        "/rows/[]/rollup/tokens/input:number",
+        "/rows/[]/rollup/tokens/output:number",
+        "/rows/[]/rollup/tokens/total:number",
+        "/rows/[]/rollup/tokens:object",
+        "/rows/[]/rollup:object",
+        "/rows/[]/spend/attribution/kind:string",
+        "/rows/[]/spend/attribution/label:string",
+        "/rows/[]/spend/attribution:object",
+        "/rows/[]/spend/micro_usd:number",
+        "/rows/[]/spend/tokens/cache_read:number",
+        "/rows/[]/spend/tokens/cache_write:number",
+        "/rows/[]/spend/tokens/input:number",
+        "/rows/[]/spend/tokens/output:number",
+        "/rows/[]/spend/tokens/total:number",
+        "/rows/[]/spend/tokens:object",
+        "/rows/[]/spend/unpriced_tokens:number",
+        "/rows/[]/spend/usd:string",
+        "/rows/[]/spend:object",
+        "/rows/[]/state:string",
+        "/rows/[]/title:string",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/clients": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/client:string",
+        "/rows/[]/present:bool",
+        "/rows/[]/tools/[]/description:string",
+        "/rows/[]/tools/[]/input_schema/properties/command/minLength:number",
+        "/rows/[]/tools/[]/input_schema/properties/command/type:string",
+        "/rows/[]/tools/[]/input_schema/properties/command:object",
+        "/rows/[]/tools/[]/input_schema/properties:object",
+        "/rows/[]/tools/[]/input_schema/required/[]:string",
+        "/rows/[]/tools/[]/input_schema/required:array",
+        "/rows/[]/tools/[]/input_schema/type:string",
+        "/rows/[]/tools/[]/input_schema:object",
+        "/rows/[]/tools/[]/name:string",
+        "/rows/[]/tools/[]:object",
+        "/rows/[]/tools:array",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/config": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/text:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/conversations": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/age_secs:number",
+        "/rows/[]/alignment/agent:string",
+        "/rows/[]/alignment/input_tokens:number",
+        "/rows/[]/alignment/model:string",
+        "/rows/[]/alignment/reason:string",
+        "/rows/[]/alignment/sha:string",
+        "/rows/[]/alignment/verdict:string",
+        "/rows/[]/alignment/workspace:string",
+        "/rows/[]/alignment:object",
+        "/rows/[]/attention:number",
+        "/rows/[]/ball/badge:string",
+        "/rows/[]/ball/id:string",
+        "/rows/[]/ball/state:string",
+        "/rows/[]/ball/title:string",
+        "/rows/[]/ball:object",
+        "/rows/[]/depth:number",
+        "/rows/[]/direct:number",
+        "/rows/[]/display:string",
+        "/rows/[]/display_only:bool",
+        "/rows/[]/flight:string",
+        "/rows/[]/members:number",
+        "/rows/[]/name:string",
+        "/rows/[]/preview:string",
+        "/rows/[]/root_id:string",
+        "/rows/[]/state:string",
+        "/rows/[]/stop_children:bool",
+        "/rows/[]/stoppable:bool",
+        "/rows/[]/tone:string",
+        "/rows/[]/uncertain:bool",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/deleted": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/delivered": {
+      "signature": [
+        "/base:string",
+        "/commit:string",
+        "/kind:string",
+        "/ok:bool",
+        "/source:string",
+        "/target:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/fanned": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/binding:string",
+        "/rows/[]/goal:string",
+        "/rows/[]/lineage:null",
+        "/rows/[]/origin:string",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/files": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/preview/kind:string",
+        "/preview/size:number",
+        "/preview/text:string",
+        "/preview:object",
+        "/rows/[]/dir:bool",
+        "/rows/[]/path:string",
+        "/rows/[]/size:number",
+        "/rows/[]:object",
+        "/rows:array",
+        "/truncated:bool",
+        "/worktree:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/flagged": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/floored": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/standing:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/follow": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/stream/delta:string",
+        "/stream/text:string",
+        "/stream/thinking:string",
+        "/stream:object",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/governing": {
+      "signature": [
+        "/branch:null",
+        "/branch:string",
+        "/files/[]:string",
+        "/files:array",
+        "/kind:string",
+        "/oid:string",
+        "/ok:bool",
+        "/short_oid:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/help": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/detail:string",
+        "/rows/[]/summary:string",
+        "/rows/[]/usage:string",
+        "/rows/[]/verb:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/inbox": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/deposit/body:string",
+        "/rows/[]/deposit/deposited_at:string",
+        "/rows/[]/deposit/epitaph:string",
+        "/rows/[]/deposit/from:string",
+        "/rows/[]/deposit/terminal_ref:string",
+        "/rows/[]/deposit:object",
+        "/rows/[]/name:string",
+        "/rows/[]/raw:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/invocations": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/input/command:string",
+        "/rows/[]/input/timeout:number",
+        "/rows/[]/input:object",
+        "/rows/[]/invocation:string",
+        "/rows/[]/tool:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/lineages": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/committed:number",
+        "/rows/[]/files/[]:string",
+        "/rows/[]/files:array",
+        "/rows/[]/name:string",
+        "/rows/[]/oid:string",
+        "/rows/[]/short_oid:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/marks": {
+      "signature": [
+        "/branch:string",
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/models": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]:string",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/nudged": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/ops": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/argv:string",
+        "/rows/[]/cwd:string",
+        "/rows/[]/exit:number",
+        "/rows/[]/origin:string",
+        "/rows/[]/stderr:string",
+        "/rows/[]/stdout:string",
+        "/rows/[]/ts:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/outcome": {
+      "signature": [
+        "/exit:number",
+        "/kind:string",
+        "/ok:bool",
+        "/stderr:string",
+        "/stdout:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/prepared": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/prepared/binding:string",
+        "/prepared/goal:string",
+        "/prepared/lineage:null",
+        "/prepared/origin:string",
+        "/prepared/workspace:string",
+        "/prepared:object",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/providers": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/blocked:null",
+        "/rows/[]/blocked:string",
+        "/rows/[]/fact:string",
+        "/rows/[]/name:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/rail": {
+      "signature": [
+        "/cards/[]/agent:string",
+        "/cards/[]/fork:string",
+        "/cards/[]/name:string",
+        "/cards/[]/notch:number",
+        "/cards/[]/state:string",
+        "/cards/[]/tail:string",
+        "/cards/[]/tokens:number",
+        "/cards/[]:object",
+        "/cards:array",
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/budget:number",
+        "/rows/[]/commit:string",
+        "/rows/[]/cut:number",
+        "/rows/[]/row:string",
+        "/rows/[]/seq:string",
+        "/rows/[]/short:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/refusal": {
+      "signature": [
+        "/error:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/retired": {
+      "signature": [
+        "/discarded:bool",
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/routed": {
+      "signature": [
+        "/capture/exit_code:number",
+        "/capture/stderr:string",
+        "/capture/stdout:string",
+        "/capture:object",
+        "/invocation:string",
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/science": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/base:string",
+        "/rows/[]/compacted:number",
+        "/rows/[]/conversation:string",
+        "/rows/[]/diff/ball_id:string",
+        "/rows/[]/diff/delivered:string",
+        "/rows/[]/diff/files/[]/added:number",
+        "/rows/[]/diff/files/[]/binary:bool",
+        "/rows/[]/diff/files/[]/path:string",
+        "/rows/[]/diff/files/[]/removed:number",
+        "/rows/[]/diff/files/[]:object",
+        "/rows/[]/diff/files:array",
+        "/rows/[]/diff/handle:string",
+        "/rows/[]/diff/missing/[]:string",
+        "/rows/[]/diff/missing:array",
+        "/rows/[]/diff/project:string",
+        "/rows/[]/diff/source:string",
+        "/rows/[]/diff/source_oid:string",
+        "/rows/[]/diff/state:string",
+        "/rows/[]/diff/target:string",
+        "/rows/[]/diff/target_oid:string",
+        "/rows/[]/diff/truncated:bool",
+        "/rows/[]/diff:object",
+        "/rows/[]/goal:string",
+        "/rows/[]/governing:string",
+        "/rows/[]/outcome/by:string",
+        "/rows/[]/outcome/commit:string",
+        "/rows/[]/outcome/state:string",
+        "/rows/[]/outcome:object",
+        "/rows/[]/pins/[]:string",
+        "/rows/[]/pins:array",
+        "/rows/[]/response:string",
+        "/rows/[]/steps:number",
+        "/rows/[]/usage/cache_read_tokens:number",
+        "/rows/[]/usage/cache_write_tokens:number",
+        "/rows/[]/usage/input_tokens:number",
+        "/rows/[]/usage/output_tokens:number",
+        "/rows/[]/usage:object",
+        "/rows/[]/verdicts/[]/body:string",
+        "/rows/[]/verdicts/[]/sender:string",
+        "/rows/[]/verdicts/[]:object",
+        "/rows/[]/verdicts:array",
+        "/rows/[]/wall_secs:number",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/search": {
+      "signature": [
+        "/kind:string",
+        "/needle:string",
+        "/ok:bool",
+        "/rows/[]/agent:string",
+        "/rows/[]/at:string",
+        "/rows/[]/excerpt:string",
+        "/rows/[]/field:string",
+        "/rows/[]/id:string",
+        "/rows/[]/offset:number",
+        "/rows/[]/project:string",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        "/unreadable/[]:string",
+        "/unreadable:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/started": {
+      "signature": [
+        "/conversation:string",
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/step": {
+      "signature": [
+        "/kind:string",
+        "/meta/kind:string",
+        "/meta/raw:string",
+        "/meta/value/commit:string",
+        "/meta/value:object",
+        "/meta:object",
+        "/ok:bool",
+        "/request/kind:string",
+        "/request:object",
+        "/response/[]/kind:string",
+        "/response/[]:object",
+        "/response:array",
+        "/seq:string",
+        "/staging/kind:string",
+        "/staging/note:string",
+        "/staging/raw:string",
+        "/staging:object",
+        "/stderr/kind:string",
+        "/stderr/size:number",
+        "/stderr/text:string",
+        "/stderr:object",
+        "/tools/[]/input/kind:string",
+        "/tools/[]/input:object",
+        "/tools/[]/is_error:bool",
+        "/tools/[]/output/kind:string",
+        "/tools/[]/output/note:string",
+        "/tools/[]/output/raw:string",
+        "/tools/[]/output:object",
+        "/tools/[]/tool_id:string",
+        "/tools/[]:object",
+        "/tools:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/steps": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/orphan:string",
+        "/orphan_reason:string",
+        "/rows/[]/attempts:number",
+        "/rows/[]/auth_failed:bool",
+        "/rows/[]/auth_row:string",
+        "/rows/[]/commit:string",
+        "/rows/[]/ended_at:string",
+        "/rows/[]/framing:string",
+        "/rows/[]/seq:string",
+        "/rows/[]/started_at:string",
+        "/rows/[]/tokens/cache_read:number",
+        "/rows/[]/tokens/cache_write:number",
+        "/rows/[]/tokens/input:number",
+        "/rows/[]/tokens/output:number",
+        "/rows/[]/tokens/total:number",
+        "/rows/[]/tokens:object",
+        "/rows/[]/wound:string",
+        "/rows/[]/wound_reason:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/trail-cleared": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/transcript": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/blocks/[]/id:string",
+        "/rows/[]/blocks/[]/input:string",
+        "/rows/[]/blocks/[]/kind:string",
+        "/rows/[]/blocks/[]/name:string",
+        "/rows/[]/blocks/[]/text:string",
+        "/rows/[]/blocks/[]:object",
+        "/rows/[]/blocks:array",
+        "/rows/[]/body:string",
+        "/rows/[]/content:string",
+        "/rows/[]/epitaph:string",
+        "/rows/[]/first:number",
+        "/rows/[]/is_error:bool",
+        "/rows/[]/kind:string",
+        "/rows/[]/last:number",
+        "/rows/[]/model_id:string",
+        "/rows/[]/name:string",
+        "/rows/[]/raw:string",
+        "/rows/[]/sender:string",
+        "/rows/[]/summary:string",
+        "/rows/[]/text:string",
+        "/rows/[]/thinking:string",
+        "/rows/[]/tool_use_id:string",
+        "/rows/[]/usage/input_tokens:number",
+        "/rows/[]/usage:object",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/work-diff": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/patch/kind:string",
+        "/patch/size:number",
+        "/patch/text:string",
+        "/patch:object",
+        "/rows/[]/ball_id:string",
+        "/rows/[]/delivered:string",
+        "/rows/[]/files/[]/added:number",
+        "/rows/[]/files/[]/binary:bool",
+        "/rows/[]/files/[]/path:string",
+        "/rows/[]/files/[]/removed:number",
+        "/rows/[]/files/[]:object",
+        "/rows/[]/files:array",
+        "/rows/[]/handle:string",
+        "/rows/[]/missing/[]:string",
+        "/rows/[]/missing:array",
+        "/rows/[]/project:string",
+        "/rows/[]/source:string",
+        "/rows/[]/source_oid:string",
+        "/rows/[]/state:string",
+        "/rows/[]/target:string",
+        "/rows/[]/target_oid:string",
+        "/rows/[]/truncated:bool",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/workspace-balls": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/badge:string",
+        "/rows/[]/id:string",
+        "/rows/[]/owner:string",
+        "/rows/[]/project:string",
+        "/rows/[]/spend/attribution/count:number",
+        "/rows/[]/spend/attribution/kind:string",
+        "/rows/[]/spend/attribution/label:string",
+        "/rows/[]/spend/attribution:object",
+        "/rows/[]/spend/micro_usd:number",
+        "/rows/[]/spend/tokens/cache_read:number",
+        "/rows/[]/spend/tokens/cache_write:number",
+        "/rows/[]/spend/tokens/input:number",
+        "/rows/[]/spend/tokens/output:number",
+        "/rows/[]/spend/tokens/total:number",
+        "/rows/[]/spend/tokens:object",
+        "/rows/[]/spend/unpriced_tokens:number",
+        "/rows/[]/spend/usd:string",
+        "/rows/[]/spend:object",
+        "/rows/[]/state:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/workspaces": {
+      "signature": [
+        "/growth:string",
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/agents:number",
+        "/rows/[]/attention:number",
+        "/rows/[]/config_tip/oid:string",
+        "/rows/[]/config_tip/short_oid:string",
+        "/rows/[]/config_tip:object",
+        "/rows/[]/kind:string",
+        "/rows/[]/pinned:number",
+        "/rows/[]/running:bool",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        "/stale:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/ack": {
+      "signature": [
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/advertise": {
+      "signature": [
+        "/op:string",
+        "/tools/[]/description:string",
+        "/tools/[]/input_schema/properties/command/minLength:number",
+        "/tools/[]/input_schema/properties/command/type:string",
+        "/tools/[]/input_schema/properties/command:object",
+        "/tools/[]/input_schema/properties:object",
+        "/tools/[]/input_schema/required/[]:string",
+        "/tools/[]/input_schema/required:array",
+        "/tools/[]/input_schema/type:string",
+        "/tools/[]/input_schema:object",
+        "/tools/[]/name:string",
+        "/tools/[]:object",
+        "/tools:array",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/agent": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/answer": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/verdict:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/arm": {
+      "signature": [
+        "/model:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/assign": {
+      "signature": [
+        "/id:string",
+        "/name:string",
+        "/op:string",
+        "/project:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/attention": {
+      "signature": [
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/balls": {
+      "signature": [
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/board": {
+      "signature": [
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/capture": {
+      "signature": [
+        "/invocation:string",
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/clear-trail": {
+      "signature": [
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/clients": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/close": {
+      "signature": [
+        "/id:string",
+        "/name:string",
+        "/op:string",
+        "/project:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/complete": {
+      "signature": [
+        "/capture/exit_code:number",
+        "/capture/stderr:string",
+        "/capture/stdout:string",
+        "/capture:object",
+        "/invocation:string",
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/config": {
+      "signature": [
+        "/op:string",
+        "/target/file:string",
+        "/target/lineage:string",
+        "/target/name:string",
+        "/target/origin:string",
+        "/target/path:string",
+        "/target/source:string",
+        "/target/workspace:string",
+        "/target:object",
+        "/text:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/conversations": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/create": {
+      "signature": [
+        "/body:string",
+        "/fields/[]/field:string",
+        "/fields/[]/on:bool",
+        "/fields/[]/value:null",
+        "/fields/[]/value:number",
+        "/fields/[]/value:string",
+        "/fields/[]:object",
+        "/fields:array",
+        "/name:string",
+        "/op:string",
+        "/project:string",
+        "/title:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/delete-agent": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/typed:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/delete-workspace": {
+      "signature": [
+        "/op:string",
+        "/typed:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/deliver": {
+      "signature": [
+        "/ball:string",
+        "/handle:string",
+        "/op:string",
+        "/project:string",
+        "/summary:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/disarm": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/disband": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/fan": {
+      "signature": [
+        "/ball:string",
+        "/n:number",
+        "/op:string",
+        "/prepared/binding:null",
+        "/prepared/binding:string",
+        "/prepared/goal:string",
+        "/prepared/lineage:null",
+        "/prepared/origin:string",
+        "/prepared/workspace:string",
+        "/prepared:object",
+        "/project:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/files": {
+      "signature": [
+        "/agent:string",
+        "/at:string",
+        "/op:string",
+        "/path:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/flag": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/reason:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/fleet": {
+      "signature": [
+        "/cap:number",
+        "/op:string",
+        "/project:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/follow": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/fork": {
+      "signature": [
+        "/from:string",
+        "/goal:string",
+        "/op:string",
+        "/parent:string",
+        "/role:string",
+        "/skills/[]:string",
+        "/skills:array",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/governing": {
+      "signature": [
+        "/agent:string",
+        "/at:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/help": {
+      "signature": [
+        "/op:string",
+        "/verb:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/inbox": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/interrupt": {
+      "signature": [
+        "/agent:string",
+        "/content:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/invocations": {
+      "signature": [
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/invoke": {
+      "signature": [
+        "/client:string",
+        "/input/command:string",
+        "/input/timeout:number",
+        "/input:object",
+        "/op:string",
+        "/tool:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/lineages": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/marks": {
+      "signature": [
+        "/branch:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/message": {
+      "signature": [
+        "/agent:string",
+        "/content:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/model": {
+      "signature": [
+        "/model:string",
+        "/op:string",
+        "/provider:string",
+        "/role:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/models": {
+      "signature": [
+        "/op:string",
+        "/provider:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/nudge": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/ops": {
+      "signature": [
+        "/max:number",
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/prepare": {
+      "signature": [
+        "/op:string",
+        "/payload/ball/body:string",
+        "/payload/ball/id:string",
+        "/payload/ball/join:string",
+        "/payload/ball/tags:array",
+        "/payload/ball/title:string",
+        "/payload/ball:object",
+        "/payload/dir:string",
+        "/payload/project:string",
+        "/payload/rung:string",
+        "/payload:object",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/prompt": {
+      "signature": [
+        "/goal:string",
+        "/op:string",
+        "/prepared/binding:null",
+        "/prepared/binding:string",
+        "/prepared/goal:string",
+        "/prepared/lineage:null",
+        "/prepared/origin:string",
+        "/prepared/workspace:string",
+        "/prepared:object",
+        "/seed:null",
+        "/seed:number",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/providers": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/rail": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/release": {
+      "signature": [
+        "/id:string",
+        "/name:string",
+        "/op:string",
+        "/project:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/restore": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/retarget": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/retire": {
+      "signature": [
+        "/ball:string",
+        "/handle:string",
+        "/op:string",
+        "/project:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/revoke": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/scan": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/science": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/search": {
+      "signature": [
+        "/op:string",
+        "/text:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/seen": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/step": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/seq:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/steps": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/stop": {
+      "signature": [
+        "/agent:string",
+        "/children:bool",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/transcript": {
+      "signature": [
+        "/agent:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/update": {
+      "signature": [
+        "/body:string",
+        "/fields/[]/field:string",
+        "/fields/[]/on:bool",
+        "/fields/[]/value:null",
+        "/fields/[]/value:number",
+        "/fields/[]/value:string",
+        "/fields/[]:object",
+        "/fields:array",
+        "/id:string",
+        "/name:string",
+        "/note:string",
+        "/op:string",
+        "/project:string",
+        "/title:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/work-diff": {
+      "signature": [
+        "/file/ball:string",
+        "/file/handle:string",
+        "/file/path:string",
+        "/file:object",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/workspace-balls": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "request/workspaces": {
+      "signature": [
+        "/op:string",
+        ":object"
+      ],
+      "since": 1
+    }
+  }
+}

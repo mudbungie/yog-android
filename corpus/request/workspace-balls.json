@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "workspace-balls",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "workspace-balls"
+}

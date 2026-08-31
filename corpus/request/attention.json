@@ -1,0 +1,10 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "attention"
+    }
+  ],
+  "protocol": 1,
+  "shape": "attention"
+}

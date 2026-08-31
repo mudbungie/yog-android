@@ -1,0 +1,97 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "config",
+      "target": {
+        "file": "brazen",
+        "workspace": "ws"
+      },
+      "text": "models:\n  gpt-5.4:\n    provider: codex\n"
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "litany-models"
+      },
+      "text": "models:\n  gpt-5.4:\n    provider: codex\n"
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "cadence"
+      },
+      "text": "models:\n  gpt-5.4:\n    provider: codex\n"
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "litany-workflow",
+        "name": "review"
+      },
+      "text": "models:\n  gpt-5.4:\n    provider: codex\n"
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "branch",
+        "lineage": "default",
+        "origin": "advance",
+        "path": "providers.yaml",
+        "workspace": "ws"
+      },
+      "text": "models:\n  gpt-5.4:\n    provider: codex\n"
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "branch",
+        "lineage": "default",
+        "origin": "fork",
+        "path": "providers.yaml",
+        "source": "base",
+        "workspace": "ws"
+      },
+      "text": "models:\n  gpt-5.4:\n    provider: codex\n"
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "branch",
+        "lineage": "default",
+        "origin": "orphan",
+        "path": "providers.yaml",
+        "workspace": "ws"
+      },
+      "text": "models:\n  gpt-5.4:\n    provider: codex\n"
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "brazen",
+        "workspace": "ws"
+      }
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "litany-models"
+      }
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "cadence"
+      }
+    },
+    {
+      "op": "config",
+      "target": {
+        "file": "litany-workflow",
+        "name": "review"
+      }
+    }
+  ],
+  "protocol": 1,
+  "shape": "config"
+}

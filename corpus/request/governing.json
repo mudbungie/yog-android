@@ -1,0 +1,18 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "op": "governing",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "at": "abcdef1234",
+      "op": "governing",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "governing"
+}

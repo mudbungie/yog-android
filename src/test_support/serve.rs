@@ -37,15 +37,42 @@ pub fn serve_many(
     leaf: &str,
     scripts: Vec<Vec<Vec<u8>>>,
 ) -> (String, JoinHandle<Vec<Vec<u8>>>) {
+    serve_versioned(dir, ca, leaf, crate::hello::PROTOCOL, scripts)
+}
+
+/// [`serve_many`], with the version this engine states made a parameter — the
+/// one knob a test needs to stand a skewed engine up (REMOTE §3's fail-closed
+/// mismatch). Every other caller gets this build's own `PROTOCOL`, so every
+/// existing test also asserts that the seat states its version on **every**
+/// connection: the read below refuses a client that did not.
+pub fn serve_versioned(
+    dir: &Path,
+    ca: &str,
+    leaf: &str,
+    protocol: u32,
+    scripts: Vec<Vec<Vec<u8>>>,
+) -> (String, JoinHandle<Vec<Vec<u8>>>) {
     let config = config(dir, ca, leaf);
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let address = format!("127.0.0.1:{}", listener.local_addr().unwrap().port());
+    let preface = serde_json::json!({ "protocol": protocol })
+        .to_string()
+        .into_bytes();
     let handle = std::thread::spawn(move || {
         let mut requests = Vec::new();
         for script in scripts {
             let (tcp, _) = listener.accept().unwrap();
             let conn = rustls::ServerConnection::new(Arc::clone(&config)).unwrap();
             let mut tls = rustls::StreamOwned::new(conn, tcp);
+            // The engine's half of the preface, stated before this end reads —
+            // §3's "both write before either reads", from the other side.
+            crate::frame::write_frame(&mut tls, &preface).unwrap();
+            let stated = crate::frame::read_frame(&mut tls).unwrap().unwrap();
+            assert_eq!(
+                serde_json::from_slice::<serde_json::Value>(&stated).unwrap(),
+                serde_json::json!({ "protocol": crate::hello::PROTOCOL }),
+                "the seat opened a connection without stating its version"
+            );
             requests.push(crate::frame::read_frame(&mut tls).unwrap().unwrap());
             for reply in &script {
                 crate::frame::write_frame(&mut tls, reply).unwrap();

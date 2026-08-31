@@ -8,7 +8,16 @@
 # knobs relax the matching lints for code clippy classifies as a test — any
 # item under a `#[cfg(test)]` module (both the inline `#[cfg(test)] mod tests {}`
 # blocks AND the sibling-file `#[cfg(test)] mod tests;` declarations this crate
-# uses) and the `tests/` integration binaries. Prod code gets no relief.
+# uses), and inside a `#[test]` function anywhere. Prod code gets no relief.
+#
+# **A `tests/` integration binary is NOT wholesale test code to clippy**, and
+# that surprised this repo once (bl-93e3): an integration crate is compiled
+# without `cfg(test)`, so only its `#[test]` items are relaxed and a free
+# helper beside them is judged as production. That is not a defect to work
+# around — a helper the whole file leans on is worth writing total anyway. So
+# `tests/conformance/` returns `Result` from its helpers and keeps the panic
+# vocabulary in the `#[test]` items, which is where it reads as an assertion
+# rather than as a failure mode.
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 allow-panic-in-tests = true

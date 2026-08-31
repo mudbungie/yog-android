@@ -1,0 +1,13 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "cap": 4,
+      "op": "fleet",
+      "project": "proj",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "fleet"
+}

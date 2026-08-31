@@ -1,0 +1,26 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "branch": "default",
+      "files": [
+        "workflow.yaml",
+        "souls/base.md"
+      ],
+      "kind": "governing",
+      "oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "ok": true,
+      "short_oid": "bbbbbbbb"
+    },
+    {
+      "branch": null,
+      "files": [],
+      "kind": "governing",
+      "oid": "cccccccccccccccccccccccccccccccccccccccc",
+      "ok": true,
+      "short_oid": "cccccccc"
+    }
+  ],
+  "protocol": 1,
+  "shape": "governing"
+}

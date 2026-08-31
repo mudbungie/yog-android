@@ -1,0 +1,11 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "nudged",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "nudged"
+}

@@ -1,0 +1,81 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "transcript",
+      "ok": true,
+      "rows": [
+        {
+          "body": "hello",
+          "epitaph": "budget-exhausted",
+          "kind": "delivered",
+          "name": "001-user.md",
+          "raw": "{}",
+          "sender": "user"
+        },
+        {
+          "body": "",
+          "kind": "delivered",
+          "name": "002-user.md",
+          "raw": "{}",
+          "sender": "user"
+        },
+        {
+          "blocks": [
+            {
+              "kind": "text",
+              "text": "said"
+            },
+            {
+              "kind": "thinking",
+              "text": "thought"
+            },
+            {
+              "id": "toolu_1",
+              "input": "file",
+              "kind": "tool-use",
+              "name": "Read"
+            }
+          ],
+          "kind": "model",
+          "model_id": "opus",
+          "name": "003-claude.json",
+          "raw": "{}",
+          "usage": {
+            "input_tokens": 5
+          }
+        },
+        {
+          "content": "out",
+          "is_error": true,
+          "kind": "tool-result",
+          "name": "004-tool.json",
+          "raw": "{}",
+          "tool_use_id": "toolu_1"
+        },
+        {
+          "kind": "streaming",
+          "name": "streaming",
+          "raw": "{}",
+          "text": "partial",
+          "thinking": "..."
+        },
+        {
+          "first": 6,
+          "kind": "compacted",
+          "last": 8,
+          "name": "«006–008»",
+          "raw": "{}",
+          "summary": "what the compactor cut"
+        },
+        {
+          "kind": "raw",
+          "name": "005-junk.json",
+          "raw": "{}"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "transcript"
+}

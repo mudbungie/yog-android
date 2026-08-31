@@ -1,0 +1,12 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "conversation": "brave-fox",
+      "kind": "started",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "started"
+}

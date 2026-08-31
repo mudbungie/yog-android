@@ -206,7 +206,7 @@ fn started(seat: &Seat, focus: &Focus, goal: String) -> Result<(), String> {
         prepared: staged,
         goal,
     })))? {
-        Reply::Outcome { ok: true, .. } | Reply::Prepared(_) => Ok(()),
+        Reply::Started { .. } | Reply::Outcome { ok: true, .. } => Ok(()),
         Reply::Outcome { stderr, .. } => Err(format!("start refused: {stderr}")),
         other => Err(kind_err("start", &other)),
     }

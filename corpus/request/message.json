@@ -1,0 +1,13 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "content": "hi there",
+      "op": "message",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "message"
+}

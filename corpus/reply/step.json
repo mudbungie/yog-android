@@ -1,0 +1,51 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "step",
+      "meta": {
+        "kind": "json",
+        "raw": "{\"commit\":\"abc\"}",
+        "value": {
+          "commit": "abc"
+        }
+      },
+      "ok": true,
+      "request": {
+        "kind": "absent"
+      },
+      "response": [
+        {
+          "kind": "absent"
+        }
+      ],
+      "seq": "001",
+      "staging": {
+        "kind": "unparsed",
+        "note": "unparseable JSON — bytes verbatim below",
+        "raw": "not json"
+      },
+      "stderr": {
+        "kind": "truncated",
+        "size": 999999,
+        "text": "the adapter's last words"
+      },
+      "tools": [
+        {
+          "input": {
+            "kind": "absent"
+          },
+          "is_error": false,
+          "output": {
+            "kind": "unparsed",
+            "note": "unparseable JSON — bytes verbatim below",
+            "raw": "raw"
+          },
+          "tool_id": "toolu_1"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "step"
+}

@@ -1,0 +1,22 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "invocation": "inv-1",
+      "kind": "routed",
+      "ok": true
+    },
+    {
+      "capture": {
+        "exit_code": 3,
+        "stderr": "warned\n",
+        "stdout": "hello\n"
+      },
+      "invocation": "inv-2",
+      "kind": "routed",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "routed"
+}

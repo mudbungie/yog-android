@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "conversations",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "conversations"
+}

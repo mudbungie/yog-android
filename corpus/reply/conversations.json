@@ -1,0 +1,81 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "conversations",
+      "ok": true,
+      "rows": [
+        {
+          "age_secs": 42,
+          "alignment": {
+            "agent": "c-1",
+            "input_tokens": 7,
+            "model": "m",
+            "reason": "wandered",
+            "sha": "deadbeef",
+            "verdict": "drifting",
+            "workspace": "/ws"
+          },
+          "attention": 1,
+          "ball": {
+            "badge": "closed",
+            "id": "bl-7",
+            "state": "bound",
+            "title": "t"
+          },
+          "depth": 2,
+          "direct": 2,
+          "display": "brave-fox",
+          "display_only": false,
+          "flight": "inference",
+          "members": 3,
+          "name": "brave-fox",
+          "preview": "first line",
+          "root_id": "c-1",
+          "state": "in-flight",
+          "stop_children": false,
+          "stoppable": false,
+          "tone": "weak",
+          "uncertain": true
+        },
+        {
+          "age_secs": 0,
+          "attention": 0,
+          "ball": {
+            "id": "stray"
+          },
+          "depth": 0,
+          "direct": 0,
+          "display": "c-2",
+          "display_only": false,
+          "members": 1,
+          "preview": "",
+          "root_id": "c-2",
+          "state": "quiescent",
+          "stop_children": false,
+          "stoppable": false,
+          "tone": "plain",
+          "uncertain": false
+        },
+        {
+          "age_secs": 0,
+          "attention": 0,
+          "depth": 0,
+          "direct": 0,
+          "display": "goal-stamped",
+          "display_only": true,
+          "members": 1,
+          "preview": "",
+          "root_id": "c-3",
+          "state": "quiescent",
+          "stop_children": false,
+          "stoppable": false,
+          "tone": "plain",
+          "uncertain": false
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "conversations"
+}

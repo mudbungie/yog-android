@@ -1,0 +1,44 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "cards": [
+        {
+          "agent": "c-1-a",
+          "fork": "from here",
+          "name": "Cobalt",
+          "notch": 0,
+          "state": "live",
+          "tail": "working",
+          "tokens": 9
+        },
+        {
+          "agent": "c-1-b",
+          "fork": "from config/main",
+          "name": "Dun",
+          "notch": 1,
+          "state": "stopped",
+          "tokens": 0
+        }
+      ],
+      "kind": "rail",
+      "ok": true,
+      "rows": [
+        {
+          "budget": 120,
+          "commit": "abcdef1234567890",
+          "cut": 2,
+          "row": "003-claude.json",
+          "seq": "001",
+          "short": "abcdef1"
+        },
+        {
+          "budget": 120,
+          "seq": "002"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "rail"
+}

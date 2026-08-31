@@ -15,8 +15,8 @@
 //! dialled.
 
 use crate::codec::reply::{self, Reply};
-use crate::frame;
 use crate::material::Material;
+use crate::{frame, hello};
 use rustls::pki_types::ServerName;
 use rustls::{ClientConnection, StreamOwned};
 use serde_json::Value;
@@ -67,6 +67,9 @@ impl Seat {
     /// frame up to the terminator. A stream of one is the ordinary answer.
     pub fn ask(&self, request: &Value) -> Result<Vec<Value>, String> {
         let mut tls = self.dial(request)?;
+        // The engine's half of the §3 preface, read on the way to the answer:
+        // a skew refuses here, before a frame of another protocol is decoded.
+        hello::confirm(&mut tls)?;
         let mut stream = Vec::new();
         loop {
             let frame = frame::read_frame(&mut tls).map_err(|e| format!("receive: {e}"))?;
@@ -77,9 +80,9 @@ impl Seat {
         }
     }
 
-    /// Connect, handshake and send `request` — the handshake happens inside
-    /// the first read, so what this hands back is a socket with an envelope
-    /// on it and nothing yet read.
+    /// Connect, handshake and send this end's whole half of the exchange — the
+    /// handshake happens inside the first write, so what this hands back is a
+    /// socket with a preface and an envelope on it and nothing yet read.
     fn dial(&self, request: &Value) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
         let tcp = TcpStream::connect(&self.address)
             .map_err(|e| format!("connect {}: {e}", self.address))?;
@@ -90,10 +93,19 @@ impl Seat {
         let conn = ClientConnection::new(Arc::clone(&self.config), self.name.clone())
             .map_err(|e| format!("tls {}: {e}", self.address))?;
         let mut tls = StreamOwned::new(conn, tcp);
-        frame::write_frame(&mut tls, request.to_string().as_bytes())
-            .map_err(|e| format!("send: {e}"))?;
+        send(&mut tls, request).map_err(|e| format!("send: {e}"))?;
         Ok(tls)
     }
+}
+
+/// This end's two frames, written in one breath (REMOTE §3): the version
+/// preface, then the gesture envelope. One fallible unit because they are one
+/// act to a caller — a connection that could not carry the preface could not
+/// have carried the request either, and two sentences for that would be two
+/// spellings of "the socket went away".
+fn send(w: &mut dyn std::io::Write, request: &Value) -> std::io::Result<()> {
+    hello::state(w)?;
+    frame::write_frame(w, request.to_string().as_bytes())
 }
 
 /// One frame's bytes as the JSON value the codec reads — the strict-decode

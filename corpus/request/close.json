@@ -1,0 +1,13 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "id": "bl-1",
+      "name": "alba",
+      "op": "close",
+      "project": "proj"
+    }
+  ],
+  "protocol": 1,
+  "shape": "close"
+}

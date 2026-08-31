@@ -1,0 +1,23 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "providers",
+      "ok": true,
+      "rows": [
+        {
+          "blocked": null,
+          "fact": "credential present",
+          "name": "anthropic"
+        },
+        {
+          "blocked": "no login flow",
+          "fact": "no credential",
+          "name": "openai"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "providers"
+}

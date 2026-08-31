@@ -1,0 +1,10 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "board"
+    }
+  ],
+  "protocol": 1,
+  "shape": "board"
+}

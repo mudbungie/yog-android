@@ -59,6 +59,23 @@ pub struct Capture {
     pub exit_code: i32,
 }
 
+/// [`one`]'s inverse, strict — the decode side the conformance corpus needs
+/// (REMOTE §3: a client that only sends requests still decodes the request
+/// fixtures). The schema comes back **verbatim**, exactly as it went out:
+/// narrowing it on the way in would be this crate inventing a contract it does
+/// not own, the same reason [`one`] does not validate it on the way out.
+pub(crate) fn tool_of(v: &Value) -> Result<Tool, String> {
+    let o = v.as_object().ok_or("tool: not an object")?;
+    Ok(Tool {
+        name: str_of(o, "name")?,
+        description: str_of(o, "description")?,
+        input_schema: o
+            .get("input_schema")
+            .cloned()
+            .ok_or("tool: missing field \"input_schema\"")?,
+    })
+}
+
 /// The advertised set as JSON — the one spelling, spent by the gesture
 /// encoder and by nothing else in this crate.
 pub(crate) fn encode_tools(tools: &[Tool]) -> Value {

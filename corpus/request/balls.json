@@ -1,0 +1,10 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "balls"
+    }
+  ],
+  "protocol": 1,
+  "shape": "balls"
+}

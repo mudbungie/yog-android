@@ -1,0 +1,21 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "base": "aaa1",
+      "commit": "ccc3",
+      "kind": "delivered",
+      "ok": true,
+      "source": "bbb2",
+      "target": "work/bl-1f2a"
+    },
+    {
+      "base": "aaa1",
+      "kind": "delivered",
+      "ok": true,
+      "target": "main"
+    }
+  ],
+  "protocol": 1,
+  "shape": "delivered"
+}

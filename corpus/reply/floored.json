@@ -1,0 +1,12 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "floored",
+      "ok": true,
+      "standing": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "floored"
+}

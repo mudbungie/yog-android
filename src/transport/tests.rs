@@ -5,7 +5,7 @@
 
 use super::{Seat, server_name};
 use crate::codec::reply::Reply;
-use crate::test_support::{material, mint_ca, mint_leaf, scratch, serve_once};
+use crate::test_support::{material, mint_ca, mint_leaf, scratch, serve_once, serve_versioned};
 use serde_json::json;
 
 fn pki() -> std::path::PathBuf {
@@ -107,6 +107,31 @@ fn a_server_off_the_operators_ca_never_completes_the_handshake() {
     assert!(e.contains("receive:") || e.contains("send:"), "{e}");
     // The server side dies on its own half of the failed handshake.
     assert!(served.join().is_err());
+}
+
+/// REMOTE §3's fail-closed mismatch, across a real handshake: an engine of
+/// another protocol is refused **before a reply frame is decoded**, so the
+/// answer it went on to write is never read as this build's vocabulary. The
+/// engine had a perfectly good `transcript` waiting; the seat never sees it.
+#[test]
+fn a_skewed_engine_is_refused_before_its_answer_is_read() {
+    let dir = pki();
+    let reply = json!({ "ok": true, "kind": "transcript", "rows": [] });
+    let (address, _served) = serve_versioned(
+        &dir,
+        "ca",
+        "server",
+        2,
+        vec![vec![reply.to_string().into_bytes()]],
+    );
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let e = seat.ask(&json!({ "op": "workspaces" })).unwrap_err();
+    assert_eq!(
+        e,
+        "wire protocol mismatch: this end speaks version 1, the peer speaks 2. \
+         There is no negotiation — upgrade the older component until both \
+         speak one version."
+    );
 }
 
 #[test]

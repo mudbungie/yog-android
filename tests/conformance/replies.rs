@@ -1,0 +1,63 @@
+//! **Every reply shape in the corpus, and this client's decision about it** —
+//! the same recorded-decision table as `requests.rs`, over `corpus/reply/`.
+//!
+//! **There is no round trip here, and that is not an omission.** REMOTE §3
+//! asks a client to *"round-trip what it emits"*, and this client emits no
+//! reply — it is always the asker (§3's routing ruling), so a reply encoder
+//! would be a second implementation of the engine's own spelling with nothing
+//! to check it against. What a reply fixture proves is that the decoder reads
+//! the engine's real bytes rather than the bytes this repo's own tests write.
+//!
+//! `refusal` is the one shape with no `kind`, and it **reads**: the kind-less
+//! envelope is the refusal, and decoding it hands back the engine's sentence.
+
+use super::expect::Expect::{self, Reads, Refuses};
+use super::expect::UNSENT;
+
+pub const REPLIES: &[(&str, Expect)] = &[
+    ("acked", Refuses(UNSENT)),
+    ("advertised", Reads),
+    ("agent", Refuses(UNSENT)),
+    ("answered", Refuses(UNSENT)),
+    ("applied", Refuses(UNSENT)),
+    ("armed", Refuses(UNSENT)),
+    ("attention", Refuses(UNSENT)),
+    ("balls", Refuses(UNSENT)),
+    ("board", Refuses(UNSENT)),
+    ("clients", Refuses(UNSENT)),
+    ("config", Refuses(UNSENT)),
+    ("conversations", Reads),
+    ("deleted", Refuses(UNSENT)),
+    ("delivered", Refuses(UNSENT)),
+    ("fanned", Refuses(UNSENT)),
+    ("files", Refuses(UNSENT)),
+    ("flagged", Refuses(UNSENT)),
+    ("floored", Refuses(UNSENT)),
+    ("follow", Refuses(UNSENT)),
+    ("governing", Refuses(UNSENT)),
+    ("help", Refuses(UNSENT)),
+    ("inbox", Refuses(UNSENT)),
+    ("invocations", Reads),
+    ("lineages", Refuses(UNSENT)),
+    ("marks", Refuses(UNSENT)),
+    ("models", Refuses(UNSENT)),
+    ("nudged", Refuses(UNSENT)),
+    ("ops", Refuses(UNSENT)),
+    ("outcome", Reads),
+    ("prepared", Reads),
+    ("providers", Refuses(UNSENT)),
+    ("rail", Refuses(UNSENT)),
+    ("refusal", Reads),
+    ("retired", Refuses(UNSENT)),
+    ("routed", Reads),
+    ("science", Refuses(UNSENT)),
+    ("search", Refuses(UNSENT)),
+    ("started", Reads),
+    ("step", Refuses(UNSENT)),
+    ("steps", Refuses(UNSENT)),
+    ("trail-cleared", Refuses(UNSENT)),
+    ("transcript", Reads),
+    ("work-diff", Refuses(UNSENT)),
+    ("workspace-balls", Refuses(UNSENT)),
+    ("workspaces", Reads),
+];

@@ -1,0 +1,28 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "from": "aaaa1111",
+      "goal": "try it  the other way\nagain",
+      "op": "fork",
+      "parent": "c-1",
+      "role": "worker",
+      "skills": [
+        "bash",
+        "read_file"
+      ],
+      "workspace": "ws"
+    },
+    {
+      "from": "config/strict",
+      "goal": "g",
+      "op": "fork",
+      "parent": "c-1",
+      "role": "worker",
+      "skills": [],
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "fork"
+}

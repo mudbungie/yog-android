@@ -1,0 +1,12 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "config",
+      "ok": true,
+      "text": "roles: []"
+    }
+  ],
+  "protocol": 1,
+  "shape": "config"
+}

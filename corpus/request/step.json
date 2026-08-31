@@ -1,0 +1,13 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "op": "step",
+      "seq": "003",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "step"
+}

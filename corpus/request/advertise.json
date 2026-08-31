@@ -1,0 +1,32 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "advertise",
+      "tools": []
+    },
+    {
+      "op": "advertise",
+      "tools": [
+        {
+          "description": "run a command",
+          "input_schema": {
+            "properties": {
+              "command": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "command"
+            ],
+            "type": "object"
+          },
+          "name": "Bash"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "advertise"
+}

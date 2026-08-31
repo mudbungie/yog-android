@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "science",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "science"
+}

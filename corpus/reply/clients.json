@@ -1,0 +1,40 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "clients",
+      "ok": true,
+      "rows": [
+        {
+          "client": "laptop",
+          "present": true,
+          "tools": [
+            {
+              "description": "run a command",
+              "input_schema": {
+                "properties": {
+                  "command": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "command"
+                ],
+                "type": "object"
+              },
+              "name": "Bash"
+            }
+          ]
+        },
+        {
+          "client": "phone",
+          "present": false,
+          "tools": []
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "clients"
+}

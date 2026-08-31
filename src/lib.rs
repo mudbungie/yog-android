@@ -12,6 +12,7 @@
 
 pub mod codec;
 pub mod frame;
+pub mod hello;
 pub mod host;
 pub mod material;
 pub mod rows;

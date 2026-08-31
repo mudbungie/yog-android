@@ -1,0 +1,13 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "op": "delete-agent",
+      "typed": "the goal name",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "delete-agent"
+}

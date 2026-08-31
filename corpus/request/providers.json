@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "providers",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "providers"
+}

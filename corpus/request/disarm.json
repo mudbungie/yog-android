@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "disarm",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "disarm"
+}

@@ -1,0 +1,10 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "invocations"
+    }
+  ],
+  "protocol": 1,
+  "shape": "invocations"
+}

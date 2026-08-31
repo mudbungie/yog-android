@@ -1,0 +1,33 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "files",
+      "ok": true,
+      "preview": {
+        "kind": "text",
+        "text": "body"
+      },
+      "rows": [
+        {
+          "dir": false,
+          "path": "src/a.rs",
+          "size": 12
+        }
+      ],
+      "truncated": true,
+      "worktree": true
+    },
+    {
+      "kind": "files",
+      "ok": true,
+      "preview": {
+        "kind": "binary",
+        "size": 4
+      },
+      "worktree": false
+    }
+  ],
+  "protocol": 1,
+  "shape": "files"
+}

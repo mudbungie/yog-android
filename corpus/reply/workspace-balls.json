@@ -1,0 +1,56 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "workspace-balls",
+      "ok": true,
+      "rows": [
+        {
+          "badge": "delivered",
+          "id": "bl-1",
+          "owner": "alba",
+          "project": "p",
+          "spend": {
+            "attribution": {
+              "count": 2,
+              "kind": "conversations",
+              "label": "over 2 conversations"
+            },
+            "micro_usd": 2500000,
+            "tokens": {
+              "cache_read": 0,
+              "cache_write": 0,
+              "input": 12,
+              "output": 0,
+              "total": 12
+            },
+            "unpriced_tokens": 3,
+            "usd": "$2.50"
+          },
+          "state": "delivered"
+        },
+        {
+          "id": "bl-2",
+          "owner": "alba",
+          "project": "p",
+          "spend": {
+            "attribution": {
+              "kind": "workspace",
+              "label": "workspace-wide"
+            },
+            "tokens": {
+              "cache_read": 0,
+              "cache_write": 0,
+              "input": 0,
+              "output": 0,
+              "total": 0
+            }
+          },
+          "state": "bound"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "workspace-balls"
+}

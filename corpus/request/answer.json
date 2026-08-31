@@ -1,0 +1,25 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "verdict": "pass",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "verdict": "hold",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "verdict": "refuse",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "answer"
+}

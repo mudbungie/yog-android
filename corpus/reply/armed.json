@@ -1,0 +1,12 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "armed": true,
+      "kind": "armed",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "armed"
+}

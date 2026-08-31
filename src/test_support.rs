@@ -9,7 +9,7 @@ use std::process::Command;
 
 pub mod serve;
 
-pub use serve::{serve_many, serve_once};
+pub use serve::{serve_many, serve_once, serve_versioned};
 
 /// Mint a CA under `dir` as `<name>.pem`/`<name>.key`.
 pub fn mint_ca(dir: &Path, name: &str) {

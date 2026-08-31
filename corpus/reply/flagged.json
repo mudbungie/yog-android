@@ -1,0 +1,11 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "flagged",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "flagged"
+}

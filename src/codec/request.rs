@@ -1,0 +1,113 @@
+//! **The gesture codec's decode side** — the inverse of [`encode`](super::encode),
+//! and the mirror of the server's own `boundary::codec::decode`.
+//!
+//! This client never *reads* a request off a wire: it is always the asker
+//! (REMOTE §3), so nothing in the app calls this at runtime. It exists because
+//! REMOTE §3 says a client owes it to the conformance corpus:
+//!
+//! > *"decode every frame in both directories into its own types, and
+//! > round-trip what it emits — decode then re-encode must return the frame
+//! > exactly. A client that only sends requests still decodes the request
+//! > fixtures; that is what catches a field it drops on the way out."*
+//!
+//! That is the whole argument for this module. An encoder alone can be proven
+//! only against a fixture somebody wrote here; an encoder with an inverse can
+//! be proven against a fixture the *server's own codec* wrote, and a field
+//! this client silently omits shows up as a round trip that does not close.
+//!
+//! **It is exactly as narrow as the encoder, and refuses the rest by name.** A
+//! shape outside this crate's slice is not decoded into an approximation of
+//! itself — it refuses naming the op, because REMOTE §3's third rule is that
+//! *"a shape a client does not implement is still one it must not misread."*
+//! That reaches inside a shape as well as across shapes: `prepare` carries a
+//! rung and `prompt` carries a name prediction, and this client spells one
+//! rung and predicts no name (DESIGN §8), so a frame stating either of the
+//! others is refused rather than flattened into the one this codec has.
+
+use serde_json::Value;
+
+use super::fields::{arr_of, str_of};
+use super::start::{Prepared, prepared_of};
+use super::tools::{Tool, capture_of, tool_of};
+use super::{Act, Ask, Gesture};
+
+/// Read one request envelope into this crate's gesture type.
+pub fn decode(v: &Value) -> Result<Gesture, String> {
+    let o = v.as_object().ok_or("request: not a JSON object")?;
+    let op = str_of(o, "op")?;
+    let gesture = match op.as_str() {
+        "message" => Gesture::Act(Act::Message {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+            content: str_of(o, "content")?,
+        }),
+        "workspaces" => Gesture::Ask(Ask::Workspaces),
+        "conversations" => Gesture::Ask(Ask::Conversations {
+            workspace: str_of(o, "workspace")?,
+        }),
+        "transcript" => Gesture::Ask(Ask::Transcript {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+        }),
+        "invocations" => Gesture::Ask(Ask::Invocations),
+        "advertise" => Gesture::Act(Act::Advertise {
+            tools: arr_of(o, "tools")?
+                .iter()
+                .map(tool_of)
+                .collect::<Result<Vec<Tool>, String>>()?,
+        }),
+        "complete" => Gesture::Act(Act::Complete {
+            invocation: str_of(o, "invocation")?,
+            capture: capture_of(
+                o.get("capture")
+                    .ok_or("complete: missing field \"capture\"")?,
+            )?,
+        }),
+        "prepare" => Gesture::Act(Act::Prepare {
+            workspace: bare_rung(o.get("payload"), str_of(o, "workspace")?)?,
+        }),
+        "prompt" => Gesture::Act(Act::Prompt {
+            prepared: unseeded(o.get("seed"), prepared(o.get("prepared"))?)?,
+            goal: str_of(o, "goal")?,
+        }),
+        other => return Err(format!("unknown op {other:?}")),
+    };
+    Ok(gesture)
+}
+
+/// The staging payload, on the one rung this device spends. The workspace
+/// rides through so the caller reads one expression rather than two bindings.
+///
+/// A `path` or `ball` rung is **refused by name**: this codec has no field to
+/// put a work directory or a ball in, and answering the bare rung to a frame
+/// that asked for either would be the silent misread §3's third rule forbids.
+fn bare_rung(payload: Option<&Value>, workspace: String) -> Result<String, String> {
+    let payload = payload.ok_or("prepare: missing field \"payload\"")?;
+    let o = payload
+        .as_object()
+        .ok_or("prepare: payload is not an object")?;
+    match str_of(o, "rung")?.as_str() {
+        "bare" => Ok(workspace),
+        rung => Err(format!("prepare: unimplemented rung {rung:?}")),
+    }
+}
+
+/// The prepared body out of a firing gesture — required, and read whole.
+fn prepared(body: Option<&Value>) -> Result<Prepared, String> {
+    prepared_of(body.ok_or("prompt: missing field \"prepared\"")?)
+}
+
+/// `seed` is the firing seat's own name prediction, and a phone predicts none
+/// (DESIGN §8) — so this codec writes the null and reads only the null. A
+/// stated seed is a field this client would drop on the way back out, which is
+/// the exact class of miss the corpus exists to catch, so it refuses instead.
+fn unseeded(seed: Option<&Value>, prepared: Prepared) -> Result<Prepared, String> {
+    match seed {
+        Some(Value::Null) => Ok(prepared),
+        Some(v) => Err(format!("prompt: unimplemented seed {v}")),
+        None => Err("prompt: missing field \"seed\"".to_owned()),
+    }
+}
+
+#[cfg(test)]
+mod tests;

@@ -1,0 +1,22 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "ops",
+      "ok": true,
+      "rows": [
+        {
+          "argv": "bl close x",
+          "cwd": "/p",
+          "exit": 1,
+          "origin": "balls",
+          "stderr": "gate",
+          "stdout": "",
+          "ts": "1700"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "ops"
+}

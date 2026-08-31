@@ -1,0 +1,14 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "help"
+    },
+    {
+      "op": "help",
+      "verb": "scan"
+    }
+  ],
+  "protocol": 1,
+  "shape": "help"
+}

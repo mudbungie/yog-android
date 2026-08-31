@@ -1,0 +1,47 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "search",
+      "needle": "gate",
+      "ok": true,
+      "rows": [
+        {
+          "at": "ball",
+          "excerpt": "bl-1",
+          "field": "name",
+          "id": "bl-1",
+          "offset": 0,
+          "project": "p"
+        },
+        {
+          "at": "workspace",
+          "excerpt": "ws",
+          "field": "summary",
+          "offset": 3,
+          "workspace": "/ws"
+        },
+        {
+          "agent": "c-1",
+          "at": "conversation",
+          "excerpt": "the gate",
+          "field": "text",
+          "offset": 12,
+          "workspace": "/ws"
+        }
+      ],
+      "unreadable": [
+        "/p: not a repo"
+      ]
+    },
+    {
+      "kind": "search",
+      "needle": "",
+      "ok": true,
+      "rows": [],
+      "unreadable": []
+    }
+  ],
+  "protocol": 1,
+  "shape": "search"
+}

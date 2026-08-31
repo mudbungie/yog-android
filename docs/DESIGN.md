@@ -55,6 +55,44 @@ hand-codec discipline (`src/boundary/codec.rs` there). `serde_json` enters as
 the parse substrate when that ball lands, matching the server's own framing
 dependency; serde *derive* stays a non-dependency, as upstream.
 
+**Every connection opens with a version preface (bl-93e3).** REMOTE §3 is the
+authority and this file cites rather than restates it: each end writes one
+frame, `{"protocol": <integer>}`, before it reads the peer's; a mismatch is
+fail-closed and the refusal names both versions and the remedy; a peer that
+states no version is refused exactly as a peer of the wrong one. Landed here
+as `src/hello.rs`, the mirror of the server's `src/wire/hello.rs`, with the
+same sentence word for word — one rule said two ways is two rules. This seat
+writes its preface and its request in one breath and confirms the engine's on
+the way to the answer, so the check costs no round trip.
+
+**The vocabulary is judged by the conformance corpus, not by fixtures written
+here (bl-93e3).** REMOTE §3 ships `corpus/` — generated from the server's own
+codec, never authored — and states what a client owes it: decode every frame
+in both directories, round-trip what it emits, and record every skip as a
+decision. The directory is **vendored** into this repo (there is no published
+artifact and no endpoint that serves it) and replayed by
+`tests/conformance/`. Three consequences are structural here:
+
+- **The gesture codec gained a decode side** (`src/codec/request.rs`), which
+  nothing in the app calls at runtime — this client is always the asker. It
+  exists because an encoder alone can only be proved against a fixture
+  somebody here wrote, while an encoder with an inverse is proved against the
+  server's own bytes. That is what catches a field dropped on the way out.
+- **A skip is a row with a reason**, exhaustive over the corpus in both
+  directions: a shape with no row and a row with no shape are each a red test,
+  so a vocabulary that grows upstream arrives as a question rather than as
+  silence. A skipped shape must still be refused **naming itself**.
+- **Rule 3 reaches inside an envelope, not only across shapes.** This codec
+  spells one staging rung and predicts no conversation name (§8), so a frame
+  stating another rung or a real seed is refused rather than flattened into
+  the shape this codec has — the same misread the rule forbids, one level
+  down.
+
+The corpus caught one live defect on its first replay: firing a conversation
+answers `{"kind": "started"}`, which this client had no arm for, so the one
+gesture that makes a conversation reported a failure over a conversation that
+was in fact running.
+
 ## 3. The stack ruling
 
 **Rust, one crate** (this repo), same contained-Rust standard as yog. The
@@ -143,6 +181,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | module | role | status |
 |---|---|---|
 | `src/frame.rs` | REMOTE §3 framing, bytes only | landed (bl-c747) |
+| `src/hello.rs` | REMOTE §3's version preface: state, confirm, and the one fail-closed sentence | landed (bl-93e3) |
+| `src/codec/request.rs` | the gesture codec's decode side — the inverse the corpus is replayed through | landed (bl-93e3) |
+| `corpus/` + `tests/conformance/` | the vendored wire conformance corpus and its replay: the decision table over every shape, in both directions | landed (bl-93e3) |
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |

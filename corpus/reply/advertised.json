@@ -1,0 +1,11 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "advertised",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "advertised"
+}

@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "search",
+      "text": "tekeli-li"
+    }
+  ],
+  "protocol": 1,
+  "shape": "search"
+}

@@ -20,12 +20,14 @@ use serde_json::{Value, json};
 mod conv;
 pub(crate) mod fields;
 pub mod reply;
+pub mod request;
 pub mod start;
 pub mod tools;
 mod transcript;
 mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
+pub use request::decode;
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
 pub use transcript::{Block, Entry, EntryKind};

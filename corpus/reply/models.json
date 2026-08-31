@@ -1,0 +1,15 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "models",
+      "ok": true,
+      "rows": [
+        "opus",
+        "sonnet"
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "models"
+}

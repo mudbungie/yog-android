@@ -19,10 +19,19 @@ transport, key material, the Android shell (egui via GameActivity — DESIGN
 composer) are landed. On-device verification is operator-assisted; an
 unregistered leaf correctly sees empty rows.
 
+**Wire v1.** Every connection opens with the version preface REMOTE §3
+defines, and a skew is fail-closed with a sentence naming both versions. The
+vocabulary is judged by yog's **conformance corpus** — generated from the
+server's own codec, vendored here as `corpus/`, and replayed by
+`tests/conformance/`: every frame decodes, everything this client emits
+round-trips, and every shape outside its slice is a recorded decision that
+refuses by name.
+
 ## Dev loop
 
 ```
 make check          # the complete local gate == CI == pre-commit hook
+make conformance    # replay the vendored wire corpus (REMOTE §3)
 make test           # cargo test
 make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
 make lint           # line-cap + leak-scan + clippy + ast-grep + cargo-deny

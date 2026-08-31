@@ -1,0 +1,12 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "models",
+      "provider": "acme",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "models"
+}

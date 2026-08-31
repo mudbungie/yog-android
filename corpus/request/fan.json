@@ -1,0 +1,58 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "ball": "bl-1f2a",
+      "n": 3,
+      "op": "fan",
+      "prepared": {
+        "binding": "/claim",
+        "goal": "Ball bl-1f2a: do it",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "project": "dev/proj"
+    },
+    {
+      "n": 3,
+      "op": "fan",
+      "prepared": {
+        "binding": "/claim",
+        "goal": "Ball bl-1f2a: do it",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "project": "dev/proj"
+    },
+    {
+      "ball": "bl-1f2a",
+      "n": 0,
+      "op": "fan",
+      "prepared": {
+        "binding": null,
+        "goal": "Ball bl-1f2a: do it",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "project": "dev/proj"
+    },
+    {
+      "ball": "bl-1f2a",
+      "n": 1,
+      "op": "fan",
+      "prepared": {
+        "binding": null,
+        "goal": "Ball bl-1f2a: do it",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "project": "dev/proj"
+    }
+  ],
+  "protocol": 1,
+  "shape": "fan"
+}

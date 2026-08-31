@@ -1,0 +1,16 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "capture": {
+        "exit_code": 3,
+        "stderr": "warned\n",
+        "stdout": "hello\n"
+      },
+      "invocation": "inv-1",
+      "op": "complete"
+    }
+  ],
+  "protocol": 1,
+  "shape": "complete"
+}

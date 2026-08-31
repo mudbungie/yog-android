@@ -1,0 +1,26 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "invocations",
+      "ok": true,
+      "rows": []
+    },
+    {
+      "kind": "invocations",
+      "ok": true,
+      "rows": [
+        {
+          "input": {
+            "command": "ls -l",
+            "timeout": 30
+          },
+          "invocation": "inv-1",
+          "tool": "Bash"
+        }
+      ]
+    }
+  ],
+  "protocol": 1,
+  "shape": "invocations"
+}

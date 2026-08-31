@@ -1,0 +1,151 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": null,
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "seed": null
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": null,
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "seed": 49375
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": "/target",
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "seed": null
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": "/target",
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "balls",
+        "workspace": "ws"
+      },
+      "seed": 49375
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": null,
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "conversation",
+        "workspace": "ws"
+      },
+      "seed": null
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": null,
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "conversation",
+        "workspace": "ws"
+      },
+      "seed": 49375
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": "/target",
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "conversation",
+        "workspace": "ws"
+      },
+      "seed": null
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": "/target",
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "conversation",
+        "workspace": "ws"
+      },
+      "seed": 49375
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": null,
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "world",
+        "workspace": "ws"
+      },
+      "seed": null
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": null,
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "world",
+        "workspace": "ws"
+      },
+      "seed": 49375
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": "/target",
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "world",
+        "workspace": "ws"
+      },
+      "seed": null
+    },
+    {
+      "goal": "edited goal",
+      "op": "prompt",
+      "prepared": {
+        "binding": "/target",
+        "goal": "the goal",
+        "lineage": null,
+        "origin": "world",
+        "workspace": "ws"
+      },
+      "seed": 49375
+    }
+  ],
+  "protocol": 1,
+  "shape": "prompt"
+}

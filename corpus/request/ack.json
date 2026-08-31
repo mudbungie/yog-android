@@ -1,0 +1,10 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "ack"
+    }
+  ],
+  "protocol": 1,
+  "shape": "ack"
+}

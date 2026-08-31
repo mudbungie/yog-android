@@ -1,0 +1,12 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "delete-workspace",
+      "typed": "alba",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "delete-workspace"
+}

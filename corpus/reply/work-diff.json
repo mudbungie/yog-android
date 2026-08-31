@@ -1,0 +1,72 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "work-diff",
+      "ok": true,
+      "patch": {
+        "kind": "truncated",
+        "size": 9000,
+        "text": "head"
+      },
+      "rows": [
+        {
+          "ball_id": "bl-1",
+          "project": "p",
+          "state": "unreadable"
+        },
+        {
+          "ball_id": "bl-2",
+          "missing": [
+            "work/bl-2"
+          ],
+          "project": "p",
+          "source": "work/bl-2",
+          "state": "absent",
+          "target": "main"
+        },
+        {
+          "ball_id": "bl-3",
+          "files": [
+            {
+              "added": 3,
+              "path": "src/a.rs",
+              "removed": 1
+            },
+            {
+              "binary": true,
+              "path": "assets/x.png"
+            }
+          ],
+          "project": "p",
+          "source": "work/bl-3",
+          "source_oid": "bbb",
+          "state": "diff",
+          "target": "main",
+          "target_oid": "aaa",
+          "truncated": true
+        },
+        {
+          "ball_id": "bl-3",
+          "delivered": "ccc",
+          "files": [],
+          "handle": "at-0badcafe",
+          "project": "p",
+          "source": "attempt/at-0badcafe",
+          "source_oid": "ddd",
+          "state": "diff",
+          "target": "work/bl-3",
+          "target_oid": "ccc",
+          "truncated": false
+        }
+      ]
+    },
+    {
+      "kind": "work-diff",
+      "ok": true,
+      "rows": []
+    }
+  ],
+  "protocol": 1,
+  "shape": "work-diff"
+}

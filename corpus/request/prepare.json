@@ -1,0 +1,139 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "prepare",
+      "payload": {
+        "rung": "bare"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "dir": "/work",
+        "rung": "path"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "id": "bl-9",
+          "join": "ready",
+          "tags": [],
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "id": "bl-9",
+          "join": "blocked",
+          "tags": [],
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "id": "bl-9",
+          "join": "bound",
+          "tags": [],
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "id": "bl-9",
+          "join": "claimed-elsewhere",
+          "tags": [],
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "id": "bl-9",
+          "join": "delivered",
+          "tags": [],
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "id": "bl-9",
+          "join": "unassigned-workspace",
+          "tags": [],
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    },
+    {
+      "op": "prepare",
+      "payload": {
+        "ball": {
+          "body": "b",
+          "id": "bl-9",
+          "join": "orphaned-project",
+          "tags": [],
+          "title": "t"
+        },
+        "project": "proj",
+        "rung": "ball"
+      },
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "prepare"
+}
