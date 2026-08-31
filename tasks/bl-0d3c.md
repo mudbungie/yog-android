@@ -1,7 +1,8 @@
 +++
 title = "the first-run surface gets branded, tappable choices — and each opens a real screen"
 created = 1788147577
-updated = 1788147577
+updated = 1788147622
+claimant = "OrderGreeter"
 priority = 9
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
