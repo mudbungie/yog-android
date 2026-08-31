@@ -1,7 +1,8 @@
 +++
 title = "the enroll envelope, pasted: the QR payload as text, validated and landed"
 created = 1788147813
-updated = 1788147813
+updated = 1788147825
+claimant = "OrderGreeter"
 priority = 8
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
