@@ -13,6 +13,7 @@ use std::time::Duration;
 use winit::platform::android::activity::AndroidApp;
 
 use crate::bootstrap::{Component, Offer, Standing, offers, standing};
+use crate::foot::Foot;
 use crate::host::Host;
 use crate::seat::Model;
 
@@ -64,9 +65,12 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
         Ok(Standing::Cold) => return cold(None),
         Ok(Standing::Enrolled(enrolled)) => enrolled,
     };
-    let seat = |m: &crate::material::Material| crate::transport::Seat::open(m);
+    let material = &enrolled.material;
     match enrolled.component {
-        Component::Foot => match seat(&enrolled.material).map(|s| host(android, s)) {
+        // The foot holds ONE channel and it is the narrow one (bl-2040): the
+        // three gestures §4.2 allows, and no seat this arm could accidentally
+        // start.
+        Component::Foot => match Foot::open(material).map(|f| host(android, f)) {
             Ok(host) => Running::Foot {
                 host,
                 client: enrolled.client,
@@ -76,16 +80,20 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
         // A leaf that says nothing says seat, and the server holds no leaf on
         // this box at all — so `Server` is unreachable here and is served by
         // the arm that cannot be wrong about it.
-        Component::Seat | Component::Server => {
-            match (seat(&enrolled.material), seat(&enrolled.material)) {
-                (Ok(asker), poster) => Running::Seat {
-                    model: Model::start(asker, CADENCE),
-                    host: poster.ok().map(|s| host(android, s)),
-                    client: enrolled.client,
-                },
-                (Err(why), _) => cold(Some(why)),
-            }
-        }
+        //
+        // Two channels on one identity, which REMOTE §5's refcounted presence
+        // expects: the seat's asker, and the tool host beside it on the same
+        // foot surface. A host that will not open is simply absent — the
+        // seat's own banner already says why a channel failed, and a second
+        // copy of that sentence would be noise.
+        Component::Seat | Component::Server => match crate::transport::Seat::open(material) {
+            Ok(asker) => Running::Seat {
+                model: Model::start(asker, CADENCE),
+                host: Foot::open(material).ok().map(|f| host(android, f)),
+                client: enrolled.client,
+            },
+            Err(why) => cold(Some(why)),
+        },
     }
 }
 
@@ -101,13 +109,13 @@ fn wire_dir(android: &AndroidApp) -> std::path::PathBuf {
 /// The tool host over one connection. The dispatch closes over this app's own
 /// storage, which is where a screenshot goes when a caller names no path — the
 /// one directory this uid can always write.
-fn host(android: &AndroidApp, seat: crate::transport::Seat) -> Host {
+fn host(android: &AndroidApp, foot: Foot) -> Host {
     let data_dir = android
         .internal_data_path()
         .map(|p| p.display().to_string())
         .unwrap_or_default();
     Host::start(
-        seat,
+        foot,
         crate::tools::advertisement(),
         Box::new(move |tool, input| crate::tools::run_in(tool, input, &data_dir)),
     )

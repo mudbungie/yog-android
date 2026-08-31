@@ -201,6 +201,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rows.rs` + `rows/{build,compacted,project,project/blocks}.rs` | the transcript's one-line row projection: the row vocabulary (class, tone, role, fold), the per-entry match and its labels, the preview/body split — pure, no paint | landed (bl-0ed6) |
 | `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
+| `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
 | `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete | landed (bl-d366) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
@@ -270,6 +271,22 @@ ordinary boundary verbs, the engine never speaking first — and it rides its
 own connection beside the seat model's, on the same material and therefore
 the same certificate common name, which §5's refcounted presence map already
 expects of one client.
+
+**The surface is a type, not a convention (bl-2040).** REMOTE §4.2 minted the
+foot grade after this loop landed, and states it as a closed set: *"the
+tool-host gestures and **nothing else**: `advertise`, `invocations` and
+`complete`. No other `Query`, no other `Action`."* `src/foot.rs` is that
+sentence in the type system — it owns the transport and never hands it out, so
+the general encode-any-gesture door is not reachable from the host loop and a
+fourth verb is a compile error rather than a refusal at the far end. It is not
+*enforcement*: the engine enforces the grade with one raise at its chokepoint,
+in band, naming it. What the narrowing buys is that a foot-graded phone cannot
+accidentally spend a gesture its own certificate refuses.
+
+**A seat's tool host rides the same surface**, and that is not a
+contradiction: the tool-host gestures are the tool-host gestures whatever
+grade the leaf carries. One code path, so the seat-with-a-host case and the
+foot-only case are the same case.
 
 **The deviation, and why it is lawful.** REMOTE §5.2 derives a host's
 advertisement from an operator-authored `<yog-data-root>/tools.json` naming an
@@ -435,9 +452,9 @@ trail, not a transcript."* A phone on a foot-grade leaf running the seat's
 standing-question loop would earn a refusal per question, per pass, forever —
 the operator would read a wall of sentences where a component boundary
 belongs. So the foot arm starts the tool host and nothing else, and its screen
-is what this machine offers and what it has run. The **structural** narrowing —
-a gesture type a foot's connection can spend, so a seat's ask is unspeakable
-rather than merely unsent — is bl-2040.
+is what this machine offers and what it has run. The **structural** narrowing
+landed with it (bl-2040, §6): `src/foot.rs` is the three gestures and there is
+no path from the host loop to a fourth.
 
 **The first-run surface has no button, deliberately.** REMOTE §1.4 stands:
 *"there is no pairing protocol in the wire, no token exchange a stranger on

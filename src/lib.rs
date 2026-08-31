@@ -12,6 +12,7 @@
 
 pub mod bootstrap;
 pub mod codec;
+pub mod foot;
 pub mod frame;
 pub mod hello;
 pub mod host;

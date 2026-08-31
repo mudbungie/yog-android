@@ -28,9 +28,8 @@
 
 use std::sync::mpsc;
 
-use crate::codec::reply::Reply;
-use crate::codec::{Act, Ask, Capture, Gesture, Invocation, encode};
-use crate::transport::Seat;
+use crate::codec::{Capture, Invocation};
+use crate::foot::Foot;
 
 /// What a host runs an invocation with: the tool's name and the model's own
 /// arguments in, a capture out. Owned and `Send` because it crosses onto the
@@ -69,9 +68,9 @@ impl Host {
     /// [`crate::tools`] so the loop is testable against a table a test wrote,
     /// and `run` is boxed rather than a bare `fn` because the real dispatch
     /// closes over this app's own storage path (`crate::tools::run_in`).
-    pub fn start(seat: Seat, tools: Vec<crate::codec::Tool>, run: Dispatch) -> Self {
+    pub fn start(foot: Foot, tools: Vec<crate::codec::Tool>, run: Dispatch) -> Self {
         let (tx, standings) = mpsc::channel();
-        let worker = std::thread::spawn(move || serve(&seat, tools, &run, &tx));
+        let worker = std::thread::spawn(move || serve(&foot, tools, &run, &tx));
         Self {
             standings,
             last: Standing::default(),
@@ -102,7 +101,7 @@ impl Drop for Host {
 /// Present, then wait, run and answer, until something stops it — and publish
 /// the sentence that did.
 fn serve(
-    seat: &Seat,
+    foot: &Foot,
     tools: Vec<crate::codec::Tool>,
     run: &Dispatch,
     out: &mpsc::Sender<Standing>,
@@ -112,7 +111,7 @@ fn serve(
         ..Standing::default()
     };
     let _ = out.send(standing.clone());
-    standing.stopped = Some(hold(seat, tools, run, out, &mut standing));
+    standing.stopped = Some(hold(foot, tools, run, out, &mut standing));
     let _ = out.send(standing);
 }
 
@@ -120,14 +119,19 @@ fn serve(
 /// no success exit, so none is spelled — a host's only way out is a gesture
 /// that failed, and an `Ok` arm here would be one no state of the world can
 /// reach.
+///
+/// **Every wire crossing in this loop is a [`Foot`] method**, which is the
+/// bl-2040 narrowing: the three gestures REMOTE §4.2 allows a foot are the
+/// three this function can reach, and the general encode-any-gesture door is
+/// not in scope here at all.
 fn hold(
-    seat: &Seat,
+    foot: &Foot,
     tools: Vec<crate::codec::Tool>,
     run: &Dispatch,
     out: &mpsc::Sender<Standing>,
     standing: &mut Standing,
 ) -> String {
-    if let Err(why) = tell(seat, &Gesture::Act(Act::Advertise { tools })) {
+    if let Err(why) = foot.advertise(tools) {
         return why;
     }
     standing.advertised = true;
@@ -135,7 +139,7 @@ fn hold(
         return "the frame stopped reading".to_owned();
     }
     loop {
-        let work = match waited(seat) {
+        let work = match foot.invocations() {
             Ok(work) => work,
             Err(why) => return why,
         };
@@ -143,7 +147,7 @@ fn hold(
             let capture = run(&invocation.tool, &invocation.input);
             standing.served += 1;
             standing.last = Some(format!("{} → {}", invocation.tool, capture.exit_code));
-            if let Err(why) = answer(seat, &invocation, capture) {
+            if let Err(why) = answer(foot, &invocation, capture) {
                 return why;
             }
             if out.send(standing.clone()).is_err() {
@@ -153,37 +157,9 @@ fn hold(
     }
 }
 
-/// The follow-class read: this machine's next work. An empty answer is
-/// ordinary — a hold that ended quietly — and only a channel failure is not.
-fn waited(seat: &Seat) -> Result<Vec<Invocation>, String> {
-    match tell(seat, &Gesture::Ask(Ask::Invocations))? {
-        Reply::Invocations(rows) => Ok(rows),
-        other => Err(format!(
-            "the engine answered {}, not this machine's work",
-            other.kind()
-        )),
-    }
-}
-
-/// Post one capture back. The receipt is read rather than discarded: an engine
-/// that refused the completion — an expired handle, a slot addressed elsewhere
-/// — is a thing this host must stop rather than keep answering into.
-fn answer(seat: &Seat, invocation: &Invocation, capture: Capture) -> Result<(), String> {
-    tell(
-        seat,
-        &Gesture::Act(Act::Complete {
-            invocation: invocation.id.clone(),
-            capture,
-        }),
-    )
-    .map(|_| ())
-}
-
-/// One gesture over the wire, in the one codec and the one reply decoder — so
-/// this host speaks exactly what every other seat speaks and can add nothing
-/// to it.
-fn tell(seat: &Seat, gesture: &Gesture) -> Result<Reply, String> {
-    seat.answered(&encode(gesture))
+/// Post one capture back, quoting the handle it answers.
+fn answer(foot: &Foot, invocation: &Invocation, capture: Capture) -> Result<(), String> {
+    foot.complete(invocation.id.clone(), capture)
 }
 
 #[cfg(test)]

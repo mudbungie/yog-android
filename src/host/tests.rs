@@ -5,8 +5,8 @@
 
 use super::{Host, Standing};
 use crate::codec::{Capture, Tool};
+use crate::foot::Foot;
 use crate::test_support::{material, mint_ca, mint_leaf, scratch, serve_many};
-use crate::transport::Seat;
 use serde_json::{Value, json};
 use std::time::Duration;
 
@@ -64,8 +64,8 @@ fn routed(id: &str) -> Vec<u8> {
 fn host_against(scripts: Vec<Vec<Vec<u8>>>) -> (Host, std::thread::JoinHandle<Vec<Vec<u8>>>) {
     let dir = pki();
     let (address, served) = serve_many(&dir, "ca", "server", scripts);
-    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
-    (Host::start(seat, table(), Box::new(dispatch)), served)
+    let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
+    (Host::start(foot, table(), Box::new(dispatch)), served)
 }
 
 /// Poll until a standing satisfies `pass` — the host publishes on its own
@@ -266,8 +266,8 @@ fn a_frame_that_goes_away_mid_run_stops_the_host_after_it_answers() {
             vec![routed("i1")],
         ],
     );
-    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
-    let mut host = Host::start(seat, table(), Box::new(slow_dispatch));
+    let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let mut host = Host::start(foot, table(), Box::new(slow_dispatch));
     // Waiting for the advertisement is what puts the drop INSIDE the run: the
     // publish that failed is the loop's, not the one right after presenting.
     settle(&mut host, |s| s.advertised);

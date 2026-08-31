@@ -9,7 +9,9 @@ engine; seats attach and detach, and the work does not.
 
 **Which component runs is read off the leaf, never stored.** No material and
 nothing runs — the first screen is the three bootstraps. A leaf with `OU=foot`
-runs the tool host; any other leaf runs the seat (REMOTE §4.2).
+runs the tool host; any other leaf runs the seat (REMOTE §4.2). The foot's
+wire surface is a type with three methods, so a gesture outside the foot set
+is a compile error here rather than a refusal at the engine.
 
 The wire contract is the server's (yog `docs/REMOTE.md`): big-endian `u32`
 length-prefixed JSON frames, a zero-length terminator, mTLS with
