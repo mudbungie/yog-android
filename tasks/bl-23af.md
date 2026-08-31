@@ -2,6 +2,7 @@
 title = "the APK's device matrix is two: an x86_64 library beside the arm64 one"
 created = 1788147957
 updated = 1788147957
+claimant = "OrderPuppeteer"
 priority = 7
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
