@@ -29,11 +29,17 @@ use super::app::Shell;
 use super::boot::Running;
 use crate::bootstrap::{Component, Offer};
 
+mod material;
+
 /// What a tap on an opened screen asked for. `Stay` is every frame in which
 /// nothing was pressed.
-enum Act {
+pub(super) enum Act {
     Stay,
     Back,
+    /// Re-run the boot derivation. Both controls that act ask for this and
+    /// neither knows what it will find — landing an envelope and re-reading
+    /// after a cable push are the same question, asked after the material
+    /// changed.
     Recheck,
 }
 
@@ -61,10 +67,14 @@ impl Shell {
             self.chose = None;
             return;
         };
-        match opened(ui, offer, &dir, refusal.as_ref()) {
+        let (text, said) = (&mut self.envelope, &mut self.envelope_said);
+        match opened(ui, offer, &dir, refusal.as_ref(), text, said) {
             Act::Stay => {}
-            Act::Back => self.chose = None,
-            Act::Recheck => self.reboot(),
+            Act::Back => self.forget_envelope(),
+            Act::Recheck => {
+                self.forget_envelope();
+                self.reboot();
+            }
         }
     }
 }
@@ -126,7 +136,14 @@ fn choice(ui: &mut egui::Ui, offer: &Offer, emphasised: bool) -> bool {
 
 /// The screen a choice opened. For the two enrollments it is what material is
 /// needed and where it goes; for the server it is the recorded blockers.
-fn opened(ui: &mut egui::Ui, offer: &Offer, dir: &str, refusal: Option<&String>) -> Act {
+fn opened(
+    ui: &mut egui::Ui,
+    offer: &Offer,
+    dir: &str,
+    refusal: Option<&String>,
+    text: &mut String,
+    said: &mut Option<String>,
+) -> Act {
     let mut act = Act::Stay;
     if ui.button("< back").clicked() {
         act = Act::Back;
@@ -141,40 +158,9 @@ fn opened(ui: &mut egui::Ui, offer: &Offer, dir: &str, refusal: Option<&String>)
             ui.weak("this bootstrap starts nothing.");
             return;
         }
-        if enrollment(ui, offer, dir, refusal) {
+        if material::screen(ui, offer, dir, refusal, text, said) {
             act = Act::Recheck;
         }
     });
     act
-}
-
-/// The enrollment screen proper: the file list, the path, the delivery
-/// channels, and the one control that re-reads this app's own storage.
-/// Returns whether that control was pressed.
-fn enrollment(ui: &mut egui::Ui, offer: &Offer, dir: &str, refusal: Option<&String>) -> bool {
-    ui.strong("this device needs");
-    for file in crate::material::WANTED {
-        ui.label(format!("  · {file}"));
-    }
-    ui.add_space(4.0);
-    ui.strong("put them at");
-    ui.label(format!("  {dir}"));
-    ui.add_space(8.0);
-    ui.label(&offer.how);
-    ui.add_space(8.0);
-    ui.strong("how it gets here");
-    for channel in crate::bootstrap::channels() {
-        ui.label(format!("  · {channel}"));
-    }
-    ui.add_space(12.0);
-    ui.separator();
-    if let Some(why) = refusal {
-        ui.colored_label(egui::Color32::LIGHT_RED, why);
-    } else {
-        ui.weak("nothing has arrived yet.");
-    }
-    ui.add_space(4.0);
-    // A read of this app's own storage, not a dial: it is the act that makes
-    // an `adb push` land without killing and relaunching the app.
-    ui.button("check for material").clicked()
 }

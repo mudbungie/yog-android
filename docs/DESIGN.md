@@ -216,7 +216,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start}.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
-| `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
+| `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
@@ -224,6 +224,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
 | `src/shell/boot.rs` | android-only: the bootstrap gate — read the standing, start exactly that component, start nothing otherwise | landed (bl-7714) |
 | `src/shell/enroll.rs` | android-only: the first-run surface — the three branded choices, and the screen behind each tap | landed (bl-0d3c) |
+| `src/shell/enroll/material.rs` | android-only: the enrollment screen — the file list, the delivery channels, the pasted envelope and the re-read | landed (bl-dd7b) |
+| `src/envelope.rs` | the enroll envelope a seat mints: read, checked against the leaf's own grade and name, landed under `material`'s names | landed (bl-dd7b) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
@@ -579,3 +581,48 @@ in the operator's own terms and starts nothing. That is the whole deliverable
 of this evaluation, and it is deliberate: REMOTE §12's *"ship inert"* ruling
 says a server that cannot serve refuses in band, and a button that started one
 which refuses every act would be strictly worse than a sentence that says why.
+
+## 11. The enroll envelope, and why pasting it is not a pairing protocol (bl-dd7b)
+
+yog's `enroll` act (yog bl-f4e3) mints a client leaf on the engine's own
+recipe and answers a reply carrying `{grade, name, address, ca, cert, key}`,
+shredding the leaf key server-side. The operator's seat renders that as a QR;
+this device reads it. The envelope is that payload with a version tag in
+front, and `src/envelope.rs` is the whole contract:
+
+```text
+{"yog-enroll":1,"grade":…,"name":…,"address":…,"ca":…,"cert":…,"key":…}
+```
+
+**REMOTE §1.4 is untouched, and the reason is which machine acts.** The new
+device performs no channel act at all: an already-trusted **operator-grade**
+seat performs the mint over *its own* authenticated channel, and the material
+travels out of channel — a screen, and an operator's eyes. That is §5's third
+delivery channel arriving, not a token exchange a stranger could initiate.
+Nothing in this module dials.
+
+**The tag names the envelope and states its version in one field.** A payload
+carrying a version but not a name would be read out of whatever JSON a camera
+happened to see. The version is checked first and refuses naming both — the
+fail-closed shape `src/hello.rs` gives the wire preface, one channel over.
+
+**The grade is not taken on the envelope's word.** REMOTE §4.2 puts the grade
+on the certificate and §9 derives the component from it; an envelope field
+that disagreed would be a second authority for one fact, and landing it would
+enroll this device as something its own leaf is not. So the stated grade and
+name must AGREE with the leaf's own, and a disagreement refuses naming both —
+it is a defect in whatever minted the envelope, caught at the one moment the
+material can still be refused. The envelope's `grade` field is good for
+exactly that check and for nothing else.
+
+**Paste is the QR's degraded path, and it is the same sink.** A camera that
+will not focus, a denied permission, an operator reading a laptop screen: the
+text field has to work regardless, so it was built first. A decoder — when one
+is adjudicated (bl-d815; the platform ships none, so it is a rule 6 dependency
+decision, not a coding task) — is only a producer of the same string, feeding
+a path already proven end to end on real glass.
+
+**The field holds a private key while it is full**, and is emptied the moment
+it lands and on the way back out of the screen (`Shell::forget_envelope`).
+Nothing logs it. It is the one place this app holds key material it was not
+handed a file for.

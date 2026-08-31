@@ -1,10 +1,15 @@
-//! The frame loop: eframe boot, the inset pads, the IME mirror, and the
-//! seat model the screens paint from. Every frame renders owned state and
-//! blocks on nothing — the wire runs only on the model's worker thread.
+//! **What the shell is**: the owned state a frame paints from, and the
+//! editable fields the IME mirror addresses. Every frame renders owned state
+//! and blocks on nothing — the wire runs only on the model's worker thread.
+//!
+//! The per-frame pass itself is `app/pass.rs`, a child module so it can reach
+//! these private fields. The seam is what the shell IS against what one frame
+//! DOES with it.
 
-use std::time::Duration;
+mod pass;
 
-use eframe::egui;
+pub(crate) use pass::run;
+
 use winit::platform::android::activity::AndroidApp;
 
 use super::boot::{Running, boot};
@@ -21,27 +26,15 @@ pub(crate) const COMPOSER: Field = Field {
     kind: FieldKind::Composer,
 };
 
-/// Boot eframe over the Activity. `sys::android_main` is the only caller;
-/// everything before this call is sys.rs's.
-pub(crate) fn run(app: AndroidApp) {
-    android_logger::init_once(
-        android_logger::Config::default().with_max_level(log::LevelFilter::Info),
-    );
-    let handle = app.clone();
-    let options = eframe::NativeOptions {
-        android_app: Some(app),
-        renderer: eframe::Renderer::Wgpu,
-        ..Default::default()
-    };
-    if let Err(e) = eframe::run_native(
-        "yog",
-        options,
-        Box::new(move |_| Ok(Box::new(Shell::new(handle)))),
-    ) {
-        // The process is over either way; logcat is the only witness.
-        log::error!("eframe: {e}");
-    }
-}
+/// The enrollment screen's envelope field. A separate id because the two are
+/// never on screen together for the composer's reason inverted: a cold device
+/// has no conversation to speak into, and a provisioned one has nothing left
+/// to enroll — but they are different KINDS of editor (`bridge.rs`), and the
+/// IME must be told which it is focused on.
+pub(crate) const ENVELOPE: Field = Field {
+    id: "envelope",
+    kind: FieldKind::Envelope,
+};
 
 pub(crate) struct Shell {
     android: AndroidApp,
@@ -54,6 +47,12 @@ pub(crate) struct Shell {
     /// stored choice would be a second authority for one fact (DESIGN §9).
     pub(crate) chose: Option<crate::bootstrap::Component>,
     pub(crate) composer: String,
+    /// The pasted enroll envelope, and the last thing reading it said. It
+    /// holds a PRIVATE KEY while it is full, so it is emptied the moment it
+    /// has been landed and on the way back out of the screen
+    /// (`forget_envelope`), and nothing logs it.
+    pub(crate) envelope: String,
+    pub(crate) envelope_said: Option<String>,
     /// Which KINDS of row open by default (the desktop's two knobs).
     pub(crate) auto: AutoExpand,
     /// The rows the operator has flipped by hand — overrides, never states:
@@ -76,12 +75,24 @@ impl Shell {
             android,
             bridge: Bridge::default(),
             composer: String::new(),
+            envelope: String::new(),
+            envelope_said: None,
             auto: AutoExpand::default(),
             folds: std::collections::BTreeSet::new(),
             t0: std::time::Instant::now(),
             inset: InsetPx::default(),
             inset_at: 0,
         }
+    }
+
+    /// Drop the pasted envelope and whatever reading it said. Called on the
+    /// way out of the enrollment screen and the instant material lands: the
+    /// text is a private key, and a buffer that outlives its use is the one
+    /// place this app holds key material it was not handed a file for.
+    pub(crate) fn forget_envelope(&mut self) {
+        self.envelope = String::new();
+        self.envelope_said = None;
+        self.chose = None;
     }
 
     /// Re-read what is provisioned and start whatever it now names. A read of
@@ -127,53 +138,5 @@ impl Shell {
             Running::Foot { host, .. } => Some(host),
             Running::Cold { .. } => None,
         }
-    }
-
-    fn refresh_insets(&mut self, now: u128) {
-        if now.saturating_sub(self.inset_at) < 200 {
-            return;
-        }
-        self.inset_at = now;
-        match super::inset::probe(&self.android) {
-            Ok(px) => self.inset = px,
-            Err(e) => log::warn!("inset probe: {e}"),
-        }
-    }
-}
-
-impl eframe::App for Shell {
-    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        let ctx = ui.ctx().clone();
-        let now = self.t0.elapsed().as_millis();
-
-        // The bridge runs FIRST, on egui's settled focus, so the widgets
-        // below lay out from text that is already current.
-        {
-            let mut fields = [(COMPOSER, &mut self.composer)];
-            self.bridge.run(&ctx, &self.android, &mut fields, now);
-        }
-        self.refresh_insets(now);
-
-        let ppp = ctx.pixels_per_point();
-        ui.add_space(self.inset.top as f32 / ppp);
-        // A gutter on both sides. The platform insets carry only top and
-        // bottom (`inset.rs`: the status bar and the taller of keyboard and
-        // gesture-nav), so nothing else was holding content off the display's
-        // own edge — the first-run heading was painting with its first glyph
-        // half off the glass, and every full-width button ran edge to edge.
-        egui::Frame::NONE
-            .inner_margin(egui::Margin::symmetric(10, 0))
-            .show(ui, |ui| self.screens(ui));
-
-        // The input-wake ruling (DESIGN §3, decided under bl-c761): no
-        // vendored winit, so the commit wake winit drops (bl-2958) is
-        // replaced by a focus-gated fast repaint. The focus is read HERE, at
-        // the decision, from egui's settled memory — resetting a focus flag
-        // before this read silently reverted the fix once (the bl-c761
-        // dossier's named trap). Consuming a winit release with the wake arm
-        // dissolves this poll.
-        let focused = ctx.memory(egui::Memory::focused).is_some();
-        let delay = if focused { 16 } else { 250 };
-        ctx.request_repaint_after(Duration::from_millis(delay));
     }
 }

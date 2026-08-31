@@ -45,6 +45,10 @@ pub(crate) enum FieldKind {
     /// residual: `GameActivity` writes the action where the enter key does not
     /// read it, so enter stays a newline until upstream moves — DESIGN §3.)
     Composer,
+    /// The enrollment screen's envelope: a long machine-written blob carried
+    /// here by paste. Autocorrect and sentence capitals would corrupt it, and
+    /// there is no action key — the button beside it is the gesture.
+    Envelope,
 }
 
 #[derive(Default)]
@@ -146,6 +150,10 @@ fn editor_info(kind: FieldKind) -> (aa::input::InputType, aa::input::TextInputAc
         T::TYPE_CLASS_TEXT | T::TYPE_TEXT_FLAG_CAP_SENTENCES | T::TYPE_TEXT_FLAG_AUTO_CORRECT;
     match kind {
         FieldKind::Composer => (base | T::TYPE_TEXT_VARIATION_SHORT_MESSAGE, A::Send),
+        FieldKind::Envelope => (
+            T::TYPE_CLASS_TEXT | T::TYPE_TEXT_FLAG_MULTI_LINE | T::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
+            A::None,
+        ),
     }
 }
 

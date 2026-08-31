@@ -15,7 +15,10 @@ DESIGN §10 is the whole chain, rung by rung.
 **Which component runs is read off the leaf, never stored.** No material and
 nothing runs — the first screen is the three bootstraps as branded choices:
 **Lernie** the seat, **Thrall** the foot, **Yog** the server. A tap opens the
-screen that explains one; it never dials and never stores a mode. A leaf with `OU=foot`
+screen that explains one; it never dials and never stores a mode. The two
+enrollment screens take the **enroll envelope** a trusted seat minted —
+pasted today, scanned once a decoder is adjudicated — validate it against the
+leaf's own grade, land it, and bring up the component the certificate names. A leaf with `OU=foot`
 runs the tool host; any other leaf runs the seat (REMOTE §4.2). The foot's
 wire surface is a type with three methods, so a gesture outside the foot set
 is a compile error here rather than a refusal at the engine.
