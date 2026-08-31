@@ -171,12 +171,16 @@ pub fn offers(dir: &Path) -> Vec<Offer> {
         Offer {
             component: Component::Server,
             title: "run the engine here".to_owned(),
-            how: "Not yet: an engine holds a world, and founding one on this \
-                  device needs a chain that has not been walked — the crate \
-                  cross-compiled, a world founded under an app uid, and the \
-                  child processes the engine spawns present on the device. \
-                  A button that started a server which refuses every act \
-                  would be worse than this sentence."
+            how: "Not yet, and here is exactly why. The engine cross-compiles \
+                  to this architecture and links — that rung is walked. Two \
+                  are not. An engine founds its world with git, commits every \
+                  workspace and keeps its tasks in a git repository, and \
+                  Android ships no git. And the world seeds shell shims its \
+                  own agents run, which land in this app's private storage — \
+                  where Android refuses to execute anything, by policy, since \
+                  API 29. Both are upstream shapes, not settings. A button \
+                  that started an engine which refuses every act would be \
+                  worse than this sentence."
                 .to_owned(),
             default: false,
         },

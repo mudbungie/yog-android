@@ -7,6 +7,11 @@ runnable components — the **seat**, the **foot** (tool host) and the
 of channel, and this app dialling a host engine with it. Agents run on that
 engine; seats attach and detach, and the work does not.
 
+The **server** bootstrap is offered and does not start: the engine
+cross-compiles and links for this architecture, but Android ships no `git` and
+refuses to execute the shell shims the world seeds into app-private storage.
+DESIGN §10 is the whole chain, rung by rung.
+
 **Which component runs is read off the leaf, never stored.** No material and
 nothing runs — the first screen is the three bootstraps. A leaf with `OU=foot`
 runs the tool host; any other leaf runs the seat (REMOTE §4.2). The foot's

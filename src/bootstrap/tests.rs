@@ -110,6 +110,10 @@ fn the_offers_are_the_three_bootstraps_with_enrolment_emphasised() {
         .collect();
     assert_eq!(server.len(), 1);
     assert!(server[0].how.contains("Not yet"), "{}", server[0].how);
+    // It names the two rungs that are not walked, because "not yet" without
+    // them is a shrug (DESIGN §10).
+    assert!(server[0].how.contains("git"), "{}", server[0].how);
+    assert!(server[0].how.contains("API 29"), "{}", server[0].how);
 }
 
 #[test]

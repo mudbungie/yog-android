@@ -476,3 +476,64 @@ can be a client of many servers, each named by its own directory under
 *"remains what it has always been, the box's own root"* — so today's shape is
 lawful and is the zero-entry case, not a deviation. Multi-entry is a ball of
 its own, because it is N models and N host channels rather than a file format.
+
+## 10. Running the engine on this device: the chain, walked (bl-d6c6)
+
+The third component §9 offers is the yog **server** — holder of the world, the
+balls, the conversations. This section is the honest evaluation the offer's
+sentence is a summary of. **It is not landable, and the reasons are structural
+rather than effort.**
+
+**Rung 1 — the crate cross-compiles, and this is measured, not assumed.** The
+engine's library and its binaries both build for `aarch64-linux-android`
+against the pinned NDK, with `balls`, `brazen`, `litany`, `ureq`, `rustls` and
+`ring` in the graph and no C toolchain acquired: `ring` is the crypto provider
+on both ends already, for the reason this repo's own manifest gives. The
+release link produces a ~13 MB PIE executable for `/system/bin/linker64`, min
+API 21. So *"does the Rust cross-compile"* — the question that usually decides
+this kind of question — is answered yes and is not the obstacle.
+
+**Rung 2 — the engine must be a child process, not a library.** This app is a
+`.so` loaded into a zygote-forked process, so `current_exe()` here reports the
+system's app runtime, not yog. That matters because yog's spawn resolution is
+**self-multiplex**: `bl`, `litany` and `bz` all resolve to yog's own
+`current_exe()` under a leading namespace word. In-process, every one of those
+would exec the wrong program. Launched as a **child** from the app's native
+library directory the resolution is correct again, because that child's
+`/proc/self/exe` is the engine.
+
+That directory is also the only place an APK-shipped executable may be
+executed: since API 29 the platform refuses to execute a file in an app's
+private storage, and the native library directory is the documented exception.
+So the shape, if this is ever built, is a binary shipped inside the APK's
+native library set and spawned — never a linked-in engine.
+
+**Rung 3 — the world's agent-tool shims cannot be executed, and this is the
+first hard stop.** yog's world seeds `<world>/tools/{bl,litany,bz,…}`: small
+`/bin/sh` re-execs of yog under a namespace, written at runtime so *an agent's
+bash* resolves `bl` to the embedded balls rather than to whatever is on the
+ambient `PATH`. They are generated files in the app's private storage, which is
+exactly what rung 2's platform rule refuses to execute. Nothing this repo can
+write changes that: the shims are yog's mechanism, and the fix — resolving the
+agent's tools to the shipped binary directly rather than through a written file
+— is an upstream change to yog's own resolution.
+
+**Rung 4 — git is absent, and this is the second hard stop.** The engine founds
+its world by committing, `litany new` commits every workspace, the task store
+is a git repository on two branches, and the whole workspace read surface is
+`git`. Android ships no git and nothing in yog's dependency graph substitutes
+for one. Shipping a cross-compiled git beside the engine is conceivable and is
+a project of its own, not a step in this one.
+
+**Two smaller ones, recorded so the list is complete.** The engine's boot mints
+its wire certificates by shelling to `openssl`, which is also absent — though a
+phone's material is provisioned out of channel anyway (§5), so the mint is the
+wrong act here regardless. And a listening engine needs to survive the
+platform's background limits, which means a foreground service and a
+notification, not a thread.
+
+**What the offer therefore says.** The first-run surface states rungs 3 and 4
+in the operator's own terms and starts nothing. That is the whole deliverable
+of this evaluation, and it is deliberate: REMOTE §12's *"ship inert"* ruling
+says a server that cannot serve refuses in band, and a button that started one
+which refuses every act would be strictly worse than a sentence that says why.
