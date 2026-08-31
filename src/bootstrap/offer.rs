@@ -19,7 +19,8 @@ use super::Component;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Offer {
     pub component: Component,
-    /// The name on the control — the brand an operator picks by.
+    /// The name on the control — [`Component::brand`], carried here so the
+    /// screen paints one struct rather than joining two.
     pub brand: String,
     /// What taking this makes this device, in one line under the brand.
     pub tagline: String,
@@ -45,7 +46,7 @@ pub fn offers() -> Vec<Offer> {
     vec![
         Offer {
             component: Component::Seat,
-            brand: "Lernie".to_owned(),
+            brand: Component::Seat.brand(),
             tagline: "the seat — operate your conversations".to_owned(),
             how: "An operator-grade leaf: a subject with no OU=foot \
                   (REMOTE §4.2), plus the one host:port it dials. \
@@ -57,7 +58,7 @@ pub fn offers() -> Vec<Offer> {
         },
         Offer {
             component: Component::Foot,
-            brand: "Thrall".to_owned(),
+            brand: Component::Foot.brand(),
             tagline: "the foot — let conversations use this device's tools".to_owned(),
             how: "The same files, on a leaf minted with OU=foot. A foot \
                   advertises what this machine can run, waits for work \
@@ -70,7 +71,7 @@ pub fn offers() -> Vec<Offer> {
         },
         Offer {
             component: Component::Server,
-            brand: "Yog".to_owned(),
+            brand: Component::Server.brand(),
             tagline: "the server — run the engine here".to_owned(),
             how: "Not yet, and here is exactly why. The engine cross-compiles \
                   to this architecture and links — that rung is walked. Two \

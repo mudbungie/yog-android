@@ -146,6 +146,18 @@ fn the_enrollment_screen_names_the_three_delivery_channels() {
     assert!(channels[2].contains("screen"), "{}", channels[2]);
 }
 
+/// The brand lives on the component, so the chooser and the screen the device
+/// lands on cannot disagree about what an operator just picked (bl-4b91).
+#[test]
+fn each_component_wears_a_brand_and_the_offers_read_it() {
+    assert_eq!(Component::Seat.brand(), "Lernie");
+    assert_eq!(Component::Foot.brand(), "Thrall");
+    assert_eq!(Component::Server.brand(), "Yog");
+    for offer in offers() {
+        assert_eq!(offer.brand, offer.component.brand());
+    }
+}
+
 #[test]
 fn each_component_wears_a_word() {
     assert_eq!(Component::Seat.word(), "seat");

@@ -53,6 +53,20 @@ pub enum Component {
 }
 
 impl Component {
+    /// **The name an operator picks this component by**, and the name every
+    /// screen it runs is headed with. It lives on the component rather than on
+    /// the offer because the chooser and the running screen must not be able
+    /// to disagree: a device enrolled by tapping "Thrall" landing on a screen
+    /// headed "tool host" is one word said twice, badly (bl-4b91).
+    pub fn brand(self) -> String {
+        match self {
+            Self::Seat => "Lernie",
+            Self::Foot => "Thrall",
+            Self::Server => "Yog",
+        }
+        .to_owned()
+    }
+
     /// The word this component wears at the glass.
     pub fn word(self) -> String {
         match self {

@@ -54,7 +54,7 @@ impl Shell {
     /// §4.2's *"a foot cannot ask about the world"* is the sentence, and an
     /// empty roster would be this app asking anyway and hiding the refusal.
     fn foot(&mut self, ui: &mut egui::Ui) {
-        ui.heading("tool host");
+        ui.heading(crate::bootstrap::Component::Foot.brand());
         ui.weak(self.identity());
         ui.separator();
         self.hosting(ui);
@@ -68,7 +68,8 @@ impl Shell {
     }
 
     fn roster(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        ui.heading("workspaces");
+        ui.heading(crate::bootstrap::Component::Seat.brand());
+        ui.weak("workspaces");
         ui.weak(self.identity());
         self.hosting(ui);
         ui.separator();
