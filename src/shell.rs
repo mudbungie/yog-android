@@ -21,7 +21,7 @@ mod bridge;
 #[cfg(target_os = "android")]
 mod chat;
 #[cfg(target_os = "android")]
-mod enrol;
+mod enroll;
 #[cfg(target_os = "android")]
 mod inset;
 #[cfg(target_os = "android")]

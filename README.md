@@ -3,7 +3,7 @@
 **yog on Android** (`dev.yog`): the app ships all three of the harness's
 runnable components — the **seat**, the **foot** (tool host) and the
 **server** — each gated behind an explicit bootstrap rather than auto-started
-(DESIGN §9). The default path is mTLS client enrolment: a leaf provisioned out
+(DESIGN §9). The default path is mTLS client enrollment: a leaf provisioned out
 of channel, and this app dialling a host engine with it. Agents run on that
 engine; seats attach and detach, and the work does not.
 

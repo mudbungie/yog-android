@@ -14,11 +14,11 @@
 //! > dial like any other client."*
 //!
 //! So **there is no button here**, deliberately. Every widget on this screen
-//! reads; none of them acts. A tap that "started enrolment" would be the
+//! reads; none of them acts. A tap that "started enrollment" would be the
 //! unauthenticated connection §1.4 forbids, dressed as a convenience.
 //!
 //! The content is [`crate::bootstrap::offers`]' and the emphasis is its
-//! `default` flag — the two enrolments carry it and the server does not.
+//! `default` flag — the two enrollments carry it and the server does not.
 
 use eframe::egui;
 

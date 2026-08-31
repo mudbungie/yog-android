@@ -4,7 +4,7 @@
 //! The ruling: this app is named yog and ships all three runnable components —
 //! the seat, the foot and the server — *each gated behind an explicit
 //! bootstrap rather than auto-started*. The default path is mTLS client
-//! enrolment; running the server on the phone is allowed but is the
+//! enrollment; running the server on the phone is allowed but is the
 //! deliberate, non-default choice.
 //!
 //! **The component is derived, never stored, and that is the whole design.**
@@ -26,8 +26,8 @@
 //! *"making a foot into an operator is minting a new certificate, which is
 //! exactly the friction that ruling wants."*
 //!
-//! **Nothing here enrols anything.** REMOTE §1.4 stands, and DESIGN §5
-//! restates it: the new device never enrols over its own unauthenticated
+//! **Nothing here enrolls anything.** REMOTE §1.4 stands, and DESIGN §5
+//! restates it: the new device never enrolls over its own unauthenticated
 //! connection. What an offer describes is where material goes when it arrives
 //! through existing trust — a cable, an authenticated tool route, or a screen
 //! the operator photographed — and this module only ever *reads* the result.
@@ -64,11 +64,11 @@ impl Component {
     }
 }
 
-/// What a provisioned device already is: the component its leaf enrols it as,
+/// What a provisioned device already is: the component its leaf enrolls it as,
 /// the client identity that leaf carries, and the material both connections
 /// ride.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Enrolment {
+pub struct Enrollment {
     pub component: Component,
     /// The leaf's subject common name — REMOTE §2's *"one certificate = one
     /// client identity"*, and the name the engine's registry knows this
@@ -88,7 +88,7 @@ pub enum Standing {
     /// Nothing is provisioned. The app runs no component and offers three.
     Cold,
     /// A leaf is here, and it says which component this device is.
-    Enrolled(Enrolment),
+    Enrolled(Enrollment),
 }
 
 /// Read this device's standing out of its material directory.
@@ -97,7 +97,7 @@ pub fn standing(dir: &Path) -> Result<Standing, String> {
         return Ok(Standing::Cold);
     };
     let der = first_certificate(&material)?;
-    Ok(Standing::Enrolled(Enrolment {
+    Ok(Standing::Enrolled(Enrollment {
         component: match crate::leaf::grade(&der) {
             Grade::Foot => Component::Foot,
             Grade::Operator => Component::Seat,
@@ -131,7 +131,7 @@ pub struct Offer {
     /// The act, in the operator's own terms. Every one of them happens
     /// **outside this app**, which is the point rather than a limitation.
     pub how: String,
-    /// Whether this is the ruling's default path. Exactly the two enrolments
+    /// Whether this is the ruling's default path. Exactly the two enrollments
     /// carry it: the server is *"allowed but … the deliberate, non-default
     /// choice."*
     pub default: bool,
@@ -146,19 +146,19 @@ pub fn offers(dir: &Path) -> Vec<Offer> {
     vec![
         Offer {
             component: Component::Seat,
-            title: "enrol as a seat".to_owned(),
+            title: "enroll as a seat".to_owned(),
             how: format!(
                 "Put an operator-grade leaf at {at}: ca.pem, client.pem, \
                  client.key and an address file holding one host:port. \
                  The engine's own box mints it; a cable, an already-trusted \
                  device's tools, or a screen you photographed carries it \
-                 here. This app never mints and never enrols itself."
+                 here. This app never mints and never enrolls itself."
             ),
             default: true,
         },
         Offer {
             component: Component::Foot,
-            title: "enrol as a tool host".to_owned(),
+            title: "enroll as a tool host".to_owned(),
             how: format!(
                 "The same four files at {at}, on a leaf minted with OU=foot. \
                  A foot advertises what this machine can run, waits for work \

@@ -11,7 +11,7 @@ replace prose and cite the ball id; the path to a ruling is not narrated.
 **The app is yog** (operator ruling 2026-08-30, yog bl-15bd), and it ships all
 three of REMOTE §12's runnable components — the seat, the foot and the server
 — **each gated behind an explicit bootstrap rather than auto-started**. The
-default path is mTLS client enrolment; running the engine on the phone is
+default path is mTLS client enrollment; running the engine on the phone is
 allowed but is the deliberate, non-default choice. §9 is that ruling made
 structural.
 
@@ -222,7 +222,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk; the three offers a cold device paints | landed (bl-7714) |
 | `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
 | `src/shell/boot.rs` | android-only: the bootstrap gate — read the standing, start exactly that component, start nothing otherwise | landed (bl-7714) |
-| `src/shell/enrol.rs` | android-only: the first-run surface — the three bootstraps, and no button | landed (bl-7714) |
+| `src/shell/enroll.rs` | android-only: the first-run surface — the three bootstraps, and no button | landed (bl-7714) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
@@ -426,7 +426,7 @@ addresses exactly one field by that id (bl-014e).
 
 **The ruling** (operator, 2026-08-30): the Android app is named **yog** and
 ships all three runnable components, each gated behind an explicit bootstrap
-rather than auto-started. The default bootstrap is mTLS client enrolment — the
+rather than auto-started. The default bootstrap is mTLS client enrollment — the
 seat or the foot dialing a host engine, material provisioned out of channel
 per REMOTE §1.4. Running the yog server locally on the phone is allowed but is
 the deliberate, non-default choice. The old development client is superseded:
@@ -474,7 +474,7 @@ no path from the host loop to a fourth.
 *"there is no pairing protocol in the wire, no token exchange a stranger on
 the network could initiate. Bootstrap is always an act performed through
 existing trust."* Every widget on that screen reads; none acts. A tap that
-"started enrolment" would be the unauthenticated connection §1.4 forbids,
+"started enrollment" would be the unauthenticated connection §1.4 forbids,
 dressed as a convenience. What the screen carries is what each bootstrap makes
 this device, the act that takes it, and the directory material lands in — the
 fact an operator holding a cable is actually there for.

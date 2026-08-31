@@ -29,7 +29,7 @@ impl Shell {
                 refusal,
                 dir,
             } => {
-                super::enrol::surface(ui, &offers.clone(), refusal.clone().as_ref(), &dir.clone());
+                super::enroll::surface(ui, &offers.clone(), refusal.clone().as_ref(), &dir.clone());
                 return;
             }
             Running::Foot { .. } => {

@@ -81,12 +81,12 @@ fn a_chain_with_no_certificate_in_it_refuses() {
     assert!(e.contains("client.pem"), "{e}");
 }
 
-/// The first-run surface's content. Two enrolments carry the default emphasis
+/// The first-run surface's content. Two enrollments carry the default emphasis
 /// and the server does not — the ruling's own words — and every offer names
 /// the directory material lands in, because an operator holding a cable needs
 /// the path rather than a description of one.
 #[test]
-fn the_offers_are_the_three_bootstraps_with_enrolment_emphasised() {
+fn the_offers_are_the_three_bootstraps_with_enrollment_emphasised() {
     let dir = Path::new("/home/u/files/wire");
     let offers = offers(dir);
     let components: Vec<Component> = offers.iter().map(|o| o.component).collect();
