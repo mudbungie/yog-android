@@ -101,6 +101,27 @@ answers `{"kind": "started"}`, which this client had no arm for, so the one
 gesture that makes a conversation reported a failure over a conversation that
 was in fact running.
 
+**The wire is at PROTOCOL 2 (yog bl-77be), and this seat speaks it (bl-8553).**
+The number lives in `src/hello.rs` and in `corpus/shapes.json`, and the
+conformance suite asserts they are the same — so a corpus vendored from a yog
+that has moved on, and a preface bumped without re-vendoring, are each a red
+test rather than a skew discovered on a handshake. Three meanings moved, and
+they are not the same kind of move:
+
+- **Two the ledger caught**, which is why there is a version 2 at all: REMOTE
+  §5.1's advertised element gained an optional `subject_cwd`, and §5.3's
+  invocation gained an optional `cwd` — the two halves of the worktree lane.
+  Both are spelled in `src/codec/tools.rs`, because `request/advertise`
+  round-trips and `reply/invocations` reads; a field this codec did not carry
+  would be one dropped on the way out. What this device *does* about them is
+  §6's, not the codec's.
+- **One the ledger could not see**, and it is the hazard worth naming: REMOTE
+  §5.5 made the follow lane's frame an **append** — *"absorb every frame of a
+  read, in order, onto an empty fold"* — under a wire spelling that did not
+  change. A signature ledger records field paths and types, so nothing forced a
+  bump and no fixture can fail. A client of that lane must read the section
+  rather than re-vendor the fixtures and call it consumed.
+
 ## 3. The stack ruling
 
 **Rust, one crate** (this repo), same contained-Rust standard as yog. The
@@ -594,11 +615,38 @@ yog's `enroll` act (yog bl-f4e3) mints a client leaf on the engine's own
 recipe and answers a reply carrying `{grade, name, address, ca, cert, key}`,
 shredding the leaf key server-side. The operator's seat renders that as a QR;
 this device reads it. The envelope is that payload with a version tag in
-front, and `src/envelope.rs` is the whole contract:
+front, and `src/envelope.rs` is this end of it:
 
 ```text
 {"yog-enroll":1,"grade":…,"name":…,"address":…,"ca":…,"cert":…,"key":…}
 ```
+
+**REMOTE §8.4's payload-contract paragraph is the authority, and it says so in
+those words** — *"The payload contract — this section is its authority"*. This
+file records what this device does with the envelope; the envelope's own shape
+is quoted from there and settled there. Two facts from it that this end has to
+meet and could not derive:
+
+- **PEM rides verbatim, at error-correction level M or lower.** A real mint —
+  P-256 keys, 825-day leaves — measures **1567 bytes** of compact JSON. A
+  version-40 QR in byte mode carries 2953 bytes at L, 2331 at M, 1663 at Q and
+  1273 at H, so the envelope fits at L, M and Q and overflows at H.
+  DER-plus-base64 was weighed and refused: it buys ~13% and costs the property
+  worth keeping, a field an operator can paste into `openssl x509 -text`. **So
+  the decoder's bar is 1567 bytes at level M**, which is the version-33 symbol
+  §12's fixture pins (the module map's `enroll-v33m-*` row) — one number, read
+  from one place, and the fixture is what proves the decoder meets it.
+- **The two keys that do not travel.** `ok` and `kind` say what a *wire answer*
+  is and a photograph is not one, so they are absent from the envelope by
+  contract rather than by omission. `yog-enroll` is the marker a scanner
+  recognizes it by, and the version it will be told about if the fields move.
+
+`request/enroll` and `reply/enrolled` are additions to the wire vocabulary and
+took no protocol bump of their own (strict decode already refuses an unknown op
+in band). This client is on the enrolled side of both and sends neither; the
+decision is recorded in `tests/conformance/expect.rs` as `NOT_THE_MINTER`, and
+the corpus's `reply/enrolled` fixture was checked field for field against
+`src/envelope.rs` when it was vendored — they agree.
 
 **REMOTE §1.4 is untouched, and the reason is which machine acts.** The new
 device performs no channel act at all: an already-trusted **operator-grade**

@@ -19,8 +19,22 @@
           "tool": "Bash"
         }
       ]
+    },
+    {
+      "kind": "invocations",
+      "ok": true,
+      "rows": [
+        {
+          "cwd": "/w/home/agents/c-1",
+          "input": {
+            "command": "printf made > out.txt"
+          },
+          "invocation": "inv-2",
+          "tool": "bash"
+        }
+      ]
     }
   ],
-  "protocol": 1,
+  "protocol": 2,
   "shape": "invocations"
 }

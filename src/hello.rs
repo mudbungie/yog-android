@@ -4,7 +4,13 @@
 //! REMOTE §3, verbatim: *"Every connection opens with a version preface: each
 //! end writes one frame, `{"protocol": <integer>}`, before it reads the
 //! peer's. Both write before either reads, so neither waits on the other and
-//! there is no ordering rule to remember. `PROTOCOL` is `1`."*
+//! there is no ordering rule to remember."*
+//!
+//! **The number itself is quoted from nowhere, deliberately.** REMOTE §3's
+//! prose named a version and went stale the day the wire moved; the standing
+//! value is the server's `src/wire/hello.rs` constant and nothing else, so
+//! [`PROTOCOL`] below mirrors that constant and this paragraph states no
+//! integer for a second reader to trust. One fact, one home.
 //!
 //! Three properties this end must keep, each the refusal of something easier:
 //!
@@ -38,7 +44,15 @@ use crate::frame;
 /// itself rather than two protocols meeting. It moves when an *existing* shape
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
-pub const PROTOCOL: u32 = 1;
+///
+/// **2 since yog bl-77be**, which is exactly that case twice over: the
+/// advertised element gained `subject_cwd` and an invocation gained `cwd`
+/// (REMOTE §5.1, §5.3), and the corpus drift ledger refused the change at the
+/// standing version. A third meaning moved in the same release under an
+/// unchanged signature — REMOTE §5.5's follow frame is now an **append** —
+/// which no ledger can see, so a client that consumes that lane must read the
+/// section and not only re-vendor the fixtures.
+pub const PROTOCOL: u32 = 2;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

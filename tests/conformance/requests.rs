@@ -17,7 +17,7 @@
 //! frame must still be refused by name.
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
-use super::expect::{ACT, ASKING_SIDE, BARE_RUNG, NO_SEED, READ};
+use super::expect::{ACT, ASKING_SIDE, BARE_RUNG, NO_SEED, NOT_THE_MINTER, READ};
 
 pub const REQUESTS: &[(&str, Expect)] = &[
     ("ack", Refuses(ACT)),
@@ -42,6 +42,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("deliver", Refuses(ACT)),
     ("disarm", Refuses(ACT)),
     ("disband", Refuses(ACT)),
+    ("enroll", Refuses(NOT_THE_MINTER)),
     ("fan", Refuses(ACT)),
     ("files", Refuses(READ)),
     ("flag", Refuses(ACT)),

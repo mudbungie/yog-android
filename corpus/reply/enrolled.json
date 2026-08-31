@@ -1,0 +1,27 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "address": "engine.invalid:7737",
+      "ca": "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n",
+      "cert": "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n",
+      "grade": "operator",
+      "key": "-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n",
+      "kind": "enrolled",
+      "name": "phone-1",
+      "ok": true
+    },
+    {
+      "address": "engine.invalid:7737",
+      "ca": "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n",
+      "cert": "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n",
+      "grade": "foot",
+      "key": "-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n",
+      "kind": "enrolled",
+      "name": "builder",
+      "ok": true
+    }
+  ],
+  "protocol": 1,
+  "shape": "enrolled"
+}

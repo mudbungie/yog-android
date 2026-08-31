@@ -2,7 +2,9 @@
 //! because a drifted spelling is a refused gesture rather than a red test
 //! anywhere else.
 
-use super::{Capture, Invocation, Tool, capture_of, capture_value, encode_tools, invocation_of};
+use super::{
+    Capture, Invocation, Tool, capture_of, capture_value, encode_tools, invocation_of, tool_of,
+};
 use serde_json::json;
 
 fn tool() -> Tool {
@@ -10,6 +12,7 @@ fn tool() -> Tool {
         name: "shell".into(),
         description: "run a command".into(),
         input_schema: json!({ "type": "object" }),
+        subject_cwd: false,
     }
 }
 
@@ -21,6 +24,38 @@ fn an_advertised_element_is_three_facts_and_no_more() {
                  "input_schema": { "type": "object" } }])
     );
     assert_eq!(encode_tools(&[]), json!([]));
+}
+
+/// The PROTOCOL 2 fourth fact, both ways. Withheld consent writes **no key**
+/// — the test above is that half — and given consent writes exactly `true`,
+/// so the bytes of a non-consenting host are the bytes of the era before the
+/// version moved.
+#[test]
+fn the_consent_rides_only_when_it_is_given() {
+    let consenting = Tool {
+        subject_cwd: true,
+        ..tool()
+    };
+    let set = std::slice::from_ref(&consenting);
+    assert_eq!(
+        encode_tools(set),
+        json!([{ "name": "shell", "description": "run a command",
+                 "input_schema": { "type": "object" }, "subject_cwd": true }])
+    );
+    assert_eq!(tool_of(&encode_tools(set)[0]).unwrap(), consenting);
+    assert_eq!(tool_of(&encode_tools(&[tool()])[0]).unwrap(), tool());
+}
+
+/// An advertised element is an instruction, so a consent that is not a boolean
+/// refuses naming the key rather than reading as either answer.
+#[test]
+fn a_mistyped_consent_refuses_by_name() {
+    assert_eq!(
+        tool_of(&json!({ "name": "shell", "description": "d",
+                         "input_schema": {}, "subject_cwd": "yes" }))
+        .unwrap_err(),
+        "tool: field \"subject_cwd\" is not a boolean"
+    );
 }
 
 #[test]
@@ -65,7 +100,28 @@ fn an_invocation_reads_back_with_its_arguments_verbatim() {
             id: "i1".into(),
             tool: "shell".into(),
             input: json!({ "command": "id" }),
+            cwd: None,
         }
+    );
+}
+
+/// The PROTOCOL 2 subject location, read back. `None` is the ordinary call
+/// (the test above), a string is the worktree lane's, and anything else
+/// refuses naming the key — a place a tool will run is an instruction.
+#[test]
+fn an_invocation_carries_its_subjects_location_when_the_lane_set_one() {
+    let v = json!({ "invocation": "i1", "tool": "bash", "cwd": "/w/home/agents/c-1",
+                    "input": { "command": "id" } });
+    assert_eq!(
+        invocation_of(&v).unwrap().cwd,
+        Some("/w/home/agents/c-1".to_owned())
+    );
+    let null = json!({ "invocation": "i1", "tool": "bash", "cwd": null, "input": {} });
+    assert_eq!(invocation_of(&null).unwrap().cwd, None);
+    assert_eq!(
+        invocation_of(&json!({ "invocation": "i1", "tool": "b", "input": {}, "cwd": 7 }))
+            .unwrap_err(),
+        "invocation: field \"cwd\" is not a string"
     );
 }
 
@@ -93,6 +149,7 @@ fn equality_is_reflexive_over_a_schema_and_an_argument_object() {
         id: "i".into(),
         tool: "t".into(),
         input: json!({ "n": 1.5 }),
+        cwd: None,
     };
     assert_eq!(one.clone(), one);
 }

@@ -65,3 +65,18 @@ pub const BARE_RUNG: &str = "the bare rung is this device's whole slice (DESIGN 
 /// seat's own"* and a phone predicts none, so this codec writes the null and
 /// reads only the null.
 pub const NO_SEED: &str = "this seat predicts no conversation name (DESIGN §8)";
+
+/// REMOTE §8.4's act and its answer. This device is the thing enrolled, and it
+/// is enrolled **out of channel** — §1.4 stands, the new device performs no
+/// channel act, and the material reaches it as a photograph or a paste
+/// (DESIGN §11). So the phone neither mints nor is answered here: `enroll` is
+/// an operator-grade act a seated operator sends from a screen this app does
+/// not have, and `enrolled` is what that operator's seat is handed.
+///
+/// It is a *skip*, not an absence: `src/envelope.rs` already reads §8.4's six
+/// fields out of the QR envelope, which is the same six facts arriving by the
+/// route this device actually has. The day this app grows a screen that
+/// enrolls the *next* device, the row becomes `Reads` and the decoder is one
+/// function; until then a frame of either shape is refused naming itself.
+pub const NOT_THE_MINTER: &str =
+    "§8.4's minting side — this device is enrolled out of channel, it enrolls nobody";

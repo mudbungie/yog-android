@@ -134,6 +134,12 @@ pub(crate) fn tool(name: &str, description: &str, schema: Value) -> Tool {
         name: name.to_owned(),
         description: description.to_owned(),
         input_schema: schema,
+        // PROTOCOL 2's optional fourth fact, and this table states it nowhere:
+        // `false` rides as an absent key (`codec::tools::one`), so the bytes
+        // this machine advertises are the three facts it advertised before the
+        // version moved. What consent would mean on a phone is a decision, and
+        // it is not this constructor's.
+        subject_cwd: false,
     }
 }
 

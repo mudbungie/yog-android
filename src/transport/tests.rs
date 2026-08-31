@@ -117,20 +117,23 @@ fn a_server_off_the_operators_ca_never_completes_the_handshake() {
 fn a_skewed_engine_is_refused_before_its_answer_is_read() {
     let dir = pki();
     let reply = json!({ "ok": true, "kind": "transcript", "rows": [] });
+    // Derived, not typed: "the version this build does not speak" is one more
+    // than the one it does, at every version this build will ever be.
+    let theirs = u64::from(crate::hello::PROTOCOL) + 1;
     let (address, _served) = serve_versioned(
         &dir,
         "ca",
         "server",
-        2,
+        u32::try_from(theirs).unwrap(),
         vec![vec![reply.to_string().into_bytes()]],
     );
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
     let e = seat.ask(&json!({ "op": "workspaces" })).unwrap_err();
-    assert_eq!(
-        e,
-        "wire protocol mismatch: this end speaks version 1, the peer speaks 2. \
-         There is no negotiation — upgrade the older component until both \
-         speak one version."
+    assert!(
+        e.starts_with("wire protocol mismatch: this end speaks version ")
+            && e.contains(&format!("the peer speaks {theirs}."))
+            && e.ends_with("upgrade the older component until both speak one version."),
+        "{e}"
     );
 }
 

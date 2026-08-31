@@ -9,8 +9,18 @@
       },
       "op": "invoke",
       "tool": "Bash"
+    },
+    {
+      "client": "laptop",
+      "cwd": "/w/home/agents/c-1",
+      "input": {
+        "command": "ls -l",
+        "timeout": 30
+      },
+      "op": "invoke",
+      "tool": "Bash"
     }
   ],
-  "protocol": 1,
+  "protocol": 2,
   "shape": "invoke"
 }

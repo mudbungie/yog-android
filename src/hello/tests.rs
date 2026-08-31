@@ -32,14 +32,24 @@ fn an_engine_of_this_version_is_confirmed() {
 
 /// The sentence is the upgrade prompt: it names this end's version, the
 /// peer's, and the remedy — so an operator reads what to do, not a code.
+///
+/// **The skewed peer is derived, never typed.** A literal here is a literal
+/// that reads as the wrong version for exactly one release: this test named
+/// the standing version as the peer's the day PROTOCOL moved to 2, and passed
+/// only because it happened to be testing the opposite of what it said.
 #[test]
 fn a_version_skew_names_both_versions_and_the_remedy() {
-    let e = confirm(&mut Cursor::new(peer(2))).unwrap_err();
+    let mine = u64::from(PROTOCOL);
+    let e = confirm(&mut Cursor::new(peer(mine + 1))).unwrap_err();
+    assert_eq!(e, super::mismatch(Some(mine + 1)));
     assert_eq!(
         e,
-        "wire protocol mismatch: this end speaks version 1, the peer speaks 2. \
-         There is no negotiation — upgrade the older component until both \
-         speak one version."
+        format!(
+            "wire protocol mismatch: this end speaks version {mine}, the peer \
+             speaks {}. There is no negotiation — upgrade the older component \
+             until both speak one version.",
+            mine + 1
+        )
     );
 }
 

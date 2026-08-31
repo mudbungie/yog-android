@@ -11,6 +11,15 @@
 //! neither validated nor rewritten here, because it is this machine's
 //! statement to a model and narrowing it would be inventing a contract this
 //! client does not own.
+//!
+//! **PROTOCOL 2 put one optional fourth fact on each of two of them** (yog
+//! bl-77be): `subject_cwd` on the advertised element and `cwd` on the
+//! invocation, the two halves of REMOTE §5.4's worktree lane. They are spelled
+//! here for the reason every other field is — the corpus round-trips
+//! `request/advertise` and reads `reply/invocations`, so a field this codec
+//! did not carry would be a field dropped on the way out. **What this device
+//! does about them is a policy and lives elsewhere**; a codec that decided it
+//! would be a codec with an opinion.
 
 use serde_json::{Map, Value, json};
 
@@ -25,6 +34,12 @@ pub struct Tool {
     pub description: String,
     /// Its JSON Schema, verbatim.
     pub input_schema: Value,
+    /// **The consent** (REMOTE §5.1, PROTOCOL 2): `true` states that this box
+    /// will run the tool at a working directory the invocation names, which is
+    /// the fact the engine routes the worktree lane on. Absent reads false,
+    /// and it rides the wire only when true — so a host that consents to
+    /// nothing advertises exactly the three facts it always did.
+    pub subject_cwd: bool,
 }
 
 /// `Eq` is written rather than derived for [`Value`]'s reason: it holds `f64`,
@@ -43,6 +58,11 @@ pub struct Invocation {
     pub tool: String,
     /// The model's own `tool_use.input`, verbatim.
     pub input: Value,
+    /// **The subject's location** (REMOTE §5.3, PROTOCOL 2): the conversation's
+    /// resolved working directory, set only by the worktree lane and only
+    /// against an entry that advertised `subject_cwd`. `None` is the ordinary
+    /// call, which runs wherever this machine runs things.
+    pub cwd: Option<String>,
 }
 
 impl Eq for Invocation {}
@@ -73,6 +93,11 @@ pub(crate) fn tool_of(v: &Value) -> Result<Tool, String> {
             .get("input_schema")
             .cloned()
             .ok_or("tool: missing field \"input_schema\"")?,
+        subject_cwd: match o.get("subject_cwd") {
+            None => false,
+            Some(Value::Bool(b)) => *b,
+            Some(_) => return Err("tool: field \"subject_cwd\" is not a boolean".to_owned()),
+        },
     })
 }
 
@@ -82,9 +107,17 @@ pub(crate) fn encode_tools(tools: &[Tool]) -> Value {
     Value::Array(tools.iter().map(one).collect())
 }
 
+/// One element, spelled once — and the consent rides only when it is given,
+/// which is the server's own `registry::tools::one` byte for byte. A `false`
+/// written out would be this end stating a fact the absent key already states,
+/// and the round trip would then fail against every fixture that omits it.
 fn one(t: &Tool) -> Value {
-    json!({ "name": t.name, "description": t.description,
-            "input_schema": t.input_schema })
+    let mut o = json!({ "name": t.name, "description": t.description,
+            "input_schema": t.input_schema });
+    if let (true, Some(map)) = (t.subject_cwd, o.as_object_mut()) {
+        map.insert("subject_cwd".to_owned(), Value::Bool(true));
+    }
+    o
 }
 
 /// A capture as JSON — the one spelling, spent by the completing act.
@@ -117,7 +150,19 @@ pub(crate) fn invocation_of(v: &Value) -> Result<Invocation, String> {
         id: str_of(o, "invocation")?,
         tool: str_of(o, "tool")?,
         input: input_of(o)?,
+        cwd: cwd_of(o)?,
     })
+}
+
+/// The optional subject location, read strictly: absent and null are the
+/// ordinary no-location case, and anything but a string refuses — a place a
+/// tool will run is an instruction, not an observation.
+fn cwd_of(o: &Map<String, Value>) -> Result<Option<String>, String> {
+    match o.get("cwd") {
+        None | Some(Value::Null) => Ok(None),
+        Some(Value::String(s)) => Ok(Some(s.clone())),
+        Some(_) => Err("invocation: field \"cwd\" is not a string".to_owned()),
+    }
 }
 
 /// The arguments, verbatim and required: a call with no input is not a call

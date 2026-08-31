@@ -1,5 +1,5 @@
 {
-  "protocol": 1,
+  "protocol": 2,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -40,6 +40,7 @@
         "/nudgeable:bool",
         "/ok:bool",
         "/present:bool",
+        "/refused:bool",
         "/root:string",
         "/seats/[]/doing:string",
         "/seats/[]/name:string",
@@ -68,7 +69,7 @@
         "/tip:string",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/answered": {
       "signature": [
@@ -219,13 +220,14 @@
         "/rows/[]/tools/[]/input_schema/type:string",
         "/rows/[]/tools/[]/input_schema:object",
         "/rows/[]/tools/[]/name:string",
+        "/rows/[]/tools/[]/subject_cwd:bool",
         "/rows/[]/tools/[]:object",
         "/rows/[]/tools:array",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/config": {
       "signature": [
@@ -291,6 +293,20 @@
         "/ok:bool",
         "/source:string",
         "/target:string",
+        ":object"
+      ],
+      "since": 1
+    },
+    "reply/enrolled": {
+      "signature": [
+        "/address:string",
+        "/ca:string",
+        "/cert:string",
+        "/grade:string",
+        "/key:string",
+        "/kind:string",
+        "/name:string",
+        "/ok:bool",
         ":object"
       ],
       "since": 1
@@ -408,6 +424,7 @@
       "signature": [
         "/kind:string",
         "/ok:bool",
+        "/rows/[]/cwd:string",
         "/rows/[]/input/command:string",
         "/rows/[]/input/timeout:number",
         "/rows/[]/input:object",
@@ -417,7 +434,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/lineages": {
       "signature": [
@@ -864,11 +881,12 @@
         "/tools/[]/input_schema/type:string",
         "/tools/[]/input_schema:object",
         "/tools/[]/name:string",
+        "/tools/[]/subject_cwd:bool",
         "/tools/[]:object",
         "/tools:array",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "request/agent": {
       "signature": [
@@ -1062,6 +1080,16 @@
       ],
       "since": 1
     },
+    "request/enroll": {
+      "signature": [
+        "/grade:string",
+        "/name:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 1
+    },
     "request/fan": {
       "signature": [
         "/ball:string",
@@ -1180,6 +1208,7 @@
     "request/invoke": {
       "signature": [
         "/client:string",
+        "/cwd:string",
         "/input/command:string",
         "/input/timeout:number",
         "/input:object",
@@ -1187,7 +1216,7 @@
         "/tool:string",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "request/lineages": {
       "signature": [

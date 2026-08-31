@@ -1,0 +1,19 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "grade": "operator",
+      "name": "phone-1",
+      "op": "enroll",
+      "workspace": "ws"
+    },
+    {
+      "grade": "foot",
+      "name": "phone-1",
+      "op": "enroll",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 1,
+  "shape": "enroll"
+}

@@ -139,6 +139,7 @@ fn every_answer_names_its_own_kind() {
                 id: "i".into(),
                 tool: "t".into(),
                 input: json!({}),
+                cwd: None,
             }]),
             "invocations",
         ),

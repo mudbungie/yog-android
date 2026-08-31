@@ -24,6 +24,14 @@
                 "type": "object"
               },
               "name": "Bash"
+            },
+            {
+              "description": "run a command in the conversation's cwd",
+              "input_schema": {
+                "type": "object"
+              },
+              "name": "bash",
+              "subject_cwd": true
             }
           ]
         },
@@ -35,6 +43,6 @@
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 2,
   "shape": "clients"
 }

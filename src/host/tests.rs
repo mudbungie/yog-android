@@ -23,6 +23,7 @@ fn table() -> Vec<Tool> {
         name: "echo".into(),
         description: "say it back".into(),
         input_schema: json!({ "type": "object" }),
+        subject_cwd: false,
     }]
 }
 

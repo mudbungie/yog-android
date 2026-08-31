@@ -222,6 +222,12 @@
           "verb": "clear-trail"
         },
         {
+          "detail": "Issues a leaf under the stated common name on this engine's own CA, registers that client in the focused workspace, and answers the whole of what the device needs: the anchors, its certificate, its private key and the address it dials. The key is shredded here before the answer leaves, so this box keeps none of it; the certificate stays, and its presence is what refuses a second enrollment under the same name — re-issuing distrusts nothing, so both would be live. Bare is operator grade; add `foot` for a tool host that may advertise, take its invocations and complete them and say nothing else. Refuses when this box holds no CA, and when its address names no port a device can dial. The material travels to the device out of channel — a QR on a screen, adb, a hand — never over a connection the new device opened, which it could not open anyway.",
+          "summary": "mint a new device's certificate here, register it, and hand back its material",
+          "usage": "/enroll <common-name> [foot]",
+          "verb": "enroll"
+        },
+        {
           "detail": "Every workspace yog can see, classified, with the attention count, the agent count and whether anything in it is running.",
           "summary": "the workspaces with their attention rollups",
           "usage": "/workspaces",
