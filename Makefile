@@ -19,7 +19,7 @@ release:
 # null guard is tracked under bl-2958).
 #
 # Requires: the Android NDK + cargo-ndk (`cargo install cargo-ndk`), the
-# aarch64-linux-android target (rust-toolchain.toml pins it), and a SYSTEM
+# Android targets rust-toolchain.toml pins, and a SYSTEM
 # `gradle` (8.7+, JDK 17). There is deliberately no gradle wrapper: the
 # wrapper is a committed jar, and the leak gate refuses any binary it cannot
 # read (BINARY_ALLOWED matches nothing) — which is correct, so the pin lives
@@ -31,8 +31,21 @@ release:
 # leak gate refuses and should.
 GRADLE ?= gradle
 
+# The device matrix, and therefore the ABI list. Two members: an arm64 phone
+# and the x86_64 emulator the enrollment stories are driven through (an ARM
+# image under full emulation is too slow to loop on, and the host has KVM).
+# ONE APK carries both libraries rather than a second emulator-only target:
+# Gradle packs `jniLibs/<abi>/` and the INSTALLER picks, so "which artifact is
+# on this device?" is never a question a test verdict makes you ask, and an
+# arm64 phone never loads the x86_64 copy.
+# A variable for `GRADLE`'s reason exactly — a box that only ever flashes the
+# phone skips the cross-build with `make apk ABIS=arm64-v8a` instead of
+# editing this file. Both is the default, so the honest path is the one you
+# get by typing nothing.
+ABIS ?= arm64-v8a x86_64
+
 apk:
-	cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release
+	cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
 	cd android && $(GRADLE) assembleDebug
 	@echo "apk: android/app/build/outputs/apk/debug/app-debug.apk"
 

@@ -5,6 +5,8 @@
 [toolchain]
 channel = "1.95.0"
 components = ["rustfmt", "clippy"]
-# The APK's ABI. arm64 only, matching the spike's device matrix of one; a
-# second ABI is added when a device that needs it exists, not speculatively.
-targets = ["aarch64-linux-android"]
+# The APK's ABIs, one per member of the device matrix. arm64 is the phone;
+# x86_64 is the emulator the enrollment stories are driven through, added
+# when that device came to exist rather than speculatively. The Makefile's
+# `ABIS` selects which of these a given build cross-compiles.
+targets = ["aarch64-linux-android", "x86_64-linux-android"]

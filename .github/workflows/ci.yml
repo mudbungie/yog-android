@@ -81,7 +81,10 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-          targets: aarch64-linux-android
+          # Both APK ABIs — `make apk` cross-builds every one of them, so a
+          # single target here would red the leg the moment the Makefile's
+          # ABIS default grew its second entry.
+          targets: aarch64-linux-android,x86_64-linux-android
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: Cache cargo-ndk 4.1.2
         id: ndk-cache
@@ -98,6 +101,9 @@ jobs:
         run: |
           yes 2>/dev/null | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.2.13676358" >/dev/null
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      # One ABI is enough here: what the host gate cannot see is the
+      # `target_os = "android"` cfg, and both ABIs share it. A defect that is
+      # genuinely x86_64-specific is a compile error the APK build below hits.
       - name: Cross-clippy (the host gate cannot see this cfg)
         run: cargo ndk -t arm64-v8a clippy -- -D warnings
       - name: Build the APK

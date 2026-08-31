@@ -50,17 +50,23 @@ make conformance    # replay the vendored wire corpus (REMOTE §3)
 make test           # cargo test
 make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
 make lint           # line-cap + leak-scan + clippy + ast-grep + cargo-deny
-make apk            # cargo-ndk (aarch64) + gradle assembleDebug
+make apk            # cargo-ndk (arm64-v8a + x86_64) + gradle assembleDebug
 make install-hooks  # seat the pre-commit / commit-msg hooks, once
 ```
 
-The APK build needs the Android NDK, `cargo-ndk`, the
-`aarch64-linux-android` target (pinned in `rust-toolchain.toml`), and a
+The APK build needs the Android NDK, `cargo-ndk`, the two Android targets
+pinned in `rust-toolchain.toml`, and a
 **gradle** 8.7+ on JDK 17 — `make apk GRADLE=/path/to/gradle` when it is not
 on `PATH`. There is deliberately no gradle wrapper:
 the wrapper is a committed jar, and the disclosure gate refuses any binary
 it cannot read — correctly. The release profile is load-bearing, not an
 optimization (see the Makefile `apk` target).
+
+One APK carries **both ABIs**: `arm64-v8a` for the phone and `x86_64` for the
+emulator the enrollment stories run on. Gradle packs a `jniLibs/<abi>/`
+directory per ABI and the installer picks one, so there is no
+emulator-only artifact to confuse a test verdict. Override with
+`make apk ABIS=arm64-v8a` on a box that only ever flashes a phone.
 
 Task tracking is [balls](https://crates.io/crates/balls-cli) (`bl`): `bl prime
 --as YOU`, `bl list`, claim → work in the worktree → close.
