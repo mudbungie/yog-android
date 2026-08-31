@@ -30,6 +30,9 @@ use super::boot::Running;
 use crate::bootstrap::{Component, Offer};
 
 mod material;
+mod scan;
+
+pub(crate) use scan::Scanner;
 
 /// What a tap on an opened screen asked for. `Stay` is every frame in which
 /// nothing was pressed.
@@ -67,8 +70,9 @@ impl Shell {
             self.chose = None;
             return;
         };
+        let scanner = &mut self.scanner;
         let (text, said) = (&mut self.envelope, &mut self.envelope_said);
-        match opened(ui, offer, &dir, refusal.as_ref(), text, said) {
+        match opened(ui, offer, &dir, refusal.as_ref(), text, said, scanner) {
             Act::Stay => {}
             Act::Back => self.forget_envelope(),
             Act::Recheck => {
@@ -143,7 +147,17 @@ fn opened(
     refusal: Option<&String>,
     text: &mut String,
     said: &mut Option<String>,
+    scanner: &mut Scanner,
 ) -> Act {
+    // The scan screen is the whole screen while it is up: a camera preview
+    // under a heading and a back control belonging to a screen it is covering
+    // reads as two screens at once.
+    if scanner.live() {
+        if material::scanned(ui, dir, text, said, scanner) {
+            return Act::Recheck;
+        }
+        return Act::Stay;
+    }
     let mut act = Act::Stay;
     if ui.button("< back").clicked() {
         act = Act::Back;
@@ -158,7 +172,7 @@ fn opened(
             ui.weak("this bootstrap starts nothing.");
             return;
         }
-        if material::screen(ui, offer, dir, refusal, text, said) {
+        if material::screen(ui, offer, dir, refusal, text, said, scanner) {
             act = Act::Recheck;
         }
     });

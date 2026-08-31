@@ -14,6 +14,7 @@ use winit::platform::android::activity::AndroidApp;
 
 use super::boot::{Running, boot};
 use super::bridge::{Bridge, Field, FieldKind};
+use super::enroll::Scanner;
 use super::inset::InsetPx;
 use crate::host::Host;
 use crate::rows::AutoExpand;
@@ -53,6 +54,11 @@ pub(crate) struct Shell {
     /// (`forget_envelope`), and nothing logs it.
     pub(crate) envelope: String,
     pub(crate) envelope_said: Option<String>,
+    /// The enrollment screen's camera (bl-d815). It lives beside the field it
+    /// fills rather than inside it, because the camera outlives any one frame
+    /// and the field does not: an open camera must be closed on the way out
+    /// of the screen, whichever way out was taken.
+    pub(crate) scanner: Scanner,
     /// Which KINDS of row open by default (the desktop's two knobs).
     pub(crate) auto: AutoExpand,
     /// The rows the operator has flipped by hand — overrides, never states:
@@ -72,6 +78,7 @@ impl Shell {
         Self {
             running: boot(&android),
             chose: None,
+            scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),
             composer: String::new(),
@@ -93,6 +100,10 @@ impl Shell {
         self.envelope = String::new();
         self.envelope_said = None;
         self.chose = None;
+        // An open camera is a running capture session and a background
+        // thread; leaving the screen is the last moment anything here knows
+        // to close them.
+        self.scanner.shut();
     }
 
     /// Re-read what is provisioned and start whatever it now names. A read of

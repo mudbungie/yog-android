@@ -4,6 +4,15 @@
          not, and Android reports permissionless DNS as no-address-for-
          hostname — a first-class red herring, not a permission denial. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- The enrollment scanner (bl-d815). Dangerous, so the manifest entry
+         only makes the runtime request possible: dev.yog.Camera asks, the
+         operator answers, and a refusal degrades to the paste field with a
+         sentence. `required="false"` because a camera is not what this app
+         IS — a device without one enrolls by cable or by paste exactly as
+         before, and a required feature would hide the app from it. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <application android:label="@string/app_name"
                  android:theme="@style/Theme.AppCompat.NoActionBar">
         <activity android:name=".MainActivity"

@@ -20,6 +20,7 @@ pub mod host;
 pub mod leaf;
 pub mod material;
 pub mod rows;
+pub mod scan;
 pub mod seat;
 pub mod shell;
 pub mod tools;

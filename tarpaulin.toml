@@ -25,7 +25,12 @@
 # stays UNDER the 100% floor. `src/tools/ui/bridge.rs` is the same class and
 # is named for the same reason: it is the JNI call itself, and the seam is
 # drawn so everything up to it — the schemas, the argument reading, the
-# two-line answer protocol — stays testable without a device — an exclusion is added with its reasoning,
+# two-line answer protocol — stays testable without a device. `src/shell/jvm.rs`
+# is that same JNI call, factored out when the camera became its second caller
+# (bl-d815), and `src/shell/camera.rs` is the camera's own half of it; the scan
+# screen (`src/shell/enroll/scan.rs`) is egui glue over both, while the decode
+# and the bridge vocabulary it spends live in `src/scan.rs`, which is pure and
+# stays UNDER the floor — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
 #
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
@@ -35,11 +40,14 @@ exclude-files = [
     "src/shell/app.rs",
     "src/shell/app/pass.rs",
     "src/shell/boot.rs",
+    "src/shell/camera.rs",
     "src/shell/bridge.rs",
     "src/shell/chat.rs",
     "src/shell/enroll.rs",
     "src/shell/enroll/material.rs",
+    "src/shell/enroll/scan.rs",
     "src/shell/inset.rs",
+    "src/shell/jvm.rs",
     "src/shell/screens.rs",
     "src/shell/transcript.rs",
     "src/shell/sys.rs",

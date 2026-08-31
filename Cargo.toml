@@ -36,6 +36,37 @@ serde_json = "1"
 # the gate instead of quietly re-acquiring a C toolchain. Feature set mirrors
 # the server's own rustls line exactly.
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+# rxing: operator ruling 2026-08-30 (bl-d815) — the QR decoder behind **Scan
+# QR** on the enrollment screen. The ruling is a choice between three routes,
+# and it is recorded here because the manifest is where the cost lands:
+#
+#   * ML Kit barcode scanning was REFUSED. It is not "the platform route" —
+#     it is Google Play Services, a Gradle dependency tree this repo has
+#     never had, several MB of bundled model in the APK, and absent on a
+#     device without Play Services. It also brings CameraX with it.
+#   * A from-scratch decoder was refused: a Reed-Solomon decode behind a
+#     binarizer, a finder-pattern locate and a perspective unwarp is new code
+#     this repo maintains forever, under the 100% floor, for a format with
+#     three mature implementations.
+#   * `rxing` — the Rust port of ZXing — puts the decoder in the Rust core,
+#     which is the ONE place this repo's gate can judge a dependency:
+#     cargo-deny reads its licenses, advisories, sources and bans, and the
+#     Gradle side has no equivalent gate at all. Apache-2.0, already on the
+#     allow-list for ring's own AND-arm; the tree it adds is pure Rust
+#     (chrono, num, once_cell, regex, thiserror, unicode-segmentation,
+#     encoding_rs, codepage-437) with no C toolchain and no new license.
+#
+# The feature set is the smallest one that DECODES, and each flag is
+# load-bearing. `qrcode` + `decoders` is the reader; `encoding_rs` is not
+# optional in practice — rxing's only other character-set arm,
+# `no_character_set_support`, compiles `CharacterSet::decode` to
+# `unimplemented!()`, which is the panic path AGENTS.md rule 4 forbids and
+# which byte-mode QR content reaches on every decode. Everything else is off:
+# no `image`/`image_formats` (the frame arrives as a luminance buffer from
+# the camera, never as a file), no `encoders` (this app reads symbols and
+# never draws one — minting is the operator seat's job, REMOTE §8.4), and no
+# other symbology.
+rxing = { version = "0.9", default-features = false, features = ["qrcode", "decoders", "encoding_rs"] }
 
 # The shell set (operator ruling 2026-08-23, recorded on bl-c761: eframe,
 # winit, jni, log, android_logger — the versions the bl-8d03/bl-014e spikes

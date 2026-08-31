@@ -19,6 +19,7 @@
 use eframe::egui;
 
 use super::super::app::ENVELOPE;
+use super::Scanner;
 use crate::bootstrap::Offer;
 
 /// The enrollment screen. Returns whether the material should be re-read —
@@ -30,6 +31,7 @@ pub(super) fn screen(
     refusal: Option<&String>,
     text: &mut String,
     said: &mut Option<String>,
+    scanner: &mut Scanner,
 ) -> bool {
     ui.strong("this device needs");
     for file in crate::material::WANTED {
@@ -47,7 +49,7 @@ pub(super) fn screen(
     }
     ui.add_space(12.0);
     ui.separator();
-    let landed = envelope(ui, dir, text, said);
+    let landed = envelope(ui, dir, text, said, scanner);
     ui.separator();
     if let Some(why) = refusal {
         ui.colored_label(egui::Color32::LIGHT_RED, why);
@@ -60,8 +62,36 @@ pub(super) fn screen(
     landed || ui.button("check for material").clicked()
 }
 
-/// The envelope field and its one button. Returns whether material landed.
-fn envelope(ui: &mut egui::Ui, dir: &str, text: &mut String, said: &mut Option<String>) -> bool {
+/// **The scan screen, and what it produces** (bl-d815). Returns whether
+/// material landed.
+///
+/// The decoded string goes into the paste field and is spent by [`land`] —
+/// the paste field's own sink, unchanged. That is the whole relationship
+/// between the two controls: a camera is a faster way to fill one text field,
+/// and every refusal an envelope can earn is still earned in one place.
+pub(super) fn scanned(
+    ui: &mut egui::Ui,
+    dir: &str,
+    text: &mut String,
+    said: &mut Option<String>,
+    scanner: &mut Scanner,
+) -> bool {
+    let Some(found) = scanner.run(ui, said) else {
+        return false;
+    };
+    *text = found;
+    land(dir, text, said)
+}
+
+/// The envelope field and the two controls that spend it. Returns whether
+/// material landed.
+fn envelope(
+    ui: &mut egui::Ui,
+    dir: &str,
+    text: &mut String,
+    said: &mut Option<String>,
+    scanner: &mut Scanner,
+) -> bool {
     ui.strong("or paste the envelope a seat minted");
     ui.weak(format!(
         "one line of JSON beginning {{\"{}\": {}",
@@ -85,8 +115,19 @@ fn envelope(ui: &mut egui::Ui, dir: &str, text: &mut String, said: &mut Option<S
             );
         });
     let ready = !text.trim().is_empty();
-    let landed =
-        ui.add_enabled(ready, egui::Button::new("enroll")).clicked() && land(dir, text, said);
+    let mut landed = false;
+    ui.horizontal(|ui| {
+        landed =
+            ui.add_enabled(ready, egui::Button::new("enroll")).clicked() && land(dir, text, said);
+        // Beside paste, never instead of it (bl-d815). The camera is one way
+        // to fill this field; a laptop screen read by eye is the other, and
+        // the second one works on a device with no camera, no permission and
+        // no light.
+        if ui.button("scan QR").clicked() {
+            *said = None;
+            scanner.open();
+        }
+    });
     if let Some(why) = said.as_ref() {
         ui.colored_label(egui::Color32::LIGHT_RED, why);
     }

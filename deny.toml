@@ -3,9 +3,12 @@
 # Verified against cargo-deny 0.20.2 (CI pins this exact version). The license
 # allow-list is empirically derived from `cargo deny list` over the committed
 # Cargo.lock — every license that actually appears in the tree, nothing
-# speculative. Today the graph is the crate itself (zero dependencies), so the
-# list is one entry. Re-run `cargo deny check` after any dependency change and
-# fix drift here by config, never by patching dependencies.
+# speculative. Re-run `cargo deny check` after any dependency change and fix
+# drift here by config, never by patching dependencies. The list has been
+# re-derived at every dependency ruling and has not needed a new entry since
+# the eframe set: the rxing tree (bl-d815) added chrono, num, once_cell,
+# regex, thiserror, unicode-segmentation, encoding_rs and codepage-437, and
+# every one of them fell under a line already here.
 
 [advisories]
 # Reject crates whose published version has been yanked from the registry.
@@ -27,7 +30,9 @@ allow = [
     # The rustls/ring tree (bl-48d9, the operator-approved TLS set).
     # serde_json's subtree is dual MIT-or-Apache and rides on the MIT arm;
     # ring is "Apache-2.0 AND ISC", so both of its arms must be allowed.
-    "Apache-2.0",    # ring (AND-arm)
+    # ring's AND-arm, and rxing's sole license (bl-d815) — the ZXing port
+    # carries the upstream Java project's Apache-2.0 outright, not as a dual.
+    "Apache-2.0",
     "ISC",           # ring (AND-arm), rustls-webpki, untrusted
     "BSD-3-Clause",  # subtle
     # The eframe 0.36 tree (bl-c761, the operator-approved shell set) —

@@ -43,6 +43,14 @@ import com.google.androidgamesdk.gametextinput.InputConnection;
  * against. The loop stops; every later press pays the same price. A plain
  * {@code EditText} never restarts input on a keystroke.
  *
+ * <h2>The one other override (bl-d815)</h2>
+ *
+ * {@code onRequestPermissionsResult} is the only signal that separates "the
+ * operator is looking at the camera dialog" from "the operator said no" — the
+ * platform's own {@code checkSelfPermission} answers DENIED for both, and a
+ * scan screen that cannot tell them apart either spins forever or gives up on
+ * a dialog still on screen. It is handed straight to {@link Camera}.
+ *
  * We cannot edit that class, but the listener it installs on the surface view
  * is replaceable: the InputConnection registers itself with
  * {@code targetView.setOnKeyListener(this)} in its constructor, so a listener
@@ -55,6 +63,13 @@ import com.google.androidgamesdk.gametextinput.InputConnection;
 public class MainActivity extends GameActivity {
     static {
         System.loadLibrary("yog_android");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int request, String[] permissions, int[] grants) {
+        super.onRequestPermissionsResult(request, permissions, grants);
+        Camera.answered(grants);
     }
 
     @Override

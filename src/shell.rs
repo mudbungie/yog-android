@@ -19,11 +19,15 @@ mod boot;
 #[cfg(target_os = "android")]
 mod bridge;
 #[cfg(target_os = "android")]
+mod camera;
+#[cfg(target_os = "android")]
 mod chat;
 #[cfg(target_os = "android")]
 mod enroll;
 #[cfg(target_os = "android")]
 mod inset;
+#[cfg(target_os = "android")]
+pub(crate) mod jvm;
 #[cfg(target_os = "android")]
 mod screens;
 #[cfg(target_os = "android")]

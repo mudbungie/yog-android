@@ -226,7 +226,13 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/enroll.rs` | android-only: the first-run surface — the three branded choices, and the screen behind each tap | landed (bl-0d3c) |
 | `src/shell/enroll/material.rs` | android-only: the enrollment screen — the file list, the delivery channels, the pasted envelope and the re-read | landed (bl-dd7b) |
 | `src/envelope.rs` | the enroll envelope a seat mints: read, checked against the leaf's own grade and name, landed under `material`'s names | landed (bl-dd7b) |
-| `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
+| `src/scan.rs` | the QR decoder: a camera luminance frame in, the envelope's text out, plus the camera bridge's four-word vocabulary — pure, host-tested | landed (bl-d815) |
+| `tests/fixtures/enroll-v33m-{symbol.txt,payload.json}` | one foreign-encoded symbol at REMOTE §8.4's own bar (1567 bytes, version 33, level M, 149×149) and the bytes it carries | landed (bl-d815) |
+| `src/shell/jvm.rs` | android-only: the crate's ONE JNI plumbing — attach, this app's class loader, the pending-exception discipline | landed (bl-d815, out of `tools/ui/bridge.rs`) |
+| `src/shell/camera.rs` | android-only: the five static calls into `dev.yog.Camera`, activity passed in | landed (bl-d815) |
+| `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
+| `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
+| `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA), games-activity trio, the OnKeyListener backspace shim, the permission-result hook | landed (bl-c761, bl-d815) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
 
@@ -617,12 +623,84 @@ exactly that check and for nothing else.
 
 **Paste is the QR's degraded path, and it is the same sink.** A camera that
 will not focus, a denied permission, an operator reading a laptop screen: the
-text field has to work regardless, so it was built first. A decoder — when one
-is adjudicated (bl-d815; the platform ships none, so it is a rule 6 dependency
-decision, not a coding task) — is only a producer of the same string, feeding
-a path already proven end to end on real glass.
+text field has to work regardless, so it was built first. The decoder
+(§12, bl-d815) is only a producer of the same string, feeding a path already
+proven end to end on real glass — every refusal above is reached by one path
+however the text arrived.
 
 **The field holds a private key while it is full**, and is emptied the moment
 it lands and on the way back out of the screen (`Shell::forget_envelope`).
 Nothing logs it. It is the one place this app holds key material it was not
 handed a file for.
+
+## 12. Scanning the envelope: the decoder and the capture route (bl-d815)
+
+§11 built the paste field first and called a decoder "only a producer of the
+same string". This section is that producer, and the two decisions it took.
+
+### 12.1 The decoder is `rxing`, and the alternatives were refused
+
+**The ruling is the operator's** (2026-08-30) and it is a rule 6 dependency
+decision, because the honest finding was that **the platform ships no decoder
+this app can reach**: AOSP has no barcode API in any public surface, and there
+is no intent a stranger app may rely on. The three real routes and what each
+costs the *shape* of the app:
+
+- **ML Kit barcode scanning — REFUSED.** It is not "the platform route": it is
+  Google Play Services, a Gradle dependency tree this repo has never had,
+  several MB of bundled model in the APK, absent on a device without Play
+  Services, and it brings CameraX or a camera2 pipeline with it.
+- **From scratch — REFUSED.** A Reed–Solomon decode behind a binarizer, a
+  finder-pattern locate and a perspective unwarp: buildable, and then
+  maintained forever under the 100% floor, for a format with three mature
+  implementations.
+- **`rxing`, the Rust port of ZXing — TAKEN.** It puts the decoder in the Rust
+  core, which is **the one place this repo's gate can judge a dependency**:
+  `cargo-deny` reads its licenses, advisories, sources and bans, and the Gradle
+  side has no equivalent gate at all. It added no new license (Apache-2.0 was
+  already allowed), no advisory and no C toolchain. The feature set and the
+  reason each flag is load-bearing are recorded at the manifest line, which is
+  where the cost lands.
+
+`src/scan.rs` is the whole Rust surface: a frame in, `Option<String>` out. It
+knows nothing about envelopes — **the sink is unchanged**, so the version
+check, the grade-versus-certificate law and every refusal sentence in §11 are
+reached by one path whether the operator pasted or scanned.
+
+### 12.2 The capture route is camera2 in the Java shell, and there is no preview surface
+
+The app is Rust/egui over `GameActivity` with a thin Java shell. Two routes
+were live: the NDK camera API called from Rust, or camera2 in the Java shell
+handing frames across. **The Java shell wins on the machinery already
+present**: this repo has a proven JNI bridge with the class-loader trap already
+solved (`src/tools/ui/bridge.rs`, now over the shared `src/shell/jvm.rs`),
+while the NDK route needs either a new dependency or raw FFI — and rule 3
+confines every `unsafe` to `src/shell/sys.rs`, so a camera's worth of FFI would
+be pressure on the one file whose whole value is being small.
+
+**The session has exactly one output and it is an `ImageReader`.** No
+`SurfaceView`, no `SurfaceTexture` handed to wgpu, no CameraX: the Rust side
+paints the preview from the very buffer it decodes, so the egui frame loop
+keeps the one surface it already owns and the class of defects where the
+preview works but the decoder sees something else cannot arise.
+
+Three consequences are structural, and two of them were learned on the
+emulator rather than reasoned:
+
+- **Rust pulls; Java never calls in.** A Java→Rust callback needs a
+  `#[unsafe(no_mangle)]` entry point, which is rule 3 pressure again. The frame
+  loop is already a loop, so it polls: one state call and one frame call per
+  pass, both through the shared plumbing.
+- **A frame is packed only when the reader has taken the last one, into one of
+  two buffers that alternate.** A fresh ~900 KB array per frame killed the app
+  outright — `OutOfMemoryError` on the camera's `HandlerThread`, whose death is
+  the process's. Steady-state allocation is now zero, and the packer catches
+  even `OutOfMemoryError`, because a sentence beats a stack trace only logcat
+  sees.
+- **The permission is asked per tap, not per process.** The platform's own
+  `checkSelfPermission` cannot tell "the dialog is up" from "the operator said
+  no", so `MainActivity.onRequestPermissionsResult` records the answer and
+  `dev.yog.Camera` answers one of four words. A denial closes the scan screen
+  and writes its sentence into the enrollment screen's own refusal line: what
+  the operator lands on is the paste field with an explanation, never a preview
+  that will not fill.
