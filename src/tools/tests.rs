@@ -49,6 +49,22 @@ fn the_advertisement_is_the_table_and_every_element_is_three_facts() {
     }
 }
 
+/// **The invariant that makes the consent one fact rather than two**
+/// (bl-0ac8). `crate::host` refuses every invocation carrying a `cwd`, and it
+/// is allowed to do that unconditionally only because nothing in this table
+/// can consent — `tool()` has no parameter for it. The day a dispatch here can
+/// honour a directory, this is what fails, and it names the check to change.
+#[test]
+fn no_advertised_tool_consents_to_a_carried_working_directory() {
+    for tool in advertisement() {
+        assert!(
+            !tool.subject_cwd,
+            "{} consents to subject_cwd, so crate::host's blanket refusal is now wrong",
+            tool.name
+        );
+    }
+}
+
 #[test]
 fn an_unknown_tool_and_unreadable_arguments_are_two_sentences() {
     let missing = run("nope", &json!({}));

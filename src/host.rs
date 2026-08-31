@@ -25,6 +25,21 @@
 //! another, on the same material and therefore the same certificate common
 //! name. REMOTE §5's presence map is refcounted per identity precisely because
 //! one client may hold more than one connection.
+//!
+//! **A carried working directory is refused here, and that is the whole of
+//! REMOTE §5.4's worktree lane on this device** (bl-0ac8). §5.1 puts the
+//! consent on the advertisement — *"it stays checkable because the box that
+//! stated it is the box that enforces it (thrall refuses a carried cwd against
+//! an unconsenting entry, in band, naming the key)"* — and this box states
+//! none: DESIGN §6's lawful §5.2 deviation dispatches to a Rust function
+//! rather than spawning an argv, so there is nothing to spawn *at*, and
+//! `tools::tool` has no parameter with which to say otherwise. So the check is
+//! that fact's consequence rather than a second copy of it, and
+//! `tools::tests` holds the invariant that keeps them one: no advertised entry
+//! consents. Refusing rather than dropping, because a `cwd` silently ignored
+//! is both ends believing a tool ran in the conversation's worktree when it
+//! ran wherever this app's uid happened to be — the quiet miss the lane exists
+//! to exclude.
 
 use std::sync::mpsc;
 
@@ -144,7 +159,10 @@ fn hold(
             Err(why) => return why,
         };
         for invocation in work {
-            let capture = run(&invocation.tool, &invocation.input);
+            let capture = match &invocation.cwd {
+                None => run(&invocation.tool, &invocation.input),
+                Some(cwd) => unconsented(&invocation.tool, cwd),
+            };
             standing.served += 1;
             standing.last = Some(format!("{} → {}", invocation.tool, capture.exit_code));
             if let Err(why) = answer(foot, &invocation, capture) {
@@ -155,6 +173,26 @@ fn hold(
             }
         }
     }
+}
+
+/// The refusal a carried `cwd` earns: the capture's three facts, the sentence
+/// on stderr where a tool's diagnostics go, and the key named — because the
+/// reader is a model and the fixer is an operator with another machine. It
+/// says what would run it instead rather than only what will not, which is
+/// REMOTE §5.4's own posture for every miss in this lane.
+fn unconsented(tool: &str, cwd: &str) -> Capture {
+    crate::tools::refused(
+        crate::tools::UNCONSENTED,
+        &format!(
+            "this machine does not run {tool} at a directory an invocation names: \
+             it advertises no \"subject_cwd\" consent, because it dispatches to a \
+             function of its own rather than spawning a program somewhere, and a \
+             phone holds no worktree of this conversation. {cwd} was not entered \
+             and nothing ran. Route this to the box that holds the server's \
+             worktrees, or load this machine's tool by name to run it where this \
+             machine runs things."
+        ),
+    )
 }
 
 /// Post one capture back, quoting the handle it answers.

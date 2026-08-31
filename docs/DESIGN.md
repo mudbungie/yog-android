@@ -231,7 +231,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
-| `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete | landed (bl-d366) |
+| `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete — and refuse a carried `cwd` (§6) | landed (bl-d366, bl-0ac8) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
@@ -382,6 +382,39 @@ own loader is what resolves it, and one global reference to the result
 outlives the attach that found it (`src/tools/ui/bridge.rs`). The honest limits are written into the descriptions a model
 reads — REMOTE §5's containment paragraph in this client's own terms: what
 runs here runs as this app's user, and the design does not claim otherwise.
+
+**The worktree lane ends here, in a refusal (bl-0ac8).** PROTOCOL 2 added
+REMOTE §5.4's lane: an advertised entry may carry `"subject_cwd": true`, and
+the engine then routes a bare granted name to the one client of the workspace
+that both advertises it and consents, putting the conversation's resolved
+working directory on the invocation as `cwd`. §5.1 puts enforcement on the
+advertiser in as many words — *"it stays checkable because the box that stated
+it is the box that enforces it (thrall refuses a carried cwd against an
+unconsenting entry, in band, naming the key)"*.
+
+**This device consents to nothing, and cannot.** The deviation above is why:
+dispatch is a call into a Rust function, not a spawn, so there is no directory
+to run *at* — `tools::tool` has no consent parameter, and every advertised
+element rides without the key (which is what "absent reads false" is for). The
+subject reason stands behind the mechanical one: a phone rarely holds a
+conversation's worktree, and the box that does is the co-located thrall §5.4
+already names as the normal install.
+
+So `crate::host` refuses **every** invocation carrying a `cwd`, in band, with
+the capture's three facts: exit code `tools::UNCONSENTED`, empty stdout, and a
+sentence naming the key, the tool, the directory that was not entered, the fact
+that nothing ran, and the two ways to get the work done. Its own exit code
+rather than `BAD_INPUT`'s, because the arguments were read perfectly and
+nothing the model wrote is wrong — the two failures have different fixers.
+
+A blanket refusal is lawful only while nothing can consent, so that is an
+**invariant with a test** (`tools::tests`), not an assumption: no advertised
+tool may state `subject_cwd`. The day a dispatch here can honour a directory,
+that test fails and names the check to change — one fact, and the check is its
+consequence rather than a second copy of it. Refusing rather than dropping the
+field, because a `cwd` silently ignored leaves both ends believing a tool ran
+in the conversation's worktree when it ran wherever this app's uid happened to
+be, which is the quiet miss the whole lane exists to exclude.
 
 **The table is host-testable and is tested.** It is ordinary Rust over the
 standard library, so the same code the device runs is the code the suite runs;

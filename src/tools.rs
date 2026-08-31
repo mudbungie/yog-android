@@ -43,6 +43,14 @@ pub const NO_SUCH_TOOL: i32 = 127;
 /// in band, rather than a silent empty answer.
 pub const BAD_INPUT: i32 = 2;
 
+/// The verdict an invocation carrying a working directory earns (REMOTE §5.1,
+/// §5.4; `crate::host` holds the check and the sentence). Its own code and not
+/// [`BAD_INPUT`]'s: the arguments were read perfectly and nothing the model
+/// wrote is wrong — the routing lane addressed a machine that never consented,
+/// so the two failures have different fixers and a reader that could not tell
+/// them apart would send the model to correct a call that was correct.
+pub const UNCONSENTED: i32 = 3;
+
 /// What this machine presents on connect. Order is the table's, which is the
 /// order an operator reads them in; nothing downstream depends on it.
 ///
@@ -137,8 +145,14 @@ pub(crate) fn tool(name: &str, description: &str, schema: Value) -> Tool {
         // PROTOCOL 2's optional fourth fact, and this table states it nowhere:
         // `false` rides as an absent key (`codec::tools::one`), so the bytes
         // this machine advertises are the three facts it advertised before the
-        // version moved. What consent would mean on a phone is a decision, and
-        // it is not this constructor's.
+        // version moved.
+        //
+        // **There is no parameter here to say otherwise, and that is the
+        // design** (bl-0ac8). Consent means "this box will run the tool at a
+        // directory the invocation names", and dispatch below is a function
+        // call — there is nothing to run *somewhere*. `crate::host` refuses a
+        // carried `cwd` as the consequence of this one fact, and the invariant
+        // test in `tests` is what keeps the two from becoming two facts.
         subject_cwd: false,
     }
 }

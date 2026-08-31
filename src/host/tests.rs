@@ -3,6 +3,8 @@
 //! way a channel can stop it. The requests the server read back are asserted,
 //! so this device's side of the wire is pinned rather than assumed.
 
+mod consent;
+
 use super::{Host, Standing};
 use crate::codec::{Capture, Tool};
 use crate::foot::Foot;
@@ -71,7 +73,12 @@ fn host_against(scripts: Vec<Vec<Vec<u8>>>) -> (Host, std::thread::JoinHandle<Ve
 
 /// Poll until a standing satisfies `pass` — the host publishes on its own
 /// thread, so the test waits the way a frame would, just faster.
-fn settle<F: Fn(&Standing) -> bool>(host: &mut Host, pass: F) -> Standing {
+///
+/// `pass` is a trait object, not a bound: a generic helper is monomorphized
+/// per calling module, and llvm-cov then reports one instantiation's lines as
+/// uncovered the moment a sibling test module calls it. One function, one set
+/// of lines, and the coverage floor measures the thing that actually runs.
+fn settle(host: &mut Host, pass: &dyn Fn(&Standing) -> bool) -> Standing {
     let deadline = std::time::Instant::now() + Duration::from_secs(10);
     loop {
         let standing = host.standing();
@@ -106,7 +113,7 @@ fn it_advertises_then_runs_what_it_is_handed_and_completes_it() {
         // The loop asks again; the script ends there, which stops the host.
         vec![],
     ]);
-    let standing = settle(&mut host, |s| s.served == 1);
+    let standing = settle(&mut host, &|s| s.served == 1);
     assert_eq!(standing.tools, ["echo"]);
     assert!(standing.advertised);
     assert_eq!(standing.last.as_deref(), Some("echo → 0"));
@@ -145,7 +152,7 @@ fn an_empty_answer_is_ordinary_and_the_host_asks_again() {
         vec![routed("i2")],
         vec![],
     ]);
-    settle(&mut host, |s| s.served == 1);
+    settle(&mut host, &|s| s.served == 1);
     assert_eq!(
         ops(&served.join().unwrap()),
         [
@@ -170,7 +177,7 @@ fn two_invocations_in_one_answer_run_in_order() {
         vec![routed("b")],
         vec![],
     ]);
-    let standing = settle(&mut host, |s| s.served == 2);
+    let standing = settle(&mut host, &|s| s.served == 2);
     assert_eq!(standing.served, 2);
     let requests = served.join().unwrap();
     let first: Value = serde_json::from_slice(&requests[2]).unwrap();
@@ -185,7 +192,7 @@ fn a_refused_advertisement_stops_the_host_with_the_engines_sentence() {
         .to_string()
         .into_bytes();
     let (mut host, _served) = host_against(vec![vec![refusal]]);
-    let standing = settle(&mut host, |s| s.stopped.is_some());
+    let standing = settle(&mut host, &|s| s.stopped.is_some());
     assert_eq!(standing.stopped.as_deref(), Some("not registered here"));
     assert!(!standing.advertised);
     assert_eq!(standing.served, 0);
@@ -203,7 +210,7 @@ fn a_refused_completion_stops_the_host_rather_than_answering_into_it() {
         )],
         vec![refusal],
     ]);
-    let standing = settle(&mut host, |s| s.stopped.is_some());
+    let standing = settle(&mut host, &|s| s.stopped.is_some());
     assert_eq!(
         standing.stopped.as_deref(),
         Some("no invocation \"i1\" is in flight")
@@ -213,7 +220,7 @@ fn a_refused_completion_stops_the_host_rather_than_answering_into_it() {
 #[test]
 fn a_wrong_reply_to_the_follow_read_names_what_came_instead() {
     let (mut host, _served) = host_against(vec![vec![advertised()], vec![advertised()]]);
-    let standing = settle(&mut host, |s| s.stopped.is_some());
+    let standing = settle(&mut host, &|s| s.stopped.is_some());
     let stopped = standing.stopped.unwrap_or_default();
     assert!(
         stopped == "the engine answered advertised, not this machine's work",
@@ -224,11 +231,11 @@ fn a_wrong_reply_to_the_follow_read_names_what_came_instead() {
 #[test]
 fn a_dead_engine_stops_the_host_with_the_dial_that_failed() {
     let (mut host, served) = host_against(vec![vec![advertised()]]);
-    settle(&mut host, |s| s.advertised);
+    settle(&mut host, &|s| s.advertised);
     // Once the one scripted connection is served the listener is gone, so the
     // follow-class read cannot be dialled at all.
     served.join().unwrap();
-    let standing = settle(&mut host, |s| s.stopped.is_some());
+    let standing = settle(&mut host, &|s| s.stopped.is_some());
     assert!(standing.stopped.is_some());
     assert!(standing.advertised);
 }
@@ -271,7 +278,7 @@ fn a_frame_that_goes_away_mid_run_stops_the_host_after_it_answers() {
     let mut host = Host::start(foot, table(), Box::new(slow_dispatch));
     // Waiting for the advertisement is what puts the drop INSIDE the run: the
     // publish that failed is the loop's, not the one right after presenting.
-    settle(&mut host, |s| s.advertised);
+    settle(&mut host, &|s| s.advertised);
     drop(host);
     // The invocation still ran and was still answered: a frame going away does
     // not abandon work the engine is waiting on.
