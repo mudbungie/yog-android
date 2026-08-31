@@ -457,6 +457,30 @@ operator.
 in-flight row's colour. A phone repaints on a budget it is also spending on
 the IME mirror, so the label says `running` and the hue holds still.
 
+**The read path is a re-read at cadence, not the follow lane — and since
+REMOTE §5.5 that is a decision worth stating (bl-2842).** `seat::model::fill`
+asks `workspaces` → `conversations` → `transcript` on every pass of the
+worker's own clock, and a gesture wakes it immediately; `Query::Follow` is
+sent nowhere. What changed upstream is not the lane's spelling but its
+meaning: a follow frame now carries *what landed since that read's previous
+frame*, and the rule is one line —
+
+> *"Absorb every frame of a read, in order, onto an empty fold. What you hold
+> after the last frame you have received is what you paint."*
+
+The frame body is byte for byte what it was, so **nothing mechanical here can
+notice**: the corpus ledger records field paths and types, no version bump was
+forced, and a green conformance run says nothing about it. That is why the
+decision lives in a place a person reads — the `follow` rows in
+`tests/conformance/expect.rs` carry the reason, and `transport::Seat::answered`
+carries the trap at the line that would spring it, because it decodes
+`stream.last()` and the last frame of an append stream is the final delta
+alone. `Seat::ask` hands back every frame and is the lane's door.
+
+The tool host's `invocations` read (§6) is follow-**class** and is not this
+lane: it holds a connection open, but its answer is one frame of rows rather
+than a text fold, so §5.5's rule does not reach it.
+
 ## 8. Starting a conversation (bl-b64e)
 
 A client that can read every conversation and speak into one, and cannot make

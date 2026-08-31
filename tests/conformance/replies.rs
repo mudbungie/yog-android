@@ -12,7 +12,7 @@
 //! envelope is the refusal, and decoding it hands back the engine's sentence.
 
 use super::expect::Expect::{self, Reads, Refuses};
-use super::expect::{NOT_THE_MINTER, UNSENT};
+use super::expect::{FOLLOW_IS_AN_APPEND, NOT_THE_MINTER, UNSENT};
 
 pub const REPLIES: &[(&str, Expect)] = &[
     ("acked", Refuses(UNSENT)),
@@ -34,7 +34,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("files", Refuses(UNSENT)),
     ("flagged", Refuses(UNSENT)),
     ("floored", Refuses(UNSENT)),
-    ("follow", Refuses(UNSENT)),
+    ("follow", Refuses(FOLLOW_IS_AN_APPEND)),
     ("governing", Refuses(UNSENT)),
     ("help", Refuses(UNSENT)),
     ("inbox", Refuses(UNSENT)),

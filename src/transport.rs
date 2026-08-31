@@ -55,6 +55,19 @@ impl Seat {
     /// today is the only frame. One `Err` for a refusal, an unreadable answer
     /// and a socket that never opened alike: all three are the same fact to a
     /// caller — this cannot be painted, and here is the sentence.
+    ///
+    /// **`last()` is not the door to the follow lane** (REMOTE §5.5, bl-2842).
+    /// Since yog bl-3655 a `Query::Follow` frame carries what landed *since
+    /// the previous frame*, not the whole answer, and the rule is one line
+    /// with no flag: *"Absorb every frame of a read, in order, onto an empty
+    /// fold. What you hold after the last frame you have received is what you
+    /// paint."* Taking the last frame of such a stream paints the final delta
+    /// alone and calls it the answer. Nothing here follows — this seat
+    /// re-reads the transcript at the model's cadence — so no test can catch
+    /// it, which is exactly why the trap is named at the `last()` rather than
+    /// in a document the author will not be reading. The lane's door is
+    /// [`ask`](Self::ask), which hands back every frame; the fold goes on top
+    /// of it.
     pub fn answered(&self, request: &Value) -> Result<Reply, String> {
         let stream = self.ask(request)?;
         let last = stream

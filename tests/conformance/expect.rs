@@ -56,6 +56,36 @@ pub const ASKING_SIDE: &str = "§5.3's asking side — this device is invoked, i
 /// the bug.
 pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 
+/// **The follow lane, and the one skip the corpus could never have caught.**
+///
+/// This seat re-reads a transcript at the model's cadence (`seat::model::fill`
+/// asks `workspaces` → `conversations` → `transcript`) rather than holding a
+/// connection open on `Query::Follow`. That was a shape decision, and it is
+/// now also a *protection*: REMOTE §5.5 made the lane's frame an **append** —
+///
+/// > *"Absorb every frame of a read, in order, onto an empty fold. What you
+/// > hold after the last frame you have received is what you paint."*
+///
+/// — under a wire spelling that did not move at all. REMOTE says the
+/// consequence out loud: *"The corpus ledger records field paths and types, so
+/// it cannot see a change of meaning under an unchanged signature: nothing
+/// forced a version bump and none was taken."* So this row is the only place
+/// the change can be recorded at all; a green conformance run says nothing
+/// about it, and re-vendoring the fixtures is not consuming the section.
+///
+/// **What the author who adds the lane owes**, so it is written before it is
+/// needed rather than after: absorb every frame onto an empty fold in stream
+/// order, letting the newer `delta` kind win; a read starts holding nothing,
+/// so a dropped connection is re-asked and the first frame is whole; and
+/// `Seat::answered` is the wrong door — it decodes `stream.last()`, which for
+/// an append stream is the final delta alone.
+///
+/// The tool host's `invocations` read is follow-CLASS and is **not** this
+/// lane: its answer is one frame of rows, and §5.5's rule is about a text
+/// fold. It stays `Reads`.
+pub const FOLLOW_IS_AN_APPEND: &str =
+    "REMOTE §5.5's append lane — this seat re-reads the transcript at cadence and follows nothing";
+
 /// DESIGN §8: *"One rung, and the other two are not omissions. The bare rung
 /// is the whole slice: a phone is not where a work directory is chosen or a
 /// ball is bound."*
