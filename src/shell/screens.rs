@@ -107,6 +107,19 @@ impl Shell {
                     for row in &snap.conversations {
                         let mark = if row.attention > 0 { " ●" } else { "" };
                         let label = format!("{}{mark}\n{}", row.display, row.preview);
+                        // The row's ink is the ENGINE's reading of it, not a
+                        // second one taken here (bl-ef9a). `Tone::Bad` is the
+                        // one passive sighting of a conversation refused at
+                        // the provider rung: the badge set is frozen at four,
+                        // so such a conversation comes to rest `stopped` — the
+                        // word `/stop` owns — and a list where the two read
+                        // identically is a list that cannot be scanned.
+                        // `Tone::Weak` is a start whose driver has written no
+                        // branch yet. `chat::tone_hue` is the same map the
+                        // transcript spends, so this app has one colour
+                        // vocabulary and it is the desktop's.
+                        let ink = super::chat::tone_hue(ui, row.tone);
+                        let label = egui::RichText::new(label).color(ink);
                         if ui.button(label).clicked()
                             && let Some(model) = self.model()
                         {

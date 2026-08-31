@@ -457,6 +457,24 @@ operator.
 in-flight row's colour. A phone repaints on a budget it is also spending on
 the IME mirror, so the label says `running` and the hue holds still.
 
+**The conversation list takes its ink from the same map (bl-ef9a), and that is
+how a provider refusal becomes visible here at all.** yog bl-b43b named a wound
+with no badge of its own: a conversation refused at the provider rung comes to
+rest `stopped` — the badge set is frozen at four (REMOTE §5.1 #9), so it wears
+the word an operator's own `/stop` owns — with an empty transcript and an
+empty-stderr trail row. Upstream's answer was to say **which way** the rest came
+about at every passive surface, and the half that reaches this seat is the
+roster row's `tone`: `bad` for a refusal, `weak` for a start whose driver has
+written no branch yet. The `refused` boolean itself rides `reply/agent`, and
+`reply/attention` carries the signal word; both are shapes this codec does not
+read, so `tone` is the whole of what the phone can see and it was being decoded
+and dropped one function short of the screen. It now colours the row's label
+through `shell::chat::tone_hue` — one map, two surfaces, because a hue meaning
+one thing in a list and another in a transcript would be two colour
+vocabularies inside one app. Upstream's own words for why a list is the place
+this matters: *"the roster is the operator's one passive sighting of it — a
+list where the two read identically is a list that cannot be scanned."*
+
 **The read path is a re-read at cadence, not the follow lane — and since
 REMOTE §5.5 that is a decision worth stating (bl-2842).** `seat::model::fill`
 asks `workspaces` → `conversations` → `transcript` on every pass of the

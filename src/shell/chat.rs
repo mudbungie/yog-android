@@ -116,7 +116,15 @@ fn role_hue(role: Role) -> egui::Color32 {
 
 /// A tone's ink. `Plain` and `Weak` defer to the theme's own text colours;
 /// the other four are the desktop's constants.
-fn tone_hue(ui: &egui::Ui, tone: crate::codec::Tone) -> egui::Color32 {
+///
+/// **Two surfaces spend it** (bl-ef9a): this transcript, and the conversation
+/// list in `super::screens`. One map rather than two, because a hue that meant
+/// one thing in a list and another in a transcript would be two colour
+/// vocabularies inside one app — and because `Tone::Bad` in a roster row is
+/// the operator's only passive sighting of a conversation refused at the
+/// provider rung (yog bl-b43b), which is a fact worth painting the same way
+/// wherever it appears.
+pub(super) fn tone_hue(ui: &egui::Ui, tone: crate::codec::Tone) -> egui::Color32 {
     use crate::codec::Tone;
     match tone {
         Tone::Plain => ui.visuals().text_color(),
