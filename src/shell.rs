@@ -15,12 +15,18 @@ pub mod span;
 #[cfg(target_os = "android")]
 mod app;
 #[cfg(target_os = "android")]
+mod boot;
+#[cfg(target_os = "android")]
 mod bridge;
 #[cfg(target_os = "android")]
 mod chat;
+#[cfg(target_os = "android")]
+mod enrol;
 #[cfg(target_os = "android")]
 mod inset;
 #[cfg(target_os = "android")]
 mod screens;
 #[cfg(target_os = "android")]
 pub(crate) mod sys;
+#[cfg(target_os = "android")]
+mod transcript;

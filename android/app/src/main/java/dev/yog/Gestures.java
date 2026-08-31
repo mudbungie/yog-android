@@ -1,4 +1,4 @@
-package dev.yog.seat;
+package dev.yog;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
@@ -53,18 +53,18 @@ final class Gestures {
                         },
                         null);
         if (!dispatched) {
-            return YogAccessibilityService.ERR + "the platform refused the gesture";
+            return InterfaceService.ERR + "the platform refused the gesture";
         }
         try {
             if (!done.await(PATIENCE_S, TimeUnit.SECONDS)) {
-                return YogAccessibilityService.ERR + "the tap was never answered for";
+                return InterfaceService.ERR + "the tap was never answered for";
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return YogAccessibilityService.ERR + "the wait for the tap was interrupted";
+            return InterfaceService.ERR + "the wait for the tap was interrupted";
         }
         return landed[0]
-                ? YogAccessibilityService.OK + "tapped " + x + "," + y
-                : YogAccessibilityService.ERR + "the tap was cancelled";
+                ? InterfaceService.OK + "tapped " + x + "," + y
+                : InterfaceService.ERR + "the tap was cancelled";
     }
 }

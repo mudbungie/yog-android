@@ -1,4 +1,4 @@
-package dev.yog.seat;
+package dev.yog;
 
 import android.graphics.Rect;
 import android.view.accessibility.AccessibilityNodeInfo;

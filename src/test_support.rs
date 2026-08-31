@@ -24,10 +24,17 @@ pub fn mint_ca(dir: &Path, name: &str) {
 }
 
 fn names(name: &str) -> (String, String, String) {
+    subject(name, None)
+}
+
+/// The same three names with an optional organizational unit — REMOTE §4.2's
+/// grade, which rides in the leaf's own subject and nowhere else.
+fn subject(name: &str, unit: Option<&str>) -> (String, String, String) {
+    let ou = unit.map(|u| format!("/OU={u}")).unwrap_or_default();
     (
         format!("{name}.key"),
         format!("{name}.pem"),
-        format!("/CN=notreal-{name}"),
+        format!("/CN=notreal-{name}{ou}"),
     )
 }
 
@@ -35,7 +42,23 @@ fn names(name: &str) -> (String, String, String) {
 /// carries the loopback IP SAN the client verifies the dialled address
 /// against; a client leaf needs none.
 pub fn mint_leaf(dir: &Path, ca: &str, name: &str, ip_san: bool) {
-    let (key, pem, subj) = names(name);
+    mint_graded(dir, ca, name, ip_san, None);
+}
+
+/// A **foot-grade** leaf (REMOTE §4.2): the same mint with `OU=foot` written
+/// into the subject, which is the one place a grade may be stated.
+pub fn mint_foot(dir: &Path, ca: &str, name: &str) {
+    mint_graded(dir, ca, name, false, Some("foot"));
+}
+
+/// A leaf carrying an arbitrary organizational unit — the near miss the grade
+/// walk must not read as a promotion.
+pub fn mint_unit(dir: &Path, ca: &str, name: &str, unit: &str) {
+    mint_graded(dir, ca, name, false, Some(unit));
+}
+
+fn mint_graded(dir: &Path, ca: &str, name: &str, ip_san: bool, unit: Option<&str>) {
+    let (key, pem, subj) = subject(name, unit);
     let csr = format!("{name}.csr");
     run(
         dir,

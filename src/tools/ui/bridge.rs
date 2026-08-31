@@ -1,5 +1,5 @@
 //! The JNI half of the interface tools: six static calls into
-//! `dev.yog.seat.YogAccessibilityService`, each answering one string.
+//! `dev.yog.InterfaceService`, each answering one string.
 //!
 //! **The `JavaVM` comes from `ndk_context`, not from an `AndroidApp`.** This
 //! runs on the tool-host worker, which holds no activity handle and must not
@@ -21,7 +21,7 @@ use jni::objects::{GlobalRef, JObject, JString, JValue};
 /// The class the static entry points live on, in the form a class loader
 /// takes (dots, not slashes — `FindClass` is not what resolves it; see
 /// [`class`]).
-const CLASS: &str = "dev.yog.seat.YogAccessibilityService";
+const CLASS: &str = "dev.yog.InterfaceService";
 
 pub(crate) fn bridge_read() -> String {
     call("uiRead", "()Ljava/lang/String;", &[])

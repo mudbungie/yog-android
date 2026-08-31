@@ -7,6 +7,7 @@ use std::time::Duration;
 use eframe::egui;
 use winit::platform::android::activity::AndroidApp;
 
+use super::boot::{Running, boot};
 use super::bridge::{Bridge, Field, FieldKind};
 use super::inset::InsetPx;
 use crate::host::Host;
@@ -19,10 +20,6 @@ pub(crate) const COMPOSER: Field = Field {
     id: "composer",
     kind: FieldKind::Composer,
 };
-
-/// How long the model rests between unprompted refreshes — the human
-/// cadence of a chat glanced at, not a terminal streamed to.
-const CADENCE: Duration = Duration::from_secs(2);
 
 /// Boot eframe over the Activity. `sys::android_main` is the only caller;
 /// everything before this call is sys.rs's.
@@ -49,13 +46,7 @@ pub(crate) fn run(app: AndroidApp) {
 pub(crate) struct Shell {
     android: AndroidApp,
     bridge: Bridge,
-    /// The seat model, or the sentence explaining why there is none
-    /// (unprovisioned material; provisioning is an operator act, DESIGN §5).
-    pub(crate) model: Result<Model, String>,
-    /// This device as a machine a session can call (REMOTE §5). It rides its
-    /// own connection on the same material, so it is `Some` exactly when the
-    /// seat opened — a device that cannot dial cannot host either.
-    pub(crate) host: Option<Host>,
+    pub(crate) running: Running,
     pub(crate) composer: String,
     /// Which KINDS of row open by default (the desktop's two knobs).
     pub(crate) auto: AutoExpand,
@@ -74,8 +65,7 @@ pub(crate) struct Shell {
 impl Shell {
     fn new(android: AndroidApp) -> Self {
         Self {
-            model: open_model(&android),
-            host: open_host(&android),
+            running: boot(&android),
             android,
             bridge: Bridge::default(),
             composer: String::new(),
@@ -84,6 +74,43 @@ impl Shell {
             t0: std::time::Instant::now(),
             inset: InsetPx::default(),
             inset_at: 0,
+        }
+    }
+
+    /// The seat model, when this launch is running one.
+    pub(crate) fn model(&self) -> Option<&Model> {
+        match &self.running {
+            Running::Seat { model, .. } => Some(model),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn model_mut(&mut self) -> Option<&mut Model> {
+        match &mut self.running {
+            Running::Seat { model, .. } => Some(model),
+            _ => None,
+        }
+    }
+
+    /// Who this device is on the wire, and as what: the leaf's own common
+    /// name and the component its grade enrolled it as (REMOTE §2, §4.2).
+    /// Painted rather than logged, because a seat showing an empty roster and
+    /// a seat registered in no workspace look identical until this line says
+    /// which client the engine was answering.
+    pub(crate) fn identity(&self) -> String {
+        match &self.running {
+            Running::Seat { client, .. } => format!("{client} · seat"),
+            Running::Foot { client, .. } => format!("{client} · foot grade"),
+            Running::Cold { .. } => String::new(),
+        }
+    }
+
+    /// The tool host, whichever component holds one.
+    pub(crate) fn host_mut(&mut self) -> Option<&mut Host> {
+        match &mut self.running {
+            Running::Seat { host, .. } => host.as_mut(),
+            Running::Foot { host, .. } => Some(host),
+            Running::Cold { .. } => None,
         }
     }
 
@@ -97,43 +124,6 @@ impl Shell {
             Err(e) => log::warn!("inset probe: {e}"),
         }
     }
-}
-
-/// The seat over the provisioned material in the app's private `files/wire`
-/// (DESIGN §5: adb, remote exec or QR put it there; this app never mints).
-fn open_model(android: &AndroidApp) -> Result<Model, String> {
-    Ok(Model::start(open_seat(android)?, CADENCE))
-}
-
-/// The tool host, on its own connection over the same material — one
-/// identity, two connections, which REMOTE §5's refcounted presence expects.
-/// A device that cannot dial simply does not host: the seat's own banner is
-/// already saying why, and a second copy of that sentence would be noise.
-fn open_host(android: &AndroidApp) -> Option<Host> {
-    let seat = open_seat(android).ok()?;
-    // The dispatch closes over this app's own storage, which is where a
-    // screenshot goes when a caller names no path — the one directory this
-    // uid can always write.
-    let data_dir = android
-        .internal_data_path()
-        .map(|p| p.display().to_string())
-        .unwrap_or_default();
-    Some(Host::start(
-        seat,
-        crate::tools::advertisement(),
-        Box::new(move |tool, input| crate::tools::run_in(tool, input, &data_dir)),
-    ))
-}
-
-/// One dial's worth of material, resolved the same way for both connections.
-fn open_seat(android: &AndroidApp) -> Result<crate::transport::Seat, String> {
-    let dir = android
-        .internal_data_path()
-        .ok_or("no internal data path")?
-        .join("wire");
-    let material = crate::material::read_dir(&dir)?
-        .ok_or_else(|| format!("nothing provisioned at {}", dir.display()))?;
-    crate::transport::Seat::open(&material)
 }
 
 impl eframe::App for Shell {

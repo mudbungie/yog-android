@@ -1,4 +1,4 @@
-package dev.yog.seat;
+package dev.yog;
 
 import android.content.Context;
 import android.os.Bundle;

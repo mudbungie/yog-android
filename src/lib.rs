@@ -10,10 +10,12 @@
 //! (yog REMOTE §3) and mirrored here — where the two implementations
 //! disagree, one of them is a bug.
 
+pub mod bootstrap;
 pub mod codec;
 pub mod frame;
 pub mod hello;
 pub mod host;
+pub mod leaf;
 pub mod material;
 pub mod rows;
 pub mod seat;

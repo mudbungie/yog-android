@@ -21,7 +21,7 @@
              never grants itself anything. BIND_ACCESSIBILITY_SERVICE is
              held by the SYSTEM, not requested by us: declaring it here is
              what stops any other app from binding this service. -->
-        <service android:name=".YogAccessibilityService"
+        <service android:name=".InterfaceService"
                  android:exported="true"
                  android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

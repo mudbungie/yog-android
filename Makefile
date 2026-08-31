@@ -24,9 +24,16 @@ release:
 # wrapper is a committed jar, and the leak gate refuses any binary it cannot
 # read (BINARY_ALLOWED matches nothing) — which is correct, so the pin lives
 # in this comment and the README instead of a jar.
+# `gradle` is a variable so a box without one on PATH can point at a
+# distribution it already has (a wrapper cache, a package manager's prefix)
+# without editing this file — `make apk GRADLE=/path/to/gradle`. The default
+# is still a system gradle, because a committed wrapper jar is a binary the
+# leak gate refuses and should.
+GRADLE ?= gradle
+
 apk:
 	cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs build --release
-	cd android && gradle assembleDebug
+	cd android && $(GRADLE) assembleDebug
 	@echo "apk: android/app/build/outputs/apk/debug/app-debug.apk"
 
 test:

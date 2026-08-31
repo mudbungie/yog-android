@@ -1,4 +1,4 @@
-package dev.yog.seat;
+package dev.yog;
 
 import android.accessibilityservice.AccessibilityService;
 import android.graphics.Bitmap;
@@ -29,7 +29,7 @@ final class Screens {
 
     static String capture(AccessibilityService service, String path) {
         CountDownLatch done = new CountDownLatch(1);
-        String[] answer = {YogAccessibilityService.ERR + "the screenshot was never answered for"};
+        String[] answer = {InterfaceService.ERR + "the screenshot was never answered for"};
         service.takeScreenshot(
                 Display.DEFAULT_DISPLAY,
                 Runnable::run,
@@ -43,7 +43,7 @@ final class Screens {
                     @Override
                     public void onFailure(int code) {
                         answer[0] =
-                                YogAccessibilityService.ERR
+                                InterfaceService.ERR
                                         + "the platform refused the screenshot (code "
                                         + code
                                         + "); a secure window may be in front.";
@@ -52,11 +52,11 @@ final class Screens {
                 });
         try {
             if (!done.await(PATIENCE_S, TimeUnit.SECONDS)) {
-                return YogAccessibilityService.ERR + "the screenshot timed out";
+                return InterfaceService.ERR + "the screenshot timed out";
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return YogAccessibilityService.ERR + "the wait for the screenshot was interrupted";
+            return InterfaceService.ERR + "the wait for the screenshot was interrupted";
         }
         return answer[0];
     }
@@ -66,14 +66,14 @@ final class Screens {
         try (HardwareBuffer buffer = shot.getHardwareBuffer()) {
             Bitmap bitmap = Bitmap.wrapHardwareBuffer(buffer, shot.getColorSpace());
             if (bitmap == null) {
-                return YogAccessibilityService.ERR + "the screenshot buffer could not be read";
+                return InterfaceService.ERR + "the screenshot buffer could not be read";
             }
             // A hardware bitmap cannot be compressed directly on every device;
             // the software copy is what makes the write portable.
             Bitmap copy = bitmap.copy(Bitmap.Config.ARGB_8888, false);
             bitmap.recycle();
             if (copy == null) {
-                return YogAccessibilityService.ERR + "the screenshot could not be copied";
+                return InterfaceService.ERR + "the screenshot could not be copied";
             }
             try (FileOutputStream out = new FileOutputStream(path)) {
                 copy.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -81,7 +81,7 @@ final class Screens {
             String size = copy.getWidth() + "x" + copy.getHeight();
             long bytes = new java.io.File(path).length();
             copy.recycle();
-            return YogAccessibilityService.OK
+            return InterfaceService.OK
                     + "wrote a "
                     + size
                     + " screenshot, "
@@ -89,7 +89,7 @@ final class Screens {
                     + " bytes, to "
                     + path;
         } catch (Exception e) {
-            return YogAccessibilityService.ERR + "the screenshot failed: " + e;
+            return InterfaceService.ERR + "the screenshot failed: " + e;
         }
     }
 }

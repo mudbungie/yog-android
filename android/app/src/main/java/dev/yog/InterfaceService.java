@@ -1,4 +1,4 @@
-package dev.yog.seat;
+package dev.yog;
 
 import android.accessibilityservice.AccessibilityService;
 import android.view.accessibility.AccessibilityEvent;
@@ -35,7 +35,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
  * CheckJNI; a prefix cannot be forgotten. The split is parsed on the Rust side
  * by a pure function the suite tests.
  */
-public class YogAccessibilityService extends AccessibilityService {
+public class InterfaceService extends AccessibilityService {
     /** The prefix a successful answer carries. */
     static final String OK = "ok\n";
 
@@ -48,7 +48,7 @@ public class YogAccessibilityService extends AccessibilityService {
      * thread — volatile because those are different threads and a stale read
      * here is a call against a service that has gone away.
      */
-    private static volatile YogAccessibilityService live;
+    private static volatile InterfaceService live;
 
     @Override
     protected void onServiceConnected() {
@@ -73,7 +73,7 @@ public class YogAccessibilityService extends AccessibilityService {
     public void onInterrupt() {}
 
     /** The service, or null — the one place the enabled check is spelled. */
-    static YogAccessibilityService live() {
+    static InterfaceService live() {
         return live;
     }
 
@@ -87,7 +87,7 @@ public class YogAccessibilityService extends AccessibilityService {
 
     /** Read the interface in front, as text. */
     public static String uiRead() {
-        YogAccessibilityService service = live;
+        InterfaceService service = live;
         if (service == null) {
             return notEnabled();
         }
@@ -104,7 +104,7 @@ public class YogAccessibilityService extends AccessibilityService {
 
     /** Press one of the system's own controls. */
     public static String uiKey(String action) {
-        YogAccessibilityService service = live;
+        InterfaceService service = live;
         if (service == null) {
             return notEnabled();
         }
@@ -124,7 +124,7 @@ public class YogAccessibilityService extends AccessibilityService {
 
     /** Type into whatever field holds focus. */
     public static String uiText(String text) {
-        YogAccessibilityService service = live;
+        InterfaceService service = live;
         if (service == null) {
             return notEnabled();
         }
@@ -143,7 +143,7 @@ public class YogAccessibilityService extends AccessibilityService {
 
     /** Tap a point, in screen pixels. */
     public static String uiTap(int x, int y) {
-        YogAccessibilityService service = live;
+        InterfaceService service = live;
         if (service == null) {
             return notEnabled();
         }
@@ -152,7 +152,7 @@ public class YogAccessibilityService extends AccessibilityService {
 
     /** Tap the first node whose text or description matches. */
     public static String uiTapText(String needle) {
-        YogAccessibilityService service = live;
+        InterfaceService service = live;
         if (service == null) {
             return notEnabled();
         }
@@ -171,7 +171,7 @@ public class YogAccessibilityService extends AccessibilityService {
 
     /** Save a screenshot, and answer where it went. */
     public static String screenshot(String path) {
-        YogAccessibilityService service = live;
+        InterfaceService service = live;
         if (service == null) {
             return notEnabled();
         }

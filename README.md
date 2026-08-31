@@ -1,9 +1,15 @@
 # yog-android
 
-The **phone seat** for [yog](https://github.com/mudbungie/yog): an Android
-client of yog's remote boundary — a wire client that dials the engine over
-mTLS and speaks `Act | Ask` frames in, `Reply` frames out. Agents run on the
-server; seats attach and detach, and the work does not.
+**yog on Android** (`dev.yog`): the app ships all three of the harness's
+runnable components — the **seat**, the **foot** (tool host) and the
+**server** — each gated behind an explicit bootstrap rather than auto-started
+(DESIGN §9). The default path is mTLS client enrolment: a leaf provisioned out
+of channel, and this app dialling a host engine with it. Agents run on that
+engine; seats attach and detach, and the work does not.
+
+**Which component runs is read off the leaf, never stored.** No material and
+nothing runs — the first screen is the three bootstraps. A leaf with `OU=foot`
+runs the tool host; any other leaf runs the seat (REMOTE §4.2).
 
 The wire contract is the server's (yog `docs/REMOTE.md`): big-endian `u32`
 length-prefixed JSON frames, a zero-length terminator, mTLS with
@@ -41,7 +47,8 @@ make install-hooks  # seat the pre-commit / commit-msg hooks, once
 
 The APK build needs the Android NDK, `cargo-ndk`, the
 `aarch64-linux-android` target (pinned in `rust-toolchain.toml`), and a
-**system gradle** (8.7+, JDK 17). There is deliberately no gradle wrapper:
+**gradle** 8.7+ on JDK 17 — `make apk GRADLE=/path/to/gradle` when it is not
+on `PATH`. There is deliberately no gradle wrapper:
 the wrapper is a committed jar, and the disclosure gate refuses any binary
 it cannot read — correctly. The release profile is load-bearing, not an
 optimization (see the Makefile `apk` target).

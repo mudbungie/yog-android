@@ -1,9 +1,9 @@
 plugins { id 'com.android.application' }
 android {
-    namespace 'dev.yog.seat'
+    namespace 'dev.yog'
     compileSdk 35
     defaultConfig {
-        applicationId 'dev.yog.seat'
+        applicationId 'dev.yog'
         minSdk 28
         targetSdk 35
         versionCode 1

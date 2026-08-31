@@ -8,14 +8,22 @@ replace prose and cite the ball id; the path to a ruling is not narrated.
 
 ## 1. What this is
 
-The **phone seat** from REMOTE §1's canonical scene: a home server runs the
-yog engine and keeps every log; this client talks to conversations from a
-phone. In REMOTE's nouns it is a **client** (a machine holding an
-operator-issued certificate) acting as a **seat** (asks queries, paints
-replies, dispatches gestures) — and, by the bl-ae9d ruling, a **tool host**
-in direction: remote administration of the phone is a stated goal, with
-tools invoked from the laptop running ON the phone and vice versa. The seat
-lands first; hosting is the second act, not a maybe (§5).
+**The app is yog** (operator ruling 2026-08-30, yog bl-15bd), and it ships all
+three of REMOTE §12's runnable components — the seat, the foot and the server
+— **each gated behind an explicit bootstrap rather than auto-started**. The
+default path is mTLS client enrolment; running the engine on the phone is
+allowed but is the deliberate, non-default choice. §9 is that ruling made
+structural.
+
+The **phone seat** is still the scene REMOTE §1 opens with, and still the
+default: a home server runs the yog engine and keeps every log; this client
+talks to conversations from a phone. In REMOTE's nouns it is a **client** (a
+machine holding an operator-issued certificate) acting as a **seat** (asks
+queries, paints replies, dispatches gestures) — and, by the bl-ae9d ruling, a
+**tool host** in direction: remote administration of the phone is a stated
+goal, with tools invoked from the laptop running ON the phone and vice versa.
+Since REMOTE §4.2 minted the foot grade, hosting is not merely a second act —
+it is a component with a certificate of its own (§9).
 
 What follows from that, and is invariant:
 
@@ -196,12 +204,16 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete | landed (bl-d366) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
-| `android/…/{YogAccessibilityService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
+| `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start}.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge,app}.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, the frame loop | landed (bl-c761) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
+| `src/bootstrap.rs` | which component this device is, derived from the leaf on disk; the three offers a cold device paints | landed (bl-7714) |
+| `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
+| `src/shell/boot.rs` | android-only: the bootstrap gate — read the standing, start exactly that component, start nothing otherwise | landed (bl-7714) |
+| `src/shell/enrol.rs` | android-only: the first-run surface — the three bootstraps, and no button | landed (bl-7714) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET), games-activity trio, the OnKeyListener backspace shim | landed (bl-c761) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
@@ -378,3 +390,72 @@ of the conversation list — so the seat model runs both and the composer knows
 nothing about the pair. That field shares the chat composer's widget id
 deliberately: only one of the two is ever on screen, and the IME mirror
 addresses exactly one field by that id (bl-014e).
+
+## 9. One app, three components, three bootstraps (bl-15bd, landed bl-7714)
+
+**The ruling** (operator, 2026-08-30): the Android app is named **yog** and
+ships all three runnable components, each gated behind an explicit bootstrap
+rather than auto-started. The default bootstrap is mTLS client enrolment — the
+seat or the foot dialing a host engine, material provisioned out of channel
+per REMOTE §1.4. Running the yog server locally on the phone is allowed but is
+the deliberate, non-default choice. The old development client is superseded:
+its landed foundations are the starting material, not discarded work.
+
+**The identity moved with it.** The launcher label was already `yog`; the
+`applicationId` and Java package were `dev.yog.seat`, which names one
+component out of three. They are now `dev.yog`, and the accessibility service
+is `dev.yog.InterfaceService` rather than a class whose name repeated the
+app's. The app has never left the box that builds it and has no upgrade path
+to preserve, which is exactly why the id moved now: an install channel makes
+it a one-way door.
+
+**The component is derived, never stored.** This is the design's whole shape
+and it dissolves the first-run special case rather than answering it:
+
+- **No material — nothing runs.** That is the gate. An unbootstrapped yog is
+  inert by construction, not by a check, and the first screen is the three
+  offers rather than a component that started itself. It is REMOTE §12's
+  *"ship inert"* posture one machine over.
+- **A leaf — the leaf says which component.** REMOTE §4.2 puts the grade *on
+  the certificate*: `CN=<client>, OU=foot` is a foot and a subject with no
+  `OU=foot` is operator grade. So enrolling a phone as a tool host is minting
+  it a foot-grade leaf, which is the friction §4.2 wants, rather than tapping
+  a setting on the phone.
+
+A stored choice would have been a second authority for one fact, and the two
+would disagree the first time an operator replaced a seat's leaf with a
+foot's. `src/bootstrap.rs` is the derivation and it is host-tested; reading
+the grade is `src/leaf.rs`, a DER walk because this crate links no certificate
+library — structural rather than a byte scan, because the **issuer** carries a
+common name too and comes first.
+
+**A foot paints no chat screen**, and that is the component working. §4.2: *"A
+foot cannot ask about the world: not the workspaces, not the board, not the
+trail, not a transcript."* A phone on a foot-grade leaf running the seat's
+standing-question loop would earn a refusal per question, per pass, forever —
+the operator would read a wall of sentences where a component boundary
+belongs. So the foot arm starts the tool host and nothing else, and its screen
+is what this machine offers and what it has run. The **structural** narrowing —
+a gesture type a foot's connection can spend, so a seat's ask is unspeakable
+rather than merely unsent — is bl-2040.
+
+**The first-run surface has no button, deliberately.** REMOTE §1.4 stands:
+*"there is no pairing protocol in the wire, no token exchange a stranger on
+the network could initiate. Bootstrap is always an act performed through
+existing trust."* Every widget on that screen reads; none acts. A tap that
+"started enrolment" would be the unauthenticated connection §1.4 forbids,
+dressed as a convenience. What the screen carries is what each bootstrap makes
+this device, the act that takes it, and the directory material lands in — the
+fact an operator holding a cable is actually there for.
+
+**The server offer states its dependency chain and starts nothing** (bl-d6c6).
+A button that started an engine which refuses every act would be worse than a
+sentence saying what is missing, and §12's ship-inert ruling is the precedent.
+
+**What this does not yet do: REMOTE §8.2 entries.** §8.2 rules that a client
+can be a client of many servers, each named by its own directory under
+`wire/workspaces/<leaf>/` with its own material, address and optional
+`workspace` rename. This device reads the **flat** directory, which §8.2 says
+*"remains what it has always been, the box's own root"* — so today's shape is
+lawful and is the zero-entry case, not a deviation. Multi-entry is a ball of
+its own, because it is N models and N host channels rather than a file format.

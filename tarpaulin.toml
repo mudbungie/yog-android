@@ -33,10 +33,13 @@
 exclude-files = [
     "rules/fixtures/*",
     "src/shell/app.rs",
+    "src/shell/boot.rs",
     "src/shell/bridge.rs",
     "src/shell/chat.rs",
+    "src/shell/enrol.rs",
     "src/shell/inset.rs",
     "src/shell/screens.rs",
+    "src/shell/transcript.rs",
     "src/shell/sys.rs",
     "src/tools/ui/bridge.rs",
 ]
