@@ -139,6 +139,14 @@ Four findings the shell module must carry, each learned the hard way:
 4. **The upstream era moved**: eframe 0.36 replaced `App::update(ctx)` with
    `App::ui(&mut Ui)`; yog sits on 0.29. The client tracks current eframe and
    does not wait for yog to catch up.
+5. **An app's private storage is not executable** (API 29 onward, bl-7f12).
+   A file this process writes cannot be `exec`'d at all, and the one exception
+   is the app's own native library directory — whose contents are placed there
+   at install time and therefore cannot be generated. It is recorded here
+   rather than only where it bites (§10, where it is one of the two stops on
+   running an engine on this device) because it bounds **anything** this app
+   might ever write and then run, and the failure it produces reads as a
+   permission problem an operator could grant. There is none to grant.
 
 **The input mechanism is settled (bl-014e, closed with the spike's full
 trap ledger in its comments).** The shell is GameActivity behind a minimal
@@ -318,6 +326,12 @@ Android's restricted-settings block silently reverts the enable — and lifting
 it is one more act on that same cable (`appops set … ACCESS_RESTRICTED_SETTINGS
 allow`), recorded here because the failure presents as a setting that will not
 stick rather than as a refusal.
+
+**An operator who upgrades rather than installs fresh meets both again**
+(bl-7f12): the service is enabled per class name, and the class moved with the
+rename (§9). Today that is moot — the `applicationId` moved too, so every
+install is a fresh one — which is exactly why it is written down now, before it
+stops being moot.
 
 The five are `ui_read` (the node tree in front, as text — the form a model can
 act on), `ui_tap` (a coordinate, or the first clickable node matching text),
