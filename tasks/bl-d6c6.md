@@ -1,7 +1,8 @@
 +++
 title = "the local server bootstrap: what running the engine on the phone actually needs"
 created = 1788138444
-updated = 1788138444
+updated = 1788139021
+claimant = "OrderDroid"
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
 The third component the bl-15bd ruling names: the yog **server** — holder of
