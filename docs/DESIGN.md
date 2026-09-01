@@ -239,7 +239,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
-| `src/shell/mark.rs` | android-only: the yog mark — the standing top-left control that toggles the configuration surface | landed (bl-387f) |
+| `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
+| `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
 | `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |

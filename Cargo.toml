@@ -123,6 +123,7 @@ must_use_candidate = "allow"       # advisory; not decorating every getter with 
 # Site-specific, each genuinely wrong for this code.
 cast_possible_truncation = "allow" # the frame header's len-as-u32 is bounded by MAX_FRAME before the cast (src/frame.rs); a try_from there is an untestable error arm
 cast_precision_loss = "allow"      # the shell's JNI inset pixels (i32, bounded by screen geometry far below f32's 24-bit integer range) cross into egui's f32 point space
+cast_sign_loss = "allow"           # the icon hue drive clamps every channel to 0.0..=255.0 before its f32-to-u8 cast (src/icon.rs); a clamped channel has no sign to lose, and a try_from there is an untestable error arm
 struct_excessive_bools = "allow"   # ConvRow mirrors the server row: its four bools are orthogonal, independently-written wire facts (yog's own manifest carries the same allow for the same shape)
 
 # Restriction lints: prod code is panic-free and bounds-checked. These deny

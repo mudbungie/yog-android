@@ -17,6 +17,7 @@ pub mod foot;
 pub mod frame;
 pub mod hello;
 pub mod host;
+pub mod icon;
 pub mod leaf;
 pub mod material;
 pub mod rows;
