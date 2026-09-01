@@ -21,6 +21,40 @@ use eframe::egui;
 use crate::rows::{Fold, Role, Row};
 use crate::seat::Snapshot;
 
+/// The composer row: the one editable field plus a send control, shared by
+/// the transcript's composer and the conversation starter — the same gesture
+/// at two depths, already sharing a widget id (DESIGN §8). Returns the taken
+/// text when a send happened, and refocuses the field either way.
+///
+/// The button exists because Enter is not a control a phone can be promised
+/// (bl-9196): the IME's action key is the keyboard's to interpret, and a
+/// message that can be typed but not sent is a chat app that does not chat.
+/// Enter stays as the second path where a keyboard offers it.
+pub(super) fn composer(ui: &mut egui::Ui, text: &mut String, hint: &str) -> Option<String> {
+    let mut taken = None;
+    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+        // Laid right-to-left so the button claims its seat first and the
+        // field's infinite width takes what remains, not the whole row.
+        let pressed = ui
+            .add(egui::Button::new("send").min_size(egui::vec2(0.0, 26.0)))
+            .clicked();
+        let r = ui.add(
+            egui::TextEdit::singleline(text)
+                .id(egui::Id::new(super::app::COMPOSER.id))
+                .desired_width(f32::INFINITY)
+                .hint_text(hint),
+        );
+        let entered = r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
+        if pressed || entered {
+            if !text.is_empty() {
+                taken = Some(std::mem::take(text));
+            }
+            r.request_focus();
+        }
+    });
+    taken
+}
+
 /// The fold triangles, and the mark a row with nothing to fold shows in their
 /// place so every payload starts at the same x.
 const GLYPH_COLLAPSED: &str = "▶";

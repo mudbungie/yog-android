@@ -8,7 +8,7 @@
 
 use eframe::egui;
 
-use super::app::{COMPOSER, Shell};
+use super::app::Shell;
 use crate::rows::rows;
 use crate::seat::Snapshot;
 
@@ -41,20 +41,10 @@ impl Shell {
         let mut flipped = None;
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
             ui.add_space((inset as f32 / ppp).max(8.0));
-            let r = ui.add(
-                egui::TextEdit::singleline(&mut self.composer)
-                    .id(egui::Id::new(COMPOSER.id))
-                    .desired_width(f32::INFINITY)
-                    .hint_text("message"),
-            );
-            if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                let taken = std::mem::take(&mut self.composer);
-                if !taken.is_empty()
-                    && let Some(model) = self.model()
-                {
-                    model.deposit(taken);
-                }
-                r.request_focus();
+            if let Some(taken) = super::chat::composer(ui, &mut self.composer, "message")
+                && let Some(model) = self.model()
+            {
+                model.deposit(taken);
             }
             ui.add_space(4.0);
             egui::ScrollArea::vertical()

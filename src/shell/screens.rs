@@ -9,7 +9,7 @@
 
 use eframe::egui;
 
-use super::app::{COMPOSER, Shell};
+use super::app::Shell;
 use super::boot::Running;
 use crate::seat::Snapshot;
 
@@ -137,20 +137,10 @@ impl Shell {
     /// two is ever on screen, they are the same gesture at two depths, and
     /// the IME bridge addresses exactly one field by that id (bl-014e).
     fn starter(&mut self, ui: &mut egui::Ui) {
-        let r = ui.add(
-            egui::TextEdit::singleline(&mut self.composer)
-                .id(egui::Id::new(COMPOSER.id))
-                .desired_width(f32::INFINITY)
-                .hint_text("start a conversation"),
-        );
-        if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-            let goal = std::mem::take(&mut self.composer);
-            if !goal.is_empty()
-                && let Some(model) = self.model()
-            {
-                model.start_conversation(goal);
-            }
-            r.request_focus();
+        if let Some(goal) = super::chat::composer(ui, &mut self.composer, "start a conversation")
+            && let Some(model) = self.model()
+        {
+            model.start_conversation(goal);
         }
     }
 

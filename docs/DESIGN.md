@@ -528,6 +528,13 @@ nothing about the pair. That field shares the chat composer's widget id
 deliberately: only one of the two is ever on screen, and the IME mirror
 addresses exactly one field by that id (bl-014e).
 
+**The field carries a send control (bl-9196).** Enter is not a control a
+phone can be promised — the IME's action key is the keyboard's to interpret,
+and a message that can be typed but not sent is a chat app that does not
+chat. The composer row pairs the field with a button on both screens (one
+shared helper, `shell::chat::composer`); Enter stays as the second path
+where a keyboard offers it.
+
 ## 9. One app, three components, three bootstraps (bl-15bd, landed bl-7714)
 
 **The ruling** (operator, 2026-08-30): the Android app is named **yog** and
