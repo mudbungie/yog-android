@@ -538,6 +538,21 @@ multiline — enter is a newline (the residual made it one anyway, and it is
 what a phone composer does with enter), the field grows to a cap and scrolls
 inside it, and the button is the one send.
 
+**The row is allocated its own height, never the screen's remainder**
+(bl-193c). Both callers paint bottom-up, so a row that asks for what is left
+is handed the entire rest of the screen, and its two children then resolve
+that rect at opposite extremes: a scroller anchors to the TOP of whatever it
+is given — the cross alignment is not a thing it reads — while the
+bottom-aligned button anchors to the floor. The field painted under the
+transcript header and the send button a full screen beneath it, which is one
+row seen twice. So the helper allocates a band first: the field's own
+last-painted content height, floored at the touch target (§13.2) and capped at
+the growth limit, with the cap living there and nowhere else. Last frame's
+measurement is the honest input — a widget's height is not knowable before it
+is laid out — and it is the CONTENT height that is cached, which depends on
+the text and the width but never on the band, so the measurement converges
+rather than pinning the field at whatever height it was first handed.
+
 ## 9. One app, three components, three bootstraps (bl-15bd, landed bl-7714)
 
 **The ruling** (operator, 2026-08-30): the Android app is named **yog** and
