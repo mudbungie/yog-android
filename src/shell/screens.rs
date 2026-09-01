@@ -76,10 +76,10 @@ impl Shell {
         self.hosting(ui);
         ui.add_space(8.0);
         ui.weak(
-            "A foot advertises what this machine can run, waits for work \
+            "Thrall advertises what this machine can run, waits for work \
              addressed to it, and hands back what happened. It says nothing \
-             else about the world — mint this device an operator-grade leaf \
-             to seat it instead.",
+             else about the world — mint this device a Lernie (operator-grade) \
+             leaf to seat it instead.",
         );
     }
 

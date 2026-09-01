@@ -158,6 +158,28 @@ fn each_component_wears_a_brand_and_the_offers_read_it() {
     }
 }
 
+/// §13.3's vocabulary rule, pinned: the prose an operator reads leads with
+/// the brand and carries W3's sentence — a seat already offers this
+/// device's tools, so Thrall is the tools-only choice.
+#[test]
+fn the_offers_speak_brands_and_thrall_carries_the_w3_sentence() {
+    let offers = offers();
+    let seat = offers.iter().find(|o| o.component == Component::Seat);
+    let foot = offers.iter().find(|o| o.component == Component::Foot);
+    let (Some(seat), Some(foot)) = (seat, foot) else {
+        panic!("both enrollments are offered");
+    };
+    assert!(seat.how.starts_with("Lernie"), "{}", seat.how);
+    assert!(foot.how.starts_with("Thrall"), "{}", foot.how);
+    assert!(foot.tagline.contains("tool host"), "{}", foot.tagline);
+    assert!(
+        foot.how
+            .contains("Lernie seat already offers this device's tools"),
+        "{}",
+        foot.how
+    );
+}
+
 #[test]
 fn each_component_wears_a_word() {
     assert_eq!(Component::Seat.word(), "seat");

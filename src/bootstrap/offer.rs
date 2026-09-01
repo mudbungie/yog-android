@@ -48,24 +48,31 @@ pub fn offers() -> Vec<Offer> {
             component: Component::Seat,
             brand: Component::Seat.brand(),
             tagline: "the seat — operate your conversations".to_owned(),
-            how: "An operator-grade leaf: a subject with no OU=foot \
-                  (REMOTE §4.2), plus the one host:port it dials. \
-                  The engine's own box mints it; a cable, an already-trusted \
-                  device's tools, or a screen you photographed carries it \
-                  here. This app never mints and never enrolls itself."
+            how: "Lernie seats you at your conversations: every workspace, \
+                  every transcript, and this device's tools offered \
+                  alongside — one identity, two connections. It needs an \
+                  operator-grade leaf (a subject with no OU=foot, REMOTE \
+                  §4.2) plus the one host:port it dials. The engine's own \
+                  box mints it; a cable, an already-trusted device's tools, \
+                  or a screen you photographed carries it here. This app \
+                  never mints and never enrolls itself."
                 .to_owned(),
             default: true,
         },
         Offer {
             component: Component::Foot,
             brand: Component::Foot.brand(),
-            tagline: "the foot — let conversations use this device's tools".to_owned(),
-            how: "The same files, on a leaf minted with OU=foot. A foot \
+            tagline: "the tool host — this device's hands, and nothing else".to_owned(),
+            how: "Thrall makes this device a dedicated tool host: it \
                   advertises what this machine can run, waits for work \
-                  addressed to it, and hands back what happened — and may say \
-                  nothing else about the world, which is why it is the right \
-                  grade for a phone. This app never mints and never enrolls \
-                  itself."
+                  addressed to it, and hands back what happened — and may \
+                  say nothing else about the world (its leaf is minted with \
+                  OU=foot, the grade REMOTE §4.2 narrows to exactly those \
+                  three gestures). The same files as Lernie, on that \
+                  narrower leaf, under this device's own name. A Lernie \
+                  seat already offers this device's tools — take Thrall \
+                  only for a device that should offer tools and nothing \
+                  else. This app never mints and never enrolls itself."
                 .to_owned(),
             default: true,
         },

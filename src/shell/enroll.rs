@@ -102,6 +102,21 @@ impl Shell {
             self.forget_envelope();
             return;
         }
+        // §13.1 W3, said to the one operator it is for: opening Thrall while
+        // a seat runs is the moment before enrolling a second name this
+        // device does not need — the seat already hosts tools beside the
+        // asker, one identity on two connections (REMOTE §5).
+        if open == Component::Foot && matches!(self.running, Running::Seat { .. }) {
+            ui.colored_label(
+                egui::Color32::LIGHT_YELLOW,
+                format!(
+                    "this device already offers its tools — it runs {}, and a \
+                     Lernie seat hosts tools beside the asker. Thrall is for a \
+                     device that should offer ONLY tools.",
+                    self.identity()
+                ),
+            );
+        }
         let scanner = &mut self.scanner;
         let (text, said) = (&mut self.envelope, &mut self.envelope_said);
         match opened(ui, offer, &dir, refusal.as_ref(), text, said, scanner) {

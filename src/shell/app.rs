@@ -151,9 +151,10 @@ impl Shell {
     /// a seat registered in no workspace look identical until this line says
     /// which client the engine was answering.
     pub(crate) fn identity(&self) -> String {
+        use crate::bootstrap::Component;
         match &self.running {
-            Running::Seat { client, .. } => format!("{client} · seat"),
-            Running::Foot { client, .. } => format!("{client} · foot grade"),
+            Running::Seat { client, .. } => format!("{client} · {}", Component::Seat.brand()),
+            Running::Foot { client, .. } => format!("{client} · {}", Component::Foot.brand()),
             Running::Cold { .. } => String::new(),
         }
     }
