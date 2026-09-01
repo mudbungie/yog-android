@@ -47,20 +47,36 @@ pub(super) enum Act {
 }
 
 impl Shell {
-    /// The cold device's whole screen: the chooser, or the screen a choice
-    /// opened.
-    pub(super) fn cold(&mut self, ui: &mut egui::Ui) {
-        let Running::Cold {
-            offers,
-            refusal,
-            dir,
-        } = &self.running
-        else {
-            return;
+    /// The configuration surface: the chooser, or the screen a choice
+    /// opened. A cold device's whole screen, and the screen the yog mark
+    /// opens over a running component (bl-387f) — the same offers either
+    /// way, because re-provisioning IS provisioning: the material lands in
+    /// the same directory and the same recheck derives what it now names.
+    pub(super) fn configuration(&mut self, ui: &mut egui::Ui) {
+        let (offers, refusal, dir, standing) = match &self.running {
+            Running::Cold {
+                offers,
+                refusal,
+                dir,
+            } => (
+                offers.clone(),
+                refusal.clone(),
+                dir.clone(),
+                "nothing is provisioned, so nothing is running.".to_owned(),
+            ),
+            // Opened over a running component nothing carries the triple
+            // along, so it is re-derived: the offers are a constant and the
+            // directory is the one fact the boot read. The standing line
+            // says what is running — the cold sentence would be a lie here.
+            _ => (
+                crate::bootstrap::offers(),
+                None,
+                self.material_dir(),
+                format!("running: {}", self.identity()),
+            ),
         };
-        let (offers, refusal, dir) = (offers.clone(), refusal.clone(), dir.clone());
         let Some(open) = self.chose else {
-            self.chose = chooser(ui, &offers, refusal.as_ref(), &dir);
+            self.chose = chooser(ui, &offers, refusal.as_ref(), &dir, &standing);
             return;
         };
         // An offer for every component exists by construction; a missing one
@@ -89,9 +105,9 @@ fn chooser(
     offers: &[Offer],
     refusal: Option<&String>,
     dir: &str,
+    standing: &str,
 ) -> Option<Component> {
-    ui.heading("yog");
-    ui.weak("nothing is provisioned, so nothing is running.");
+    ui.weak(standing);
     // A half-provisioned store is not an empty one, and the two must not read
     // the same: this device HAS something, and the sentence names every file
     // that is missing at once.

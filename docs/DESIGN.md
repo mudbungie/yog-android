@@ -239,12 +239,13 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
+| `src/shell/mark.rs` | android-only: the yog mark — the standing top-left control that toggles the configuration surface | landed (bl-387f) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
 | `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
 | `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
 | `src/shell/boot.rs` | android-only: the bootstrap gate — read the standing, start exactly that component, start nothing otherwise | landed (bl-7714) |
-| `src/shell/enroll.rs` | android-only: the first-run surface — the three branded choices, and the screen behind each tap | landed (bl-0d3c) |
+| `src/shell/enroll.rs` | android-only: the configuration surface — the three branded choices, and the screen behind each tap | landed (bl-0d3c, generalized bl-387f) |
 | `src/shell/enroll/material.rs` | android-only: the enrollment screen — the file list, the delivery channels, the pasted envelope and the re-read | landed (bl-dd7b) |
 | `src/envelope.rs` | the enroll envelope a seat mints: read, checked against the leaf's own grade and name, landed under `material`'s names | landed (bl-dd7b) |
 | `src/scan.rs` | the QR decoder: a camera luminance frame in, the envelope's text out, plus the camera bridge's four-word vocabulary — pure, host-tested | landed (bl-d815) |
@@ -614,6 +615,20 @@ owns is not a bootstrap and reaches no network.
 **The server offer states its dependency chain and starts nothing** (bl-d6c6).
 A button that started an engine which refuses every act would be worse than a
 sentence saying what is missing, and §12's ship-inert ruling is the precedent.
+
+**The surface is standing, not first-run (bl-387f).** It shipped reachable
+only while nothing was provisioned, and the operator hit the wall the same
+day: a device enrolled as a seat had no path back, so the second act —
+enrolling the tooling side — could not be reached at the glass. The way in is
+now the **yog mark**, a control at the top-left of every screen, whatever
+component is running; it toggles the configuration surface open and closed.
+Breadcrumbs were considered and rejected — a trail requires every path worked
+out, and the paths are not; one standing control asks nothing of the screens
+beneath it. The cold device is the same surface forced open, not a separate
+first-run screen, and the chooser's standing line says what is running
+rather than pretending nothing is. Nothing else moved: a tap still stores
+nothing, material still arrives out of channel, and *check for material*
+still exits by re-running the derivation.
 
 **What this does not yet do: REMOTE §8.2 entries.** §8.2 rules that a client
 can be a client of many servers, each named by its own directory under

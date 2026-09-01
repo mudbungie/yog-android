@@ -14,25 +14,26 @@ use super::boot::Running;
 use crate::seat::Snapshot;
 
 impl Shell {
-    /// Everything below the top inset: the component this launch is running,
-    /// and then the screen its focus depth selects.
+    /// Everything below the top inset: the yog mark, then the component this
+    /// launch is running, and then the screen its focus depth selects.
     ///
-    /// **The outermost branch is the bootstrap gate** (yog bl-15bd), not a
-    /// state check: a cold device paints the three offers and a foot paints
-    /// what it is hosting, because a foot may not ask the world anything
-    /// (REMOTE §4.2) and painting it a chat screen would be an app promising
-    /// a surface its own certificate refuses.
+    /// **The outermost branch is the configuration surface** (bl-387f), and
+    /// the bootstrap gate (yog bl-15bd) is its forced-open case: a cold
+    /// device paints the three offers because nothing else exists, and a
+    /// provisioned one paints them because the mark was tapped — one
+    /// surface, two ways in. A foot otherwise paints what it is hosting,
+    /// because a foot may not ask the world anything (REMOTE §4.2) and
+    /// painting it a chat screen would be an app promising a surface its own
+    /// certificate refuses.
     pub(crate) fn screens(&mut self, ui: &mut egui::Ui) {
-        match &self.running {
-            Running::Cold { .. } => {
-                self.cold(ui);
-                return;
-            }
-            Running::Foot { .. } => {
-                self.foot(ui);
-                return;
-            }
-            Running::Seat { .. } => {}
+        self.mark(ui);
+        if self.settings || matches!(self.running, Running::Cold { .. }) {
+            self.configuration(ui);
+            return;
+        }
+        if matches!(self.running, Running::Foot { .. }) {
+            self.foot(ui);
+            return;
         }
         let Some(snap) = self.model_mut().map(crate::seat::Model::snapshot) else {
             return;

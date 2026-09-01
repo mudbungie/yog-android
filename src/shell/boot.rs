@@ -99,7 +99,7 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
 
 /// This app's private material directory (DESIGN §5: adb, remote exec or QR
 /// put material there; this app never mints).
-fn wire_dir(android: &AndroidApp) -> std::path::PathBuf {
+pub(super) fn wire_dir(android: &AndroidApp) -> std::path::PathBuf {
     android
         .internal_data_path()
         .unwrap_or_default()

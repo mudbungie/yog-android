@@ -47,6 +47,11 @@ pub(crate) struct Shell {
     /// derived from the leaf on disk every boot (`crate::bootstrap`), so a
     /// stored choice would be a second authority for one fact (DESIGN §9).
     pub(crate) chose: Option<crate::bootstrap::Component>,
+    /// Whether the configuration surface is open over a running component
+    /// (bl-387f). Navigation like `chose` above, never a mode: a cold device
+    /// paints the configuration regardless of this flag, and nothing about
+    /// what runs is stored here.
+    pub(crate) settings: bool,
     pub(crate) composer: String,
     /// The pasted enroll envelope, and the last thing reading it said. It
     /// holds a PRIVATE KEY while it is full, so it is emptied the moment it
@@ -78,6 +83,7 @@ impl Shell {
         Self {
             running: boot(&android),
             chose: None,
+            settings: false,
             scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),
@@ -112,6 +118,16 @@ impl Shell {
     pub(crate) fn reboot(&mut self) {
         self.running = boot(&self.android);
         self.chose = None;
+        // A recheck is the configuration's exit: whatever the derivation now
+        // says is the screen the operator asked to see.
+        self.settings = false;
+    }
+
+    /// Where material goes — the same directory the boot derivation reads.
+    /// The configuration surface paints it when it is opened over a running
+    /// component, where no `Running::Cold` carries it along (bl-387f).
+    pub(crate) fn material_dir(&self) -> String {
+        super::boot::wire_dir(&self.android).display().to_string()
     }
 
     /// The seat model, when this launch is running one.
