@@ -851,3 +851,99 @@ emulator rather than reasoned:
   and writes its sentence into the enrollment screen's own refusal line: what
   the operator lands on is the paste field with an explanation, never a preview
   that will not fill.
+
+## 13. The app, whole: workflows, chrome, vocabulary, parity (bl-a246)
+
+The screens above grew one operator sighting at a time — a way in (bl-387f),
+a way out (bl-e192), a send control (bl-9196) — and each fix was right and
+none of them was a design. This section is the design: what an operator does
+with this app end to end, the chrome every screen answers to, the words the
+app speaks, and the ledger separating parity this wire can already carry from
+what is an upstream ask. **The bar is ordinary**: this is a phone chat app,
+and it should hold up beside any of the LLM apps on the same shelf. Novelty
+here is a defect.
+
+### 13.1 The workflows, end to end
+
+- **W1 — first run.** Open the app cold: the configuration surface is the
+  whole screen. Three branded offers; tapping **Lernie** shows what material
+  is needed, where it goes, and the three delivery channels; a QR scan or a
+  pasted envelope lands it; *check for material* (or the landing itself)
+  re-derives, and the seat comes up on the workspace roster. No restart, no
+  choice stored.
+- **W2 — daily chat.** Roster → conversations → transcript, each one tap;
+  attention marks and tone ink say where to look before anything is opened.
+  Speak through the composer; start a conversation through the same row on
+  the list screen. Reads refresh at cadence and a gesture wakes the worker
+  immediately (§7).
+- **W3 — this device's tools, for a seat.** **There is nothing to do**, and
+  the app must say so where the operator would otherwise go looking: a
+  Lernie seat already runs the tool host beside the asker, one identity on
+  two connections (REMOTE §5). The roster's `tools:` line is the running
+  proof. The Thrall screen carries the sentence (§13.3), because the one
+  operator who opens it while a seat runs is the one about to enroll a
+  second name this device does not need.
+- **W4 — a dedicated tool box.** Thrall is for a device that should offer
+  ONLY tools — no chat surface, no questions about the world (REMOTE §4.2).
+  Enrollment is W1 with a foot-grade leaf under that device's own name.
+- **W5 — re-provisioning.** The mark, from any screen, opens the same
+  surface W1 used; the chooser states what is running and offers the way
+  back (bl-e192). Landing new material and rechecking is the exit that
+  changes what runs.
+- **W6 — the engine on this phone.** The Yog offer explains the recorded
+  blockers and starts nothing (§10). It is the deliberate, non-default
+  choice and reads like one.
+
+### 13.2 The chrome contract
+
+- **One standing bar**, painted before every screen: the mark (the drawn
+  application mark, not a wordmark — the walk ported from the yog crate),
+  then the screen's back control when it has a parent, then the screen's
+  title. A screen paints no heading and no back control of its own; the bar
+  is the one place depth is spelled. The mark toggles the configuration
+  surface; back walks one focus depth.
+- **The composer is one shared row** at two depths (§8): a multiline field
+  that grows to a cap and scrolls inside it, beside a send button that is
+  THE send. The platform residual makes this the only honest shape: the
+  IME's enter key stays a newline on this stack (§3 — GameActivity writes
+  the Send action where the enter key does not read it), which is also what
+  every phone chat app does with enter anyway.
+- **Touch targets:** every tappable row and control stands at least 44
+  points tall, full width where it lists. A row an adult thumb misses is a
+  defect, not a style.
+- **Status where it happened:** a connection error is a banner under the
+  bar; an enrollment refusal paints on the enrollment screen, verbatim from
+  the one place the sentence is made. No toast, no dialog — nothing in this
+  app is modal except the scan screen, which is a camera.
+
+### 13.3 The vocabulary rule
+
+**Brands where an operator reads; grades only beside the certificate facts
+they name.** The words are Lernie, Thrall, Yog — the components an operator
+can say out loud — and each surface's first mention carries a clause saying
+what it means (*Lernie, the seat — operate your conversations*; *Thrall, the
+tool host — this device's hands, and nothing else*). `foot` and
+`operator-grade` appear only where the leaf itself is the subject,
+parenthesized after the brand, because they name what the certificate may
+say, not what the operator chose. The identity line reads
+`<name> · Lernie` / `<name> · Thrall`. **One device, one name, one leaf**:
+the grade is what a leaf may say, never a second registration — the Thrall
+screen says so while a seat runs (W3), and the engine's own enrollment
+refusal for a taken name is upstream's half of the same sentence.
+
+### 13.4 The parity ledger
+
+What a phone LLM app has, and where this seat stands. **In-wire** (this
+codec already carries the fact — build it here): the conversation list with
+unread marks and status ink (landed), starting a conversation (landed), the
+send control (landed), streaming-at-cadence reads (landed §7), settings
+reachable from anywhere (landed), the drawn mark, the standing bar, the
+multiline composer and the touch-target floor (children of this section).
+**Upstream asks** (the wire does not carry the fact; a ball on the server's
+board, not a shim here): conversation timestamps on roster rows;
+conversation search; a stop control for an in-flight turn (the slash
+vocabulary is the boundary's — whether a deposited `/stop` is that gesture
+is upstream's answer to give); push notifications (the engine dials
+nothing, so a channel is a REMOTE design act, not an app feature).
+**Already on this board:** entries — one device as a client of many engines
+(REMOTE §8.2, bl-d0d2).
