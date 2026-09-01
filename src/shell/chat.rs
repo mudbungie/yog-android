@@ -32,24 +32,35 @@ use crate::seat::Snapshot;
 /// Enter stays as the second path where a keyboard offers it.
 pub(super) fn composer(ui: &mut egui::Ui, text: &mut String, hint: &str) -> Option<String> {
     let mut taken = None;
-    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+    ui.with_layout(egui::Layout::right_to_left(egui::Align::BOTTOM), |ui| {
         // Laid right-to-left so the button claims its seat first and the
-        // field's infinite width takes what remains, not the whole row.
-        let pressed = ui
-            .add(egui::Button::new("send").min_size(egui::vec2(0.0, 26.0)))
-            .clicked();
-        let r = ui.add(
-            egui::TextEdit::singleline(text)
-                .id(egui::Id::new(super::app::COMPOSER.id))
-                .desired_width(f32::INFINITY)
-                .hint_text(hint),
-        );
-        let entered = r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
-        if pressed || entered {
-            if !text.is_empty() {
+        // field's infinite width takes what remains, not the whole row;
+        // bottom-aligned so the button stays put while the field grows.
+        let control = egui::Button::new("send").min_size(egui::vec2(0.0, super::mark::TOUCH));
+        let pressed = ui.add(control).clicked();
+        // Multiline (bl-56d6): the IME's enter is a newline on this stack
+        // (DESIGN §3 residual) and that is also simply what a phone chat
+        // composer does with enter — so the field grows with its text to a
+        // cap and scrolls inside it, and the button is the one send. A field
+        // that grew unbounded would push the transcript off the glass.
+        let field = egui::ScrollArea::vertical()
+            .id_salt(super::app::COMPOSER.id)
+            .max_height(132.0)
+            .show(ui, |ui| {
+                ui.add(
+                    egui::TextEdit::multiline(text)
+                        .id(egui::Id::new(super::app::COMPOSER.id))
+                        .desired_width(f32::INFINITY)
+                        .desired_rows(1)
+                        .hint_text(hint),
+                )
+            })
+            .inner;
+        if pressed {
+            if !text.trim().is_empty() {
                 taken = Some(std::mem::take(text));
             }
-            r.request_focus();
+            field.request_focus();
         }
     });
     taken

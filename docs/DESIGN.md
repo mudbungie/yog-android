@@ -533,8 +533,10 @@ addresses exactly one field by that id (bl-014e).
 phone can be promised — the IME's action key is the keyboard's to interpret,
 and a message that can be typed but not sent is a chat app that does not
 chat. The composer row pairs the field with a button on both screens (one
-shared helper, `shell::chat::composer`); Enter stays as the second path
-where a keyboard offers it.
+shared helper, `shell::chat::composer`), and since bl-56d6 the field is
+multiline — enter is a newline (the residual made it one anyway, and it is
+what a phone composer does with enter), the field grows to a cap and scrolls
+inside it, and the button is the one send.
 
 ## 9. One app, three components, three bootstraps (bl-15bd, landed bl-7714)
 
