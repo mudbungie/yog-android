@@ -76,6 +76,17 @@ impl Shell {
             ),
         };
         let Some(open) = self.chose else {
+            // The way out, where a way out exists (bl-e192). The mark's
+            // second tap also closes the surface, but a toggle nobody can
+            // see is not an affordance — the chooser states its exit the way
+            // every opened offer screen states its own. A cold device gets
+            // no such control: there is nothing behind the surface to
+            // return to.
+            if !matches!(self.running, Running::Cold { .. }) && ui.button("< back").clicked() {
+                self.forget_envelope();
+                self.settings = false;
+                return;
+            }
             self.chose = chooser(ui, &offers, refusal.as_ref(), &dir, &standing);
             return;
         };

@@ -628,8 +628,10 @@ only while nothing was provisioned, and the operator hit the wall the same
 day: a device enrolled as a seat had no path back, so the second act —
 enrolling the tooling side — could not be reached at the glass. The way in is
 now the **yog mark**, a control at the top-left of every screen, whatever
-component is running; it toggles the configuration surface open and closed.
-Breadcrumbs were considered and rejected — a trail requires every path worked
+component is running; it toggles the configuration surface open and closed,
+and the chooser also states its own exit — a `< back` control whenever a
+component is running (bl-e192), because a toggle nobody can see is not an
+affordance. Breadcrumbs were considered and rejected — a trail requires every path worked
 out, and the paths are not; one standing control asks nothing of the screens
 beneath it. The cold device is the same surface forced open, not a separate
 first-run screen, and the chooser's standing line says what is running
