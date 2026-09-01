@@ -35,10 +35,10 @@ mod scan;
 pub(crate) use scan::Scanner;
 
 /// What a tap on an opened screen asked for. `Stay` is every frame in which
-/// nothing was pressed.
+/// nothing was pressed; the way back is the bar's (bl-7a57), not this
+/// screen's.
 pub(super) enum Act {
     Stay,
-    Back,
     /// Re-run the boot derivation. Both controls that act ask for this and
     /// neither knows what it will find — landing an envelope and re-reading
     /// after a cable push are the same question, asked after the material
@@ -76,13 +76,11 @@ impl Shell {
             ),
         };
         let Some(open) = self.chose else {
-            // The way out, where a way out exists (bl-e192). The mark's
-            // second tap also closes the surface, but a toggle nobody can
-            // see is not an affordance — the chooser states its exit the way
-            // every opened offer screen states its own. A cold device gets
-            // no such control: there is nothing behind the surface to
-            // return to.
-            if !matches!(self.running, Running::Cold { .. }) && ui.button("< back").clicked() {
+            // The bar's back is the way out, where a way out exists
+            // (bl-e192): a cold device has nothing behind this surface to
+            // return to, so it gets no back control at all.
+            let out = !matches!(self.running, Running::Cold { .. });
+            if self.bar(ui, "configuration", out) {
                 self.forget_envelope();
                 self.settings = false;
                 return;
@@ -97,11 +95,17 @@ impl Shell {
             self.chose = None;
             return;
         };
+        // The scan screen is the whole screen while it is up — a camera
+        // preview under a bar belonging to a screen it covers reads as two
+        // screens at once — so the bar stays down while the scanner is live.
+        if !self.scanner.live() && self.bar(ui, &offer.brand.clone(), true) {
+            self.forget_envelope();
+            return;
+        }
         let scanner = &mut self.scanner;
         let (text, said) = (&mut self.envelope, &mut self.envelope_said);
         match opened(ui, offer, &dir, refusal.as_ref(), text, said, scanner) {
             Act::Stay => {}
-            Act::Back => self.forget_envelope(),
             Act::Recheck => {
                 self.forget_envelope();
                 self.reboot();
@@ -186,10 +190,6 @@ fn opened(
         return Act::Stay;
     }
     let mut act = Act::Stay;
-    if ui.button("< back").clicked() {
-        act = Act::Back;
-    }
-    ui.heading(&offer.brand);
     ui.weak(&offer.tagline);
     ui.separator();
     egui::ScrollArea::vertical().show(ui, |ui| {

@@ -26,26 +26,42 @@ impl Shell {
     /// painting it a chat screen would be an app promising a surface its own
     /// certificate refuses.
     pub(crate) fn screens(&mut self, ui: &mut egui::Ui) {
-        self.mark(ui);
         if self.settings || matches!(self.running, Running::Cold { .. }) {
             self.configuration(ui);
             return;
         }
         if matches!(self.running, Running::Foot { .. }) {
+            self.bar(ui, &crate::bootstrap::Component::Foot.brand(), false);
             self.foot(ui);
             return;
         }
         let Some(snap) = self.model_mut().map(crate::seat::Model::snapshot) else {
             return;
         };
-        if let Some(error) = &snap.error {
-            ui.colored_label(egui::Color32::LIGHT_RED, error);
-        }
+        // The bar first, then the error banner under it (§13.2), then the
+        // depth's own body. Back walks exactly one focus depth — the bar
+        // returns the tap and this match is the one place a depth is spelled.
         match snap.focus.workspace.clone() {
-            None => self.roster(ui, &snap),
+            None => {
+                self.bar(ui, &crate::bootstrap::Component::Seat.brand(), false);
+                banner(ui, &snap);
+                self.roster(ui, &snap);
+            }
             Some(workspace) => match snap.focus.agent.clone() {
-                None => self.conversations(ui, &snap, &workspace),
-                Some(agent) => self.transcript(ui, &snap, &workspace, &agent),
+                None => {
+                    if self.bar(ui, &workspace, true) {
+                        self.focus_workspace(None);
+                    }
+                    banner(ui, &snap);
+                    self.conversations(ui, &snap, &workspace);
+                }
+                Some(agent) => {
+                    if self.bar(ui, &super::chat::speaker_of(&snap, &agent), true) {
+                        self.focus_workspace(Some(workspace.clone()));
+                    }
+                    banner(ui, &snap);
+                    self.transcript(ui, &snap, &agent);
+                }
             },
         }
     }
@@ -55,7 +71,6 @@ impl Shell {
     /// §4.2's *"a foot cannot ask about the world"* is the sentence, and an
     /// empty roster would be this app asking anyway and hiding the refusal.
     fn foot(&mut self, ui: &mut egui::Ui) {
-        ui.heading(crate::bootstrap::Component::Foot.brand());
         ui.weak(self.identity());
         ui.separator();
         self.hosting(ui);
@@ -69,7 +84,6 @@ impl Shell {
     }
 
     fn roster(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        ui.heading(crate::bootstrap::Component::Seat.brand());
         ui.weak("workspaces");
         ui.weak(self.identity());
         self.hosting(ui);
@@ -78,7 +92,7 @@ impl Shell {
             for row in &snap.workspaces {
                 let mark = if row.attention > 0 { " ●" } else { "" };
                 let label = format!("{}{mark} · {} agents", row.workspace, row.agents);
-                if ui.button(label).clicked() {
+                if tap(ui, label.into()) {
                     self.focus_workspace(Some(row.workspace.clone()));
                 }
             }
@@ -86,10 +100,6 @@ impl Shell {
     }
 
     pub(super) fn conversations(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str) {
-        if ui.button("< workspaces").clicked() {
-            self.focus_workspace(None);
-        }
-        ui.heading(workspace);
         ui.separator();
         // The starter rides the BOTTOM of this screen, where the composer
         // sits on the next one: starting a conversation and speaking into one
@@ -121,7 +131,7 @@ impl Shell {
                         // vocabulary and it is the desktop's.
                         let ink = super::chat::tone_hue(ui, row.tone);
                         let label = egui::RichText::new(label).color(ink);
-                        if ui.button(label).clicked()
+                        if tap(ui, label)
                             && let Some(model) = self.model()
                         {
                             model.focus_conversation(workspace.to_owned(), row.root_id.clone());
@@ -174,4 +184,21 @@ impl Shell {
             model.focus_workspace(workspace);
         }
     }
+}
+
+/// The connection banner: the worker's standing error, under the bar and
+/// above whatever screen it interrupted (§13.2).
+fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
+    if let Some(error) = &snap.error {
+        ui.colored_label(egui::Color32::LIGHT_RED, error);
+    }
+}
+
+/// One full-width list row at the §13.2 touch floor. Every navigation list
+/// paints its rows through this, so the floor is a fact of the helper rather
+/// than a discipline at each site.
+fn tap(ui: &mut egui::Ui, label: egui::RichText) -> bool {
+    let control =
+        egui::Button::new(label).min_size(egui::vec2(ui.available_width(), super::mark::TOUCH));
+    ui.add(control).clicked()
 }

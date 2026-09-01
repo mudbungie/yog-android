@@ -13,24 +13,15 @@ use crate::rows::rows;
 use crate::seat::Snapshot;
 
 impl Shell {
-    pub(super) fn transcript(
-        &mut self,
-        ui: &mut egui::Ui,
-        snap: &Snapshot,
-        workspace: &str,
-        agent: &str,
-    ) {
+    pub(super) fn transcript(&mut self, ui: &mut egui::Ui, snap: &Snapshot, agent: &str) {
+        // The two auto knobs, the desktop's own pair: which KINDS open by
+        // default. They are policy; a hand-flipped row is the override set
+        // below and dies with the screen. (The heading and the way back are
+        // the bar's — `screens.rs` spelled both before this body ran.)
         ui.horizontal(|ui| {
-            if ui.button("< conversations").clicked() {
-                self.focus_workspace(Some(workspace.to_owned()));
-            }
-            // The two auto knobs, the desktop's own pair: which KINDS open by
-            // default. They are policy; a hand-flipped row is the override
-            // set below and dies with the screen.
             ui.checkbox(&mut self.auto.responses, "talk");
             ui.checkbox(&mut self.auto.others, "steps");
         });
-        ui.heading(super::chat::speaker_of(snap, agent));
         ui.separator();
         let speaker = super::chat::speaker_of(snap, agent);
         let painted = rows(&snap.transcript, &speaker, self.auto, &self.folds);

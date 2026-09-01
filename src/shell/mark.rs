@@ -24,14 +24,33 @@ use eframe::egui;
 use super::app::Shell;
 use crate::icon::Shape;
 
-/// The mark's tap target, in points — the §13.2 touch floor.
-const SIDE: f32 = 44.0;
+/// The §13.2 touch floor, in points: every navigation row and action
+/// control stands at least this tall. The mark's own tap target too.
+pub(crate) const TOUCH: f32 = 44.0;
 
 impl Shell {
-    /// The mark row. Painted before anything else on every screen, whatever
+    /// The standing bar (§13.2): the mark, the screen's back control when it
+    /// has a parent, and its title — one row, painted before every screen's
+    /// body, and the ONLY place a heading or a back gesture is spelled.
+    /// Returns whether back was tapped; the caller owns what one depth up
+    /// means, because the bar has no idea and must not grow one.
+    pub(super) fn bar(&mut self, ui: &mut egui::Ui, title: &str, backable: bool) -> bool {
+        let mut back = false;
+        ui.horizontal(|ui| {
+            self.mark(ui);
+            if backable {
+                let control = egui::Button::new("<").min_size(egui::vec2(TOUCH, TOUCH));
+                back = ui.add(control).clicked();
+            }
+            ui.heading(title);
+        });
+        back
+    }
+
+    /// The mark control. Painted before anything else on every screen, whatever
     /// the component — that unconditionality is the whole feature.
     pub(super) fn mark(&mut self, ui: &mut egui::Ui) {
-        let (rect, hit) = ui.allocate_exact_size(egui::vec2(SIDE, SIDE), egui::Sense::click());
+        let (rect, hit) = ui.allocate_exact_size(egui::vec2(TOUCH, TOUCH), egui::Sense::click());
         paint(ui.painter(), rect.shrink(4.0));
         if !hit.clicked() {
             return;

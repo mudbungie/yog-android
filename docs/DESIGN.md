@@ -909,9 +909,11 @@ here is a defect.
   IME's enter key stays a newline on this stack (§3 — GameActivity writes
   the Send action where the enter key does not read it), which is also what
   every phone chat app does with enter anyway.
-- **Touch targets:** every tappable row and control stands at least 44
-  points tall, full width where it lists. A row an adult thumb misses is a
-  defect, not a style.
+- **Touch targets:** every navigation row and action control stands at
+  least 44 points tall, full width where it lists — `shell/mark.rs` holds
+  the one constant and `screens.rs`'s row helper spends it. In-content
+  affordances (a transcript row's fold toggle) read at text size; a row an
+  adult thumb misses is a defect, not a style.
 - **Status where it happened:** a connection error is a banner under the
   bar; an enrollment refusal paints on the enrollment screen, verbatim from
   the one place the sentence is made. No toast, no dialog — nothing in this
