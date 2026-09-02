@@ -163,6 +163,7 @@ fn every_answer_names_its_own_kind() {
         (Reply::Providers(Vec::new()), "providers"),
         (Reply::Models(Vec::new()), "models"),
         (Reply::Applied, "applied"),
+        (Reply::Nudged, "nudged"),
     ];
     for (reply, kind) in named {
         assert_eq!(reply.kind(), kind);
@@ -244,5 +245,11 @@ fn the_selector_replies_read_back() {
             .unwrap()
             .unwrap(),
         Reply::Applied
+    );
+    assert_eq!(
+        decode(&json!({ "ok": true, "kind": "nudged" }))
+            .unwrap()
+            .unwrap(),
+        Reply::Nudged
     );
 }

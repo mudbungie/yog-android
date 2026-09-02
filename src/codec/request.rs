@@ -55,6 +55,10 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             agent: str_of(o, "agent")?,
             children: super::fields::bool_of(o, "children")?,
         }),
+        "nudge" => Gesture::Act(Act::Nudge {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+        }),
         "providers" => Gesture::Ask(Ask::Providers {
             workspace: str_of(o, "workspace")?,
         }),

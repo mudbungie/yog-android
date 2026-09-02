@@ -79,6 +79,19 @@ impl Shell {
         if children && ui.button("stop all").clicked() {
             self.stop_turn(true);
         }
+        // **Nudge is the other half of the same question** (bl-d09e): stop is
+        // for a turn that is running, nudge for a branch that stopped
+        // advancing — so it is offered exactly when nothing is in flight,
+        // read off the row's own `flight` (its `None` IS "at rest"). The
+        // engine's own `nudgeable` gate rides the agent view this codec does
+        // not spell; if the row's reading proves too coarse, the fix is that
+        // gate on the row rather than a second derivation here.
+        if row.flight.is_none()
+            && ui.button("nudge").clicked()
+            && let Some(model) = self.model()
+        {
+            model.nudge();
+        }
     }
 
     /// Ask the worker to stop the focused turn.

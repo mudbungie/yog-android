@@ -151,3 +151,24 @@ pub(super) fn stop(seat: &Seat, focus: &Focus, children: bool) -> Result<(), Str
         other => Err(kind_err("stop", &other)),
     }
 }
+
+/// **Nudge the focused conversation** (§8.2, bl-d09e): re-prompt it from
+/// where it stands. It deposits nothing — a nudge is a detached
+/// `litany advance`, not a message — so a branch that stopped advancing goes
+/// on without a line in its transcript saying an operator poked it.
+///
+/// The receipt is `nudged` and carries nothing: what the nudge did shows up
+/// in the next cadence read like any other work.
+pub(super) fn nudge(seat: &Seat, focus: &Focus) -> Result<(), String> {
+    let Focus {
+        workspace: Some(workspace),
+        agent: Some(agent),
+    } = focus.clone()
+    else {
+        return Err("nudge: no conversation is focused".to_owned());
+    };
+    match seat.answered(&encode(&Gesture::Act(Act::Nudge { workspace, agent })))? {
+        Reply::Nudged => Ok(()),
+        other => Err(kind_err("nudge", &other)),
+    }
+}

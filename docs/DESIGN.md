@@ -1151,7 +1151,10 @@ the provider/model selectors (landed bl-0267 — three ops the wire always had
 and this codec did not spell), and **the stop control** (landed bl-48fa —
 REMOTE §3.1 states the gesture as an op and puts both gates on the row, so
 the seat neither derives them nor deposits a slash line: a `/stop` deposit is
-CONTENT, and content wakes the driver it meant to kill).
+CONTENT, and content wakes the driver it meant to kill), and **the nudge**
+(landed bl-d09e — §8.2's re-prompt for a branch that stopped advancing,
+offered while the row states no flight; it deposits nothing, so a poked
+conversation carries no line saying it was poked).
 **Upstream asks** (the wire does not carry the fact; a ball on the server's
 board, not a shim here): conversation timestamps on roster rows;
 conversation search; push notifications (the engine dials nothing, so a

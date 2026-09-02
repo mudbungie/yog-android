@@ -60,6 +60,10 @@ pub enum Reply {
     Providers(Vec<ProviderRow>),
     /// One provider's model names, in the engine's order.
     Models(Vec<String>),
+    /// The receipt a nudge earns (bl-d09e). It carries nothing: the act
+    /// said everything, and what the nudge DID shows up in the next
+    /// transcript read like any other work.
+    Nudged,
     /// The receipt a config write earns — what a model pick answers with. It
     /// carries nothing: the act stated the assignment whole, so an echo would
     /// be a second spelling of what the sender already holds.
@@ -93,6 +97,7 @@ impl Reply {
             Self::Providers(_) => "providers",
             Self::Models(_) => "models",
             Self::Applied => "applied",
+            Self::Nudged => "nudged",
         }
         .to_owned()
     }
@@ -128,6 +133,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "providers" => Reply::Providers(rows(o, pick::row)?),
         "models" => Reply::Models(pick::names(o)?),
         "applied" => Reply::Applied,
+        "nudged" => Reply::Nudged,
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,
             capture: opt_val(o, "capture", capture_of)?,

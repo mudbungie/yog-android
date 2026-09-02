@@ -70,6 +70,11 @@ pub enum Act {
         agent: String,
         children: bool,
     },
+    /// **Re-prompt a conversation from where it stands** (§8.2's nudge,
+    /// bl-d09e): the act for a branch that stopped advancing. It is not a
+    /// message — nothing is added to the transcript — it is a detached
+    /// `litany advance`, so it says nothing and asks the driver to go on.
+    Nudge { workspace: String, agent: String },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather
@@ -141,6 +146,9 @@ pub fn encode(gesture: &Gesture) -> Value {
             children,
         }) => json!({ "op": "stop", "workspace": workspace,
                       "agent": agent, "children": children }),
+        Gesture::Act(Act::Nudge { workspace, agent }) => {
+            json!({ "op": "nudge", "workspace": workspace, "agent": agent })
+        }
         Gesture::Act(Act::PickModel {
             workspace,
             role,

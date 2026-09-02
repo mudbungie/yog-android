@@ -39,6 +39,8 @@ enum Cmd {
     Pick(String, String),
     /// Stop the focused conversation's turn, optionally its subtree with it.
     StopTurn(bool),
+    /// Re-prompt the focused conversation from where it stands.
+    Nudge,
     Stop,
 }
 
@@ -133,6 +135,14 @@ impl Model {
         let _ = self.cmds.send(Cmd::StopTurn(children));
     }
 
+    /// **Nudge the focused conversation** (§8.2, bl-d09e) — the act for a
+    /// branch that stopped advancing. Idempotent it is not: two taps are two
+    /// nudges, which is why the control is offered only while the
+    /// conversation is at rest.
+    pub fn nudge(&self) {
+        let _ = self.cmds.send(Cmd::Nudge);
+    }
+
     /// Start a new conversation in the focused workspace with `goal` as its
     /// first instruction. The staging and the firing are one gesture from
     /// here because they are one act to the operator; the engine's two-step
@@ -199,6 +209,7 @@ fn run(
             Ok(Cmd::StopTurn(children)) => {
                 note = super::acts::stop(seat, &focus, children).err();
             }
+            Ok(Cmd::Nudge) => note = super::acts::nudge(seat, &focus).err(),
             Ok(Cmd::Pick(provider, model)) => {
                 note = super::acts::pick(seat, &focus, &provider, &model).err();
             }
