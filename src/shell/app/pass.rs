@@ -68,6 +68,9 @@ impl eframe::App for Shell {
             self.bridge.run(&ctx, &self.android, &mut fields, now);
         }
         self.refresh_insets(now);
+        // The platform's back press, read once and offered to the screens:
+        // whatever has a depth to walk takes it (`shell::back`).
+        self.back = crate::shell::back::pressed(&ctx);
 
         let ppp = ctx.pixels_per_point();
         ui.add_space(self.inset.top as f32 / ppp);
@@ -94,6 +97,11 @@ impl eframe::App for Shell {
                 .inner_margin(egui::Margin::symmetric(10, 0))
                 .show(ui, |ui| self.screens(ui));
         });
+        // Nothing took it, so there was no depth to walk: the top of the app,
+        // where back means what the platform means by it (bl-550e).
+        if std::mem::take(&mut self.back) {
+            crate::shell::back::leave(&self.android);
+        }
 
         // The input-wake ruling (DESIGN §3, decided under bl-c761): no
         // vendored winit, so the commit wake winit drops (bl-2958) is

@@ -76,6 +76,14 @@ pub(crate) struct Shell {
     /// slides (bl-014e).
     pub(crate) inset: InsetPx,
     inset_at: u128,
+    /// **A platform back press this frame has not yet been taken** (bl-550e).
+    /// Read once at the top of the pass and consumed by whatever has a depth
+    /// to walk — the bar wherever it paints a back control, the scan screen
+    /// because closing a camera is one depth up. Still standing at the end of
+    /// the frame means nothing had a depth, which is where leaving the app
+    /// belongs (`shell::back`). A frame-scoped fact, not state: it is
+    /// rewritten every pass.
+    pub(crate) back: bool,
 }
 
 impl Shell {
@@ -95,6 +103,7 @@ impl Shell {
             t0: std::time::Instant::now(),
             inset: InsetPx::default(),
             inset_at: 0,
+            back: false,
         }
     }
 

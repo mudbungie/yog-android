@@ -117,7 +117,14 @@ impl Shell {
         // The scan screen is the whole screen while it is up — a camera
         // preview under a bar belonging to a screen it covers reads as two
         // screens at once — so the bar stays down while the scanner is live.
-        if !self.scanner.live() && self.bar(ui, &offer.brand.clone(), true) {
+        // Which leaves the scanner the only thing that can take a platform
+        // back press while it is up, and closing the camera is exactly one
+        // depth up from it (bl-550e).
+        if self.scanner.live() {
+            if std::mem::take(&mut self.back) {
+                self.scanner.shut();
+            }
+        } else if self.bar(ui, &offer.brand.clone(), true) {
             self.forget_envelope();
             return;
         }

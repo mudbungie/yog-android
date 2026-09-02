@@ -246,6 +246,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
+| `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
 | `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
@@ -987,6 +988,20 @@ here is a defect.
   title. A screen paints no heading and no back control of its own; the bar
   is the one place depth is spelled. The mark toggles the configuration
   surface; back walks one focus depth.
+- **The platform's own back control means exactly that** (bl-550e). The
+  gesture-nav back is the control every Android thumb reaches first, and it
+  was inert: `GameActivity.onKeyDown` answers `KEYCODE_BACK` true — spending
+  the platform's default before it can run — and hands the key to the native
+  glue, which enqueues it, so it arrived at this app as an ordinary
+  `BrowserBack` key that nothing read (`shell/back.rs` records the chain).
+  It is now read once per frame and **taken by whatever has a depth to
+  walk**: the bar wherever it paints a back control, and the scan screen,
+  which paints no bar because it is a camera and for which closing the camera
+  IS one depth up. A press nothing took means there was no depth left, and
+  that is where leaving the app belongs — performed by hand, because step one
+  already spent the platform's own. No screen is enumerated: the rule is the
+  same one sentence at every depth, and a new screen inherits it by painting
+  a bar.
 - **The composer is one shared row** at two depths (§8): a multiline field
   that grows to a cap and scrolls inside it, beside a send button that is
   THE send. The platform residual makes this the only honest shape: the

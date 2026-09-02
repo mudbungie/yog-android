@@ -38,6 +38,7 @@
 exclude-files = [
     "rules/fixtures/*",
     "src/shell/app.rs",
+    "src/shell/back.rs",
     "src/shell/app/pass.rs",
     "src/shell/boot.rs",
     "src/shell/camera.rs",

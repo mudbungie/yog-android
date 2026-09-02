@@ -32,15 +32,23 @@ impl Shell {
     /// The standing bar (§13.2): the mark, the screen's back control when it
     /// has a parent, and its title — one row, painted before every screen's
     /// body, and the ONLY place a heading or a back gesture is spelled.
-    /// Returns whether back was tapped; the caller owns what one depth up
+    /// Returns whether back was asked for; the caller owns what one depth up
     /// means, because the bar has no idea and must not grow one.
+    ///
+    /// **The platform's own back control comes through here too** (bl-550e):
+    /// where this bar paints a back control it is the thing with a depth to
+    /// walk, so it takes a pending press — and every caller's existing arm
+    /// runs unchanged, which is the whole reason the wiring is one line here
+    /// rather than a second walk somewhere else. A bar with no back control
+    /// takes nothing: there is no depth, and the press goes on to mean
+    /// leaving the app.
     pub(super) fn bar(&mut self, ui: &mut egui::Ui, title: &str, backable: bool) -> bool {
         let mut back = false;
         ui.horizontal(|ui| {
             self.mark(ui);
             if backable {
                 let control = egui::Button::new("<").min_size(egui::vec2(TOUCH, TOUCH));
-                back = ui.add(control).clicked();
+                back = ui.add(control).clicked() || std::mem::take(&mut self.back);
             }
             ui.heading(title);
         });
