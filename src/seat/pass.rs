@@ -9,6 +9,7 @@ use std::path::Path;
 
 use serde_json::Value;
 
+use super::options::Options;
 use super::{Focus, Snapshot};
 use crate::cache::Envelopes;
 use crate::codec::reply::Reply;
@@ -25,6 +26,10 @@ const GRACE: u32 = 1;
 /// actually gave, and how many passes have failed since one did.
 #[derive(Default)]
 pub(super) struct Standing {
+    /// What the composer's selectors offer, carried between passes because a
+    /// pass does not read it — the selectors are their own gestures
+    /// (bl-0267).
+    pub(super) options: Options,
     last: Snapshot,
     failed: u32,
     /// What was last WRITTEN to the cache, so a pass that changed nothing
@@ -38,8 +43,9 @@ impl Standing {
     /// last-good so a first pass that fails republishes them rather than
     /// blanking the screen. `stored` is seeded with them too — they ARE what
     /// the file holds, so an unchanged pass rewrites nothing.
-    pub(super) fn resumed(snap: Snapshot) -> Self {
+    pub(super) fn resumed(snap: Snapshot, options: Options) -> Self {
         Self {
+            options,
             last: snap.clone(),
             failed: 0,
             stored: snap,
@@ -78,6 +84,13 @@ impl Standing {
         };
         let mut kept = Envelopes::default();
         let failed = fill(seat, focus, &mut fresh, &mut kept).err();
+        // The selectors' offerings ride every snapshot, under the focus they
+        // were read for and no other (bl-0267).
+        self.options.paint(focus, &mut fresh);
+        let (providers, models) = self.options.envelopes();
+        kept.providers = providers;
+        kept.models = models;
+        kept.options_workspace = self.options.workspace();
         if failed.is_none() {
             self.failed = 0;
             self.last = fresh;
@@ -102,6 +115,10 @@ impl Standing {
             }
         }
         let mut out = self.last.clone();
+        // Painted onto the published snapshot as well as onto `fresh`: a
+        // pass that failed republishes last-good rows, and the selectors'
+        // offerings are not the pass's to lose (bl-0267).
+        self.options.paint(focus, &mut out);
         out.error = match (note, failed.filter(|_| self.failed > GRACE)) {
             (Some(note), Some(failed)) => Some(format!("{note}; {failed}")),
             (note, failed) => note.or(failed),
@@ -152,7 +169,7 @@ fn fill(
 /// decoded to** (bl-de96). The raw value is what the cache stores, so the
 /// file holds the wire's spelling rather than a second one this client would
 /// have to keep in step — see `crate::cache`.
-fn answer(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), String> {
+pub(super) fn answer(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), String> {
     // The transport's two classes collapse to the sentence here, and rightly:
     // this model opens a connection per ask, so a broken channel is already
     // re-dialled by the next pass and there is nothing for it to decide

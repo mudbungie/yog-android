@@ -42,7 +42,7 @@ use crate::seat::{Focus, Snapshot};
 /// `crate::envelope` gives the enroll payload, for its reason: a version
 /// with no name is read out of whatever JSON happens to be there.
 const TAG: &str = "yog-seat-cache";
-const VERSION: u64 = 1;
+const VERSION: u64 = 2;
 
 /// **What one answered pass carried, in the engine's own words.** Present
 /// exactly as deep as the focus went: a pass under no workspace asks one
@@ -52,6 +52,16 @@ pub struct Envelopes {
     pub workspaces: Option<Value>,
     pub conversations: Option<Value>,
     pub transcript: Option<Value>,
+    /// **The composer selectors' offerings** (bl-0267), stored the same way
+    /// and under the same rules: the workspace they were read for, the
+    /// `providers` reply, and each provider's `models` reply. They are not
+    /// part of a pass — the selectors are their own gestures — so they ride
+    /// beside the pass's three rather than inside them, and a file whose
+    /// options name a workspace the focus does not is discarded like any
+    /// other mispairing.
+    pub options_workspace: Option<String>,
+    pub providers: Option<Value>,
+    pub models: std::collections::BTreeMap<String, Value>,
 }
 
 /// Store one pass. The `Err` is for the caller's log and nothing else — a
@@ -64,6 +74,9 @@ pub fn write(path: &Path, focus: &Focus, kept: &Envelopes) -> Result<(), String>
         "workspaces": kept.workspaces,
         "conversations": kept.conversations,
         "transcript": kept.transcript,
+        "options": { "workspace": kept.options_workspace,
+                     "providers": kept.providers,
+                     "models": kept.models },
     });
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
@@ -79,7 +92,7 @@ pub fn write(path: &Path, focus: &Focus, kept: &Envelopes) -> Result<(), String>
 /// envelope this build's decoder refuses, an envelope of the wrong kind, or a
 /// depth that disagrees with the focus — each discards the whole file rather
 /// than half-reading it.
-pub fn read(path: &Path) -> Option<(Focus, Snapshot)> {
+pub fn read(path: &Path) -> Option<(Focus, Snapshot, Envelopes)> {
     let value: Value = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
     if value.get(TAG)?.as_u64()? != VERSION
         || value.get("protocol")?.as_u64()? != u64::from(crate::hello::PROTOCOL)
@@ -87,8 +100,8 @@ pub fn read(path: &Path) -> Option<(Focus, Snapshot)> {
         return None;
     }
     let focus = Focus {
-        workspace: at(&value, "focus", "workspace"),
-        agent: at(&value, "focus", "agent"),
+        workspace: at2(&value, "focus", "workspace"),
+        agent: at2(&value, "focus", "agent"),
     };
     // The pairing law `Snapshot` keeps, checked on the FILE: rows deeper than
     // the focus they were asked at are not paintable, and a file that carries
@@ -102,6 +115,7 @@ pub fn read(path: &Path) -> Option<(Focus, Snapshot)> {
         focus: focus.clone(),
         ..Snapshot::default()
     };
+    let kept = options(&value, &focus)?;
     match decoded(&value, "workspaces")? {
         Reply::Workspaces { rows, .. } => snap.workspaces = rows,
         _ => return None,
@@ -118,7 +132,37 @@ pub fn read(path: &Path) -> Option<(Focus, Snapshot)> {
             _ => return None,
         }
     }
-    Some((focus, snap))
+    Some((focus, snap, kept))
+}
+
+/// The stored selector offerings, checked against the focus that owns them.
+/// **Absent is ordinary** — the selectors may simply never have been opened —
+/// but options naming another workspace than the focus are the mispairing the
+/// whole file is fail-closed about, so they discard it.
+fn options(value: &Value, focus: &Focus) -> Option<Envelopes> {
+    let Some(held) = held(value, "options") else {
+        return Some(Envelopes::default());
+    };
+    let workspace = at(&held, "workspace");
+    if workspace.is_some() && workspace != focus.workspace {
+        return None;
+    }
+    let models = held
+        .get("models")
+        .and_then(Value::as_object)
+        .map(|listed| {
+            listed
+                .iter()
+                .map(|(provider, envelope)| (provider.clone(), envelope.clone()))
+                .collect()
+        })
+        .unwrap_or_default();
+    Some(Envelopes {
+        options_workspace: workspace,
+        providers: held.get("providers").filter(|v| !v.is_null()).cloned(),
+        models,
+        ..Envelopes::default()
+    })
 }
 
 /// One stored envelope, decoded by the one decoder. The roster's is required:
@@ -135,8 +179,13 @@ fn held(value: &Value, key: &str) -> Option<Value> {
 }
 
 /// One nested string field, absent for every shape that is not one.
-fn at(value: &Value, outer: &str, key: &str) -> Option<String> {
+fn at2(value: &Value, outer: &str, key: &str) -> Option<String> {
     Some(value.get(outer)?.get(key)?.as_str()?.to_owned())
+}
+
+/// One string field of a held value.
+fn at(value: &Value, key: &str) -> Option<String> {
+    Some(value.get(key)?.as_str()?.to_owned())
 }
 
 #[cfg(test)]

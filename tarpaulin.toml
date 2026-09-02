@@ -44,6 +44,7 @@ exclude-files = [
     "src/shell/camera.rs",
     "src/shell/bridge.rs",
     "src/shell/chat.rs",
+    "src/shell/controls.rs",
     "src/shell/enroll.rs",
     "src/shell/mark.rs",
     "src/shell/enroll/material.rs",

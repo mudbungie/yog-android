@@ -76,6 +76,14 @@ pub(crate) struct Shell {
     /// slides (bl-014e).
     pub(crate) inset: InsetPx,
     inset_at: u128,
+    /// **What the composer's selectors are pointed at** (bl-0267), and the
+    /// workspace that owns the pointing. This device shows what it SET, never
+    /// a guess at what is set — no wire shape states a workspace's current
+    /// assignment — so these three are a viewport fact and go when the focus
+    /// leaves the workspace they were made in.
+    pub(crate) picked_in: Option<String>,
+    pub(crate) provider: Option<String>,
+    pub(crate) model: Option<String>,
     /// **A platform back press this frame has not yet been taken** (bl-550e).
     /// Read once at the top of the pass and consumed by whatever has a depth
     /// to walk — the bar wherever it paints a back control, the scan screen
@@ -103,6 +111,9 @@ impl Shell {
             t0: std::time::Instant::now(),
             inset: InsetPx::default(),
             inset_at: 0,
+            picked_in: None,
+            provider: None,
+            model: None,
             back: false,
         }
     }
@@ -142,14 +153,14 @@ impl Shell {
     /// The seat model, when this launch is running one.
     pub(crate) fn model(&self) -> Option<&Model> {
         match &self.running {
-            Running::Seat { model, .. } => Some(model),
+            Running::Seat { model, .. } => Some(model.as_ref()),
             _ => None,
         }
     }
 
     pub(crate) fn model_mut(&mut self) -> Option<&mut Model> {
         match &mut self.running {
-            Running::Seat { model, .. } => Some(model),
+            Running::Seat { model, .. } => Some(model.as_mut()),
             _ => None,
         }
     }

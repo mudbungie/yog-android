@@ -39,6 +39,25 @@ fn all() -> Envelopes {
         workspaces: Some(ws()),
         conversations: Some(convs()),
         transcript: Some(transcript()),
+        ..Envelopes::default()
+    }
+}
+
+/// The same, with the selectors' offerings for the focused workspace
+/// (bl-0267).
+fn with_options() -> Envelopes {
+    Envelopes {
+        options_workspace: Some("home".to_owned()),
+        providers: Some(json!({ "kind": "providers", "ok": true,
+                                "rows": [{ "name": "acme", "fact": "credential present",
+                                           "blocked": null }] })),
+        models: [(
+            "acme".to_owned(),
+            json!({ "kind": "models", "ok": true, "rows": ["opus"] }),
+        )]
+        .into_iter()
+        .collect(),
+        ..all()
     }
 }
 
@@ -52,7 +71,7 @@ fn path() -> std::path::PathBuf {
 fn a_stored_pass_reads_back_as_the_snapshot_it_was() {
     let at = path();
     write(&at, &deep(), &all()).unwrap();
-    let (focus, snap) = read(&at).unwrap();
+    let (focus, snap, _) = read(&at).unwrap();
     assert_eq!(focus, deep());
     assert_eq!(snap.focus, deep());
     assert_eq!(snap.workspaces[0].workspace, "home");
@@ -71,7 +90,7 @@ fn a_shallow_pass_stores_and_reads_only_what_it_asked() {
         ..Envelopes::default()
     };
     write(&at, &Focus::default(), &kept).unwrap();
-    let (focus, snap) = read(&at).unwrap();
+    let (focus, snap, _) = read(&at).unwrap();
     assert_eq!(focus, Focus::default());
     assert!(snap.conversations.is_empty() && snap.transcript.is_empty());
     assert_eq!(snap.workspaces.len(), 1);
@@ -173,4 +192,47 @@ fn a_write_that_cannot_land_names_the_path() {
     let occupied = dir.join("occupied");
     std::fs::create_dir_all(&occupied).unwrap();
     assert!(write(&occupied, &Focus::default(), &all()).is_err());
+}
+
+/// **The selectors' offerings round-trip with the rows** (bl-0267), and the
+/// same pairing law covers them: options naming a workspace the focus does
+/// not is the mispairing the whole file is fail-closed about.
+#[test]
+fn stored_options_read_back_and_a_foreign_workspace_discards() {
+    let at = path();
+    write(&at, &deep(), &with_options()).unwrap();
+    let (_, _, kept) = read(&at).unwrap();
+    assert_eq!(kept.options_workspace.as_deref(), Some("home"));
+    assert!(kept.providers.is_some());
+    assert_eq!(kept.models.len(), 1);
+
+    // A file with no options at all is ordinary: the selectors may simply
+    // never have been opened.
+    write(&at, &deep(), &all()).unwrap();
+    let (_, _, kept) = read(&at).unwrap();
+    assert_eq!(kept.options_workspace, None);
+    assert!(kept.providers.is_none() && kept.models.is_empty());
+
+    // Options under another workspace than the focus discard the file.
+    let mut foreign = with_options();
+    foreign.options_workspace = Some("away".to_owned());
+    write(&at, &deep(), &foreign).unwrap();
+    assert!(read(&at).is_none());
+}
+
+/// A layout bump discards, which is what makes the version stamp worth
+/// carrying: the options slot arrived in version 2, and a version 1 file has
+/// no honest reading of it.
+#[test]
+fn a_file_of_the_previous_layout_is_discarded() {
+    let at = path();
+    write(&at, &deep(), &with_options()).unwrap();
+    let body = std::fs::read_to_string(&at).unwrap();
+    let older = body.replace(
+        &format!("\"{}\":{}", super::TAG, super::VERSION),
+        &format!("\"{}\":{}", super::TAG, super::VERSION - 1),
+    );
+    assert_ne!(older, body, "the stamp must be in the file to be lowered");
+    std::fs::write(&at, older).unwrap();
+    assert!(read(&at).is_none());
 }

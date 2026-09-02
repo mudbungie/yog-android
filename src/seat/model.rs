@@ -29,6 +29,14 @@ enum Cmd {
     Conversation(String, String),
     Deposit(String),
     Start(String),
+    /// **List the focused workspace's providers** (bl-0267) — a gesture of
+    /// the selectors' own, asked when one is opened rather than on every
+    /// pass: a pass is the standing set, and these are options.
+    Providers,
+    /// List one provider's models.
+    Models(String),
+    /// Assign the worker role's provider and model, stated whole.
+    Pick(String, String),
     Stop,
 }
 
@@ -46,8 +54,16 @@ impl Model {
     /// under the focus they were asked at and the operator is put back where
     /// they were by the same fact.
     pub fn start(seat: Seat, cadence: Duration, cache: PathBuf) -> Self {
-        let kept = crate::cache::read(&cache);
-        let last = kept.clone().map(|(_, snap)| snap).unwrap_or_default();
+        // The cached pass, with its selector offerings painted into it: the
+        // handle's first `snapshot()` is read before any pass has run, so a
+        // resumed seat's selectors are open on the way to the first frame
+        // (bl-0267) and not one round trip later.
+        let kept = crate::cache::read(&cache).map(|(focus, mut snap, stored)| {
+            let options = super::options::from_cache(stored);
+            options.paint(&focus, &mut snap);
+            (focus, snap, options)
+        });
+        let last = kept.clone().map(|(_, snap, _)| snap).unwrap_or_default();
         let (cmds, cmd_rx) = mpsc::channel();
         let (snap_tx, snaps) = mpsc::channel();
         let worker =
@@ -87,6 +103,26 @@ impl Model {
         let _ = self.cmds.send(Cmd::Deposit(content));
     }
 
+    /// **Ask for the focused workspace's providers** (bl-0267). The answer
+    /// arrives in the next snapshot, and what was already known keeps
+    /// painting meanwhile — the selectors open on the cache and correct
+    /// themselves a round trip later.
+    pub fn list_providers(&self) {
+        let _ = self.cmds.send(Cmd::Providers);
+    }
+
+    /// Ask for one provider's models.
+    pub fn list_models(&self, provider: String) {
+        let _ = self.cmds.send(Cmd::Models(provider));
+    }
+
+    /// **Assign the worker role's model** in the focused workspace. One act,
+    /// no apply step (§13.2): the tap is the gesture, and the engine's
+    /// refusal — if it refuses — arrives in the banner.
+    pub fn pick_model(&self, provider: String, model: String) {
+        let _ = self.cmds.send(Cmd::Pick(provider, model));
+    }
+
     /// Start a new conversation in the focused workspace with `goal` as its
     /// first instruction. The staging and the firing are one gesture from
     /// here because they are one act to the operator; the engine's two-step
@@ -109,12 +145,15 @@ fn run(
     seat: &Seat,
     cadence: Duration,
     cache: &std::path::Path,
-    kept: Option<(Focus, Snapshot)>,
+    kept: Option<(Focus, Snapshot, super::options::Options)>,
     cmds: &mpsc::Receiver<Cmd>,
     out: &mpsc::Sender<Snapshot>,
 ) {
     let (mut focus, mut standing) = match kept {
-        Some((focus, snap)) => (focus, Standing::resumed(snap)),
+        // The selectors' offerings come back with the rows (bl-0267): the
+        // file holds them under the workspace they were read for, so a
+        // resumed seat opens its selectors instantly and offline.
+        Some((focus, snap, options)) => (focus, Standing::resumed(snap, options)),
         None => (Focus::default(), Standing::default()),
     };
     let mut note = None;
@@ -137,9 +176,41 @@ fn run(
                 };
             }
             Ok(Cmd::Deposit(content)) => note = super::acts::deposit(seat, &focus, content).err(),
+            // The three selector gestures. A read's answer is learned as the
+            // engine's own envelope (bl-0267); a failure is a sentence for
+            // the banner exactly as an act's is.
+            Ok(Cmd::Providers) => {
+                note = learned(super::acts::providers(seat, &focus), None, &mut standing);
+            }
+            Ok(Cmd::Models(provider)) => {
+                let listed = super::acts::models(seat, &focus, &provider);
+                note = learned(listed, Some(provider), &mut standing);
+            }
+            Ok(Cmd::Pick(provider, model)) => {
+                note = super::acts::pick(seat, &focus, &provider, &model).err();
+            }
             Ok(Cmd::Start(goal)) => note = super::acts::started(seat, &focus, goal).err(),
             Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
             Err(mpsc::RecvTimeoutError::Timeout) => {}
         }
+    }
+}
+
+/// Fold one selector read into the standing options, or hand back the
+/// sentence it failed with. One body for both reads, because the only
+/// difference between them is which slot the envelope lands in.
+fn learned(
+    read: Result<(String, serde_json::Value), String>,
+    provider: Option<String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok((workspace, envelope)) => {
+            standing
+                .options
+                .learned(&workspace, provider.as_deref(), envelope);
+            None
+        }
+        Err(why) => Some(why),
     }
 }

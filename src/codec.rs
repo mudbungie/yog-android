@@ -19,6 +19,7 @@ use serde_json::{Value, json};
 
 mod conv;
 pub(crate) mod fields;
+pub mod pick;
 pub mod reply;
 pub mod request;
 pub mod start;
@@ -27,6 +28,7 @@ mod transcript;
 mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
+pub use pick::ProviderRow;
 pub use request::decode;
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
@@ -59,6 +61,16 @@ pub enum Act {
     Prepare { workspace: String },
     /// **Fire a staged conversation** with the goal it is being given.
     Prompt { prepared: Prepared, goal: String },
+    /// **Assign a role's model** (bl-0267): one workspace, one role, and the
+    /// provider/model pair stated whole. The seat spends `worker`; the field
+    /// carries whatever the frame said so another role round-trips rather
+    /// than being flattened into this device's one.
+    PickModel {
+        workspace: String,
+        role: String,
+        provider: String,
+        model: String,
+    },
 }
 
 /// The populating reads this seat spends.
@@ -70,6 +82,11 @@ pub enum Ask {
     Conversations { workspace: String },
     /// One conversation's transcript, in message order.
     Transcript { workspace: String, agent: String },
+    /// One workspace's providers, with the credential fact each states about
+    /// itself. Per workspace, because sign-ins are (bl-0267).
+    Providers { workspace: String },
+    /// One provider's models, in the engine's listing order.
+    Models { workspace: String, provider: String },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here
@@ -102,6 +119,19 @@ pub fn encode(gesture: &Gesture) -> Value {
             json!({ "op": "transcript", "workspace": workspace, "agent": agent })
         }
         Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
+        Gesture::Ask(Ask::Providers { workspace }) => {
+            json!({ "op": "providers", "workspace": workspace })
+        }
+        Gesture::Ask(Ask::Models {
+            workspace,
+            provider,
+        }) => json!({ "op": "models", "workspace": workspace, "provider": provider }),
+        Gesture::Act(Act::PickModel {
+            workspace,
+            role,
+            provider,
+            model,
+        }) => pick::encode_pick(workspace, role, provider, model),
         Gesture::Act(Act::Advertise { tools }) => {
             json!({ "op": "advertise", "tools": tools::encode_tools(tools) })
         }

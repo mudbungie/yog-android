@@ -13,6 +13,7 @@
 use serde_json::{Map, Value};
 
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
+use super::pick::{self, ProviderRow};
 use super::start::{self, Prepared};
 use super::tools::{Capture, Invocation, capture_of, invocation_of};
 use super::{ConvRow, Entry, WsRow, conv, transcript, ws};
@@ -54,6 +55,15 @@ pub enum Reply {
     /// A staged conversation, as the engine stated it (§8.1). It is carried
     /// whole into the firing gesture; nothing here is re-derived.
     Prepared(Prepared),
+    /// One workspace's provider rows, each carrying its own credential fact
+    /// (bl-0267).
+    Providers(Vec<ProviderRow>),
+    /// One provider's model names, in the engine's order.
+    Models(Vec<String>),
+    /// The receipt a config write earns — what a model pick answers with. It
+    /// carries nothing: the act stated the assignment whole, so an echo would
+    /// be a second spelling of what the sender already holds.
+    Applied,
     /// One invocation's standing after a call (REMOTE §5.3). `capture` is
     /// **absent** rather than empty while the far side still runs it, so a
     /// reader never has to tell "not finished" from "finished saying
@@ -80,6 +90,9 @@ impl Reply {
             Self::Routed { .. } => "routed",
             Self::Prepared(_) => "prepared",
             Self::Started { .. } => "started",
+            Self::Providers(_) => "providers",
+            Self::Models(_) => "models",
+            Self::Applied => "applied",
         }
         .to_owned()
     }
@@ -112,6 +125,9 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
             conversation: str_of(o, "conversation")?,
         },
         "invocations" => Reply::Invocations(rows(o, invocation_of)?),
+        "providers" => Reply::Providers(rows(o, pick::row)?),
+        "models" => Reply::Models(pick::names(o)?),
+        "applied" => Reply::Applied,
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,
             capture: opt_val(o, "capture", capture_of)?,

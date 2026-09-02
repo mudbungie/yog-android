@@ -160,6 +160,9 @@ fn every_answer_names_its_own_kind() {
             }),
             "prepared",
         ),
+        (Reply::Providers(Vec::new()), "providers"),
+        (Reply::Models(Vec::new()), "models"),
+        (Reply::Applied, "applied"),
     ];
     for (reply, kind) in named {
         assert_eq!(reply.kind(), kind);
@@ -218,4 +221,28 @@ fn a_fired_conversation_reads_back_with_the_name_the_engine_gave_it() {
     // Strict, like every other kind: the name is the reply's whole content.
     let e = decode(&json!({ "ok": true, "kind": "started" })).unwrap_err();
     assert_eq!(e, "missing or non-string field \"conversation\"");
+}
+
+/// The selector family reads back (bl-0267): rows with their credential
+/// facts, bare model names, and the receipt a pick earns.
+#[test]
+fn the_selector_replies_read_back() {
+    let listed = json!({ "ok": true, "kind": "providers",
+                         "rows": [{ "name": "acme", "fact": "credential present",
+                                    "blocked": null }] });
+    let Reply::Providers(rows) = decode(&listed).unwrap().unwrap() else {
+        panic!("not providers")
+    };
+    assert_eq!(rows[0].name, "acme");
+    let models = json!({ "ok": true, "kind": "models", "rows": ["opus"] });
+    assert_eq!(
+        decode(&models).unwrap().unwrap(),
+        Reply::Models(vec!["opus".to_owned()])
+    );
+    assert_eq!(
+        decode(&json!({ "ok": true, "kind": "applied" }))
+            .unwrap()
+            .unwrap(),
+        Reply::Applied
+    );
 }

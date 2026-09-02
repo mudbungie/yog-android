@@ -45,7 +45,7 @@ fn a_second_boot_paints_the_last_answered_pass_before_the_wire_answers() {
     model.focus_workspace(Some("home".into()));
     settle(&mut model, &|s| s.focus.workspace.is_some());
     drop(model);
-    let (focus, kept) = crate::cache::read(&at).unwrap();
+    let (focus, kept, _) = crate::cache::read(&at).unwrap();
     assert_eq!(focus.workspace.as_deref(), Some("home"));
     assert_eq!(kept.conversations[0].root_id, "a1");
 }

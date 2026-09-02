@@ -108,6 +108,11 @@ impl Shell {
         // bottom of this layout is already the platform's floor — `app::pass`
         // spends the inset once, for every screen (bl-9cfd).
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+            // The same controls row as the transcript's, under the same
+            // composer (§13.2, bl-0267): a model is picked for the WORKSPACE,
+            // so it is picked from the screen that lists it as readily as
+            // from a conversation inside it.
+            self.controls(ui, snap);
             self.starter(ui);
             ui.add_space(4.0);
             egui::ScrollArea::vertical().show(ui, |ui| {

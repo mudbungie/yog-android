@@ -51,6 +51,10 @@ impl Shell {
         // (bl-9cfd).
         let mut flipped = None;
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
+            // Added first, so it sits UNDER the composer and above the
+            // platform's floor: the conversation-level acts (§13.2's
+            // controls row, bl-0267).
+            self.controls(ui, snap);
             if let Some(taken) = super::chat::composer(ui, &mut self.composer, "message")
                 && let Some(model) = self.model()
             {

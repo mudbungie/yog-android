@@ -127,6 +127,7 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 
 mod deposit;
 mod grace;
+mod pick;
 mod reads;
 mod resume;
 mod start;

@@ -3,12 +3,14 @@
 //! what the seat ASKS, on its own clock; an act is what the operator said,
 //! and its answer is a sentence for the banner rather than a row for a list.
 
+use serde_json::Value;
+
 use super::Focus;
 use crate::codec::reply::Reply;
-use crate::codec::{Act, Gesture, encode};
+use crate::codec::{Act, Ask, Gesture, encode};
 use crate::transport::Seat;
 
-use super::pass::kind_err;
+use super::pass::{answer, kind_err};
 
 /// Post one message. The receipt is an `outcome` whose `ok` is the server's
 /// own verdict; anything else is a sentence for the banner.
@@ -56,4 +58,69 @@ pub(super) fn started(seat: &Seat, focus: &Focus, goal: String) -> Result<(), St
         Reply::Outcome { stderr, .. } => Err(format!("start refused: {stderr}")),
         other => Err(kind_err("start", &other)),
     }
+}
+
+/// **The focused workspace's providers** (bl-0267), handed back as the
+/// engine's own envelope: what the selectors hold is what the engine said,
+/// and the cache stores exactly that (§14).
+pub(super) fn providers(seat: &Seat, focus: &Focus) -> Result<(String, Value), String> {
+    let workspace = focused(focus)?;
+    let ask = Ask::Providers {
+        workspace: workspace.clone(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Providers(_), envelope) => Ok((workspace, envelope)),
+        (other, _) => Err(kind_err("providers", &other)),
+    }
+}
+
+/// One provider's models, the same way.
+pub(super) fn models(
+    seat: &Seat,
+    focus: &Focus,
+    provider: &str,
+) -> Result<(String, Value), String> {
+    let workspace = focused(focus)?;
+    let ask = Ask::Models {
+        workspace: workspace.clone(),
+        provider: provider.to_owned(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Models(_), envelope) => Ok((workspace, envelope)),
+        (other, _) => Err(kind_err("models", &other)),
+    }
+}
+
+/// **The pick** (bl-0267): one assignment, stated whole. The role is this
+/// seat's own — a phone assigns the worker and nothing else — and the
+/// receipt is read rather than discarded, so an engine that refused the
+/// assignment says so on the glass instead of the selector claiming it took.
+pub(super) fn pick(seat: &Seat, focus: &Focus, provider: &str, model: &str) -> Result<(), String> {
+    let act = Act::PickModel {
+        workspace: focused(focus)?,
+        role: WORKER.to_owned(),
+        provider: provider.to_owned(),
+        model: model.to_owned(),
+    };
+    match seat.answered(&encode(&Gesture::Act(act)))? {
+        Reply::Applied => Ok(()),
+        // No `outcome` arm, deliberately: a pick is a config write and the
+        // engine answers it `applied` or refuses in band (the kind-less
+        // envelope, which `answered` has already turned into this `?`). A
+        // deposit has an outcome because a deposit RUNS something.
+        other => Err(kind_err("model", &other)),
+    }
+}
+
+/// The one role a phone assigns. Named here because it is this seat's whole
+/// answer to the wire's free `role` token (DESIGN §13.2's controls row).
+const WORKER: &str = "worker";
+
+/// The focused workspace, or the sentence a control earns for acting with no
+/// workspace under it — the same shape the deposit's own guard has.
+fn focused(focus: &Focus) -> Result<String, String> {
+    focus
+        .workspace
+        .clone()
+        .ok_or_else(|| "no workspace is focused".to_owned())
 }

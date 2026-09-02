@@ -39,8 +39,13 @@ pub(crate) enum Running {
     },
     /// The seat, with the tool host beside it — one identity, two
     /// connections (REMOTE §5's refcounted presence).
+    ///
+    /// **The model is boxed** because this variant is the enum's largest by
+    /// far — the handle carries a whole `Snapshot` of last-good rows
+    /// (bl-de96) and the selectors' offerings (bl-0267) — and a cold device
+    /// would otherwise carry that footprint to say "nothing is provisioned".
     Seat {
-        model: Model,
+        model: Box<Model>,
         host: Option<Host>,
         client: String,
     },
@@ -88,7 +93,7 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
         // copy of that sentence would be noise.
         Component::Seat | Component::Server => match crate::transport::Seat::open(material) {
             Ok(asker) => Running::Seat {
-                model: Model::start(asker, CADENCE, cache_file(android)),
+                model: Box::new(Model::start(asker, CADENCE, cache_file(android))),
                 host: Foot::open(material).ok().map(|f| host(android, f)),
                 client: enrolled.client,
             },

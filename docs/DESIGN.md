@@ -229,6 +229,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/request.rs` | the gesture codec's decode side — the inverse the corpus is replayed through | landed (bl-93e3) |
 | `corpus/` + `tests/conformance/` | the vendored wire conformance corpus and its replay: the decision table over every shape, in both directions | landed (bl-93e3) |
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
+| `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
+| `src/seat/options.rs` | what the selectors offer, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267) |
+| `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
@@ -1066,6 +1069,25 @@ here is a defect.
   viewport whose central 72 is the unit square the walk works in, which puts
   the mark's furthest ink at 64.2 units — inside the 66-unit circle every
   launcher mask keeps.
+- **One controls row, under the composer, inside the same floor** (bl-0267).
+  The composer is what you are SAYING; the row beneath it is what you are
+  saying it WITH — the worker's provider and model, and (as they land) the
+  acts on a turn already running. It is added to the bottom-up layout before
+  the composer, so it sits between the composer and the platform's floor and
+  rides the keyboard with it; its height is the touch floor, spent both as
+  the row's own height and as the minimum interact size inside it. One row
+  owns every conversation-level act, so a new one is an entry here rather
+  than a new place to look.
+- **Tap is the act, and a control shows only what this device did.** Nothing
+  in the row holds a draft: picking a model IS the assignment, and an engine
+  that refuses one says so in the same banner every other refusal uses. What
+  a selector displays is what this device SET — never a guess at what is set,
+  because no shape on the wire states a workspace's current assignment and
+  §8's rule is that a client re-deriving world state is inventing it. The
+  selection belongs to the workspace it was made in and goes when the focus
+  leaves it. A provider row is greyed **by the credential fact it states
+  about itself** and stays tappable: the operator may be about to sign it in,
+  and a control that vanishes teaches nothing.
 - **Wide content: prose wraps, a fenced block scrolls** (bl-b62b). Anything
   a person reads as text wraps at the width it actually has and never
   scrolls sideways — a horizontal scroller under a paragraph is a paragraph
@@ -1124,7 +1146,9 @@ codec already carries the fact — build it here): the conversation list with
 unread marks and status ink (landed), starting a conversation (landed), the
 send control (landed), streaming-at-cadence reads (landed §7), settings
 reachable from anywhere (landed), the drawn mark, the standing bar, the
-multiline composer and the touch-target floor (children of this section).
+multiline composer and the touch-target floor (children of this section), and
+the provider/model selectors (landed bl-0267 — three ops the wire always had
+and this codec did not spell).
 **Upstream asks** (the wire does not carry the fact; a ball on the server's
 board, not a shim here): conversation timestamps on roster rows;
 conversation search; a stop control for an in-flight turn (the slash

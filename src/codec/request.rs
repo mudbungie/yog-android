@@ -50,6 +50,19 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             agent: str_of(o, "agent")?,
         }),
         "invocations" => Gesture::Ask(Ask::Invocations),
+        "providers" => Gesture::Ask(Ask::Providers {
+            workspace: str_of(o, "workspace")?,
+        }),
+        "models" => Gesture::Ask(Ask::Models {
+            workspace: str_of(o, "workspace")?,
+            provider: str_of(o, "provider")?,
+        }),
+        "model" => Gesture::Act(Act::PickModel {
+            workspace: str_of(o, "workspace")?,
+            role: str_of(o, "role")?,
+            provider: str_of(o, "provider")?,
+            model: str_of(o, "model")?,
+        }),
         "advertise" => Gesture::Act(Act::Advertise {
             tools: arr_of(o, "tools")?
                 .iter()
