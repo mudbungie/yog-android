@@ -4,7 +4,11 @@
 //! fold overrides, and the composer that rides above the keyboard.
 //!
 //! The projection itself is `crate::rows`, which is pure and host-tested under
-//! the 100% floor; everything here is paint.
+//! the 100% floor; everything here is paint. **The growing answer is one of
+//! those rows and not a paint of its own** (bl-e3d1): the follow lane
+//! freshens the transcript's own streaming entry (`crate::live`), so the tail
+//! wears the speaker's name and dissolves structurally when the read stops
+//! carrying it.
 
 use eframe::egui;
 
@@ -76,16 +80,6 @@ impl Shell {
                         // be — above the answer to it.
                         if let Some(echo) = &self.echo {
                             super::chat::echo(ui, &echo.text, echo.landed);
-                        }
-                        // The answer still being written, under the rows the
-                        // engine has written down (bl-4822). The scroller
-                        // sticks to the bottom, so growth here is what the
-                        // operator watches; egui unsticks it the moment a
-                        // hand scrolls up and re-sticks when it returns.
-                        if let Some(stream) = &snap.live
-                            && !stream.is_empty()
-                        {
-                            super::chat::live(ui, stream);
                         }
                     });
                 });

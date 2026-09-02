@@ -272,6 +272,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape, and the live fold under them | landed (bl-0ed6, bl-4822) |
 | `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
 | `src/roster.rs` | the conversation list's two readings of the carried stamp: newest-first order, and how long ago each row says it is — pure, host-tested | landed (bl-e837) |
+| `src/live.rs` | the streaming tail's one rule: the lane's fold replaces the transcript's own tail, and at rest there is none — pure, host-tested | landed (bl-e3d1) |
 | `src/outbox.rs` | the one rule the local echo needs: has this message come back in a transcript read yet — pure, host-tested | landed (bl-66fb) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
@@ -557,6 +558,22 @@ one thing in a list and another in a transcript would be two colour
 vocabularies inside one app. Upstream's own words for why a list is the place
 this matters: *"the roster is the operator's one passive sighting of it — a
 list where the two read identically is a list that cannot be scanned."*
+
+**The growing answer is the speaking agent's own row, and there is exactly
+one of it** (operator ruling, bl-e3d1). The engine writes the tail into the
+transcript itself as a streaming entry, so a cadence read already carries
+one; the follow lane below then reads the same answer several times a rest.
+Painting the lane's fold *beside* the transcript put the same words on the
+glass twice, and the projection labelled its row `live:` — a word that is not
+a speaker, in the speaker's seat, which §13.3 does not allow. So: the tail
+wears `<speaker>:`, exactly as the settled turn it becomes will, and the lane
+**replaces** the transcript's own streaming entry rather than adding
+anything (`crate::live`). That makes the dedupe structural instead of a
+content match — when the read stops carrying a tail there is nothing to
+replace and nothing to dissolve — and it gives the flight-end half of the
+same defect one answer: **at rest there is no tail at all**, whatever the
+response file still holds, because the row's own `flight` is the gate the
+lane already obeys.
 
 **The world is re-read at cadence; the answer being WRITTEN is followed, one
 shot at a time (bl-4822, amending bl-2842).** `seat::pass::fill` still asks

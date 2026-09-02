@@ -43,32 +43,6 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, landed: bool) {
     }
 }
 
-/// **The answer being written right now** (bl-4822), painted under the last
-/// transcript row: the reasoning in weak ink where the model states one, then
-/// the text in the live hue. It is not a projected row and never becomes one
-/// — `crate::rows` is pure over what the engine has written down, and this is
-/// what it is still writing, so the finished answer arrives as an ordinary
-/// row and this fold goes.
-pub(crate) fn live(ui: &mut egui::Ui, stream: &crate::codec::Stream) {
-    if let Some(thinking) = &stream.thinking {
-        ui.horizontal(|ui| {
-            stripe(ui, None);
-            ui.add(
-                egui::Label::new(
-                    egui::RichText::new(thinking).color(ui.visuals().weak_text_color()),
-                )
-                .wrap(),
-            );
-        });
-    }
-    if let Some(text) = &stream.text {
-        ui.horizontal(|ui| {
-            stripe(ui, Some(Role::Model));
-            ui.add(egui::Label::new(egui::RichText::new(text).color(role_hue(Role::Model))).wrap());
-        });
-    }
-}
-
 /// The fold triangles, and the mark a row with nothing to fold shows in their
 /// place so every payload starts at the same x.
 const GLYPH_COLLAPSED: &str = "▶";

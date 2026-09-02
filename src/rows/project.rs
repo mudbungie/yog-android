@@ -105,7 +105,7 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             )));
         }
         EntryKind::Streaming { thinking, text } => {
-            push_streaming(&entry.name, thinking, text, out);
+            push_streaming(&entry.name, speaker, thinking, text, out);
         }
         EntryKind::Compacted {
             first,
@@ -162,7 +162,15 @@ fn message_role(sender: &str, has_epitaph: bool) -> Role {
 /// them while the step is happening. An empty half is no row at all: a model
 /// that has only thought so far shows one growing row, not one growing row and
 /// one blank one.
-fn push_streaming(name: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
+///
+/// **Both rows wear their committed counterpart's label** (operator ruling,
+/// bl-e3d1): the growing text is the speaking agent's own row, so it says
+/// `<speaker>:` exactly as the settled turn will, and the reasoning says
+/// `thinking:` exactly as a committed thinking block does. It used to say
+/// `live:`, which put a word that is not a speaker in the speaker's seat —
+/// a §13.3 vocabulary break — and made a finished reply read as two
+/// different people saying the same thing.
+fn push_streaming(name: &str, speaker: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
     if !thinking.is_empty() {
         out.push(row(
             key(name, 0),
@@ -176,7 +184,7 @@ fn push_streaming(name: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
     if !text.is_empty() {
         out.push(row(
             key(name, 1),
-            "live:".to_string(),
+            format!("{speaker}:"),
             text,
             RowClass::Response,
             Tone::Live,

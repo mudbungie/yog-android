@@ -2,13 +2,26 @@
 //! is asked for its tail between passes, and the tail goes when the turn
 //! does. The gate is the row's own `flight`, so a test that wants the lane
 //! scripts a row that is flying.
+//!
+//! What the lane produces is not a field of its own but the transcript's own
+//! streaming entry, freshened (bl-e3d1) — so these read the tail where the
+//! frame reads it, which is the one place it exists.
 
 use super::{
     Model, cache_in, conv_flying, conv_reply, material, pki, serve_many, settle, tr_reply, ws_reply,
 };
+use crate::codec::EntryKind;
 use crate::transport::Seat;
 use serde_json::json;
 use std::time::Duration;
+
+/// The transcript's tail, if it carries one — where the lane's reads land.
+fn tail(snap: &crate::seat::Snapshot) -> Option<(String, String)> {
+    snap.transcript.iter().find_map(|entry| match &entry.kind {
+        EntryKind::Streaming { thinking, text } => Some((thinking.clone(), text.clone())),
+        _ => None,
+    })
+}
 
 /// A rest short enough that a pass and a live tick both fit inside a test.
 const QUICK: Duration = Duration::from_millis(300);
@@ -48,22 +61,26 @@ fn a_writing_conversation_streams_its_tail_between_passes() {
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
-    let snap = settle(&mut model, &|s| s.live.is_some());
-    let live = snap.live.unwrap_or_default();
-    assert_eq!(live.text.as_deref(), Some("then this"));
-    assert_eq!(live.thinking.as_deref(), Some("first I"));
-    assert!(!live.is_empty());
+    let snap = settle(&mut model, &|s| {
+        tail(s).is_some_and(|(_, text)| text == "then this")
+    });
+    let (thinking, text) = tail(&snap).unwrap_or_default();
+    assert_eq!(text, "then this");
+    assert_eq!(thinking, "first I");
+    // One tail, never two: the lane replaced the read's own rather than
+    // painting beside it (bl-e3d1).
+    assert_eq!(
+        snap.transcript
+            .iter()
+            .filter(|e| matches!(e.kind, EntryKind::Streaming { .. }))
+            .count(),
+        1
+    );
     // The next read replaces rather than appends.
     let snap = settle(&mut model, &|s| {
-        s.live
-            .as_ref()
-            .and_then(|live| live.text.clone())
-            .is_some_and(|text| text.ends_with("and more"))
+        tail(s).is_some_and(|(_, text)| text.ends_with("and more"))
     });
-    assert_eq!(
-        snap.live.unwrap_or_default().text.as_deref(),
-        Some("then this, and more")
-    );
+    assert_eq!(tail(&snap).unwrap_or_default().1, "then this, and more");
 }
 
 /// **The tail goes when the turn does.** A pass that sees the row at rest
@@ -87,11 +104,13 @@ fn a_finished_turn_drops_the_fold_it_was_writing() {
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
-    settle(&mut model, &|s| s.live.is_some());
+    settle(&mut model, &|s| tail(s).is_some());
+    // **The flight-end path** (bl-e3d1): the row states no flight, so no tail
+    // paints — whatever the read still carries.
     let snap = settle(&mut model, &|s| {
-        s.live.is_none() && !s.transcript.is_empty()
+        tail(s).is_none() && !s.transcript.is_empty()
     });
-    assert!(snap.live.is_none());
+    assert!(tail(&snap).is_none());
 }
 
 /// A live read that fails is a sentence, not a stop: the lane is one read at
@@ -119,11 +138,8 @@ fn a_live_read_that_fails_reaches_the_banner_and_the_lane_goes_on() {
         snap.error.as_deref(),
         Some("follow: the engine answered workspaces instead")
     );
-    let snap = settle(&mut model, &|s| s.live.is_some());
-    assert_eq!(
-        snap.live.unwrap_or_default().text.as_deref(),
-        Some("recovered")
-    );
+    let snap = settle(&mut model, &|s| tail(s).is_some());
+    assert_eq!(tail(&snap).unwrap_or_default().1, "recovered");
 }
 
 /// The lane is the focused conversation's: with none focused there is

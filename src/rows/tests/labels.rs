@@ -2,7 +2,9 @@
 //! with the desktop seat, so a drift here is a drift between two clients
 //! painting one record.
 
-use super::{call, delivered, ended, go, model, prefixes, raw, result, streaming, text, thought};
+use super::{
+    SPEAKER, call, delivered, ended, go, model, prefixes, raw, result, streaming, text, thought,
+};
 use crate::rows::{Fold, Role, RowClass, Tone};
 
 #[test]
@@ -134,7 +136,9 @@ fn a_tool_result_states_its_outcome_in_words() {
 #[test]
 fn the_live_tail_is_two_rows_and_an_empty_half_is_none() {
     let both = go(&[streaming("001", "mulling", "the answer so far")]);
-    assert_eq!(prefixes(&both), ["thinking:", "live:"]);
+    // The growing text is the SPEAKER's row, wearing the label its settled
+    // counterpart will wear (bl-e3d1) — never a second speaker called `live`.
+    assert_eq!(prefixes(&both), ["thinking:", &format!("{SPEAKER}:")]);
     assert_eq!(both[0].class, RowClass::Other);
     assert_eq!(both[0].role, None);
     assert_eq!(both[1].class, RowClass::Response);
@@ -145,7 +149,10 @@ fn the_live_tail_is_two_rows_and_an_empty_half_is_none() {
         prefixes(&go(&[streaming("001", "mulling", "")])),
         ["thinking:"]
     );
-    assert_eq!(prefixes(&go(&[streaming("001", "", "words")])), ["live:"]);
+    assert_eq!(
+        prefixes(&go(&[streaming("001", "", "words")])),
+        [format!("{SPEAKER}:")]
+    );
     assert!(go(&[streaming("001", "", "")]).is_empty());
 }
 

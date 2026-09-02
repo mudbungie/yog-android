@@ -129,12 +129,16 @@ impl Standing {
         // A turn that has finished has no tail: the answer arrives as a
         // transcript row, and a fold left standing under it would be the
         // same words twice (bl-4822).
-        if !self.streaming(focus) {
+        let flying = self.streaming(focus);
+        if !flying {
             self.live = None;
         }
         let mut out = self.last.clone();
-        out.live.clone_from(&self.live);
         (out.landed, out.refused) = self.posted;
+        // One tail on the glass, and none at rest (bl-e3d1). The gate is the
+        // row's own flight, so the transcript's tail obeys exactly what the
+        // lane obeys.
+        out.transcript = crate::live::settled(out.transcript, self.live.as_ref(), flying);
         // Painted onto the published snapshot as well as onto `fresh`: a
         // pass that failed republishes last-good rows, and the selectors'
         // offerings are not the pass's to lose (bl-0267).
@@ -245,12 +249,11 @@ impl Standing {
         let mut out = self.last.clone();
         (out.landed, out.refused) = self.posted;
         match read {
-            Ok(stream) => {
-                self.live = Some(stream);
-                out.live.clone_from(&self.live);
-            }
+            Ok(stream) => self.live = Some(stream),
             Err(why) => out.error = Some(why),
         }
+        let flying = self.streaming(focus);
+        out.transcript = crate::live::settled(out.transcript, self.live.as_ref(), flying);
         self.options.paint(focus, &mut out);
         out
     }

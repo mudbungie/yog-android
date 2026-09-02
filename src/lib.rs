@@ -20,6 +20,7 @@ pub mod hello;
 pub mod host;
 pub mod icon;
 pub mod leaf;
+pub mod live;
 pub mod material;
 pub mod outbox;
 pub mod roster;
