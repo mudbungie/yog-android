@@ -18,9 +18,28 @@ impl Shell {
         // default. They are policy; a hand-flipped row is the override set
         // below and dies with the screen. (The heading and the way back are
         // the bar's — `screens.rs` spelled both before this body ran.)
-        ui.horizontal(|ui| {
-            ui.checkbox(&mut self.auto.responses, "talk");
-            ui.checkbox(&mut self.auto.others, "steps");
+        //
+        // **Right-aligned, in a row of their own, and named in the
+        // operator's words** (bl-f165). They sat at the left edge directly
+        // under the bar's back control, one thumb-width from the one gesture
+        // that leaves the screen — and were labelled `talk` and `steps`,
+        // which are this file's words for them and nobody else's. The row is
+        // allocated its own height for the reason every row in this app now
+        // is (bl-193c): a `right_to_left(Center)` layout handed the whole
+        // remaining screen centres its widgets in it, which would paint these
+        // two halfway down the transcript. The 44 is §13.2's floor, spent
+        // here as the minimum interact size so each checkbox is a target
+        // rather than a glyph.
+        ui.scope(|ui| {
+            ui.spacing_mut().interact_size.y = super::mark::TOUCH;
+            ui.allocate_ui_with_layout(
+                egui::vec2(ui.available_width(), super::mark::TOUCH),
+                egui::Layout::right_to_left(egui::Align::Center),
+                |ui| {
+                    ui.checkbox(&mut self.auto.others, "show intermediate steps");
+                    ui.checkbox(&mut self.auto.responses, "show full response");
+                },
+            );
         });
         ui.separator();
         let speaker = super::chat::speaker_of(snap, agent);

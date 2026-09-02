@@ -492,6 +492,17 @@ line. It is ordinary Rust with no egui in it, so all of it sits under the
 row is a **block**, not an entry: a model message that says something and
 then calls two tools is three rows.
 
+**The knobs say what they do, and they sit away from the way out**
+(bl-f165). They are *show full response* and *show intermediate steps* — the
+operator's words for the two classes, not the projection's — right-aligned in
+a row of their own under the bar. Left-aligned they sat a thumb's width from
+the back control, which is the one gesture on that screen that throws away
+where you are; the gap IS the feature. §13.2's touch floor applies to a
+checkbox exactly as to a row: the floor is spent as the row's own height and
+as the minimum interact size inside it, so each knob is a target rather than
+a glyph. Both fit one right-aligned row down to a 320-point display
+(measured: 295 points of controls in 300 of content).
+
 **Expansion is derived, never stored** (the desktop's own rule): a row is
 expanded when `(in-flight OR its class's knob) XOR the operator flipped it`.
 So the override set holds *flips* rather than states, a row that appears
