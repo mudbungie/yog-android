@@ -230,7 +230,7 @@ fn a_fired_conversation_reads_back_with_the_name_the_engine_gave_it() {
 #[test]
 fn the_selector_replies_read_back() {
     let listed = json!({ "ok": true, "kind": "providers",
-                         "rows": [{ "name": "acme", "fact": "credential present",
+                         "rows": [{ "name": "acme", "fact": "credential present", "effort": true, "priority": true,
                                     "blocked": null }] });
     let Reply::Providers(rows) = decode(&listed).unwrap().unwrap() else {
         panic!("not providers")

@@ -1,0 +1,31 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "level": "low",
+      "op": "effort",
+      "role": "worker",
+      "workspace": "ws"
+    },
+    {
+      "level": "medium",
+      "op": "effort",
+      "role": "worker",
+      "workspace": "ws"
+    },
+    {
+      "level": "high",
+      "op": "effort",
+      "role": "worker",
+      "workspace": "ws"
+    },
+    {
+      "level": null,
+      "op": "effort",
+      "role": "worker",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 6,
+  "shape": "effort"
+}

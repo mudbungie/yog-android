@@ -180,10 +180,22 @@
           "verb": "marks"
         },
         {
-          "detail": "Assigns a model to a role for the whole focused workspace: declares the model in litany's global models.yaml if it is not there yet, then rewrites providers.yaml on the workspace's default config lineage. Both halves or neither — a provider row brazen does not have is refused before anything is written. Conversations already running keep the policy they were born on; the next one started here gets this.",
+          "detail": "Assigns a model to a role for the whole focused workspace: one write, into providers.yaml on the workspace's default config lineage, through `litany config`. A provider row brazen does not have, and a row whose dialect cannot carry a yog turn, are each refused before anything is written. It reaches the conversations already running too — a conversation follows its lineage's head at every step boundary, so this governs the one in front of you at its next step, and every other one here, and the next one started.",
           "summary": "give a role this model, on the focused workspace's config lineage",
           "usage": "/model <role> <provider> <model-id>",
           "verb": "model"
+        },
+        {
+          "detail": "Sets the role's effort level in the same providers.yaml assignment `/model` writes, on the same lineage and through the same `litany config` — so it reaches every conversation following that lineage at its next step, with nothing else to press. `off` removes the line, which is the only way to say no level: absent means none requested and the provider's own default governs, so there is no third state to write. Whether a given model honors the level is the wire's fact and is not gated here — a model that declines it says so in the step's own failure, which is where you will read it. Refuses a role this workspace's config does not declare, and any word outside the four.",
+          "summary": "how much reasoning this role's model calls request",
+          "usage": "/effort <role> <low|medium|high|off>",
+          "verb": "effort"
+        },
+        {
+          "detail": "Turns the priority lane on or off for the role's model calls, in the same providers.yaml assignment `/model` writes and reaching running conversations the same way. A checkbox, not a choice of lanes: `off` removes the line, and off is the provider's own default lane — asking for the standard lane outright is a different intent that no setting expresses. Whether the account has a priority lane at all is the wire's fact, caught at the first call under it rather than here. Not every provider takes the request; the provider list says which do. Refuses a role this workspace's config does not declare.",
+          "summary": "ask this role's provider for its priority lane",
+          "usage": "/priority <role> <on|off>",
+          "verb": "priority"
         },
         {
           "detail": "Appends the acknowledgement line every failure-derived alarm reads past, so a failure you have understood and chosen to leave alone stops bannering. A new failure lands after the watermark and banners again.",

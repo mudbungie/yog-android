@@ -70,6 +70,16 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             provider: str_of(o, "provider")?,
         }),
+        "effort" => Gesture::Act(Act::Effort {
+            workspace: str_of(o, "workspace")?,
+            role: str_of(o, "role")?,
+            level: super::pick::level_of(o)?,
+        }),
+        "priority" => Gesture::Act(Act::Priority {
+            workspace: str_of(o, "workspace")?,
+            role: str_of(o, "role")?,
+            on: super::fields::bool_of(o, "on")?,
+        }),
         "model" => Gesture::Act(Act::PickModel {
             workspace: str_of(o, "workspace")?,
             role: str_of(o, "role")?,

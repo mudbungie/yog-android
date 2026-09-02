@@ -112,6 +112,45 @@ pub(super) fn pick(seat: &Seat, focus: &Focus, provider: &str, model: &str) -> R
     }
 }
 
+/// **The two §9.4 tuning gestures** (bl-dfbb): how much reasoning the
+/// worker's model calls request, and whether they ask for the provider's
+/// priority lane. Both are role config the engine switches at the next step,
+/// so they take mid-conversation and neither restarts anything.
+///
+/// One body for the pair because they are one act with two shapes: the
+/// receipt is `applied` either way, and a refusal is the engine's own
+/// sentence in the banner every other refusal uses.
+fn tune(seat: &Seat, tuning: Act) -> Result<(), String> {
+    match seat.answered(&encode(&Gesture::Act(tuning)))? {
+        Reply::Applied => Ok(()),
+        other => Err(kind_err("tune", &other)),
+    }
+}
+
+/// The `effort` gesture for the focused workspace's worker.
+pub(super) fn effort(
+    seat: &Seat,
+    focus: &Focus,
+    level: Option<crate::codec::Effort>,
+) -> Result<(), String> {
+    let act = Act::Effort {
+        workspace: focused(focus)?,
+        role: WORKER.to_owned(),
+        level,
+    };
+    tune(seat, act)
+}
+
+/// The `priority` gesture for the same role.
+pub(super) fn priority(seat: &Seat, focus: &Focus, on: bool) -> Result<(), String> {
+    let act = Act::Priority {
+        workspace: focused(focus)?,
+        role: WORKER.to_owned(),
+        on,
+    };
+    tune(seat, act)
+}
+
 /// The one role a phone assigns. Named here because it is this seat's whole
 /// answer to the wire's free `role` token (DESIGN §13.2's controls row).
 const WORKER: &str = "worker";

@@ -1,5 +1,5 @@
 {
-  "protocol": 5,
+  "protocol": 6,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -538,13 +538,15 @@
         "/ok:bool",
         "/rows/[]/blocked:null",
         "/rows/[]/blocked:string",
+        "/rows/[]/effort:bool",
         "/rows/[]/fact:string",
         "/rows/[]/name:string",
+        "/rows/[]/priority:bool",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 6
     },
     "reply/rail": {
       "signature": [
@@ -1091,6 +1093,17 @@
       ],
       "since": 1
     },
+    "request/effort": {
+      "signature": [
+        "/level:null",
+        "/level:string",
+        "/op:string",
+        "/role:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 6
+    },
     "request/enroll": {
       "signature": [
         "/grade:string",
@@ -1310,6 +1323,16 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/priority": {
+      "signature": [
+        "/on:bool",
+        "/op:string",
+        "/role:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 6
     },
     "request/prompt": {
       "signature": [

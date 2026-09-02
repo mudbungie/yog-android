@@ -1,19 +1,18 @@
-//! The model's two halves: the handle the frame holds, and the worker loop
-//! that owns the wire. A gesture is a command down one channel; the answer
-//! is the next snapshot up the other. Every command wakes the worker
-//! immediately and every pass through the loop publishes exactly one
-//! snapshot, so the cadence bounds staleness, never responsiveness.
+//! **The handle the frame holds**: the commands it can send and the snapshot
+//! it reads back. A gesture is a command down one channel; the answer is the
+//! next snapshot up the other, and every command wakes the worker
+//! immediately — so the cadence bounds staleness, never responsiveness.
 //!
-//! What one pass IS — the standing questions, the acts, and what survives a
-//! failed pass — is `seat::pass`, split out when the grace gave a pass state
-//! of its own to carry (bl-3202).
+//! The loop that spends them is `seat::worker`, split out when the tuning
+//! pair's two commands took this file to the 300 wall (bl-dfbb); what one
+//! PASS is — the standing questions and what survives a failed one — is
+//! `seat::pass` (bl-3202), and the acts it posts are `seat::acts`.
 
 use std::path::PathBuf;
 use std::sync::mpsc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
-use super::pass::Standing;
-use super::{Focus, Snapshot};
+use super::Snapshot;
 use crate::transport::Seat;
 
 /// The frame's handle. Dropping it stops the worker and joins it.
@@ -24,7 +23,7 @@ pub struct Model {
     worker: Option<std::thread::JoinHandle<()>>,
 }
 
-enum Cmd {
+pub(super) enum Cmd {
     Workspace(Option<String>),
     Conversation(String, String),
     Deposit(String),
@@ -37,6 +36,10 @@ enum Cmd {
     Models(String),
     /// Assign the worker role's provider and model, stated whole.
     Pick(String, String),
+    /// Set the worker's reasoning level, or remove it (`None` is off).
+    Effort(Option<crate::codec::Effort>),
+    /// Ask the worker's provider for its priority lane, or stop asking.
+    Priority(bool),
     /// Stop the focused conversation's turn, optionally its subtree with it.
     StopTurn(bool),
     /// Re-prompt the focused conversation from where it stands.
@@ -70,8 +73,9 @@ impl Model {
         let last = kept.clone().map(|(_, snap, _)| snap).unwrap_or_default();
         let (cmds, cmd_rx) = mpsc::channel();
         let (snap_tx, snaps) = mpsc::channel();
-        let worker =
-            std::thread::spawn(move || run(&seat, cadence, &cache, kept, &cmd_rx, &snap_tx));
+        let worker = std::thread::spawn(move || {
+            super::worker::run(&seat, cadence, &cache, kept, &cmd_rx, &snap_tx);
+        });
         Self {
             cmds,
             snaps,
@@ -127,6 +131,19 @@ impl Model {
         let _ = self.cmds.send(Cmd::Pick(provider, model));
     }
 
+    /// **Set the worker's reasoning level** (REMOTE §9.4, bl-dfbb) — how
+    /// much reasoning its model calls request. `None` is off, which is the
+    /// absence of a level rather than a fourth one. It takes at the next
+    /// step, so it is a mid-conversation act like the model pick.
+    pub fn set_effort(&self, level: Option<crate::codec::Effort>) {
+        let _ = self.cmds.send(Cmd::Effort(level));
+    }
+
+    /// **Ask the worker's provider for its priority lane**, or stop asking.
+    pub fn set_priority(&self, on: bool) {
+        let _ = self.cmds.send(Cmd::Priority(on));
+    }
+
     /// **Stop the focused conversation's in-flight turn** (bl-48fa), and its
     /// subtree with it when `children`. It is the wire's `stop` op — this
     /// seat never deposits a slash line for it, because a deposit is content
@@ -160,130 +177,3 @@ impl Drop for Model {
         }
     }
 }
-
-fn run(
-    seat: &Seat,
-    cadence: Duration,
-    cache: &std::path::Path,
-    kept: Option<(Focus, Snapshot, super::options::Options)>,
-    cmds: &mpsc::Receiver<Cmd>,
-    out: &mpsc::Sender<Snapshot>,
-) {
-    let (mut focus, mut standing) = match kept {
-        // The selectors' offerings come back with the rows (bl-0267): the
-        // file holds them under the workspace they were read for, so a
-        // resumed seat opens its selectors instantly and offline.
-        Some((focus, snap, options)) => (focus, Standing::resumed(snap, options)),
-        None => (Focus::default(), Standing::default()),
-    };
-    let mut note = None;
-    loop {
-        // An undeliverable snapshot is not a stop signal: `Model::drop` sends
-        // `Stop` before the receiver can go away (join precedes field drop),
-        // so shutdown always arrives as a command, never as a dead channel.
-        let _ = out.send(standing.pass(seat, cache, &focus, note.take()));
-        match wait(seat, cmds, cadence, &mut standing, &focus, out) {
-            Ok(Cmd::Workspace(workspace)) => {
-                focus = Focus {
-                    workspace,
-                    agent: None,
-                }
-            }
-            Ok(Cmd::Conversation(workspace, agent)) => {
-                focus = Focus {
-                    workspace: Some(workspace),
-                    agent: Some(agent),
-                };
-            }
-            Ok(Cmd::Deposit(content)) => {
-                // The receipt is counted as well as reported: the composer's
-                // echo has no other way to know its message landed (bl-66fb).
-                let posted = super::acts::deposit(seat, &focus, content);
-                standing.posted(posted.is_ok());
-                note = posted.err();
-            }
-            // The three selector gestures. A read's answer is learned as the
-            // engine's own envelope (bl-0267); a failure is a sentence for
-            // the banner exactly as an act's is.
-            Ok(Cmd::Providers) => {
-                note = learned(super::acts::providers(seat, &focus), None, &mut standing);
-            }
-            Ok(Cmd::Models(provider)) => {
-                let listed = super::acts::models(seat, &focus, &provider);
-                note = learned(listed, Some(provider), &mut standing);
-            }
-            Ok(Cmd::StopTurn(children)) => {
-                note = super::acts::stop(seat, &focus, children).err();
-            }
-            Ok(Cmd::Nudge) => note = super::acts::nudge(seat, &focus).err(),
-            Ok(Cmd::Pick(provider, model)) => {
-                note = super::acts::pick(seat, &focus, &provider, &model).err();
-            }
-            Ok(Cmd::Start(goal)) => note = super::acts::started(seat, &focus, goal).err(),
-            Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
-            Err(mpsc::RecvTimeoutError::Timeout) => {}
-        }
-    }
-}
-
-/// Fold one selector read into the standing options, or hand back the
-/// sentence it failed with. One body for both reads, because the only
-/// difference between them is which slot the envelope lands in.
-fn learned(
-    read: Result<(String, serde_json::Value), String>,
-    provider: Option<String>,
-    standing: &mut Standing,
-) -> Option<String> {
-    match read {
-        Ok((workspace, envelope)) => {
-            standing
-                .options
-                .learned(&workspace, provider.as_deref(), envelope);
-            None
-        }
-        Err(why) => Some(why),
-    }
-}
-
-/// **How long between passes — and what happens inside that wait** (bl-4822).
-///
-/// The world is re-read at the model's own cadence and nothing about that
-/// changed. What changed is that a conversation which is WRITING is asked for
-/// its tail on a quicker rest while the wait runs: `follow` one shot at a
-/// time (REMOTE §5.5), published as it lands, so arriving text appears four
-/// times a rest instead of once a cadence. Each tick costs one small read of
-/// the answer so far rather than a whole transcript, which is the difference
-/// between smoothing the arrival and paying the amplification the lane was
-/// built to remove (upstream measured 20x, quadratic in the answer's length).
-///
-/// It hands back exactly what `recv_timeout` hands back, so the loop above
-/// reads the same three outcomes it always did.
-fn wait(
-    seat: &Seat,
-    cmds: &mpsc::Receiver<Cmd>,
-    cadence: Duration,
-    standing: &mut Standing,
-    focus: &Focus,
-    out: &mpsc::Sender<Snapshot>,
-) -> Result<Cmd, mpsc::RecvTimeoutError> {
-    let deadline = Instant::now() + cadence;
-    loop {
-        let left = deadline.saturating_duration_since(Instant::now());
-        if left.is_zero() || !standing.streaming(focus) {
-            // Not writing, or the cadence is up: the caller's own pass is the
-            // next thing that should happen.
-            return cmds.recv_timeout(left);
-        }
-        match cmds.recv_timeout(LIVE_REST.min(left)) {
-            Err(mpsc::RecvTimeoutError::Timeout) => {
-                let _ = out.send(standing.living(seat, focus));
-            }
-            other => return other,
-        }
-    }
-}
-
-/// How long between reads of an answer being written. Short enough that text
-/// arrives in pieces an eye can follow, long enough that a phone's radio is
-/// not held awake for a paragraph.
-const LIVE_REST: Duration = Duration::from_millis(500);

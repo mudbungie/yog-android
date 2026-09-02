@@ -49,7 +49,7 @@ fn with_options() -> Envelopes {
     Envelopes {
         options_workspace: Some("home".to_owned()),
         providers: Some(json!({ "kind": "providers", "ok": true,
-                                "rows": [{ "name": "acme", "fact": "credential present",
+                                "rows": [{ "name": "acme", "fact": "credential present", "effort": true, "priority": true,
                                            "blocked": null }] })),
         models: [(
             "acme".to_owned(),

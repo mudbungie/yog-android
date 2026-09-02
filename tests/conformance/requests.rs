@@ -42,6 +42,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("deliver", Refuses(ACT)),
     ("disarm", Refuses(ACT)),
     ("disband", Refuses(ACT)),
+    ("effort", Reads),
     ("enroll", Refuses(NOT_THE_MINTER)),
     ("fan", Refuses(ACT)),
     ("files", Refuses(READ)),
@@ -69,6 +70,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
             reason: BARE_RUNG,
         },
     ),
+    ("priority", Reads),
     (
         "prompt",
         Partial {

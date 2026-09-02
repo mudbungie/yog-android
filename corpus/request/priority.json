@@ -1,0 +1,19 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "on": true,
+      "op": "priority",
+      "role": "compactor",
+      "workspace": "ws"
+    },
+    {
+      "on": false,
+      "op": "priority",
+      "role": "compactor",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 6,
+  "shape": "priority"
+}

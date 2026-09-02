@@ -59,6 +59,7 @@ pub(crate) mod acts;
 mod model;
 mod options;
 mod pass;
+mod worker;
 
 pub use model::Model;
 

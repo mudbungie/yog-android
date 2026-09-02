@@ -113,26 +113,30 @@ answers `{"kind": "started"}`, which this client had no arm for, so the one
 gesture that makes a conversation reported a failure over a conversation that
 was in fact running.
 
-**The wire is at PROTOCOL 2 (yog bl-77be), and this seat speaks it (bl-8553).**
-The number lives in `src/hello.rs` and in `corpus/shapes.json`, and the
-conformance suite asserts they are the same — so a corpus vendored from a yog
-that has moved on, and a preface bumped without re-vendoring, are each a red
-test rather than a skew discovered on a handshake. Three meanings moved, and
-they are not the same kind of move:
+**The number lives in two files and the suite asserts they agree**
+(bl-8553): `src/hello.rs` and `corpus/shapes.json`. So a corpus vendored from
+a yog that has moved on, and a preface bumped without re-vendoring, are each a
+red test rather than a skew discovered on a handshake. **What the standing
+number IS is `hello::PROTOCOL`'s own changelog and is not restated here** —
+this paragraph carried the integer once and it went stale across four bumps
+while every sentence around it stayed true.
 
-- **Two the ledger caught**, which is why there is a version 2 at all: REMOTE
-  §5.1's advertised element gained an optional `subject_cwd`, and §5.3's
-  invocation gained an optional `cwd` — the two halves of the worktree lane.
-  Both are spelled in `src/codec/tools.rs`, because `request/advertise`
-  round-trips and `reply/invocations` reads; a field this codec did not carry
-  would be one dropped on the way out. What this device *does* about them is
-  §6's, not the codec's.
-- **One the ledger could not see**, and it is the hazard worth naming: REMOTE
-  §5.5 made the follow lane's frame an **append** — *"absorb every frame of a
-  read, in order, onto an empty fold"* — under a wire spelling that did not
-  change. A signature ledger records field paths and types, so nothing forced a
-  bump and no fixture can fail. A client of that lane must read the section
-  rather than re-vendor the fixtures and call it consumed.
+Two kinds of move stand behind it, and only one of them is mechanical:
+
+- **The ledger catches a signature.** A field gained or withdrawn moves a
+  shape's `since` and the drift check refuses it at the standing version —
+  which is what forced 2 (the worktree lane's `subject_cwd`/`cwd`), 3 and 4
+  (the roster's `failure`, the queue's `flag`), 5 (`reply/governing`'s
+  rewrite) and 6 (the tuning pair and the providers row's capability
+  booleans). A field this codec did not carry would be one dropped on the way
+  out, which is what the request round trip is for.
+- **The ledger cannot see a meaning.** REMOTE §5.5 made the follow lane's
+  frame an **append** — *"absorb every frame of a read, in order, onto an
+  empty fold"* — under a wire spelling that did not change. A signature ledger
+  records field paths and types, so nothing forced a bump and no fixture can
+  fail. A client of that lane must read the section rather than re-vendor the
+  fixtures and call it consumed (§7 — this seat reads it one shot at a time,
+  where the fold is assignment).
 
 ## 3. The stack ruling
 
@@ -258,7 +262,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
-| `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
+| `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
+| `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the live tick inside it | landed (bl-dfbb, out of `model.rs`) |
 | `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
 | `src/seat/acts.rs` | the two acts the seat posts: the message deposit and the §8.1 start pair | landed (bl-de96, out of `pass.rs`) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
@@ -1145,6 +1150,29 @@ here is a defect.
   the row's own height and as the minimum interact size inside it. One row
   owns every conversation-level act, so a new one is an entry here rather
   than a new place to look.
+- **The tuning pair rides a second band, and only when the provider will
+  take it** (REMOTE §9.4, bl-dfbb). *Effort* is how much reasoning the
+  worker's model calls request (`low`/`medium`/`high`/`off`, a closed
+  vocabulary no wire read backs — `off` is the absence of a level carried as
+  a real null, not a fourth word); *priority* asks the provider's priority
+  lane, a toggle rather than a tri-state because asking for the STANDARD lane
+  is a different intent no config key expresses. Both act on the worker role
+  at the next step, so they take mid-conversation like the model pick, and
+  both are **shown only when the selected provider's own row states the
+  capability** — the widened `reply/providers` carries `effort` and
+  `priority` booleans, and reading them is the same discipline the greyed
+  credential fact keeps: the engine states it, this seat never derives it
+  (§8). The gate is answered in covered code (`codec::pick::tunable`), not in
+  the paint.
+
+  They are a **second band** under the first rather than more controls in it,
+  for a measured reason: three selectors and a toggle beside the conversation
+  acts leave a model selector too narrow to read a model name in at a
+  320-point width, and egui's own wrapping layout does not answer it — a
+  `ComboBox` does not declare its width to the wrap check, so it overflows
+  the column instead of moving down (measured: 418 points in a 390-point
+  column). One block under the composer, two rows when there is something in
+  the second: that is still one place to look.
 - **Tap is the act, and a control shows only what this device did.** Nothing
   in the row holds a draft: picking a model IS the assignment, and an engine
   that refuses one says so in the same banner every other refusal uses. What
@@ -1256,7 +1284,9 @@ CONTENT, and content wakes the driver it meant to kill), and **the nudge**
 offered while the row states no flight; it deposits nothing, so a poked
 conversation carries no line saying it was poked), and **the roster's
 timestamps and failure clauses** (landed bl-e837 — REMOTE §9.9 and §9.10 put
-both on the row, so the ask became a re-vendor).
+both on the row, so the ask became a re-vendor), and **the effort/priority
+tuning pair** (landed bl-dfbb — REMOTE §9.4 minted the two gestures and
+widened the providers row with the capability each provider will take).
 **Upstream asks** (the wire does not carry the fact; a ball on the server's
 board, not a shim here): conversation search; push notifications (the engine
 dials nothing, so a channel is a REMOTE design act, not an app feature).

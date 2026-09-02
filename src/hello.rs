@@ -45,16 +45,19 @@ use crate::frame;
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
-/// **5 since the re-vendor of bl-a433.** Four moves stand behind it and the
-/// last three are why an old build must not be left running: 2 was the
+/// **6 since the re-vendor of bl-dfbb.** Five moves stand behind it and the
+/// last four are why an old build must not be left running: 2 was the
 /// tool-host pair (`subject_cwd` on an advertised element, `cwd` on an
 /// invocation — REMOTE §5.1, §5.3); **3** put `failure` on the conversation
 /// row, the agent answer and the queue row (§9.10); **4** put `flag` on the
 /// queue row (§9.11); **5** rewrote `reply/governing` — `branch` out,
 /// `follows` and `diverged_lineages` in, and `oid` now naming the followed
 /// lineage's head rather than the fork commit an agent's branch left (§9.12,
-/// litany's follow-the-tip ruling reaching the wire). `last_active_unix`
-/// rode in at 2 with §9.9.
+/// litany's follow-the-tip ruling reaching the wire); and **6** minted the
+/// §9.4 tuning pair — `effort` and `priority`, two request shapes that are
+/// new at 6 — and widened `reply/providers`, whose rows now state per
+/// provider whether either can be asked for at all. `last_active_unix` rode
+/// in at 2 with §9.9.
 ///
 /// **A move in a shape this codec does not spell still moves this number,
 /// and that is the point.** `governing` is a recorded refusal here (it is
@@ -76,7 +79,7 @@ use crate::frame;
 /// that lane must read the section and not only re-vendor the fixtures
 /// (DESIGN §7 — this seat reads the lane one shot at a time, where the fold
 /// is assignment).
-pub const PROTOCOL: u32 = 5;
+pub const PROTOCOL: u32 = 6;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

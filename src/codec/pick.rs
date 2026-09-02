@@ -22,7 +22,7 @@
 
 use serde_json::{Map, Value, json};
 
-use super::fields::{opt, str_of};
+use super::fields::{bool_of, opt, str_of};
 
 /// One provider as the engine lists it — the name it is picked by, and the
 /// two facts a surface may state about it.
@@ -34,6 +34,81 @@ pub struct ProviderRow {
     pub fact: String,
     /// Why it cannot be used, when something does — a real null otherwise.
     pub blocked: Option<String>,
+    /// **Whether this provider can be asked for a reasoning level** (REMOTE
+    /// §9.4's tuning pair, bl-dfbb). The capability is the engine's to state
+    /// per provider and this seat never derives it: a control shown for a
+    /// provider that cannot take the setting is a control that earns a
+    /// refusal, and §8's rule is that a client re-deriving world state is
+    /// inventing it.
+    pub effort: bool,
+    /// Whether it can be asked for its priority lane.
+    pub priority: bool,
+}
+
+/// **A reasoning level**, in the three words the wire, the config and the
+/// slash line all spell it with. `off` is not a fourth word here for the
+/// reason it is not one upstream: it is the ABSENCE of a level, carried as a
+/// real null, so the vocabulary has three members and the option type says
+/// the rest.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Effort {
+    Low,
+    Medium,
+    High,
+}
+
+/// The four choices a seat offers, `off` last — the vocabulary is closed and
+/// fixed, so it is stated here rather than read from a wire that carries no
+/// listing of it.
+pub const LEVELS: [Option<Effort>; 4] = [
+    Some(Effort::Low),
+    Some(Effort::Medium),
+    Some(Effort::High),
+    None,
+];
+
+impl Effort {
+    /// The word this level is written as, on the wire and on the glass.
+    pub fn as_str(&self) -> String {
+        match self {
+            Self::Low => "low",
+            Self::Medium => "medium",
+            Self::High => "high",
+        }
+        .to_owned()
+    }
+
+    /// One level word read back, or `None` for anything else — including
+    /// `off`, which is not a level but the absence of one and rides as a
+    /// real null.
+    pub fn parse(word: &str) -> Option<Self> {
+        match word {
+            "low" => Some(Self::Low),
+            "medium" => Some(Self::Medium),
+            "high" => Some(Self::High),
+            _ => None,
+        }
+    }
+
+    /// What a chooser shows for a level or its absence.
+    pub fn label(level: Option<Self>) -> String {
+        level.map_or_else(|| "off".to_owned(), |level| level.as_str())
+    }
+}
+
+/// **What the selected provider will take** (bl-dfbb): the two capability
+/// booleans off the row the engine listed, and both false for a provider
+/// this seat has not picked or does not know. It is a read of the wire's own
+/// row and never a guess — the same fact `blocked` greying spends, asked a
+/// different way — and it lives here rather than in the paint because the
+/// paint is not under the coverage floor.
+pub fn tunable(rows: &[ProviderRow], provider: Option<&str>) -> (bool, bool) {
+    let Some(provider) = provider else {
+        return (false, false);
+    };
+    rows.iter()
+        .find(|row| row.name == provider)
+        .map_or((false, false), |row| (row.effort, row.priority))
 }
 
 /// The role a pick assigns. The wire takes a free token; this seat spends
@@ -46,6 +121,8 @@ pub(crate) fn row(v: &Value) -> Result<ProviderRow, String> {
         name: str_of(o, "name")?,
         fact: str_of(o, "fact")?,
         blocked: opt(o, "blocked", str_of)?,
+        effort: bool_of(o, "effort")?,
+        priority: bool_of(o, "priority")?,
     })
 }
 
@@ -59,6 +136,32 @@ pub(crate) fn names(o: &Map<String, Value>) -> Result<Vec<String>, String> {
                 .ok_or_else(|| "models: non-string row".to_owned())
         })
         .collect()
+}
+
+/// `{"op":"effort", …}` — the level, or a real null for off. The key is
+/// written always: a peer that omits it has said the one thing an absent
+/// optional can honestly mean, which is the same thing null says.
+pub(crate) fn encode_effort(workspace: &str, role: &str, level: Option<Effort>) -> Value {
+    json!({ "op": "effort", "workspace": workspace, "role": role,
+            "level": level.map(|level| level.as_str()) })
+}
+
+/// `{"op":"priority", …}` — a checkbox and not a tri-state: off removes the
+/// line, because asking for the *standard* lane is a different intent that no
+/// config key expresses (REMOTE §9.4).
+pub(crate) fn encode_priority(workspace: &str, role: &str, on: bool) -> Value {
+    json!({ "op": "priority", "workspace": workspace, "role": role, "on": on })
+}
+
+/// One level word off a request envelope, strictly: the vocabulary is closed,
+/// so a word outside it is a codec that has drifted rather than a typo.
+pub(crate) fn level_of(o: &Map<String, Value>) -> Result<Option<Effort>, String> {
+    match opt(o, "level", str_of)? {
+        None => Ok(None),
+        Some(word) => Effort::parse(&word).map(Some).ok_or_else(|| {
+            format!("effort: level must be one of low|medium|high|off, got {word:?}")
+        }),
+    }
 }
 
 /// `{"op":"model", …}` — the pick, stated whole.

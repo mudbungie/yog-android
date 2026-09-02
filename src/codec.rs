@@ -30,7 +30,7 @@ mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use follow::Stream;
-pub use pick::ProviderRow;
+pub use pick::{Effort, ProviderRow};
 pub use request::decode;
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
@@ -77,6 +77,22 @@ pub enum Act {
     /// message — nothing is added to the transcript — it is a detached
     /// `litany advance`, so it says nothing and asks the driver to go on.
     Nudge { workspace: String, agent: String },
+    /// **Set a role's reasoning level** (REMOTE §9.4, bl-dfbb) — how much
+    /// reasoning its model calls request. `None` is `off`: the absence of a
+    /// level rather than a fourth level, which is what the engine reads.
+    Effort {
+        workspace: String,
+        role: String,
+        level: Option<Effort>,
+    },
+    /// **Ask a role's provider for its priority lane**, or stop asking. A
+    /// checkbox and not a tri-state: `off` removes the line, because asking
+    /// for the standard lane is a different intent no config key expresses.
+    Priority {
+        workspace: String,
+        role: String,
+        on: bool,
+    },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather
@@ -158,6 +174,16 @@ pub fn encode(gesture: &Gesture) -> Value {
         Gesture::Act(Act::Nudge { workspace, agent }) => {
             json!({ "op": "nudge", "workspace": workspace, "agent": agent })
         }
+        Gesture::Act(Act::Effort {
+            workspace,
+            role,
+            level,
+        }) => pick::encode_effort(workspace, role, *level),
+        Gesture::Act(Act::Priority {
+            workspace,
+            role,
+            on,
+        }) => pick::encode_priority(workspace, role, *on),
         Gesture::Act(Act::PickModel {
             workspace,
             role,

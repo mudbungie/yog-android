@@ -23,6 +23,21 @@ use eframe::egui;
 use super::app::Shell;
 use crate::seat::Snapshot;
 
+/// The effort selector's width class. Narrower than a provider or a model
+/// selector because its whole vocabulary is four short words.
+const EFFORT: f32 = 76.0;
+
+/// One row of controls, given its own height for the reason every row in this
+/// app is (bl-193c): a `left_to_right(Center)` layout handed the rest of the
+/// screen centres its widgets in it.
+fn band(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
+    ui.allocate_ui_with_layout(
+        egui::vec2(ui.available_width(), super::mark::TOUCH),
+        egui::Layout::left_to_right(egui::Align::Center),
+        add,
+    );
+}
+
 impl Shell {
     /// The row. Painted only where a workspace is focused, because every
     /// control in it acts on one.
@@ -37,23 +52,85 @@ impl Shell {
             self.picked_in = Some(workspace);
             self.provider = None;
             self.model = None;
+            self.effort = None;
+            self.priority = false;
         }
+        // **What the picked provider will take** (bl-dfbb), read off its own
+        // row in covered code: the paint asks, it never derives.
+        let (effort, priority) =
+            crate::codec::pick::tunable(&snap.providers, self.provider.as_deref());
         ui.scope(|ui| {
             ui.spacing_mut().interact_size.y = super::mark::TOUCH;
-            ui.allocate_ui_with_layout(
-                egui::vec2(ui.available_width(), super::mark::TOUCH),
-                egui::Layout::left_to_right(egui::Align::Center),
-                |ui| {
-                    // The stop controls first: they are the acts an operator
-                    // reaches for while something is running, and they are
-                    // only there while it is (bl-48fa).
-                    self.stops(ui, snap);
-                    let wide = (ui.available_width() - ui.spacing().item_spacing.x) / 2.0;
-                    self.providers(ui, snap, wide);
-                    self.models(ui, snap, wide);
-                },
-            );
+            band(ui, |ui| {
+                // The stop controls first: they are the acts an operator
+                // reaches for while something is running, and they are
+                // only there while it is (bl-48fa).
+                self.stops(ui, snap);
+                let wide = (ui.available_width() - ui.spacing().item_spacing.x) / 2.0;
+                self.providers(ui, snap, wide);
+                self.models(ui, snap, wide);
+            });
+            // **A second band, and only when there is something in it.** The
+            // tuning controls cannot share the first: a selector narrow
+            // enough to fit beside two others at a 320-point width is one an
+            // operator cannot read a model name in (measured). egui's own
+            // wrapping layout does not answer this — a `ComboBox` does not
+            // declare its width to the wrap check, so it overflows the edge
+            // instead of moving down (measured: 418 points in a 390-point
+            // column) — so the second row is allocated rather than wrapped
+            // into. It is the same controls block under the composer, not a
+            // new place to look (§13.2).
+            if effort || priority {
+                band(ui, |ui| {
+                    if effort {
+                        self.effort(ui);
+                    }
+                    if priority {
+                        self.priority(ui);
+                    }
+                });
+            }
         });
+    }
+
+    /// **The effort selector** (REMOTE §9.4): how much reasoning the worker's
+    /// model calls request. The vocabulary is closed and no wire read backs
+    /// it, so the options are the codec's own constant; `off` is one of them
+    /// and rides as the real null the engine reads.
+    fn effort(&mut self, ui: &mut egui::Ui) {
+        let shown = self.effort.clone().unwrap_or_else(|| "effort".to_owned());
+        let mut picked = None;
+        egui::ComboBox::from_id_salt("effort")
+            .selected_text(shown)
+            .width(EFFORT)
+            .show_ui(ui, |ui| {
+                for level in crate::codec::pick::LEVELS {
+                    let label = crate::codec::Effort::label(level);
+                    if ui.selectable_label(false, &label).clicked() {
+                        picked = Some((level, label));
+                    }
+                }
+            });
+        if let Some((level, label)) = picked {
+            self.effort = Some(label);
+            if let Some(model) = self.model() {
+                model.set_effort(level);
+            }
+        }
+    }
+
+    /// **The priority toggle**: ask the provider's priority lane for this
+    /// role's calls, or stop asking. A toggle and not a tri-state — `off`
+    /// removes the line, and asking for the *standard* lane is a different
+    /// intent no config key expresses (REMOTE §9.4).
+    fn priority(&mut self, ui: &mut egui::Ui) {
+        let mut on = self.priority;
+        if ui.toggle_value(&mut on, "priority").clicked() {
+            self.priority = on;
+            if let Some(model) = self.model() {
+                model.set_priority(on);
+            }
+        }
     }
 
     /// **The stop controls** (REMOTE §3.1, bl-48fa): shown by the gates the

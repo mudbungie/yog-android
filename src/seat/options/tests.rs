@@ -7,7 +7,7 @@ use serde_json::json;
 
 fn providers() -> serde_json::Value {
     json!({ "kind": "providers", "ok": true,
-            "rows": [{ "name": "acme", "fact": "credential present", "blocked": null }] })
+            "rows": [{ "name": "acme", "fact": "credential present", "effort": true, "priority": true, "blocked": null }] })
 }
 
 fn models() -> serde_json::Value {

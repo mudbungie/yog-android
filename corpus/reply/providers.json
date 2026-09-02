@@ -7,17 +7,21 @@
       "rows": [
         {
           "blocked": null,
+          "effort": true,
           "fact": "credential present",
-          "name": "anthropic"
+          "name": "anthropic",
+          "priority": true
         },
         {
           "blocked": "no login flow",
+          "effort": false,
           "fact": "no credential",
-          "name": "openai"
+          "name": "openai",
+          "priority": false
         }
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 6,
   "shape": "providers"
 }

@@ -89,6 +89,14 @@ pub(crate) struct Shell {
     pub(crate) picked_in: Option<String>,
     pub(crate) provider: Option<String>,
     pub(crate) model: Option<String>,
+    /// **The tuning this device set** (bl-dfbb): the effort level's own word
+    /// (`off` included — it is a value, not an absence, once somebody has
+    /// chosen it) and whether the priority lane was asked for. `None` is
+    /// "this device has set none", which is not the same as `off`, and no
+    /// shape on the wire states what the workspace is on — so these two show
+    /// what was SET here and travel with `picked_in`'s reset.
+    pub(crate) effort: Option<String>,
+    pub(crate) priority: bool,
     /// **A platform back press this frame has not yet been taken** (bl-550e).
     /// Read once at the top of the pass and consumed by whatever has a depth
     /// to walk — the bar wherever it paints a back control, the scan screen
@@ -120,6 +128,8 @@ impl Shell {
             picked_in: None,
             provider: None,
             model: None,
+            effort: None,
+            priority: false,
             back: false,
         }
     }
