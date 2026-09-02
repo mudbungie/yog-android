@@ -994,6 +994,20 @@ here is a defect.
   multi-line and declares no action, because GameActivity writes an action
   where the enter key does not read it), which is also what every phone chat
   app does with enter anyway.
+- **The platform's insets are the interface's edges, and they are spent
+  once.** `app::pass` pads the top inset and **shrinks the rect every screen
+  is painted into by the bottom one** (the taller of the keyboard and the
+  gesture-nav bar, §3), so the floor is structural rather than a discipline
+  each screen has to remember: a bottom-up layout anchors to it, a top-down
+  scroller ends at it, and no screen spends an inset of its own. It became a
+  fact rather than a habit the hard way (bl-9cfd) — the composer's field
+  painted under the gesture-nav bar with its send button correctly above it,
+  because a `ScrollArea` will not go below its `min_scrolled_height` however
+  little room it is given, and the 20 points it took by force inherited the
+  row's bottom alignment and landed in the nav bar. Two rules came out of it:
+  the inset is spent in one place, and a widget that cannot fit inside the
+  band it was handed is a widget deciding the layout — say the smaller
+  minimum, do not pad around it.
 - **Touch targets:** every navigation row and action control stands at
   least 44 points tall, full width where it lists — `shell/mark.rs` holds
   the one constant and `screens.rs`'s row helper spends it. In-content

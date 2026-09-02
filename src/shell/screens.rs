@@ -104,11 +104,10 @@ impl Shell {
         ui.separator();
         // The starter rides the BOTTOM of this screen, where the composer
         // sits on the next one: starting a conversation and speaking into one
-        // are the same gesture to a thumb, so they are in the same place.
-        let inset = self.inset.bottom;
-        let ppp = ui.ctx().pixels_per_point();
+        // are the same gesture to a thumb, so they are in the same place. The
+        // bottom of this layout is already the platform's floor — `app::pass`
+        // spends the inset once, for every screen (bl-9cfd).
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            ui.add_space((inset as f32 / ppp).max(8.0));
             self.starter(ui);
             ui.add_space(4.0);
             egui::ScrollArea::vertical().show(ui, |ui| {

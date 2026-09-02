@@ -76,8 +76,17 @@ pub(super) fn composer(ui: &mut egui::Ui, text: &mut String, hint: &str) -> Opti
             // that grew unbounded would push the transcript off the glass.
             // `auto_shrink` off: the scroller fills the band it was sized
             // from, so the field's ink and the row are the same rectangle.
+            // `min_scrolled_height` is the reason the field used to paint
+            // under the gesture-nav bar (bl-9cfd): a vertical `ScrollArea`
+            // refuses to be shorter than 64 points by default, so a 44-point
+            // band was overflowed by 20 — and the overflow inherited this
+            // row's BOTTOM alignment, which put the text at the very bottom
+            // of it, exactly where the nav bar is. The band is the cap and
+            // the floor both; a scroller that will not fit inside what it is
+            // given is a scroller that decides the layout.
             let shown = egui::ScrollArea::vertical()
                 .id_salt(super::app::COMPOSER.id)
+                .min_scrolled_height(0.0)
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
                     ui.add(

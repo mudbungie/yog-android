@@ -26,12 +26,12 @@ impl Shell {
         let speaker = super::chat::speaker_of(snap, agent);
         let painted = rows(&snap.transcript, &speaker, self.auto, &self.folds);
         // Bottom-up: the composer rides above the keyboard (or the gesture-
-        // nav bar), then the transcript takes whatever height remains.
-        let inset = self.inset.bottom;
-        let ppp = ui.ctx().pixels_per_point();
+        // nav bar), then the transcript takes whatever height remains. The
+        // inset itself is not spent here — `app::pass` shrank the rect this
+        // screen is painted into, so the bottom of this layout IS the floor
+        // (bl-9cfd).
         let mut flipped = None;
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            ui.add_space((inset as f32 / ppp).max(8.0));
             if let Some(taken) = super::chat::composer(ui, &mut self.composer, "message")
                 && let Some(model) = self.model()
             {
