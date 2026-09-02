@@ -44,12 +44,48 @@ impl Shell {
                 egui::vec2(ui.available_width(), super::mark::TOUCH),
                 egui::Layout::left_to_right(egui::Align::Center),
                 |ui| {
+                    // The stop controls first: they are the acts an operator
+                    // reaches for while something is running, and they are
+                    // only there while it is (bl-48fa).
+                    self.stops(ui, snap);
                     let wide = (ui.available_width() - ui.spacing().item_spacing.x) / 2.0;
                     self.providers(ui, snap, wide);
                     self.models(ui, snap, wide);
                 },
             );
         });
+    }
+
+    /// **The stop controls** (REMOTE §3.1, bl-48fa): shown by the gates the
+    /// engine puts ON the row, never by a reading taken here — §9.4's rule is
+    /// that a gate which is not derivable from a row goes on the row, and
+    /// both of these are. They are independent: `stoppable` is true iff this
+    /// conversation holds the executor lock, `stop_children` iff some other
+    /// agent's id extends this one — so a quiet root with a working child
+    /// offers *stop all* and no *stop*, which is exactly right and is why
+    /// two gates cross rather than one.
+    ///
+    /// **The gesture is the op.** A deposited `/stop` line is content, and
+    /// content wakes the very driver it meant to kill; the seat model sends
+    /// the wire's own act.
+    fn stops(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
+        let Some(row) = focused_row(snap) else {
+            return;
+        };
+        let (stoppable, children) = (row.stoppable, row.stop_children);
+        if stoppable && ui.button("stop").clicked() {
+            self.stop_turn(false);
+        }
+        if children && ui.button("stop all").clicked() {
+            self.stop_turn(true);
+        }
+    }
+
+    /// Ask the worker to stop the focused turn.
+    fn stop_turn(&self, children: bool) {
+        if let Some(model) = self.model() {
+            model.stop_turn(children);
+        }
     }
 
     /// The provider selector. Its list is the engine's own rows, and a row
@@ -124,4 +160,16 @@ impl Shell {
             model.list_models(provider);
         }
     }
+}
+
+/// The focused conversation's row, which is where every conversation-level
+/// gate rides (REMOTE §9.4). A conversation the list has not caught up with
+/// yet has no row and therefore no gates — the honest reading, and the same
+/// one the roster's own display name falls back through.
+fn focused_row(snap: &Snapshot) -> Option<crate::codec::ConvRow> {
+    let agent = snap.focus.agent.as_deref()?;
+    snap.conversations
+        .iter()
+        .find(|row| row.root_id == agent)
+        .cloned()
 }

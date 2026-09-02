@@ -124,3 +124,30 @@ fn focused(focus: &Focus) -> Result<String, String> {
         .clone()
         .ok_or_else(|| "no workspace is focused".to_owned())
 }
+
+/// **Stop the turn in flight** (REMOTE §3.1, bl-48fa) — the op, and never a
+/// deposited `/stop`: a slash line is content, and content wakes the very
+/// driver it meant to kill. `children` carries the subtree.
+///
+/// The receipt is an `outcome` and its `ok` is litany's own verdict, so a
+/// stop that landed on nothing says so in the operator's banner rather than
+/// being read here as success.
+pub(super) fn stop(seat: &Seat, focus: &Focus, children: bool) -> Result<(), String> {
+    let Focus {
+        workspace: Some(workspace),
+        agent: Some(agent),
+    } = focus.clone()
+    else {
+        return Err("stop: no conversation is focused".to_owned());
+    };
+    let act = Act::Stop {
+        workspace,
+        agent,
+        children,
+    };
+    match seat.answered(&encode(&Gesture::Act(act)))? {
+        Reply::Outcome { ok: true, .. } => Ok(()),
+        Reply::Outcome { stderr, .. } => Err(format!("stop refused: {stderr}")),
+        other => Err(kind_err("stop", &other)),
+    }
+}

@@ -37,6 +37,8 @@ enum Cmd {
     Models(String),
     /// Assign the worker role's provider and model, stated whole.
     Pick(String, String),
+    /// Stop the focused conversation's turn, optionally its subtree with it.
+    StopTurn(bool),
     Stop,
 }
 
@@ -123,6 +125,14 @@ impl Model {
         let _ = self.cmds.send(Cmd::Pick(provider, model));
     }
 
+    /// **Stop the focused conversation's in-flight turn** (bl-48fa), and its
+    /// subtree with it when `children`. It is the wire's `stop` op — this
+    /// seat never deposits a slash line for it, because a deposit is content
+    /// and content starts the driver it was meant to stop.
+    pub fn stop_turn(&self, children: bool) {
+        let _ = self.cmds.send(Cmd::StopTurn(children));
+    }
+
     /// Start a new conversation in the focused workspace with `goal` as its
     /// first instruction. The staging and the firing are one gesture from
     /// here because they are one act to the operator; the engine's two-step
@@ -185,6 +195,9 @@ fn run(
             Ok(Cmd::Models(provider)) => {
                 let listed = super::acts::models(seat, &focus, &provider);
                 note = learned(listed, Some(provider), &mut standing);
+            }
+            Ok(Cmd::StopTurn(children)) => {
+                note = super::acts::stop(seat, &focus, children).err();
             }
             Ok(Cmd::Pick(provider, model)) => {
                 note = super::acts::pick(seat, &focus, &provider, &model).err();

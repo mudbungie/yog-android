@@ -61,6 +61,15 @@ pub enum Act {
     Prepare { workspace: String },
     /// **Fire a staged conversation** with the goal it is being given.
     Prompt { prepared: Prepared, goal: String },
+    /// **Stop an in-flight turn** (REMOTE §3.1, bl-48fa). The gesture is the
+    /// op, never a deposited `/stop` line: a slash line is CONTENT, and
+    /// content wakes the very driver it meant to kill. `children` stops the
+    /// subtree as well as the conversation named.
+    Stop {
+        workspace: String,
+        agent: String,
+        children: bool,
+    },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather
@@ -126,6 +135,12 @@ pub fn encode(gesture: &Gesture) -> Value {
             workspace,
             provider,
         }) => json!({ "op": "models", "workspace": workspace, "provider": provider }),
+        Gesture::Act(Act::Stop {
+            workspace,
+            agent,
+            children,
+        }) => json!({ "op": "stop", "workspace": workspace,
+                      "agent": agent, "children": children }),
         Gesture::Act(Act::PickModel {
             workspace,
             role,
