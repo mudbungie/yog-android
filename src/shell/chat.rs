@@ -174,10 +174,26 @@ pub(crate) fn row(ui: &mut egui::Ui, row: &Row) -> bool {
     if !inline {
         ui.horizontal(|ui| {
             stripe(ui, None);
-            ui.label(&row.body);
+            body(ui, &row.body);
         });
     }
     toggled
+}
+
+/// **An expanded payload, wrapped at the width it actually has** (bl-b62b).
+/// A bare `ui.label` inside a horizontal layout does NOT wrap — egui reads a
+/// non-wrapping horizontal row as *extend*, because a wrapping child there is
+/// ambiguous — so a model's answer ran straight off the glass and was clipped
+/// mid-word by the transcript's scroller: measured at 1017 points of label in
+/// a 400-point display. The row is horizontal for the stripe's sake, so the
+/// wrap has to be asked for, and asking for it is the whole fix: the label
+/// then takes the width left after the stripe and grows downward.
+///
+/// **Prose wraps and never scrolls sideways** (§13.2). A body is text a
+/// person reads; a horizontal scroller under a paragraph is a paragraph
+/// nobody finishes.
+fn body(ui: &mut egui::Ui, text: &str) {
+    ui.add(egui::Label::new(text).wrap());
 }
 
 /// The role stripe, or the blank seat of the same width that keeps every

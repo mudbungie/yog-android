@@ -1055,6 +1055,17 @@ here is a defect.
   viewport whose central 72 is the unit square the walk works in, which puts
   the mark's furthest ink at 64.2 units — inside the 66-unit circle every
   launcher mask keeps.
+- **Wide content: prose wraps, a fenced block scrolls** (bl-b62b). Anything
+  a person reads as text wraps at the width it actually has and never
+  scrolls sideways — a horizontal scroller under a paragraph is a paragraph
+  nobody finishes. The one exception is content whose lines mean something:
+  a code fence, where a wrapped line is a changed line, gets a horizontal
+  scroller of its OWN and the surrounding prose keeps wrapping around it.
+  The trap that made this a rule: a bare label inside a horizontal layout
+  does not wrap in egui — a non-wrapping row reads as *extend* — so an
+  expanded row body ran off the glass and was clipped mid-word (measured:
+  1017 points of label in a 400-point display). A row that lays out
+  horizontally for a stripe or a toggle has to ASK for the wrap.
 - **Touch targets:** every navigation row and action control stands at
   least 44 points tall, full width where it lists — `shell/mark.rs` holds
   the one constant and `screens.rs`'s row helper spends it. In-content
