@@ -85,5 +85,8 @@ fn the_cadence_refreshes_unprompted() {
     // fact under test is only that an UNPROMPTED refresh ran: no command
     // was ever sent, so reaching the error at all took the timeout arm.
     let snap = settle(&mut model, &|s| s.error.is_some());
-    assert!(snap.workspaces.is_empty());
+    // And the roster the engine did give is still under the banner: a failed
+    // pass republishes the last answer rather than blanking the screen
+    // (bl-3202).
+    assert!(!snap.workspaces.is_empty());
 }

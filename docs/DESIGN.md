@@ -242,7 +242,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
-| `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start}.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
+| `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
+| `src/seat/pass.rs` | one pass of that loop: the standing questions, the two acts, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
@@ -1032,6 +1033,21 @@ here is a defect.
   bar; an enrollment refusal paints on the enrollment screen, verbatim from
   the one place the sentence is made. No toast, no dialog — nothing in this
   app is modal except the scan screen, which is a camera.
+- **A failure is not an error until it persists** (bl-3202). Swapping back
+  into the app raced the network coming back: the first refresh after a
+  resume failed on a name lookup and the frame painted a red banner over
+  three emptied lists, for about a second. Both halves of that were one pass
+  discarding what it already had, so both are answered in the model, where
+  there is one clock — the frame renders what it is handed and carries no
+  timer of its own. A failed pass **republishes the last answer the engine
+  gave**, under the focus it was asked at (a moved focus gets the empty lists
+  it honestly has — pairing one focus's rows with another's is the one thing
+  a snapshot promises never to do), and its **sentence waits one pass**: the
+  cadence is the clock, so a second consecutive failure is exactly "it did
+  not clear within one rest". A pass that answers clears the banner at once,
+  because a standing success is never in doubt. **A gesture's own answer
+  never waits** — a refused deposit, a start the engine would not run — since
+  the operator just acted, and silence there is a message that vanished.
 
 ### 13.3 The vocabulary rule
 

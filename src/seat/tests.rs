@@ -61,8 +61,15 @@ pub(super) fn settle(model: &mut Model, pass: &dyn Fn(&Snapshot) -> bool) -> Sna
 }
 
 pub(super) fn ws_reply() -> Vec<u8> {
+    ws_named("home")
+}
+
+/// A roster of one named workspace. Named rather than fixed so a test can
+/// tell one pass's answer from another's — which is how a grace test proves
+/// WHICH pass it is reading (bl-3202).
+pub(super) fn ws_named(workspace: &str) -> Vec<u8> {
     json!({ "ok": true, "kind": "workspaces",
-            "rows": [{ "workspace": "home", "kind": "named", "attention": 0,
+            "rows": [{ "workspace": workspace, "kind": "named", "attention": 0,
                        "agents": 1, "running": false }] })
     .to_string()
     .into_bytes()
@@ -112,5 +119,6 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 }
 
 mod deposit;
+mod grace;
 mod reads;
 mod start;

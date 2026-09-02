@@ -38,6 +38,7 @@ pub struct Focus {
 }
 
 mod model;
+mod pass;
 
 pub use model::Model;
 

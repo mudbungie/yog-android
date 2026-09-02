@@ -3,13 +3,16 @@
 //! is the next snapshot up the other. Every command wakes the worker
 //! immediately and every pass through the loop publishes exactly one
 //! snapshot, so the cadence bounds staleness, never responsiveness.
+//!
+//! What one pass IS — the standing questions, the acts, and what survives a
+//! failed pass — is `seat::pass`, split out when the grace gave a pass state
+//! of its own to carry (bl-3202).
 
 use std::sync::mpsc;
 use std::time::Duration;
 
+use super::pass::Standing;
 use super::{Focus, Snapshot};
-use crate::codec::reply::Reply;
-use crate::codec::{Act, Ask, Gesture, encode};
 use crate::transport::Seat;
 
 /// The frame's handle. Dropping it stops the worker and joins it.
@@ -91,11 +94,12 @@ impl Drop for Model {
 fn run(seat: &Seat, cadence: Duration, cmds: &mpsc::Receiver<Cmd>, out: &mpsc::Sender<Snapshot>) {
     let mut focus = Focus::default();
     let mut note = None;
+    let mut standing = Standing::default();
     loop {
         // An undeliverable snapshot is not a stop signal: `Model::drop` sends
         // `Stop` before the receiver can go away (join precedes field drop),
         // so shutdown always arrives as a command, never as a dead channel.
-        let _ = out.send(refresh(seat, &focus, note.take()));
+        let _ = out.send(standing.pass(seat, &focus, note.take()));
         match cmds.recv_timeout(cadence) {
             Ok(Cmd::Workspace(workspace)) => {
                 focus = Focus {
@@ -109,115 +113,10 @@ fn run(seat: &Seat, cadence: Duration, cmds: &mpsc::Receiver<Cmd>, out: &mpsc::S
                     agent: Some(agent),
                 };
             }
-            Ok(Cmd::Deposit(content)) => note = deposit(seat, &focus, content).err(),
-            Ok(Cmd::Start(goal)) => note = started(seat, &focus, goal).err(),
+            Ok(Cmd::Deposit(content)) => note = super::pass::deposit(seat, &focus, content).err(),
+            Ok(Cmd::Start(goal)) => note = super::pass::started(seat, &focus, goal).err(),
             Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
             Err(mpsc::RecvTimeoutError::Timeout) => {}
         }
     }
-}
-
-/// One refresh pass. `note` is a failure carried in from a deposit; a
-/// refresh failure joins it rather than replacing it — both belong to the
-/// banner this snapshot earns.
-fn refresh(seat: &Seat, focus: &Focus, note: Option<String>) -> Snapshot {
-    let mut snap = Snapshot {
-        focus: focus.clone(),
-        ..Snapshot::default()
-    };
-    let failed = fill(seat, focus, &mut snap).err();
-    snap.error = match (note, failed) {
-        (Some(note), Some(failed)) => Some(format!("{note}; {failed}")),
-        (note, failed) => note.or(failed),
-    };
-    snap
-}
-
-/// The standing questions, as deep as the focus goes. The first failure
-/// stops the walk: an unreachable engine is one sentence, not three.
-fn fill(seat: &Seat, focus: &Focus, snap: &mut Snapshot) -> Result<(), String> {
-    snap.workspaces = match answer(seat, &Ask::Workspaces)? {
-        Reply::Workspaces { rows, .. } => rows,
-        other => return Err(kind_err("workspaces", &other)),
-    };
-    let Some(workspace) = focus.workspace.clone() else {
-        return Ok(());
-    };
-    let ask = Ask::Conversations {
-        workspace: workspace.clone(),
-    };
-    snap.conversations = match answer(seat, &ask)? {
-        Reply::Conversations(rows) => rows,
-        other => return Err(kind_err("conversations", &other)),
-    };
-    let Some(agent) = focus.agent.clone() else {
-        return Ok(());
-    };
-    snap.transcript = match answer(seat, &Ask::Transcript { workspace, agent })? {
-        Reply::Transcript(rows) => rows,
-        other => return Err(kind_err("transcript", &other)),
-    };
-    Ok(())
-}
-
-fn answer(seat: &Seat, ask: &Ask) -> Result<Reply, String> {
-    // The transport's two classes collapse to the sentence here, and rightly:
-    // this model opens a connection per ask, so a broken channel is already
-    // re-dialled by the next pass and there is nothing for it to decide
-    // (bl-8641). The tool host, which holds one channel, is the caller that
-    // reads the class.
-    Ok(seat.answered(&encode(&Gesture::Ask(ask.clone())))?)
-}
-
-/// Post one message. The receipt is an `outcome` whose `ok` is the server's
-/// own verdict; anything else is a sentence for the banner.
-fn deposit(seat: &Seat, focus: &Focus, content: String) -> Result<(), String> {
-    let Focus {
-        workspace: Some(workspace),
-        agent: Some(agent),
-    } = focus.clone()
-    else {
-        return Err("deposit: no conversation is focused".to_owned());
-    };
-    let act = Act::Message {
-        workspace,
-        agent,
-        content,
-    };
-    match seat.answered(&encode(&Gesture::Act(act)))? {
-        Reply::Outcome { ok: true, .. } => Ok(()),
-        Reply::Outcome { stderr, .. } => Err(format!("deposit refused: {stderr}")),
-        other => Err(kind_err("deposit", &other)),
-    }
-}
-
-/// Stage a conversation and fire it — the §8.1 pair, run as one act. Named
-/// for the wire's own word rather than the handle's, which is `Model::start`
-/// for the worker and cannot be this.
-///
-/// The prepared body the engine answers with is carried into the firing
-/// gesture **whole**: it is the engine's own statement about what was staged,
-/// and a client that re-derived any field of it would be inventing world
-/// state it does not own.
-fn started(seat: &Seat, focus: &Focus, goal: String) -> Result<(), String> {
-    let Some(workspace) = focus.workspace.clone() else {
-        return Err("start: no workspace is focused".to_owned());
-    };
-    let staged = match seat.answered(&encode(&Gesture::Act(Act::Prepare { workspace })))? {
-        Reply::Prepared(prepared) => prepared,
-        other => return Err(kind_err("start", &other)),
-    };
-    match seat.answered(&encode(&Gesture::Act(Act::Prompt {
-        prepared: staged,
-        goal,
-    })))? {
-        Reply::Started { .. } | Reply::Outcome { ok: true, .. } => Ok(()),
-        Reply::Outcome { stderr, .. } => Err(format!("start refused: {stderr}")),
-        other => Err(kind_err("start", &other)),
-    }
-}
-
-/// The wrong-kind sentence names the kind, never the rows it carried.
-fn kind_err(asked: &str, got: &Reply) -> String {
-    format!("{asked}: the engine answered {} instead", got.kind())
 }
