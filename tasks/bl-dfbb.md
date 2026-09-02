@@ -1,7 +1,8 @@
 +++
 title = "the controls row gains an effort selector and a priority checkbox, gated by the capability the provider row states"
 created = 1788321310
-updated = 1788321310
+updated = 1788322765
+claimant = "Patch"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
