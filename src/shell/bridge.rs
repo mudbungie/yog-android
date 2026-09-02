@@ -41,9 +41,16 @@ pub(crate) struct Field {
 /// never speculatively.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum FieldKind {
-    /// The chat composer: short-message text with a Send action. (Known
-    /// residual: `GameActivity` writes the action where the enter key does not
-    /// read it, so enter stays a newline until upstream moves — DESIGN §3.)
+    /// The chat composer: multi-line short-message text with **no action**
+    /// (bl-6850). Multi-line is what makes the enter key a newline —
+    /// Android shows a return key instead of an action key for a multi-line
+    /// editor, and an IME that is not told a field is multi-line commits no
+    /// newline into the buffer the mirror adopts, which is why enter was
+    /// inert rather than merely un-sending. No action, because the action
+    /// this field used to declare could not fire: `GameActivity` writes it
+    /// where the enter key does not read it (DESIGN §3's residual), and a
+    /// key promised to do something that cannot happen is worse than a key
+    /// that plainly breaks the line. The send button is THE send (§13.2).
     Composer,
     /// The enrollment screen's envelope: a long machine-written blob carried
     /// here by paste. Autocorrect and sentence capitals would corrupt it, and
@@ -149,7 +156,10 @@ fn editor_info(kind: FieldKind) -> (aa::input::InputType, aa::input::TextInputAc
     let base =
         T::TYPE_CLASS_TEXT | T::TYPE_TEXT_FLAG_CAP_SENTENCES | T::TYPE_TEXT_FLAG_AUTO_CORRECT;
     match kind {
-        FieldKind::Composer => (base | T::TYPE_TEXT_VARIATION_SHORT_MESSAGE, A::Send),
+        FieldKind::Composer => (
+            base | T::TYPE_TEXT_VARIATION_SHORT_MESSAGE | T::TYPE_TEXT_FLAG_MULTI_LINE,
+            A::None,
+        ),
         FieldKind::Envelope => (
             T::TYPE_CLASS_TEXT | T::TYPE_TEXT_FLAG_MULTI_LINE | T::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
             A::None,

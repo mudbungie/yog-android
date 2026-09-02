@@ -185,9 +185,15 @@ per char. Two upstream defects are carried until fixed there (both, plus the
 null-buffer abort, tracked as bl-2958): winit's missing wake arm, and
 games-activity 4.4.0 calling `restartInput()` on every key — which destroys
 the connection Gboard's delete-repeat runs against — shimmed by a ~40-line
-Java OnKeyListener in the Gradle shell. The IME action key (Send) is a known
-residual: GameActivity writes the action where the enter key does not read
-it, so enter stays a newline until upstream moves.
+Java OnKeyListener in the Gradle shell. An IME action key is a known residual:
+GameActivity writes the action where the enter key does not read it, so an
+action declared on a field cannot fire. **No field declares one** (bl-6850):
+the composer is `TYPE_TEXT_FLAG_MULTI_LINE` with `TextInputAction::None`, so
+Android shows a return key rather than an action key and the enter key breaks
+the line, which is what §8 says it does. The flag is load-bearing in both
+halves — an IME not told a field is multi-line commits no newline into the
+editor buffer the mirror adopts, so before it the key was inert rather than
+merely un-sending.
 
 **The input-wake question is ruled (bl-c761): focus-gated fast repaint, no
 vendored winit.** This repo is registry-only with no exception standing, so
@@ -573,8 +579,10 @@ phone can be promised — the IME's action key is the keyboard's to interpret,
 and a message that can be typed but not sent is a chat app that does not
 chat. The composer row pairs the field with a button on both screens (one
 shared helper, `shell::chat::composer`), and since bl-56d6 the field is
-multiline — enter is a newline (the residual made it one anyway, and it is
-what a phone composer does with enter), the field grows to a cap and scrolls
+multiline — enter is a newline because the field is DECLARED multi-line to
+the IME (§3, bl-6850: the flag is what turns the action key into a return
+key, and without it the IME committed no newline at all), which is also what
+a phone composer does with enter — the field grows to a cap and scrolls
 inside it, and the button is the one send.
 
 **The row is allocated its own height, never the screen's remainder**
@@ -962,9 +970,10 @@ here is a defect.
 - **The composer is one shared row** at two depths (§8): a multiline field
   that grows to a cap and scrolls inside it, beside a send button that is
   THE send. The platform residual makes this the only honest shape: the
-  IME's enter key stays a newline on this stack (§3 — GameActivity writes
-  the Send action where the enter key does not read it), which is also what
-  every phone chat app does with enter anyway.
+  IME's enter key is a newline on this stack (§3 — the field is declared
+  multi-line and declares no action, because GameActivity writes an action
+  where the enter key does not read it), which is also what every phone chat
+  app does with enter anyway.
 - **Touch targets:** every navigation row and action control stands at
   least 44 points tall, full width where it lists — `shell/mark.rs` holds
   the one constant and `screens.rs`'s row helper spends it. In-content
