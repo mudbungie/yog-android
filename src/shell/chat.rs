@@ -65,7 +65,7 @@ pub(crate) fn row(ui: &mut egui::Ui, row: &Row) -> bool {
     if let Some(role) = row.role {
         ui.horizontal(|ui| {
             stripe(ui, Some(role));
-            ui.colored_label(role_hue(role), &row.prefix);
+            prefix(ui, &row.prefix, role_hue(role));
         });
     }
     let mut toggled = false;
@@ -73,7 +73,8 @@ pub(crate) fn row(ui: &mut egui::Ui, row: &Row) -> bool {
         stripe(ui, None);
         toggled = toggle(ui, row);
         if row.role.is_none() {
-            ui.colored_label(tone_hue(ui, row.tone), &row.prefix);
+            let ink = tone_hue(ui, row.tone);
+            prefix(ui, &row.prefix, ink);
         }
         if inline && !row.preview.is_empty() {
             preview(ui, &row.preview, abridged);
@@ -102,6 +103,20 @@ pub(crate) fn row(ui: &mut egui::Ui, row: &Row) -> bool {
 /// nobody finishes.
 fn body(ui: &mut egui::Ui, text: &str) {
     ui.add(egui::Label::new(text).wrap());
+}
+
+/// **A row's label, bounded** (bl-e86c). A bare label inside a horizontal
+/// layout does not wrap — but the damage is worse than the label itself: a
+/// widget that overflows EXPANDS the enclosing `Ui`'s `max_rect`
+/// (`Placer::advance_after_rects`), so every wrapped label painted after it
+/// in the same stack wraps at the widened width and runs off the glass too.
+/// Measured: one extending prefix took a 390-point column to 495 and a
+/// correctly-wrapped body under it then wrapped at 474. That is why
+/// bl-b62b's fix to the body alone did not hold, and why the rule is ALL of
+/// them: nothing in a horizontal row may extend, or nothing below it can be
+/// bounded.
+fn prefix(ui: &mut egui::Ui, text: &str, ink: egui::Color32) {
+    ui.add(egui::Label::new(egui::RichText::new(text).color(ink)).wrap());
 }
 
 /// The role stripe, or the blank seat of the same width that keeps every

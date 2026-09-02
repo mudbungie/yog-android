@@ -1,0 +1,50 @@
+# A bare label inside a horizontal row does not wrap — and the damage is not
+# the label. egui's `Placer::advance_after_rects` EXPANDS the enclosing `Ui`'s
+# `max_rect` to include whatever a child painted, so one widget that overflows
+# widens the whole column, and every correctly-wrapped label painted after it
+# then wraps at the widened width and runs off the glass too. Measured on this
+# tree (bl-e86c): one extending prefix took a 390-point column to 495, and a
+# body that had been fixed to wrap (bl-b62b) then wrapped at 474 — which is
+# why fixing one site did not hold and the operator still saw clipped prose.
+#
+# So the rule is ALL of them: inside a horizontal layout, text is added with a
+# wrap mode stated — `Label::new(..).wrap()` or `.truncate()` — never through
+# the `ui.label`/`colored_label`/`weak`/`strong`/`monospace` shorthands, whose
+# mode is the ui's, which is `Extend` in a row.
+#
+# Vertical layouts are not the subject and are not matched: `Ui::wrap_mode`
+# answers `Wrap` there, so the shorthands are correct and are what the banner,
+# the enrollment refusals and every screen's prose use.
+#
+# `stopBy: end` walks every ancestor, so a label nested in a closure inside
+# the row is caught too. `ui.horizontal_*` variants and the explicit
+# `left_to_right`/`right_to_left` bands are all matched by the same regex on
+# the callee.
+id: unbounded-label-in-row
+language: rust
+severity: error
+message: "a bare label in a horizontal row extends and widens the column — say the wrap mode (Label::new(..).wrap()/.truncate()); see rules/unbounded-label-in-row.yml"
+ignores:
+  - "**/test_support.rs"
+  - "**/test_support/**"
+  - "**/tests/**"
+  - "**/tests.rs"
+  - "**/*tests.rs"
+rule:
+  kind: call_expression
+  all:
+    - has:
+        field: function
+        kind: field_expression
+        has:
+          field: field
+          regex: "^(label|colored_label|weak|strong|monospace)$"
+    - inside:
+        kind: call_expression
+        stopBy: end
+        has:
+          field: function
+          kind: field_expression
+          has:
+            field: field
+            regex: "^(horizontal|horizontal_top|horizontal_centered|horizontal_wrapped)$"

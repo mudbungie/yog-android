@@ -1185,6 +1185,20 @@ here is a defect.
   expanded row body ran off the glass and was clipped mid-word (measured:
   1017 points of label in a 400-point display). A row that lays out
   horizontally for a stripe or a toggle has to ASK for the wrap.
+
+  **And it has to be every one of them, which is why fixing the body alone
+  did not hold** (bl-e86c). egui expands the enclosing `Ui`'s `max_rect` to
+  include whatever a child painted, so a single widget that overflows widens
+  the whole column and every correctly-wrapped label under it then wraps at
+  the widened width — measured: one extending prefix took a 390-point column
+  to 495, and the body fixed by bl-b62b wrapped at 474 and still ran off the
+  glass. So the invariant is *nothing in a horizontal row extends*, and it is
+  machine-checked (`rules/unbounded-label-in-row.yml`): inside a horizontal
+  layout, text states its wrap mode — `Label::new(..).wrap()` or
+  `.truncate()` — and never rides the `ui.label`/`colored_label`/`weak`
+  shorthands, whose mode is the ui's. In a VERTICAL layout those shorthands
+  are correct (the ui's mode is `Wrap` there) and are what every screen's
+  prose uses, so the rule does not touch them.
 - **Touch targets:** every navigation row and action control stands at
   least 44 points tall, full width where it lists — `shell/mark.rs` holds
   the one constant and `screens.rs`'s row helper spends it. In-content
