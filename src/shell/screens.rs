@@ -52,21 +52,17 @@ impl Shell {
                 banner(ui, &snap);
                 self.roster(ui, &snap);
             }
+            // **The two screens that anchor controls to the floor paint their
+            // own bar** (bl-192c). Everywhere else the bar goes first because
+            // nothing below it can be pushed anywhere; here the floor's order
+            // is the opposite — the acts and the composer claim from the
+            // floor and the chrome takes what is left above them — so the bar
+            // is painted inside that remainder rather than before it. It is
+            // still the first thing in the screen's body, which is what §13.2
+            // says.
             Some(workspace) => match snap.focus.agent.clone() {
-                None => {
-                    if self.bar(ui, &workspace, true) {
-                        self.focus_workspace(None);
-                    }
-                    banner(ui, &snap);
-                    self.conversations(ui, &snap, &workspace);
-                }
-                Some(agent) => {
-                    if self.bar(ui, &super::chat::speaker_of(&snap, &agent), true) {
-                        self.focus_workspace(Some(workspace.clone()));
-                    }
-                    banner(ui, &snap);
-                    self.transcript(ui, &snap, &agent);
-                }
+                None => self.conversations(ui, &snap, &workspace),
+                Some(agent) => self.transcript(ui, &snap, &workspace, &agent),
             },
         }
     }
@@ -105,12 +101,13 @@ impl Shell {
     }
 
     pub(super) fn conversations(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str) {
-        ui.separator();
         // The starter rides the BOTTOM of this screen, where the composer
         // sits on the next one: starting a conversation and speaking into one
         // are the same gesture to a thumb, so they are in the same place. The
-        // bottom of this layout is already the platform's floor — `app::pass`
-        // spends the inset once, for every screen (bl-9cfd).
+        // bottom of this layout is the platform's floor — `app::pass` spends
+        // the inset once, for every screen (bl-9cfd) — and **what claims it
+        // first is what may never be pushed off it** (bl-192c): the controls
+        // and the starter, then the chrome and the list in what remains.
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
             // The same controls row as the transcript's, under the same
             // composer (§13.2, bl-0267): a model is picked for the WORKSPACE,
@@ -119,49 +116,62 @@ impl Shell {
             self.controls(ui, snap);
             self.starter(ui);
             ui.add_space(4.0);
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                    if snap.conversations.is_empty() {
-                        ui.weak("nothing here yet — say what to start below");
-                    }
-                    // Newest first, and each row says when (REMOTE §9.9,
-                    // bl-e837). Both readings spend the stamp the engine
-                    // carries; the clock is read once for the whole list so
-                    // no two rows are dated from different instants.
-                    let now = crate::roster::now_unix();
-                    for row in crate::roster::ordered(snap.conversations.clone()) {
-                        let mark = if row.attention > 0 { " ●" } else { "" };
-                        let when = crate::roster::stamp(row.last_active_unix, now);
-                        let label = format!("{}{mark} · {when}\n{}", row.display, row.preview);
-                        // **Why the latest call did not run** (§9.10), where
-                        // the tone already inks the row: the hue is the
-                        // engine's reading and this is its words. A `Bad`
-                        // tone with no clause is the third thing it is — a
-                        // failure that left none — and says nothing extra.
-                        let label = match &row.failure {
-                            Some(why) => format!("{label}\n{why}"),
-                            None => label,
-                        };
-                        // The row's ink is the ENGINE's reading of it, not a
-                        // second one taken here (bl-ef9a). `Tone::Bad` is the
-                        // one passive sighting of a conversation refused at
-                        // the provider rung: the badge set is frozen at four,
-                        // so such a conversation comes to rest `stopped` — the
-                        // word `/stop` owns — and a list where the two read
-                        // identically is a list that cannot be scanned.
-                        // `Tone::Weak` is a start whose driver has written no
-                        // branch yet. `chat::tone_hue` is the same map the
-                        // transcript spends, so this app has one colour
-                        // vocabulary and it is the desktop's.
-                        let ink = super::chat::tone_hue(ui, row.tone);
-                        let label = egui::RichText::new(label).color(ink);
-                        if tap(ui, label)
-                            && let Some(model) = self.model()
-                        {
-                            model.focus_conversation(workspace.to_owned(), row.root_id.clone());
-                        }
-                    }
-                });
+            ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                if self.bar(ui, workspace, true) {
+                    self.focus_workspace(None);
+                }
+                banner(ui, snap);
+                ui.separator();
+                egui::ScrollArea::vertical()
+                    .min_scrolled_height(0.0)
+                    .show(ui, |ui| {
+                        ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                            if snap.conversations.is_empty() {
+                                ui.weak("nothing here yet — say what to start below");
+                            }
+                            // Newest first, and each row says when (REMOTE §9.9,
+                            // bl-e837). Both readings spend the stamp the engine
+                            // carries; the clock is read once for the whole list so
+                            // no two rows are dated from different instants.
+                            let now = crate::roster::now_unix();
+                            for row in crate::roster::ordered(snap.conversations.clone()) {
+                                let mark = if row.attention > 0 { " ●" } else { "" };
+                                let when = crate::roster::stamp(row.last_active_unix, now);
+                                let label =
+                                    format!("{}{mark} · {when}\n{}", row.display, row.preview);
+                                // **Why the latest call did not run** (§9.10), where
+                                // the tone already inks the row: the hue is the
+                                // engine's reading and this is its words. A `Bad`
+                                // tone with no clause is the third thing it is — a
+                                // failure that left none — and says nothing extra.
+                                let label = match &row.failure {
+                                    Some(why) => format!("{label}\n{why}"),
+                                    None => label,
+                                };
+                                // The row's ink is the ENGINE's reading of it, not a
+                                // second one taken here (bl-ef9a). `Tone::Bad` is the
+                                // one passive sighting of a conversation refused at
+                                // the provider rung: the badge set is frozen at four,
+                                // so such a conversation comes to rest `stopped` — the
+                                // word `/stop` owns — and a list where the two read
+                                // identically is a list that cannot be scanned.
+                                // `Tone::Weak` is a start whose driver has written no
+                                // branch yet. `chat::tone_hue` is the same map the
+                                // transcript spends, so this app has one colour
+                                // vocabulary and it is the desktop's.
+                                let ink = super::chat::tone_hue(ui, row.tone);
+                                let label = egui::RichText::new(label).color(ink);
+                                if tap(ui, label)
+                                    && let Some(model) = self.model()
+                                {
+                                    model.focus_conversation(
+                                        workspace.to_owned(),
+                                        row.root_id.clone(),
+                                    );
+                                }
+                            }
+                        });
+                    });
             });
         });
     }
@@ -219,7 +229,7 @@ impl Shell {
 
 /// The connection banner: the worker's standing error, under the bar and
 /// above whatever screen it interrupted (§13.2).
-fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
+pub(super) fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
     if let Some(error) = &snap.error {
         ui.colored_label(egui::Color32::LIGHT_RED, error);
     }

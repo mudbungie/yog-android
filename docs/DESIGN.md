@@ -1114,6 +1114,20 @@ here is a defect.
   multi-line and declares no action, because GameActivity writes an action
   where the enter key does not read it), which is also what every phone chat
   app does with enter anyway.
+- **What is anchored to the floor claims its space first** (bl-192c). A
+  bound rect is not a clip: `app::pass` bounds what a screen is GIVEN, and a
+  screen whose content exceeds it simply paints past it — with the keyboard
+  up and a tuning band shown, the controls, the composer and the knobs all
+  went through the floor and under the gesture-nav bar. So the two screens
+  that anchor controls to the floor are laid out in the floor's own order:
+  the acts and the composer are painted FIRST, bottom-up from the floor, and
+  the chrome (the bar, the banner, the knobs) and the list or transcript take
+  what is left above them. **The transcript is what gives way**, down to
+  nothing — which needs saying to egui, since a `ScrollArea` refuses to be
+  shorter than its `min_scrolled_height` however little room it is given
+  (the composer's own defect, bl-9cfd, one level up). Measured in the rect
+  harness at 320 and 400 points, keyboard up and down, tuning band shown:
+  nothing paints past the floor.
 - **The platform's insets are the interface's edges, and they are spent
   once.** `app::pass` pads the top inset and **shrinks the rect every screen
   is painted into by the bottom one** (the taller of the keyboard and the
