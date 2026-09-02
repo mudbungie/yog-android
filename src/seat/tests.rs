@@ -35,7 +35,14 @@ pub(super) fn model_against(
     let dir = pki();
     let (address, served) = serve_many(&dir, "ca", "server", scripts);
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
-    (Model::start(seat, REST), served)
+    (Model::start(seat, REST, cache_in(&dir)), served)
+}
+
+/// A throwaway cache path beside a test's PKI. Every model writes one
+/// (bl-de96), so every test gets its own rather than sharing a boot state —
+/// and the tests that are ABOUT the cache name the path themselves.
+pub(super) fn cache_in(dir: &std::path::Path) -> std::path::PathBuf {
+    dir.join("cache").join("seat.json")
 }
 
 /// Poll until a snapshot satisfies `pass` — the worker publishes on its own
@@ -121,4 +128,5 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 mod deposit;
 mod grace;
 mod reads;
+mod resume;
 mod start;

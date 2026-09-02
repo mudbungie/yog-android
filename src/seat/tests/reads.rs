@@ -2,7 +2,8 @@
 //! and every way an answer can be the wrong one.
 
 use super::{
-    Model, conv_reply, material, model_against, ops, pki, serve_many, settle, tr_reply, ws_reply,
+    Model, cache_in, conv_reply, material, model_against, ops, pki, serve_many, settle, tr_reply,
+    ws_reply,
 };
 use crate::transport::Seat;
 use serde_json::{Value, json};
@@ -77,7 +78,7 @@ fn the_cadence_refreshes_unprompted() {
     let dir = pki();
     let (address, served) = serve_many(&dir, "ca", "server", vec![vec![ws_reply()]; 2]);
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
-    let mut model = Model::start(seat, Duration::from_millis(400));
+    let mut model = Model::start(seat, Duration::from_millis(400), cache_in(&dir));
     settle(&mut model, &|s| !s.workspaces.is_empty());
     served.join().unwrap();
     // Which sentence the dead engine earns depends on where the dial met

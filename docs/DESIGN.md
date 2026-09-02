@@ -30,8 +30,9 @@ What follows from that, and is invariant:
 - **The engine owns the world.** This client holds no durable model state.
   Per-seat UI state (REMOTE §7) lives server-side in the seat's own
   `ui.json`/`pane.json` documents; what the phone durably holds is its key
-  material and nothing else. Cache is cache: reconstructible, deletable,
-  never authoritative.
+  material and **one cache** (§14, bl-de96), which is cache in the strict
+  sense: reconstructible, deletable, never authoritative, and replaced by the
+  next answer off the wire.
 - **The wire adds nothing to the boundary** (REMOTE §3). The protocol is
   `Act(Action) | Ask(Query)` in, `Reply` out, in the server codec's JSON
   serialization. A capability this client needs and the boundary lacks is
@@ -243,7 +244,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model: owns the `Seat` on one worker thread, re-asks the standing set at cadence, publishes `Snapshot`s, posts deposits | landed (bl-5a98) |
-| `src/seat/pass.rs` | one pass of that loop: the standing questions, the two acts, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
+| `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
+| `src/seat/acts.rs` | the two acts the seat posts: the message deposit and the §8.1 start pair | landed (bl-de96, out of `pass.rs`) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
@@ -251,6 +253,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
 | `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
+| `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
 | `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
 | `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
@@ -1080,3 +1083,51 @@ is upstream's answer to give); push notifications (the engine dials
 nothing, so a channel is a REMOTE design act, not an app feature).
 **Already on this board:** entries — one device as a client of many engines
 (REMOTE §8.2, bl-d0d2).
+
+## 14. The paint-first cache (bl-de96)
+
+Switching out of the app and back re-read the whole world through the wire
+while the operator watched three empty lists fill. The operator's ruling is
+recorded with its own caveat — *generally opposed to caches, amenable here* —
+and this section is what that permission is bounded by.
+
+**One writer, one reader, one authority.** The model's worker writes after a
+pass the engine ANSWERED; the model's boot reads it once, synchronously,
+before the first frame; the next cadence read replaces whatever it painted.
+Nothing consults it to decide anything — it decides only what is on the glass
+for the second before the first answer lands. It is never consulted again for
+the life of the process.
+
+**The focus rides with the rows, because rows are only paintable under the
+focus they were asked at.** That is the invariant `Snapshot` already keeps,
+and the file keeps it too: a stored depth that disagrees with the stored focus
+is refused rather than half-read. It also means the app reopens where the
+operator was, which is the same fact rather than a second feature.
+
+**It stores the engine's own envelopes, and that is a deliberate deviation
+from the ball's sketch.** bl-de96 asked for the decoded snapshot serialized
+with a version stamp; writing that means writing a reply ENCODER, and
+`tests/conformance/replies.rs` records why this client has none — *"a reply
+encoder would be a second implementation of the engine's own spelling with
+nothing to check it against"*. `Entry` alone is a tree of blocks and untyped
+usage, and an encoder for it would drift from the decoder the first time a
+field moved, silently and only in the cache. So the file holds the reply
+envelopes verbatim and reading them goes through the ONE decoder every wire
+answer goes through. What the sketch was protecting against — a local file
+speaking with the engine's authority — is answered instead by strictness:
+**any doubt discards the whole file**. Absent, unreadable, not JSON, another
+layout version, another protocol version, an envelope the decoder refuses,
+an envelope of the wrong kind, a depth that disagrees with the focus: one
+answer to all of them, because a caller has one thing to do with all of them.
+
+**Two version stamps, because two things can move**: the file's own layout,
+and `hello::PROTOCOL`, since the envelopes inside are the wire's bytes and a
+protocol move can change what they mean.
+
+**It is written on change and nowhere near the enrollment path.** A pass whose
+snapshot equals what was last stored writes nothing; a live conversation
+changes every pass and a quiet one never does, and the write is proportionate
+either way, because this app already paid to receive the same bytes over TLS
+on the pass that produced them. The file is `<internal>/cache/seat.json`, a
+sibling of `<internal>/wire/` — material and snapshots share no file and no
+directory, and nothing in `crate::cache` reads or writes a key.

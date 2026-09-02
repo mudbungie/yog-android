@@ -8,7 +8,7 @@
 //! channel BREAK in the middle of a live listener (bl-8641), so a pass can
 //! fail with more passes still to come.
 
-use super::{Model, conv_reply, material, pki, settle, ws_named, ws_reply};
+use super::{Model, cache_in, conv_reply, material, pki, settle, ws_named, ws_reply};
 use crate::test_support::{Turn, serve_turns};
 use crate::transport::Seat;
 
@@ -17,7 +17,7 @@ fn model_turns(turns: Vec<Turn>) -> Model {
     let dir = pki();
     let (address, _served) = serve_turns(&dir, "ca", "server", turns);
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
-    Model::start(seat, super::REST)
+    Model::start(seat, super::REST, cache_in(&dir))
 }
 
 /// The whole rule in one walk: a first failure is silent and keeps the rows

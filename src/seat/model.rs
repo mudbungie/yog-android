@@ -8,6 +8,7 @@
 //! failed pass — is `seat::pass`, split out when the grace gave a pass state
 //! of its own to carry (bl-3202).
 
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::time::Duration;
 
@@ -34,14 +35,27 @@ enum Cmd {
 impl Model {
     /// Start the worker over an opened seat. `cadence` is how long the model
     /// rests between unprompted refreshes — a gesture refreshes immediately.
-    pub fn start(seat: Seat, cadence: Duration) -> Self {
+    ///
+    /// **`cache` is where the last answered pass is kept** (bl-de96), and it
+    /// is read HERE, synchronously, before the first frame: the handle starts
+    /// holding what the engine last said instead of an empty snapshot, so the
+    /// app paints its world immediately and the first cadence read replaces
+    /// it. The worker is seeded with the same value — both its rows, so a
+    /// first pass that fails republishes them rather than blanking the
+    /// screen (§13.2's grace), and its FOCUS, because rows are only paintable
+    /// under the focus they were asked at and the operator is put back where
+    /// they were by the same fact.
+    pub fn start(seat: Seat, cadence: Duration, cache: PathBuf) -> Self {
+        let kept = crate::cache::read(&cache);
+        let last = kept.clone().map(|(_, snap)| snap).unwrap_or_default();
         let (cmds, cmd_rx) = mpsc::channel();
         let (snap_tx, snaps) = mpsc::channel();
-        let worker = std::thread::spawn(move || run(&seat, cadence, &cmd_rx, &snap_tx));
+        let worker =
+            std::thread::spawn(move || run(&seat, cadence, &cache, kept, &cmd_rx, &snap_tx));
         Self {
             cmds,
             snaps,
-            last: Snapshot::default(),
+            last,
             worker: Some(worker),
         }
     }
@@ -91,15 +105,24 @@ impl Drop for Model {
     }
 }
 
-fn run(seat: &Seat, cadence: Duration, cmds: &mpsc::Receiver<Cmd>, out: &mpsc::Sender<Snapshot>) {
-    let mut focus = Focus::default();
+fn run(
+    seat: &Seat,
+    cadence: Duration,
+    cache: &std::path::Path,
+    kept: Option<(Focus, Snapshot)>,
+    cmds: &mpsc::Receiver<Cmd>,
+    out: &mpsc::Sender<Snapshot>,
+) {
+    let (mut focus, mut standing) = match kept {
+        Some((focus, snap)) => (focus, Standing::resumed(snap)),
+        None => (Focus::default(), Standing::default()),
+    };
     let mut note = None;
-    let mut standing = Standing::default();
     loop {
         // An undeliverable snapshot is not a stop signal: `Model::drop` sends
         // `Stop` before the receiver can go away (join precedes field drop),
         // so shutdown always arrives as a command, never as a dead channel.
-        let _ = out.send(standing.pass(seat, &focus, note.take()));
+        let _ = out.send(standing.pass(seat, cache, &focus, note.take()));
         match cmds.recv_timeout(cadence) {
             Ok(Cmd::Workspace(workspace)) => {
                 focus = Focus {
@@ -113,8 +136,8 @@ fn run(seat: &Seat, cadence: Duration, cmds: &mpsc::Receiver<Cmd>, out: &mpsc::S
                     agent: Some(agent),
                 };
             }
-            Ok(Cmd::Deposit(content)) => note = super::pass::deposit(seat, &focus, content).err(),
-            Ok(Cmd::Start(goal)) => note = super::pass::started(seat, &focus, goal).err(),
+            Ok(Cmd::Deposit(content)) => note = super::acts::deposit(seat, &focus, content).err(),
+            Ok(Cmd::Start(goal)) => note = super::acts::started(seat, &focus, goal).err(),
             Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
             Err(mpsc::RecvTimeoutError::Timeout) => {}
         }

@@ -37,6 +37,7 @@ pub struct Focus {
     pub agent: Option<String>,
 }
 
+mod acts;
 mod model;
 mod pass;
 

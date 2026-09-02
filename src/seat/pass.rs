@@ -1,12 +1,18 @@
 //! **One pass of the model's loop**: the standing questions asked as deep as
-//! the focus goes, the two acts the seat posts, and what survives a pass the
-//! engine did not answer. Split from `model.rs` when the grace gave a pass
-//! state to carry between calls (bl-3202) — the handle and the loop are
-//! there, what a pass MEANS is here.
+//! the focus goes, and what survives a pass the engine did not answer. Split
+//! from `model.rs` when the grace gave a pass state to carry between calls
+//! (bl-3202) — the handle and the loop are there, what a pass MEANS is here.
+//! The two acts the seat POSTS are `seat::acts`: a pass is what the seat
+//! asks, and an act is what it says.
+
+use std::path::Path;
+
+use serde_json::Value;
 
 use super::{Focus, Snapshot};
+use crate::cache::Envelopes;
 use crate::codec::reply::Reply;
-use crate::codec::{Act, Ask, Gesture, encode};
+use crate::codec::{Ask, Gesture, encode};
 use crate::transport::Seat;
 
 /// **How many consecutive failed passes an error waits for.** The cadence is
@@ -21,9 +27,24 @@ const GRACE: u32 = 1;
 pub(super) struct Standing {
     last: Snapshot,
     failed: u32,
+    /// What was last WRITTEN to the cache, so a pass that changed nothing
+    /// writes nothing (bl-de96). Comparing the snapshot rather than the
+    /// envelopes because the snapshot is what the operator would see change.
+    stored: Snapshot,
 }
 
 impl Standing {
+    /// Standing seeded from the cache: the rows the engine last gave, held as
+    /// last-good so a first pass that fails republishes them rather than
+    /// blanking the screen. `stored` is seeded with them too — they ARE what
+    /// the file holds, so an unchanged pass rewrites nothing.
+    pub(super) fn resumed(snap: Snapshot) -> Self {
+        Self {
+            last: snap.clone(),
+            failed: 0,
+            stored: snap,
+        }
+    }
     /// One refresh pass, and the snapshot the frame should paint for it.
     ///
     /// **A failure is not an error until it persists** (bl-3202). Swapping
@@ -44,15 +65,36 @@ impl Standing {
     /// - **`note` never waits.** It is a gesture's own answer — a refused
     ///   deposit, a start the engine would not run — and the operator just
     ///   acted. Silence there is a message that vanished.
-    pub(super) fn pass(&mut self, seat: &Seat, focus: &Focus, note: Option<String>) -> Snapshot {
+    pub(super) fn pass(
+        &mut self,
+        seat: &Seat,
+        cache: &Path,
+        focus: &Focus,
+        note: Option<String>,
+    ) -> Snapshot {
         let mut fresh = Snapshot {
             focus: focus.clone(),
             ..Snapshot::default()
         };
-        let failed = fill(seat, focus, &mut fresh).err();
+        let mut kept = Envelopes::default();
+        let failed = fill(seat, focus, &mut fresh, &mut kept).err();
         if failed.is_none() {
             self.failed = 0;
             self.last = fresh;
+            // The cache is written from a pass the engine ANSWERED, and only
+            // when what it says changed: a live conversation changes every
+            // pass and a quiet one never does, and the write is proportionate
+            // either way — this app already paid to receive the same bytes
+            // over TLS on the pass that produced them (bl-de96).
+            if self.last != self.stored {
+                // A cache that cannot be written is a cache miss next boot
+                // and nothing else — never the banner, which is for what the
+                // engine said, and never a stop. (`log` is the shell's
+                // dependency, not the core's, so there is nowhere here to
+                // say it either.)
+                let _ = crate::cache::write(cache, focus, &kept);
+                self.stored = self.last.clone();
+            }
         } else {
             self.failed += 1;
             if self.last.focus != *focus {
@@ -70,89 +112,62 @@ impl Standing {
 
 /// The standing questions, as deep as the focus goes. The first failure
 /// stops the walk: an unreachable engine is one sentence, not three.
-fn fill(seat: &Seat, focus: &Focus, snap: &mut Snapshot) -> Result<(), String> {
-    snap.workspaces = match answer(seat, &Ask::Workspaces)? {
+fn fill(
+    seat: &Seat,
+    focus: &Focus,
+    snap: &mut Snapshot,
+    kept: &mut Envelopes,
+) -> Result<(), String> {
+    let (reply, envelope) = answer(seat, &Ask::Workspaces)?;
+    snap.workspaces = match reply {
         Reply::Workspaces { rows, .. } => rows,
         other => return Err(kind_err("workspaces", &other)),
     };
+    kept.workspaces = Some(envelope);
     let Some(workspace) = focus.workspace.clone() else {
         return Ok(());
     };
     let ask = Ask::Conversations {
         workspace: workspace.clone(),
     };
-    snap.conversations = match answer(seat, &ask)? {
+    let (reply, envelope) = answer(seat, &ask)?;
+    snap.conversations = match reply {
         Reply::Conversations(rows) => rows,
         other => return Err(kind_err("conversations", &other)),
     };
+    kept.conversations = Some(envelope);
     let Some(agent) = focus.agent.clone() else {
         return Ok(());
     };
-    snap.transcript = match answer(seat, &Ask::Transcript { workspace, agent })? {
+    let (reply, envelope) = answer(seat, &Ask::Transcript { workspace, agent })?;
+    snap.transcript = match reply {
         Reply::Transcript(rows) => rows,
         other => return Err(kind_err("transcript", &other)),
     };
+    kept.transcript = Some(envelope);
     Ok(())
 }
 
-fn answer(seat: &Seat, ask: &Ask) -> Result<Reply, String> {
+/// One standing question, and **the engine's own envelope beside the rows it
+/// decoded to** (bl-de96). The raw value is what the cache stores, so the
+/// file holds the wire's spelling rather than a second one this client would
+/// have to keep in step — see `crate::cache`.
+fn answer(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), String> {
     // The transport's two classes collapse to the sentence here, and rightly:
     // this model opens a connection per ask, so a broken channel is already
     // re-dialled by the next pass and there is nothing for it to decide
     // (bl-8641). The tool host, which holds one channel, is the caller that
     // reads the class.
-    Ok(seat.answered(&encode(&Gesture::Ask(ask.clone())))?)
+    let stream = seat.ask(&encode(&Gesture::Ask(ask.clone())))?;
+    let last = stream
+        .last()
+        .ok_or("the engine ended the stream without answering")?;
+    let reply = crate::codec::reply::decode(last).unwrap_or_else(Err)?;
+    Ok((reply, last.clone()))
 }
 
-/// Post one message. The receipt is an `outcome` whose `ok` is the server's
-/// own verdict; anything else is a sentence for the banner.
-pub(super) fn deposit(seat: &Seat, focus: &Focus, content: String) -> Result<(), String> {
-    let Focus {
-        workspace: Some(workspace),
-        agent: Some(agent),
-    } = focus.clone()
-    else {
-        return Err("deposit: no conversation is focused".to_owned());
-    };
-    let act = Act::Message {
-        workspace,
-        agent,
-        content,
-    };
-    match seat.answered(&encode(&Gesture::Act(act)))? {
-        Reply::Outcome { ok: true, .. } => Ok(()),
-        Reply::Outcome { stderr, .. } => Err(format!("deposit refused: {stderr}")),
-        other => Err(kind_err("deposit", &other)),
-    }
-}
-
-/// Stage a conversation and fire it — the §8.1 pair, run as one act. Named
-/// for the wire's own word rather than the handle's, which is `Model::start`
-/// for the worker and cannot be this.
-///
-/// The prepared body the engine answers with is carried into the firing
-/// gesture **whole**: it is the engine's own statement about what was staged,
-/// and a client that re-derived any field of it would be inventing world
-/// state it does not own.
-pub(super) fn started(seat: &Seat, focus: &Focus, goal: String) -> Result<(), String> {
-    let Some(workspace) = focus.workspace.clone() else {
-        return Err("start: no workspace is focused".to_owned());
-    };
-    let staged = match seat.answered(&encode(&Gesture::Act(Act::Prepare { workspace })))? {
-        Reply::Prepared(prepared) => prepared,
-        other => return Err(kind_err("start", &other)),
-    };
-    match seat.answered(&encode(&Gesture::Act(Act::Prompt {
-        prepared: staged,
-        goal,
-    })))? {
-        Reply::Started { .. } | Reply::Outcome { ok: true, .. } => Ok(()),
-        Reply::Outcome { stderr, .. } => Err(format!("start refused: {stderr}")),
-        other => Err(kind_err("start", &other)),
-    }
-}
-
-/// The wrong-kind sentence names the kind, never the rows it carried.
-fn kind_err(asked: &str, got: &Reply) -> String {
+/// The wrong-kind sentence names the kind, never the rows it carried. Shared
+/// with `seat::acts`, which asks the same question of a receipt.
+pub(super) fn kind_err(asked: &str, got: &Reply) -> String {
     format!("{asked}: the engine answered {} instead", got.kind())
 }

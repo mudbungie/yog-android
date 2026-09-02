@@ -11,6 +11,7 @@
 //! disagree, one of them is a bug.
 
 pub mod bootstrap;
+pub mod cache;
 pub mod codec;
 pub mod envelope;
 pub mod foot;

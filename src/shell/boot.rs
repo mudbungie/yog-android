@@ -88,13 +88,26 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
         // copy of that sentence would be noise.
         Component::Seat | Component::Server => match crate::transport::Seat::open(material) {
             Ok(asker) => Running::Seat {
-                model: Model::start(asker, CADENCE),
+                model: Model::start(asker, CADENCE, cache_file(android)),
                 host: Foot::open(material).ok().map(|f| host(android, f)),
                 client: enrolled.client,
             },
             Err(why) => cold(Some(why)),
         },
     }
+}
+
+/// **Where the paint-first cache lives** (DESIGN §14, bl-de96): a SIBLING of
+/// the material directory and never inside it. Material and snapshots share
+/// no file and no directory — one is a private key an operator delivered out
+/// of channel, the other is a picture of the world that is deletable by
+/// definition.
+fn cache_file(android: &AndroidApp) -> std::path::PathBuf {
+    android
+        .internal_data_path()
+        .unwrap_or_default()
+        .join("cache")
+        .join("seat.json")
 }
 
 /// This app's private material directory (DESIGN §5: adb, remote exec or QR
