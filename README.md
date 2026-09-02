@@ -54,6 +54,8 @@ make test           # cargo test
 make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
 make lint           # line-cap + leak-scan + clippy + ast-grep + cargo-deny
 make apk            # cargo-ndk (arm64-v8a + x86_64) + gradle assembleDebug
+make screens-avd    # create the emulator the loop below boots, once
+make screens        # headless emulator: walk the screens, capture each one
 make install-hooks  # seat the pre-commit / commit-msg hooks, once
 ```
 
@@ -70,6 +72,29 @@ emulator the enrollment stories run on. Gradle packs a `jniLibs/<abi>/`
 directory per ABI and the installer picks one, so there is no
 emulator-only artifact to confuse a test verdict. Override with
 `make apk ABIS=arm64-v8a` on a box that only ever flashes a phone.
+
+## Looking at it without a phone
+
+`make screens` boots a headless emulator, installs the APK you built, walks the
+app through its named screens and leaves a PNG of each in `target/screens/`
+beside a verdict — so an agent can *see* this app, and a defect in how a screen
+is REACHED can fail a check instead of waiting for someone's thumb. DESIGN §15
+is the whole design; three things are worth knowing before running it:
+
+- **It builds nothing.** Run `make apk ABIS=x86_64` first. A target that
+  quietly rebuilt would hide which tree the pictures are of, which is exactly
+  how this loop's first run lied to its author.
+- **No engine is dialled.** A leaf is minted per run and the paint-first cache
+  is seeded from the vendored wire `corpus/`, so every screen is reachable with
+  no server anywhere.
+- **Only structure gates.** The app says which screen it painted
+  (`src/shell/app/probe.rs`) and the walk judges that. Nothing compares
+  pictures. The accessibility dump captured beside each PNG is *empty* — egui
+  paints into one opaque view — and that is a finding recorded in evidence,
+  not a gap in the harness.
+
+`make screens-avd` creates the virtual device, once. It may need an SDK licence
+accepted, which is an operator's act and no target here performs it.
 
 Task tracking is [balls](https://crates.io/crates/balls-cli) (`bl`): `bl prime
 --as YOU`, `bl list`, claim → work in the worktree → close.

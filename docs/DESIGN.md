@@ -269,6 +269,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
+| `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where the mark went, said to logcat once per change | landed (bl-243b) |
+| `scripts/screens.sh` + `scripts/screens-seed.sh` | the headless emulator loop (§15): boot, install, walk, capture, judge — and the two seeds (a minted leaf, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b) |
 | `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
 | `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
@@ -1354,3 +1356,119 @@ either way, because this app already paid to receive the same bytes over TLS
 on the pass that produced them. The file is `<internal>/cache/seat.json`, a
 sibling of `<internal>/wire/` — material and snapshots share no file and no
 directory, and nothing in `crate::cache` reads or writes a key.
+
+## 15. Render-and-see: the headless emulator loop (bl-243b)
+
+An agent working on this app could not look at it. Every verdict was either a
+host test over pure code or an operator's eyes on a phone, and the whole class
+of defect between them — *the screen paints, but the way to it does not
+exist* — was unreachable by either. `make screens` closes that: a headless
+emulator boots, this app is installed, a named walk drives it through its
+screens, and each one leaves a PNG an agent can read and a verdict a gate can
+fail on. `scripts/screens.sh` is the loop; `scripts/screens-seed.sh` is what
+puts the device in each state, split from it because a seed is what a screen
+IS and the loop is what is DONE with it.
+
+### 15.1 The accessibility tree is empty, and no harness can fix that
+
+The ball behind this section asked for structural assertions read out of
+`uiautomator dump`. **That surface does not exist for this app.** egui paints
+into one opaque view, so the dump comes back as a single
+`android.view.View` — no label, no button, no row, and byte-for-byte the same
+XML on every screen this app has. Nothing about the harness changes it; the
+information is not in the platform's hands.
+
+The dump is captured beside every screenshot regardless. An empty tree stated
+in a document is a claim; six identical dumps in a run's own output are
+evidence, and the day some future stack does populate it, the same files say
+so without anyone re-checking this paragraph.
+
+### 15.2 So the app states what it painted
+
+`src/shell/app/probe.rs` writes one line to logcat when what it would say
+changes — the app's answer to *"what am I showing?"*, which is the only place
+that fact honestly lives. It carries **two things and no more**:
+
+- **the screen's name**, written at the dispatch arm that chose it. Not
+  derived a second time from the same state: a derivation beside a branch is a
+  second authority for one fact, and the two disagree the first time a branch
+  moves.
+- **the mark's rectangle in device pixels.** The mark is the only way into the
+  configuration surface (§13.2) and it carries no text at all, so it is the
+  one control a harness cannot otherwise find. The app says where it put it;
+  the harness taps there and still has no say in what the tap means.
+
+**Nothing else may go down this channel, and the reason is disclosure.**
+Logcat is device-wide and readable by anything holding the debug bridge, so a
+bar title or a row label written here is world state published to the whole
+device — the same editorial rule the task store keeps (AGENTS.md). A screen
+name and a rectangle disclose the shape of an app whose source is public
+anyway.
+
+The marker `yog.screen` is in the MESSAGE, never the logcat tag:
+`android_logger` tags a record with its module path, so a tag filter is a
+harness coupled to where a file happens to live, and it would go quietly
+silent the day that file moves. Both facts are frame-scoped like
+`Shell::back` — taken at the end of the pass — so a screen that stops painting
+stops saying it is there, and a stale rectangle can never be tapped.
+
+### 15.3 The engine is not dialled, and does not need to be
+
+Two seeds put the app on any screen with no server anywhere:
+
+- **A leaf, minted per run by `openssl`.** `transport::Seat::open` builds a
+  configuration and dials nothing, so a self-signed CA and a leaf under it are
+  enough to make the device a seat. The address names a closed port; the wire
+  failure is painted, which is a screen worth a picture in its own right.
+- **The paint-first cache (§14), seeded from `corpus/`.** This is the
+  "recorded endpoint": the rows are the reply envelopes vendored out of the
+  server's own codec, not a second spelling invented in a harness, and the
+  **focus stored beside them is what selects the screen**. Roster, conversation
+  list and transcript are three seeds of one file rather than three
+  navigations, which is the same fact §14 already keeps — rows are paintable
+  only under the focus they were asked at.
+
+The cache's two version stamps are read out of `src/cache.rs` and
+`src/hello.rs` by the seeding script rather than restated in it. A stamp that
+outruns the script makes the app discard the file, which surfaces as the wrong
+screen name and reddens the walk — the failure is loud, and it is loud in the
+one place that already knows.
+
+### 15.4 What gates
+
+**Only structure.** The screen the app says it painted, against the screen the
+walk asked for. No golden image and no pixel diff: a picture that fails on a
+font bump teaches nobody anything, and the PNGs are for eyes, not for
+assertions.
+
+The walk, and the standing assertion it exists for:
+
+| step | seed | asserts |
+| --- | --- | --- |
+| `cold` | nothing provisioned | the bootstrap chooser is the first screen |
+| `roster` | a leaf | a leaf alone makes this device a seat, and "main" is its roster |
+| `settings` | — tap the mark | **the configuration surface is reachable from the roster** |
+| `back-to-roster` | — tap the mark | the mark toggles: a way in with no way out is the same defect wearing the other face |
+| `conversations` | focus at a workspace | the conversation list paints under its focus |
+| `transcript` | focus at a conversation | the chat screen paints under its focus |
+
+The pair in the middle is the assertion the loop was built for. It found its
+first defect immediately and the defect was in the harness's own premises: the
+walk was run against a stale APK, and the screen it drove had a heading no
+source in this tree emits. A loop that cannot tell you which tree you are
+looking at is a loop that will eventually lie to you — which is why `make
+screens` builds nothing and refuses an APK that is not there, rather than
+quietly rebuilding one.
+
+**It is not part of `make check` and will not become part of it.** It needs an
+SDK, an emulator and a built APK, and a lint gate that depends on an artifact
+a build step produced is a gate that cannot run on a clean box.
+
+### 15.5 What it does not reach yet
+
+The screens behind a text button — the two enrollment screens and the server
+bootstrap — are named by the probe but not walked, because reaching them means
+tapping a labelled control and the probe states only the mark's rectangle.
+Extending it to every control is the point at which this stops being a probe
+and starts being an accessibility tree written by hand; if a walk needs those
+screens, the honest next step is a ball that decides which of the two this is.

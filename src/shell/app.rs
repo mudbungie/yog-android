@@ -7,6 +7,7 @@
 //! DOES with it.
 
 mod pass;
+mod probe;
 
 pub(crate) use pass::run;
 
@@ -105,6 +106,15 @@ pub(crate) struct Shell {
     /// belongs (`shell::back`). A frame-scoped fact, not state: it is
     /// rewritten every pass.
     pub(crate) back: bool,
+    /// **What the render-and-see probe says about this pass** (`app/probe.rs`,
+    /// bl-243b): the screen the dispatch chose, and where the mark was put in
+    /// device pixels. Frame-scoped like `back` above — both are taken at the
+    /// end of the pass, so a screen that stops painting stops saying it is
+    /// there. `probed` is the last line said, and the reason a repaint is not
+    /// news.
+    pub(crate) screen: Option<&'static str>,
+    pub(crate) mark_at: Option<[i32; 4]>,
+    probed: String,
 }
 
 impl Shell {
@@ -131,6 +141,9 @@ impl Shell {
             effort: None,
             priority: false,
             back: false,
+            screen: None,
+            mark_at: None,
+            probed: String::new(),
         }
     }
 

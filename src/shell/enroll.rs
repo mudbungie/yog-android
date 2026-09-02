@@ -95,6 +95,7 @@ impl Shell {
             ),
         };
         let Some(open) = self.chose else {
+            self.note_screen("configuration");
             // The bar's back is the way out, where a way out exists
             // (bl-e192): a cold device has nothing behind this surface to
             // return to, so it gets no back control at all.
@@ -120,7 +121,17 @@ impl Shell {
         // Which leaves the scanner the only thing that can take a platform
         // back press while it is up, and closing the camera is exactly one
         // depth up from it (bl-550e).
+        // The three screens behind the chooser, named for the harness that
+        // walks them (`app/probe.rs`): the two enrollment screens differ only
+        // in the leaf they are asking for, and a walk that cannot tell them
+        // apart cannot say which one it reached.
+        self.note_screen(match open {
+            Component::Seat => "enroll-seat",
+            Component::Foot => "enroll-foot",
+            Component::Server => "server",
+        });
         if self.scanner.live() {
+            self.note_screen("scan");
             if std::mem::take(&mut self.back) {
                 self.scanner.shut();
             }

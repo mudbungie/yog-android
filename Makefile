@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk screens screens-avd
 
 all: check
 
@@ -48,6 +48,33 @@ apk:
 	cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
 	cd android && $(GRADLE) assembleDebug
 	@echo "apk: android/app/build/outputs/apk/debug/app-debug.apk"
+
+# The render-and-see loop (bl-243b, DESIGN §15): boot a headless emulator,
+# install the APK, walk the named screens, capture a PNG and an accessibility
+# dump of each, and judge the walk against what the app says it painted. Not
+# part of `check` and never will be: it needs an emulator, an SDK and a built
+# APK, none of which a lint gate may depend on.
+#
+# It builds nothing — pass an APK that exists (`make apk ABIS=x86_64` is the
+# emulator's one), because a target that silently rebuilt would hide which
+# tree the pictures are of. Outputs land in target/screens/ where an agent can
+# read them; `--keep` leaves the emulator up for a hand-driven look.
+screens:
+	scripts/screens.sh $(SCREENS_ARGS)
+
+# The one-time half of the loop: the AVD `screens` boots. Separate from
+# `screens` because creating a virtual device is a change to the BOX, not a
+# step of a run — and because the system-image install behind it may want an
+# SDK licence accepted, which is an operator's act and not a script's.
+# x86_64 with KVM: an ARM image under full emulation is too slow to loop on
+# (the same reasoning the `apk` target's ABI list carries).
+SCREENS_AVD ?= yog-screens
+SCREENS_IMAGE ?= system-images;android-35;google_apis;x86_64
+screens-avd:
+	"$${ANDROID_HOME:-$$HOME/Android/Sdk}/cmdline-tools/latest/bin/sdkmanager" --install "$(SCREENS_IMAGE)"
+	printf 'no\n' | "$${ANDROID_HOME:-$$HOME/Android/Sdk}/cmdline-tools/latest/bin/avdmanager" \
+	  create avd -n "$(SCREENS_AVD)" -k "$(SCREENS_IMAGE)" -d pixel_6
+	@echo "screens-avd: $(SCREENS_AVD) ready; run make screens"
 
 test:
 	cargo test

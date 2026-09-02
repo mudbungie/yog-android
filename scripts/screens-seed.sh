@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# **The seeds**: everything that puts this device into the state a screen needs,
+# sourced by `scripts/screens.sh`. The seam is what a screen IS against what
+# the loop DOES with it — the walk boots, taps, captures and judges; nothing in
+# here knows a screen was captured.
+#
+# Two seeds and no third, because the app derives everything else from them:
+# the key material that makes this device a seat, and the paint-first cache
+# whose stored FOCUS selects which of the seat's screens opens. Neither dials
+# anything. Both are written into the build directory, never the tree.
+
+# `run-as` is how anything reaches app-private storage, and it works because a
+# debug APK is debuggable. Two hops: push into a world-readable staging path,
+# then copy in as the app's own uid.
+push_app() {           # push_app <local-dir> <files-relative-dest>
+  "${ADB[@]}" shell "rm -rf /data/local/tmp/screens && mkdir -p /data/local/tmp/screens"
+  "${ADB[@]}" push -q "$1"/. /data/local/tmp/screens >/dev/null
+  "${ADB[@]}" shell "run-as $PKG sh -c 'mkdir -p $2 && cp /data/local/tmp/screens/* $2/'"
+}
+wipe_app() { "${ADB[@]}" shell "run-as $PKG sh -c 'rm -rf files/wire files/cache'"; }
+
+# A CA and one leaf under it. Nothing here is ever a secret: it is minted per
+# run, into the build directory, and the engine it would authenticate does not
+# exist. It is written where nothing tracked can reach it for the same reason
+# the disclosure gate refuses a committed key — a fabricated one still reads
+# like one.
+mint_material() {
+  local d="$OUT/material"; mkdir -p "$d"
+  openssl req -x509 -newkey rsa:2048 -nodes -days 1 -keyout "$d/ca.key" \
+    -out "$d/ca.pem" -subj "/CN=screens-ca" >/dev/null 2>&1
+  openssl req -newkey rsa:2048 -nodes -keyout "$d/client.key" -out "$d/client.csr" \
+    -subj "/CN=screens-seat" >/dev/null 2>&1
+  openssl x509 -req -in "$d/client.csr" -CA "$d/ca.pem" -CAkey "$d/ca.key" \
+    -CAcreateserial -days 1 -out "$d/client.pem" >/dev/null 2>&1
+  # A closed port on the device's OWN loopback. The dial fails fast, the
+  # failure is painted, and that is a screen this walk wants a picture of
+  # anyway — so the address only has to refuse, and the nearest thing that
+  # refuses is the honest one. The emulator's host alias would also refuse and
+  # is what a human reaches for; the disclosure gate refuses that literal as a
+  # routable address, and it is right to, because no rule can tell one
+  # routable quad from another by looking at it.
+  printf '127.0.0.1:9' > "$d/address"
+  rm -f "$d/ca.key" "$d/client.csr" "$d/ca.srl"
+  push_app "$d" files/wire
+}
+
+# The cache seed. Its two version stamps are READ OUT OF THE SOURCE that
+# defines them rather than restated here: one home per fact, and a bump that
+# outruns this script discards the file, which the walk then reports as the
+# wrong screen instead of a silent empty list.
+seed_cache() {         # seed_cache <depth: roster|conversations|transcript>
+  local d="$OUT/cache"; rm -rf "$d"; mkdir -p "$d"
+  local version protocol
+  version=$(sed -n 's/^const VERSION: u64 = \([0-9]*\);/\1/p' src/cache.rs)
+  protocol=$(sed -n 's/^pub const PROTOCOL: u32 = \([0-9]*\);/\1/p' src/hello.rs)
+  [ -n "$version" ] && [ -n "$protocol" ] || die "cannot read the cache/protocol versions from src/"
+  python3 - "$d/seat.json" "$version" "$protocol" "$1" <<'PY'
+import json, sys
+out, version, protocol, depth = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
+def frame(name):
+    with open(f"corpus/reply/{name}.json") as fh:
+        return json.load(fh)["frames"][0]
+workspaces = frame("workspaces")
+body = {"yog-seat-cache": version, "protocol": protocol,
+        "focus": {"workspace": None, "agent": None},
+        "workspaces": workspaces, "conversations": None, "transcript": None,
+        "options": {"workspace": None, "providers": None, "models": {}}}
+# The pairing law `cache::read` enforces on the FILE: rows deeper than the
+# focus they were asked at are unpaintable, and a file carrying them is
+# discarded whole. So each depth carries exactly its own envelopes.
+if depth in ("conversations", "transcript"):
+    conversations = frame("conversations")
+    body["focus"]["workspace"] = workspaces["rows"][0]["workspace"]
+    body["conversations"] = conversations
+    if depth == "transcript":
+        body["focus"]["agent"] = conversations["rows"][0]["root_id"]
+        body["transcript"] = frame("transcript")
+with open(out, "w") as fh:
+    json.dump(body, fh)
+PY
+  push_app "$d" files/cache
+}

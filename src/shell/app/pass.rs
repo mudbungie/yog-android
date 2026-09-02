@@ -102,6 +102,11 @@ impl eframe::App for Shell {
         if std::mem::take(&mut self.back) {
             crate::shell::back::leave(&self.android);
         }
+        // What this pass painted, said once per change (`app/probe.rs`): the
+        // seam a headless-emulator harness reads reachability out of, because
+        // the platform's accessibility tree carries nothing about an egui
+        // surface. After the screens, because that is when they have said it.
+        self.probe();
 
         // The input-wake ruling (DESIGN §3, decided under bl-c761): no
         // vendored winit, so the commit wake winit drops (bl-2958) is

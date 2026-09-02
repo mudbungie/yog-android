@@ -32,6 +32,7 @@ impl Shell {
             return;
         }
         if matches!(self.running, Running::Foot { .. }) {
+            self.note_screen("foot");
             self.bar(ui, &crate::bootstrap::Component::Foot.brand(), false);
             self.foot(ui);
             return;
@@ -48,6 +49,7 @@ impl Shell {
         // returns the tap and this match is the one place a depth is spelled.
         match snap.focus.workspace.clone() {
             None => {
+                self.note_screen("roster");
                 self.bar(ui, &crate::bootstrap::Component::Seat.brand(), false);
                 banner(ui, &snap);
                 self.roster(ui, &snap);
@@ -61,8 +63,14 @@ impl Shell {
             // still the first thing in the screen's body, which is what §13.2
             // says.
             Some(workspace) => match snap.focus.agent.clone() {
-                None => self.conversations(ui, &snap, &workspace),
-                Some(agent) => self.transcript(ui, &snap, &workspace, &agent),
+                None => {
+                    self.note_screen("conversations");
+                    self.conversations(ui, &snap, &workspace);
+                }
+                Some(agent) => {
+                    self.note_screen("transcript");
+                    self.transcript(ui, &snap, &workspace, &agent);
+                }
             },
         }
     }

@@ -40,6 +40,7 @@ exclude-files = [
     "src/shell/app.rs",
     "src/shell/back.rs",
     "src/shell/app/pass.rs",
+    "src/shell/app/probe.rs",
     "src/shell/boot.rs",
     "src/shell/camera.rs",
     "src/shell/bridge.rs",
