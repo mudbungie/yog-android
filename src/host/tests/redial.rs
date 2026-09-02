@@ -47,8 +47,17 @@ fn a_dead_engine_is_redialled_with_the_dial_that_failed_standing() {
     let Health::Redialling(why) = standing.health else {
         unreachable!()
     };
+    // **The class is the assertion, not the verb** (bl-1ae2). Which of the
+    // transport's three words a dead engine earns is the kernel's to decide:
+    // a dial that arrives after the listener's thread ended is refused at the
+    // connect, and one that lands in its backlog a moment earlier completes
+    // and dies at the write or the read instead. All three are the channel,
+    // which is the only distinction the host acts on — the standing being
+    // `Redialling` at all is the class, already settled on above.
     assert!(
-        why.starts_with("connect ") || why.starts_with("receive"),
+        ["connect ", "send:", "receive"]
+            .iter()
+            .any(|verb| why.starts_with(verb)),
         "{why}"
     );
     // The ladder starts at a second — the last dial had worked, so there is
@@ -99,9 +108,14 @@ fn a_channel_that_dies_mid_answer_is_redialled_and_the_host_serves_again() {
     let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
     let (nap, rests) = recording();
     let mut host = Host::start(foot, table(), Box::new(dispatch), nap);
+    // What is asserted on the settled standing is what that standing CARRIES
+    // — the tool it ran and how it ended. Its health is not: `standing()`
+    // keeps only the latest, so by the time the test reads it the host may
+    // lawfully have gone on to the script's last turn and stopped there
+    // (bl-1ae2). The honest reading of a transient state is the settle
+    // predicate itself, which is how the redialling standing is read above.
     let standing = settle(&mut host, &|s| s.served == 1);
-    assert_eq!(standing.health, Health::Serving);
-    assert!(standing.advertised);
+    assert_eq!(standing.last.as_deref(), Some("echo → 0"));
     assert_eq!(
         ops(&served.join().unwrap()),
         [
