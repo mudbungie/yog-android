@@ -1,5 +1,5 @@
 {
-  "protocol": 4,
+  "protocol": 5,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -386,17 +386,18 @@
     },
     "reply/governing": {
       "signature": [
-        "/branch:null",
-        "/branch:string",
+        "/diverged_lineages:number",
         "/files/[]:string",
         "/files:array",
+        "/follows:null",
+        "/follows:string",
         "/kind:string",
         "/oid:string",
         "/ok:bool",
         "/short_oid:string",
         ":object"
       ],
-      "since": 1
+      "since": 5
     },
     "reply/help": {
       "signature": [

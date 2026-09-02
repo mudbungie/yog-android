@@ -2,25 +2,27 @@
   "direction": "reply",
   "frames": [
     {
-      "branch": "default",
+      "diverged_lineages": 0,
       "files": [
         "workflow.yaml",
         "souls/base.md"
       ],
+      "follows": "default",
       "kind": "governing",
       "oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "ok": true,
       "short_oid": "bbbbbbbb"
     },
     {
-      "branch": null,
+      "diverged_lineages": 2,
       "files": [],
+      "follows": null,
       "kind": "governing",
       "oid": "cccccccccccccccccccccccccccccccccccccccc",
       "ok": true,
       "short_oid": "cccccccc"
     }
   ],
-  "protocol": 1,
+  "protocol": 5,
   "shape": "governing"
 }

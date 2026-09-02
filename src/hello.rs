@@ -45,12 +45,23 @@ use crate::frame;
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
-/// **4 since the re-vendor of bl-e837.** Three moves stand behind it and the
-/// last two are why an old build must not be left running: 2 was the
+/// **5 since the re-vendor of bl-a433.** Four moves stand behind it and the
+/// last three are why an old build must not be left running: 2 was the
 /// tool-host pair (`subject_cwd` on an advertised element, `cwd` on an
 /// invocation — REMOTE §5.1, §5.3); **3** put `failure` on the conversation
 /// row, the agent answer and the queue row (§9.10); **4** put `flag` on the
-/// queue row (§9.11). `last_active_unix` rode in at 2 with §9.9.
+/// queue row (§9.11); **5** rewrote `reply/governing` — `branch` out,
+/// `follows` and `diverged_lineages` in, and `oid` now naming the followed
+/// lineage's head rather than the fork commit an agent's branch left (§9.12,
+/// litany's follow-the-tip ruling reaching the wire). `last_active_unix`
+/// rode in at 2 with §9.9.
+///
+/// **A move in a shape this codec does not spell still moves this number,
+/// and that is the point.** `governing` is a recorded refusal here (it is
+/// the answer to a gesture this seat does not send), so 5 cost this client
+/// nothing but the integer — and the integer is the whole of what the
+/// handshake gates on. A seat that stayed at 4 because "nothing it reads
+/// changed" would simply stop speaking to the engine.
 ///
 /// **The version is the only thing that breaks an old seat, and it breaks it
 /// on purpose.** An unknown FIELD is tolerated — this codec reads the fields
@@ -65,7 +76,7 @@ use crate::frame;
 /// that lane must read the section and not only re-vendor the fixtures
 /// (DESIGN §7 — this seat reads the lane one shot at a time, where the fold
 /// is assignment).
-pub const PROTOCOL: u32 = 4;
+pub const PROTOCOL: u32 = 5;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

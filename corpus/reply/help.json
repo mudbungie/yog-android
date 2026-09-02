@@ -36,8 +36,8 @@
           "verb": "nudge"
         },
         {
-          "detail": "A conversation is frozen on the config commit it forked off, so a model you picked afterwards governs the next conversation and not this one. This moves this one (`litany retarget`): it marks the conversation, and the conversation's own driver re-forks it onto the current config at its next step, replaying everything it has already done on top — nothing is discarded and nothing is killed. It takes effect at that next step, never mid-step, which in practice is the message you send after it. Takes the workspace and the conversation from the seat; litany declines it when the conversation is already on that config, or when the target config does not describe the role it runs as.",
-          "summary": "move the selected conversation onto the config this workspace runs now",
+          "detail": "You do not need this to make a config edit reach a running conversation: a conversation follows its lineage's head at every step boundary, so a model you pick now governs this one at its next step by itself. What this changes is which *lineage* it follows — and it is the way out of the one state that has no head to follow, where two or more lineages have diverged over the conversation's fork point and it is held there until somebody says which. This runs `litany retarget`: it marks the conversation, and the conversation's own driver re-forks it onto this workspace's lineage at its next step, replaying everything it has already done on top — nothing is discarded and nothing is killed. It takes effect at that next step, never mid-step, which in practice is the message you send after it. Takes the workspace and the conversation from the seat; a conversation already on that lineage is a clean no-op litany reports for itself, and litany declines the move when the target does not describe the role it runs as.",
+          "summary": "settle the selected conversation onto this workspace's config lineage",
           "usage": "/retarget",
           "verb": "retarget"
         },
@@ -102,7 +102,7 @@
           "verb": "deliver"
         },
         {
-          "detail": "Forks the selected conversation from `--from` — a commit of its own history (the mark you pinned) or a `config/<name>` head for a clean start — and gives the fork this goal (`litany dispatch`). `--role` is what names the model: litany reads the provider and model id from the role's entry in the config governing that ref, so a role the config does not declare is refused there. `--skills` pins each named skill's instructions into the fork's context. To compare candidates, fire this more than once from the same mark: they group themselves under that mark's rule in the chat, because siblings of one mark is a fact about the refs and not a list anything keeps. Everything after `--goal` is the goal, verbatim. Takes the workspace and the conversation from the seat.",
+          "detail": "Forks the selected conversation from `--from` — a commit of its own history (the mark you pinned) or a `config/<name>` head for a clean start — and gives the fork this goal (`litany dispatch`). `--role` is what names the model: litany reads the provider and model id from the role's entry in the config lineage governing that ref, at its head, so a role that lineage does not declare is refused there. `--skills` pins each named skill's instructions into the fork's context. To compare candidates, fire this more than once from the same mark: they group themselves under that mark's rule in the chat, because siblings of one mark is a fact about the refs and not a list anything keeps. Everything after `--goal` is the goal, verbatim. Takes the workspace and the conversation from the seat.",
           "summary": "try this conversation again from a point in its history",
           "usage": "/fork --from <ref> --role <role> [--skills a,b] --goal <the goal…>",
           "verb": "fork"
@@ -318,8 +318,8 @@
           "verb": "files"
         },
         {
-          "detail": "Every conversation forks off a commit of a `config/*` lineage and keeps running that commit's policy however far the lineage moves on afterwards. This answers which commit that is — short and full — whether it is still some lineage's own tip (named if so, and absent once the branch has advanced past it, which is the ordinary frozen case), and every path its tree holds: the souls, the workflow, the manifest, the provider table and the descriptions the conversation is actually running under. `--at` asks the same question of a different commit — the same policy-as-of the window's notch pin shows — and bare it is the conversation's own branch tip, so a seat need not know one to ask. A workspace that cannot be read, and a commit that forks off no config lineage at all, are each said outright: a conversation with no policy is not a reading.",
-          "summary": "the config commit this conversation is frozen on, and what it holds",
+          "detail": "A conversation forks off a commit of a `config/*` lineage, and the fork settles which lineage governs it — not which commit. Control then resolves that lineage's current head at every step boundary, so an edit you make now reaches this conversation at its next step, with nothing to press. This answers which commit it resolves — short and full — which lineage it follows, and every path that commit's tree holds: the souls, the workflow, the manifest, the provider table and the descriptions it is actually running under. When two or more lineages have diverged over its fork point there is no one head to follow, so it is held on that fork commit and the answer says how many reached it; `/retarget` is what settles that. `--at` starts the walk from a different commit and bare it is the conversation's own branch tip, so a seat need not know one to ask — but it names a rev, not a moment: policy as of an earlier step is no longer derivable from ancestry, and what records it is each step's own request. A workspace that cannot be read, and a commit that forks off no config lineage at all, are each said outright: a conversation with no policy is not a reading.",
+          "summary": "the config commit this conversation resolves its policy from, and what it holds",
           "usage": "/governing [--at <commit>]",
           "verb": "governing"
         },
@@ -336,7 +336,7 @@
           "verb": "inbox"
         },
         {
-          "detail": "One conversation's own facts, as any seat paints them: the id and the conversation it belongs to, the name it goes by — and whether that name is one peers can actually address it with — the commit its policy is frozen against, whether it is running right now, the marks it wears (notified, over budget, in conflict, holding a tool call, abandoned), what kind of work is in flight anywhere beneath it, and whether Stop and its children cascade are offered. A conversation this workspace does not carry answers as its own root, stopped and unmarked, rather than refusing.",
+          "detail": "One conversation's own facts, as any seat paints them: the id and the conversation it belongs to, the name it goes by — and whether that name is one peers can actually address it with — the commit its policy resolves from, whether it is running right now, the marks it wears (notified, over budget, in conflict, holding a tool call, abandoned), what kind of work is in flight anywhere beneath it, and whether Stop and its children cascade are offered. A conversation this workspace does not carry answers as its own root, stopped and unmarked, rather than refusing.",
           "summary": "the selected conversation itself: what it is called, what it is doing, what may be done to it",
           "usage": "/agent",
           "verb": "agent"
