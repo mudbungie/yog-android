@@ -24,6 +24,25 @@ use eframe::egui;
 use crate::rows::{Fold, Role, Row};
 use crate::seat::Snapshot;
 
+/// **The outbox's echo** (bl-66fb): the message this seat has sent, painted
+/// where the row it will become is going to be. Muted while the engine has
+/// not answered, ordinary ink with a rule under it once it has — the rule is
+/// the "not yet in the transcript" mark, and it goes when the echo does.
+pub(crate) fn echo(ui: &mut egui::Ui, text: &str, landed: bool) {
+    let ink = if landed {
+        role_hue(Role::User)
+    } else {
+        ui.visuals().weak_text_color()
+    };
+    ui.horizontal(|ui| {
+        stripe(ui, Some(Role::User));
+        ui.add(egui::Label::new(egui::RichText::new(text).color(ink)).wrap());
+    });
+    if landed {
+        ui.separator();
+    }
+}
+
 /// **The answer being written right now** (bl-4822), painted under the last
 /// transcript row: the reasoning in weak ink where the model states one, then
 /// the text in the live hue. It is not a projected row and never becomes one

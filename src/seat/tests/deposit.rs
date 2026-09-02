@@ -146,3 +146,41 @@ fn wrong_reply_kinds_name_the_kind() {
         Some("deposit: the engine answered transcript instead")
     );
 }
+
+/// **The deposit counters** (bl-66fb): the composer's echo cannot see the
+/// receipt — the worker holds the wire — so what it watches is these moving.
+/// One taken deposit and one refused, each landing in its own count.
+#[test]
+fn a_deposits_fate_is_counted_for_the_echo_to_read() {
+    let (mut model, _served) = model_against(vec![
+        vec![ws_reply()],
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![tr_reply()],
+        vec![outcome(true, "")], // taken
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![tr_reply()],
+        vec![outcome(false, "gate red")], // refused
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![tr_reply()],
+    ]);
+    settle(&mut model, &|s| !s.workspaces.is_empty());
+    model.focus_conversation("home".into(), "a1".into());
+    settle(&mut model, &|s| !s.transcript.is_empty());
+    assert_eq!(
+        (0, 0),
+        {
+            let s = model.snapshot();
+            (s.landed, s.refused)
+        },
+        "nothing has been deposited yet"
+    );
+    model.deposit("hello".into());
+    let snap = settle(&mut model, &|s| s.landed == 1);
+    assert_eq!(snap.refused, 0);
+    model.deposit("again".into());
+    let snap = settle(&mut model, &|s| s.refused == 1);
+    assert_eq!(snap.landed, 1, "a refusal does not un-land the first");
+}

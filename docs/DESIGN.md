@@ -260,6 +260,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/res/drawable/ic_launcher_{foreground,background}.xml` + `res/mipmap-anydpi-v26/ic_launcher.xml` | the generated layers and the five lines of adaptive-icon wiring that name them | landed (bl-0b31) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape, and the live fold under them | landed (bl-0ed6, bl-4822) |
 | `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
+| `src/outbox.rs` | the one rule the local echo needs: has this message come back in a transcript read yet — pure, host-tested | landed (bl-66fb) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
 | `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
@@ -1125,6 +1126,25 @@ here is a defect.
   leaves it. A provider row is greyed **by the credential fact it states
   about itself** and stays tappable: the operator may be about to sign it in,
   and a control that vanishes teaches nothing.
+- **The outbox: a sent message paints at once** (bl-66fb). A deposit is a
+  round trip and a chat app that shows nothing for the length of one is a
+  chat app you press twice, so the composer's text appears the instant it is
+  sent, in muted ink, where its row will be. Three states and three signals
+  the app already has: **sent** is local (muted); **landed** is the engine's
+  receipt (ordinary ink, with a rule under it — the rule is the *not yet in
+  the transcript* mark); **taken** is the message coming back in a transcript
+  read, at which point the echo dissolves into the row it became. A refusal
+  gives the text back to the composer and the banner carries the engine's own
+  sentence.
+  The echo is the composer's own state and lives beside it in the shell —
+  `crate::rows` is pure over what the engine has written down, and this is a
+  message it has not written down yet — while the *rule* for when it stops
+  being an echo is `crate::outbox`, host-tested under the floor. **The known
+  weakness, named rather than hidden:** a deposit's receipt carries no id
+  this codec reads, so the match is on content within the transcript's tail,
+  and two identical consecutive messages are indistinguishable — the honest
+  fix is upstream (a receipt naming the entry it wrote), not a cleverer
+  guess here.
 - **Wide content: prose wraps, a fenced block scrolls** (bl-b62b). Anything
   a person reads as text wraps at the width it actually has and never
   scrolls sideways — a horizontal scroller under a paragraph is a paragraph

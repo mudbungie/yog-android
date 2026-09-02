@@ -39,6 +39,10 @@ impl Shell {
         let Some(snap) = self.model_mut().map(crate::seat::Model::snapshot) else {
             return;
         };
+        // The outbox settles once per frame, whatever screen is up: an echo
+        // whose conversation the operator left is not an echo any more
+        // (bl-66fb).
+        self.settle_echo(&snap);
         // The bar first, then the error banner under it (§13.2), then the
         // depth's own body. Back walks exactly one focus depth — the bar
         // returns the tap and this match is the one place a depth is spelled.

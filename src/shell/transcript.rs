@@ -55,10 +55,8 @@ impl Shell {
             // platform's floor: the conversation-level acts (§13.2's
             // controls row, bl-0267).
             self.controls(ui, snap);
-            if let Some(taken) = super::composer::composer(ui, &mut self.composer, "message")
-                && let Some(model) = self.model()
-            {
-                model.deposit(taken);
+            if let Some(taken) = super::composer::composer(ui, &mut self.composer, "message") {
+                self.deposit(snap, taken);
             }
             ui.add_space(4.0);
             egui::ScrollArea::vertical()
@@ -72,6 +70,12 @@ impl Shell {
                             if super::chat::row(ui, row) {
                                 flipped = Some(row.key.clone());
                             }
+                        }
+                        // The message this seat has sent and the engine has
+                        // not shown back yet (bl-66fb), where its row will
+                        // be — above the answer to it.
+                        if let Some(echo) = &self.echo {
+                            super::chat::echo(ui, &echo.text, echo.landed);
                         }
                         // The answer still being written, under the rows the
                         // engine has written down (bl-4822). The scroller
@@ -92,6 +96,46 @@ impl Shell {
             && !self.folds.remove(&key)
         {
             self.folds.insert(key);
+        }
+    }
+}
+
+impl Shell {
+    /// **Send, and echo it at once** (bl-66fb). The deposit crosses the wire
+    /// on the model's worker and answers in its own time; what the operator
+    /// sees immediately is this — their own words, muted, where the row will
+    /// be. The counters are remembered here because the echo's other two
+    /// states are read off their movement.
+    fn deposit(&mut self, snap: &Snapshot, text: String) {
+        let Some(model) = self.model() else { return };
+        model.deposit(text.clone());
+        self.echo = Some(super::app::Echo {
+            text,
+            landed: false,
+            agent: snap.focus.agent.clone(),
+            at: (snap.landed, snap.refused),
+        });
+    }
+
+    /// **What became of the echo**, run once per frame before the transcript
+    /// is painted: the engine's receipt inks it, a refusal gives the text
+    /// back to the composer (the banner already carries the engine's own
+    /// sentence), and the message appearing in a transcript read dissolves it
+    /// into the row it became (`crate::outbox`).
+    pub(super) fn settle_echo(&mut self, snap: &Snapshot) {
+        let Some(echo) = &mut self.echo else { return };
+        if echo.agent != snap.focus.agent {
+            self.echo = None;
+            return;
+        }
+        if snap.refused > echo.at.1 {
+            self.composer = std::mem::take(&mut echo.text);
+            self.echo = None;
+            return;
+        }
+        echo.landed |= snap.landed > echo.at.0;
+        if crate::outbox::taken(&snap.transcript, &echo.text) {
+            self.echo = None;
         }
     }
 }

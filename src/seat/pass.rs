@@ -36,6 +36,10 @@ pub(super) struct Standing {
     /// rewrite itself five times a second, and what the cache is for is the
     /// world the engine has written down.
     live: Option<crate::codec::Stream>,
+    /// The deposits the engine took and refused (bl-66fb). Carried between
+    /// passes because a deposit is a gesture, not a pass — and painted into
+    /// every published snapshot for the same reason the options are.
+    posted: (usize, usize),
     last: Snapshot,
     failed: u32,
     /// What was last WRITTEN to the cache, so a pass that changed nothing
@@ -53,6 +57,7 @@ impl Standing {
         Self {
             options,
             live: None,
+            posted: (0, 0),
             last: snap.clone(),
             failed: 0,
             stored: snap,
@@ -129,6 +134,7 @@ impl Standing {
         }
         let mut out = self.last.clone();
         out.live.clone_from(&self.live);
+        (out.landed, out.refused) = self.posted;
         // Painted onto the published snapshot as well as onto `fresh`: a
         // pass that failed republishes last-good rows, and the selectors'
         // offerings are not the pass's to lose (bl-0267).
@@ -204,6 +210,17 @@ pub(super) fn kind_err(asked: &str, got: &Reply) -> String {
 }
 
 impl Standing {
+    /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot
+    /// see the receipt — the worker holds the wire — so what it watches is
+    /// this pair moving.
+    pub(super) fn posted(&mut self, took: bool) {
+        if took {
+            self.posted.0 += 1;
+        } else {
+            self.posted.1 += 1;
+        }
+    }
+
     /// **Whether the focused conversation is writing right now** — read off
     /// the row's own `flight`, which is where every conversation-level gate
     /// rides (REMOTE §9.4). A conversation the list has not caught up with
@@ -226,6 +243,7 @@ impl Standing {
     pub(super) fn living(&mut self, seat: &Seat, focus: &Focus) -> Snapshot {
         let read = super::acts::follow(seat, focus);
         let mut out = self.last.clone();
+        (out.landed, out.refused) = self.posted;
         match read {
             Ok(stream) => {
                 self.live = Some(stream);

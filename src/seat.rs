@@ -43,6 +43,14 @@ pub struct Snapshot {
     /// `crate::rows` is pure over what the engine has written down, and this
     /// is what it is still writing.
     pub live: Option<Stream>,
+    /// **What this seat's deposits have earned** (bl-66fb): how many the
+    /// engine took, and how many it refused, since the worker started. The
+    /// composer's echo reads the CHANGE and never the number — it remembers
+    /// both at the moment it sent and watches for either to move, which is
+    /// what tells a muted echo from an inked one without a receipt id the
+    /// wire does not carry.
+    pub landed: usize,
+    pub refused: usize,
     /// The last refresh's failure or a refused deposit, one sentence for
     /// the banner. `None` is "the engine answered".
     pub error: Option<String>,

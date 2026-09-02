@@ -195,7 +195,13 @@ fn run(
                     agent: Some(agent),
                 };
             }
-            Ok(Cmd::Deposit(content)) => note = super::acts::deposit(seat, &focus, content).err(),
+            Ok(Cmd::Deposit(content)) => {
+                // The receipt is counted as well as reported: the composer's
+                // echo has no other way to know its message landed (bl-66fb).
+                let posted = super::acts::deposit(seat, &focus, content);
+                standing.posted(posted.is_ok());
+                note = posted.err();
+            }
             // The three selector gestures. A read's answer is learned as the
             // engine's own envelope (bl-0267); a failure is a sentence for
             // the banner exactly as an act's is.
