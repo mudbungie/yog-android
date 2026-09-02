@@ -10,7 +10,7 @@
 //! happens on the model's one worker thread, and the two sides talk over
 //! channels — no locks, so rule 7 stays vacuous here.
 
-use crate::codec::{ConvRow, Entry, ProviderRow, WsRow};
+use crate::codec::{ConvRow, Entry, ProviderRow, Stream, WsRow};
 
 /// What the frame paints: the standing set as of the last completed
 /// refresh, with the focus it was asked under — one value, published
@@ -33,6 +33,16 @@ pub struct Snapshot {
     /// IS the pairing, so no frame can paint one provider's list under
     /// another's name.
     pub models: std::collections::BTreeMap<String, Vec<String>>,
+    /// **The answer being written right now** (REMOTE §5.5, bl-4822), when
+    /// one is: the accumulated tail of the focused conversation's turn, read
+    /// at a quicker rest than the transcript and painted under it. `None` is
+    /// a conversation at rest — and is what a completed turn goes back to,
+    /// because the finished answer arrives as a transcript row.
+    ///
+    /// It is **not** part of the transcript and never enters the projection:
+    /// `crate::rows` is pure over what the engine has written down, and this
+    /// is what it is still writing.
+    pub live: Option<Stream>,
     /// The last refresh's failure or a refused deposit, one sentence for
     /// the banner. `None` is "the engine answered".
     pub error: Option<String>,
@@ -47,7 +57,7 @@ pub struct Focus {
     pub agent: Option<String>,
 }
 
-mod acts;
+pub(crate) mod acts;
 mod model;
 mod options;
 mod pass;

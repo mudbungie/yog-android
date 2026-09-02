@@ -172,3 +172,23 @@ pub(super) fn nudge(seat: &Seat, focus: &Focus) -> Result<(), String> {
         other => Err(kind_err("nudge", &other)),
     }
 }
+
+/// **The answer in flight** (REMOTE §5.5, bl-4822), one shot: §5.5 says a
+/// read starts holding nothing and *"the first frame of any read is the whole
+/// tail so far"*, so what comes back is the answer as it stands and this seat
+/// replaces rather than appends. The append fold belongs to a seat that HOLDS
+/// the connection, and this one does not (DESIGN §7).
+pub(super) fn follow(seat: &Seat, focus: &Focus) -> Result<crate::codec::Stream, String> {
+    let Focus {
+        workspace: Some(workspace),
+        agent: Some(agent),
+    } = focus.clone()
+    else {
+        return Err("follow: no conversation is focused".to_owned());
+    };
+    let ask = Ask::Follow { workspace, agent };
+    match super::pass::answer(seat, &ask)? {
+        (Reply::Follow(stream), _) => Ok(stream),
+        (other, _) => Err(kind_err("follow", &other)),
+    }
+}

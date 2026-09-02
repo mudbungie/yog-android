@@ -82,6 +82,19 @@ pub(super) fn ws_named(workspace: &str) -> Vec<u8> {
     .into_bytes()
 }
 
+/// A conversation row that is WRITING: the `flight` the engine puts on the
+/// row is the whole gate the live lane reads (bl-4822).
+pub(super) fn conv_flying() -> Vec<u8> {
+    json!({ "ok": true, "kind": "conversations",
+            "rows": [{ "root_id": "a1", "display": "d", "display_only": false,
+                       "state": "in-flight", "uncertain": false, "preview": "",
+                       "age_secs": 0, "flight": "inference", "attention": 0,
+                       "members": 1, "direct": 0, "stoppable": true,
+                       "stop_children": false, "depth": 0, "tone": "live" }] })
+    .to_string()
+    .into_bytes()
+}
+
 pub(super) fn conv_reply() -> Vec<u8> {
     json!({ "ok": true, "kind": "conversations",
             "rows": [{ "root_id": "a1", "display": "d", "display_only": false,
@@ -127,6 +140,7 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 
 mod deposit;
 mod grace;
+mod live;
 mod pick;
 mod reads;
 mod resume;

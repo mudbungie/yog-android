@@ -164,6 +164,7 @@ fn every_answer_names_its_own_kind() {
         (Reply::Models(Vec::new()), "models"),
         (Reply::Applied, "applied"),
         (Reply::Nudged, "nudged"),
+        (Reply::Follow(crate::codec::Stream::default()), "follow"),
     ];
     for (reply, kind) in named {
         assert_eq!(reply.kind(), kind);

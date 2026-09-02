@@ -229,6 +229,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/request.rs` | the gesture codec's decode side — the inverse the corpus is replayed through | landed (bl-93e3) |
 | `corpus/` + `tests/conformance/` | the vendored wire conformance corpus and its replay: the decision table over every shape, in both directions | landed (bl-93e3) |
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
+| `src/codec/follow.rs` | REMOTE §5.5's lane, read one shot at a time: the answer in flight as much of it as has landed | landed (bl-4822) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/seat/options.rs` | what the selectors offer, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
@@ -257,7 +258,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
 | `src/icon/drawable.rs` | the same walk emitted as Android `VectorDrawable` XML — the launcher icon as a derivation, pinned byte-for-byte against the committed assets | landed (bl-0b31) |
 | `android/…/res/drawable/ic_launcher_{foreground,background}.xml` + `res/mipmap-anydpi-v26/ic_launcher.xml` | the generated layers and the five lines of adaptive-icon wiring that name them | landed (bl-0b31) |
-| `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
+| `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape, and the live fold under them | landed (bl-0ed6, bl-4822) |
+| `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
 | `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
@@ -543,13 +545,46 @@ vocabularies inside one app. Upstream's own words for why a list is the place
 this matters: *"the roster is the operator's one passive sighting of it — a
 list where the two read identically is a list that cannot be scanned."*
 
-**The read path is a re-read at cadence, not the follow lane — and since
-REMOTE §5.5 that is a decision worth stating (bl-2842).** `seat::model::fill`
-asks `workspaces` → `conversations` → `transcript` on every pass of the
-worker's own clock, and a gesture wakes it immediately; `Query::Follow` is
-sent nowhere. What changed upstream is not the lane's spelling but its
-meaning: a follow frame now carries *what landed since that read's previous
-frame*, and the rule is one line —
+**The world is re-read at cadence; the answer being WRITTEN is followed, one
+shot at a time (bl-4822, amending bl-2842).** `seat::pass::fill` still asks
+`workspaces` → `conversations` → `transcript` on every pass of the worker's
+own clock, and a gesture still wakes it immediately. What is new is what
+happens *inside the wait*: while the focused conversation's row states a
+`flight`, the worker asks `follow` on a quicker rest and publishes the tail
+as it lands, so arriving text appears several times a cadence instead of
+once. The turn's end drops the fold — the finished answer arrives as an
+ordinary transcript row, and a fold left standing under it would be the same
+words twice.
+
+**The lane is read one shot at a time, and no connection is held.** REMOTE
+§5.5 makes that lawful in its own words — *"a read starts holding nothing"*,
+*"the **first** frame of any read is the whole tail so far"*, and *"Two reads
+by the same seat are two reads: the second starts holding nothing, so it
+replaces rather than appending"* — so every read this seat makes is a first
+frame and its fold is assignment. Holding the connection would buy
+write-cadence and cost three things this device cannot pay cheaply: a second
+socket held open on a machine that changes networks hourly (bl-8641), a
+second worker thread, since the one there is would be parked on the read and
+could not answer a gesture, and the real append fold, whose meaning the
+corpus cannot show (below). The day those are worth paying, the design is in
+`tests/conformance/expect.rs`'s `follow` note, which states what such an
+author owes.
+
+**Two things were measured before choosing, and both narrowed it.** Reading
+the *transcript* faster is what the lane exists to prevent: upstream measured
+the whole-text frame at 20x amplification, quadratic in the answer's length,
+and a transcript re-read is that cost with the whole conversation attached —
+a follow read is bounded by the answer in flight. And smoothing the SCROLL
+alone buys nothing, because the jump is the chunk rather than the mechanic:
+egui's `stick_to_bottom` already follows content exactly, already unsticks
+the moment a hand scrolls up and re-sticks when the handle returns to the
+bottom (its own documented contract), which is precisely the behaviour this
+section asks for. So the arrival rate was the thing to fix.
+
+**The hazard the corpus cannot see, kept because it is still true.** What
+changed upstream is not the lane's spelling but its meaning: a follow frame
+carries *what landed since that read's previous frame*, and the rule is one
+line —
 
 > *"Absorb every frame of a read, in order, onto an empty fold. What you hold
 > after the last frame you have received is what you paint."*
@@ -557,11 +592,13 @@ frame*, and the rule is one line —
 The frame body is byte for byte what it was, so **nothing mechanical here can
 notice**: the corpus ledger records field paths and types, no version bump was
 forced, and a green conformance run says nothing about it. That is why the
-decision lives in a place a person reads — the `follow` rows in
-`tests/conformance/expect.rs` carry the reason, and `transport::Seat::answered`
+decision lives in a place a person reads — the `follow` note in
+`tests/conformance/expect.rs` carries it, and `transport::Seat::answered`
 carries the trap at the line that would spring it, because it decodes
 `stream.last()` and the last frame of an append stream is the final delta
-alone. `Seat::ask` hands back every frame and is the lane's door.
+alone. `Seat::ask` hands back every frame and is the held lane's door. This
+seat is not on that door: one shot per read means one frame to read, and
+`answered` is exactly right for it.
 
 The tool host's `invocations` read (§6) is follow-**class** and is not this
 lane: it holds a connection open, but its answer is one frame of rows rather

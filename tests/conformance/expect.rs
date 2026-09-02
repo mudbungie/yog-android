@@ -56,36 +56,34 @@ pub const ASKING_SIDE: &str = "§5.3's asking side — this device is invoked, i
 /// the bug.
 pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 
-/// **The follow lane, and the one skip the corpus could never have caught.**
-///
-/// This seat re-reads a transcript at the model's cadence (`seat::model::fill`
-/// asks `workspaces` → `conversations` → `transcript`) rather than holding a
-/// connection open on `Query::Follow`. That was a shape decision, and it is
-/// now also a *protection*: REMOTE §5.5 made the lane's frame an **append** —
+/// **The follow lane is read, one shot at a time** (bl-4822). It was skipped
+/// for two waves and the skip's reasoning is kept here because it is what
+/// makes the consumption lawful: REMOTE §5.5 made the lane's frame an
+/// **append** —
 ///
 /// > *"Absorb every frame of a read, in order, onto an empty fold. What you
 /// > hold after the last frame you have received is what you paint."*
 ///
-/// — under a wire spelling that did not move at all. REMOTE says the
-/// consequence out loud: *"The corpus ledger records field paths and types, so
-/// it cannot see a change of meaning under an unchanged signature: nothing
-/// forced a version bump and none was taken."* So this row is the only place
-/// the change can be recorded at all; a green conformance run says nothing
-/// about it, and re-vendoring the fixtures is not consuming the section.
+/// — under a wire spelling that did not move at all, and REMOTE says the
+/// consequence out loud: *"The corpus ledger records field paths and types,
+/// so it cannot see a change of meaning under an unchanged signature."* A
+/// green conformance run still says nothing about that, and re-vendoring the
+/// fixtures is still not consuming the section.
 ///
-/// **What the author who adds the lane owes**, so it is written before it is
-/// needed rather than after: absorb every frame onto an empty fold in stream
-/// order, letting the newer `delta` kind win; a read starts holding nothing,
-/// so a dropped connection is re-asked and the first frame is whole; and
-/// `Seat::answered` is the wrong door — it decodes `stream.last()`, which for
-/// an append stream is the final delta alone.
+/// **What this seat does with it, and why the fold is not needed here.** §5.5
+/// also says *"a read starts holding nothing"* and *"Two reads by the same
+/// seat are two reads: the second starts holding nothing, so it replaces
+/// rather than appending."* This seat holds no connection (DESIGN §7): it
+/// asks `follow` one shot at a time while a turn is in flight, so every read
+/// it makes is a first frame — the whole tail so far — and its fold is
+/// assignment. An author who later HOLDS the connection owes the real fold:
+/// absorb every frame onto an empty fold in stream order, newer `delta` kind
+/// winning, and `Seat::answered` is the wrong door for it — it decodes
+/// `stream.last()`, which for an append stream is the final delta alone.
 ///
 /// The tool host's `invocations` read is follow-CLASS and is **not** this
 /// lane: its answer is one frame of rows, and §5.5's rule is about a text
-/// fold. It stays `Reads`.
-pub const FOLLOW_IS_AN_APPEND: &str =
-    "REMOTE §5.5's append lane — this seat re-reads the transcript at cadence and follows nothing";
-
+/// fold.
 /// DESIGN §8: *"One rung, and the other two are not omissions. The bare rung
 /// is the whole slice: a phone is not where a work directory is chosen or a
 /// ball is bound."*

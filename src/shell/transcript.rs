@@ -55,7 +55,7 @@ impl Shell {
             // platform's floor: the conversation-level acts (§13.2's
             // controls row, bl-0267).
             self.controls(ui, snap);
-            if let Some(taken) = super::chat::composer(ui, &mut self.composer, "message")
+            if let Some(taken) = super::composer::composer(ui, &mut self.composer, "message")
                 && let Some(model) = self.model()
             {
                 model.deposit(taken);
@@ -72,6 +72,16 @@ impl Shell {
                             if super::chat::row(ui, row) {
                                 flipped = Some(row.key.clone());
                             }
+                        }
+                        // The answer still being written, under the rows the
+                        // engine has written down (bl-4822). The scroller
+                        // sticks to the bottom, so growth here is what the
+                        // operator watches; egui unsticks it the moment a
+                        // hand scrolls up and re-sticks when it returns.
+                        if let Some(stream) = &snap.live
+                            && !stream.is_empty()
+                        {
+                            super::chat::live(ui, stream);
                         }
                     });
                 });

@@ -19,6 +19,7 @@ use serde_json::{Value, json};
 
 mod conv;
 pub(crate) mod fields;
+pub mod follow;
 pub mod pick;
 pub mod reply;
 pub mod request;
@@ -28,6 +29,7 @@ mod transcript;
 mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
+pub use follow::Stream;
 pub use pick::ProviderRow;
 pub use request::decode;
 pub use start::Prepared;
@@ -96,6 +98,10 @@ pub enum Ask {
     Conversations { workspace: String },
     /// One conversation's transcript, in message order.
     Transcript { workspace: String, agent: String },
+    /// **The answer in flight** (REMOTE §5.5, bl-4822), read one shot at a
+    /// time: every read starts holding nothing, so what comes back is the
+    /// whole tail so far and this seat replaces rather than appends.
+    Follow { workspace: String, agent: String },
     /// One workspace's providers, with the credential fact each states about
     /// itself. Per workspace, because sign-ins are (bl-0267).
     Providers { workspace: String },
@@ -133,6 +139,9 @@ pub fn encode(gesture: &Gesture) -> Value {
             json!({ "op": "transcript", "workspace": workspace, "agent": agent })
         }
         Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
+        Gesture::Ask(Ask::Follow { workspace, agent }) => {
+            json!({ "op": "follow", "workspace": workspace, "agent": agent })
+        }
         Gesture::Ask(Ask::Providers { workspace }) => {
             json!({ "op": "providers", "workspace": workspace })
         }

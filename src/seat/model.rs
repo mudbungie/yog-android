@@ -10,7 +10,7 @@
 
 use std::path::PathBuf;
 use std::sync::mpsc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use super::pass::Standing;
 use super::{Focus, Snapshot};
@@ -182,7 +182,7 @@ fn run(
         // `Stop` before the receiver can go away (join precedes field drop),
         // so shutdown always arrives as a command, never as a dead channel.
         let _ = out.send(standing.pass(seat, cache, &focus, note.take()));
-        match cmds.recv_timeout(cadence) {
+        match wait(seat, cmds, cadence, &mut standing, &focus, out) {
             Ok(Cmd::Workspace(workspace)) => {
                 focus = Focus {
                     workspace,
@@ -238,3 +238,46 @@ fn learned(
         Err(why) => Some(why),
     }
 }
+
+/// **How long between passes — and what happens inside that wait** (bl-4822).
+///
+/// The world is re-read at the model's own cadence and nothing about that
+/// changed. What changed is that a conversation which is WRITING is asked for
+/// its tail on a quicker rest while the wait runs: `follow` one shot at a
+/// time (REMOTE §5.5), published as it lands, so arriving text appears four
+/// times a rest instead of once a cadence. Each tick costs one small read of
+/// the answer so far rather than a whole transcript, which is the difference
+/// between smoothing the arrival and paying the amplification the lane was
+/// built to remove (upstream measured 20x, quadratic in the answer's length).
+///
+/// It hands back exactly what `recv_timeout` hands back, so the loop above
+/// reads the same three outcomes it always did.
+fn wait(
+    seat: &Seat,
+    cmds: &mpsc::Receiver<Cmd>,
+    cadence: Duration,
+    standing: &mut Standing,
+    focus: &Focus,
+    out: &mpsc::Sender<Snapshot>,
+) -> Result<Cmd, mpsc::RecvTimeoutError> {
+    let deadline = Instant::now() + cadence;
+    loop {
+        let left = deadline.saturating_duration_since(Instant::now());
+        if left.is_zero() || !standing.streaming(focus) {
+            // Not writing, or the cadence is up: the caller's own pass is the
+            // next thing that should happen.
+            return cmds.recv_timeout(left);
+        }
+        match cmds.recv_timeout(LIVE_REST.min(left)) {
+            Err(mpsc::RecvTimeoutError::Timeout) => {
+                let _ = out.send(standing.living(seat, focus));
+            }
+            other => return other,
+        }
+    }
+}
+
+/// How long between reads of an answer being written. Short enough that text
+/// arrives in pieces an eye can follow, long enough that a phone's radio is
+/// not held awake for a paragraph.
+const LIVE_REST: Duration = Duration::from_millis(500);

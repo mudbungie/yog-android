@@ -13,6 +13,7 @@
 use serde_json::{Map, Value};
 
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
+use super::follow::{Stream, stream_of};
 use super::pick::{self, ProviderRow};
 use super::start::{self, Prepared};
 use super::tools::{Capture, Invocation, capture_of, invocation_of};
@@ -60,6 +61,10 @@ pub enum Reply {
     Providers(Vec<ProviderRow>),
     /// One provider's model names, in the engine's order.
     Models(Vec<String>),
+    /// **The answer in flight** (REMOTE §5.5): as much of it as has landed
+    /// when the read was made. One shot per read, so this is the whole tail
+    /// and not a delta to append — see `codec::follow`.
+    Follow(Stream),
     /// The receipt a nudge earns (bl-d09e). It carries nothing: the act
     /// said everything, and what the nudge DID shows up in the next
     /// transcript read like any other work.
@@ -98,6 +103,7 @@ impl Reply {
             Self::Models(_) => "models",
             Self::Applied => "applied",
             Self::Nudged => "nudged",
+            Self::Follow(_) => "follow",
         }
         .to_owned()
     }
@@ -134,6 +140,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "models" => Reply::Models(pick::names(o)?),
         "applied" => Reply::Applied,
         "nudged" => Reply::Nudged,
+        "follow" => Reply::Follow(stream_of(o)?),
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,
             capture: opt_val(o, "capture", capture_of)?,

@@ -30,6 +30,12 @@ pub(super) struct Standing {
     /// pass does not read it — the selectors are their own gestures
     /// (bl-0267).
     pub(super) options: Options,
+    /// **The answer in flight** (bl-4822), read on its own quicker rest. It
+    /// is painted into every published snapshot and never into `last`: a
+    /// tail that changes five times a second must not make the §14 cache
+    /// rewrite itself five times a second, and what the cache is for is the
+    /// world the engine has written down.
+    live: Option<crate::codec::Stream>,
     last: Snapshot,
     failed: u32,
     /// What was last WRITTEN to the cache, so a pass that changed nothing
@@ -46,6 +52,7 @@ impl Standing {
     pub(super) fn resumed(snap: Snapshot, options: Options) -> Self {
         Self {
             options,
+            live: None,
             last: snap.clone(),
             failed: 0,
             stored: snap,
@@ -114,7 +121,14 @@ impl Standing {
                 self.last = fresh;
             }
         }
+        // A turn that has finished has no tail: the answer arrives as a
+        // transcript row, and a fold left standing under it would be the
+        // same words twice (bl-4822).
+        if !self.streaming(focus) {
+            self.live = None;
+        }
         let mut out = self.last.clone();
+        out.live.clone_from(&self.live);
         // Painted onto the published snapshot as well as onto `fresh`: a
         // pass that failed republishes last-good rows, and the selectors'
         // offerings are not the pass's to lose (bl-0267).
@@ -187,4 +201,39 @@ pub(super) fn answer(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), String> {
 /// with `seat::acts`, which asks the same question of a receipt.
 pub(super) fn kind_err(asked: &str, got: &Reply) -> String {
     format!("{asked}: the engine answered {} instead", got.kind())
+}
+
+impl Standing {
+    /// **Whether the focused conversation is writing right now** — read off
+    /// the row's own `flight`, which is where every conversation-level gate
+    /// rides (REMOTE §9.4). A conversation the list has not caught up with
+    /// has no row and so is not streaming, which is the honest answer.
+    pub(super) fn streaming(&self, focus: &Focus) -> bool {
+        let Some(agent) = focus.agent.as_deref() else {
+            return false;
+        };
+        self.last
+            .conversations
+            .iter()
+            .find(|row| row.root_id == agent)
+            .is_some_and(|row| row.flight.is_some())
+    }
+
+    /// One live read, and the snapshot to publish for it. The tail replaces
+    /// whatever was held (§5.5: every read of this seat's is a first frame),
+    /// and a failure is a sentence for the banner like any other — it does
+    /// not stop the lane, because the next tick re-asks and is whole.
+    pub(super) fn living(&mut self, seat: &Seat, focus: &Focus) -> Snapshot {
+        let read = super::acts::follow(seat, focus);
+        let mut out = self.last.clone();
+        match read {
+            Ok(stream) => {
+                self.live = Some(stream);
+                out.live.clone_from(&self.live);
+            }
+            Err(why) => out.error = Some(why),
+        }
+        self.options.paint(focus, &mut out);
+        out
+    }
 }
