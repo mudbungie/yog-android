@@ -34,6 +34,25 @@ mod scan;
 
 pub(crate) use scan::Scanner;
 
+/// **What this device stands at, for the screen that would change it**: where
+/// material goes, the sentence a half-provisioned store earns, and the
+/// identity a landing would replace. One parameter rather than three, because
+/// they are one question — what is here now — and because a screen function
+/// that grew a fourth of them would be a signature nobody reads (bl-f12d).
+///
+/// Owned and rebuilt per frame: it is three small strings off state the frame
+/// already holds, and the house style takes the clone over threading a
+/// borrow through a paint stack.
+pub(super) struct Landing {
+    /// This app's material directory, painted so an operator can act on it.
+    pub(super) dir: String,
+    /// The half-provisioned sentence, when there is one.
+    pub(super) refusal: Option<String>,
+    /// The running identity a landing would replace, or `None` on a device
+    /// with nothing to lose.
+    pub(super) replacing: Option<String>,
+}
+
 /// What a tap on an opened screen asked for. `Stay` is every frame in which
 /// nothing was pressed; the way back is the bar's (bl-7a57), not this
 /// screen's.
@@ -117,9 +136,22 @@ impl Shell {
                 ),
             );
         }
+        // What an envelope landed here would REPLACE, when there is
+        // something to lose (bl-f12d). `None` on a cold device: nothing is
+        // running, so there is no consequence to state — and the identity
+        // line is the one that already knows, so this derives from it rather
+        // than reading the leaf a second time.
+        let landing = Landing {
+            dir,
+            refusal,
+            replacing: match &self.running {
+                Running::Cold { .. } => None,
+                _ => Some(self.identity()),
+            },
+        };
         let scanner = &mut self.scanner;
         let (text, said) = (&mut self.envelope, &mut self.envelope_said);
-        match opened(ui, offer, &dir, refusal.as_ref(), text, said, scanner) {
+        match opened(ui, offer, &landing, text, said, scanner) {
             Act::Stay => {}
             Act::Recheck => {
                 self.forget_envelope();
@@ -189,8 +221,7 @@ fn choice(ui: &mut egui::Ui, offer: &Offer, emphasised: bool) -> bool {
 fn opened(
     ui: &mut egui::Ui,
     offer: &Offer,
-    dir: &str,
-    refusal: Option<&String>,
+    landing: &Landing,
     text: &mut String,
     said: &mut Option<String>,
     scanner: &mut Scanner,
@@ -199,7 +230,7 @@ fn opened(
     // under a heading and a back control belonging to a screen it is covering
     // reads as two screens at once.
     if scanner.live() {
-        if material::scanned(ui, dir, text, said, scanner) {
+        if material::scanned(ui, &landing.dir, text, said, scanner) {
             return Act::Recheck;
         }
         return Act::Stay;
@@ -214,7 +245,7 @@ fn opened(
             ui.weak("this bootstrap starts nothing.");
             return;
         }
-        if material::screen(ui, offer, dir, refusal, text, said, scanner) {
+        if material::screen(ui, offer, landing, text, said, scanner) {
             act = Act::Recheck;
         }
     });

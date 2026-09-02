@@ -845,6 +845,23 @@ it lands and on the way back out of the screen (`Shell::forget_envelope`).
 Nothing logs it. It is the one place this app holds key material it was not
 handed a file for.
 
+**Landing over a provisioned device states what it destroys** (bl-f12d). One
+device holds one leaf (§9, §13.3), so landing is not addition: `envelope::land`
+overwrites the four `material::WANTED` files in place, and the private key that
+was there is gone — the engine shredded its copy at the mint (above), so
+nothing on either side can hand it back and the only recovery is a fresh mint.
+The operator hit this live: a device running as a seat took a Thrall envelope,
+derived Foot on the next boot, and every chat screen lawfully vanished, which
+reads at the glass as an app that lost the way back to the conversations. The
+land was correct; it was silent. So the enrollment screen paints the running
+identity and that consequence **beside the control that acts** — above the
+enroll and scan buttons, in the words §13.3 rules (`<name> · Lernie`, the
+brand and not the grade). **Not a confirmation**: §13.2 says nothing in this
+app is modal except the camera, and a dialog dismissed on the way to a button
+is read less than a sentence standing under one. A cold device is told
+nothing, because there is nothing to lose and a warning about an identity that
+does not exist is noise.
+
 ## 12. Scanning the envelope: the decoder and the capture route (bl-d815)
 
 §11 built the paste field first and called a decoder "only a producer of the
@@ -954,7 +971,10 @@ here is a defect.
 - **W5 — re-provisioning.** The mark, from any screen, opens the same
   surface W1 used; the chooser states what is running and offers the way
   back (bl-e192). Landing new material and rechecking is the exit that
-  changes what runs.
+  changes what runs — and the enrollment screen says so before it is taken:
+  the running identity and the fact that landing replaces it and destroys
+  the old key stand beside the control that acts (§11, bl-f12d), because
+  the act is one keystroke and its remedy is a trip to the engine.
 - **W6 — the engine on this phone.** The Yog offer explains the recorded
   blockers and starts nothing (§10). It is the deliberate, non-default
   choice and reads like one.

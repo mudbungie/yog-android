@@ -19,7 +19,7 @@
 use eframe::egui;
 
 use super::super::app::ENVELOPE;
-use super::Scanner;
+use super::{Landing, Scanner};
 use crate::bootstrap::Offer;
 
 /// The enrollment screen. Returns whether the material should be re-read —
@@ -27,8 +27,7 @@ use crate::bootstrap::Offer;
 pub(super) fn screen(
     ui: &mut egui::Ui,
     offer: &Offer,
-    dir: &str,
-    refusal: Option<&String>,
+    landing: &Landing,
     text: &mut String,
     said: &mut Option<String>,
     scanner: &mut Scanner,
@@ -39,7 +38,7 @@ pub(super) fn screen(
     }
     ui.add_space(4.0);
     ui.strong("put them at");
-    ui.label(format!("  {dir}"));
+    ui.label(format!("  {}", landing.dir));
     ui.add_space(8.0);
     ui.label(&offer.how);
     ui.add_space(8.0);
@@ -49,9 +48,9 @@ pub(super) fn screen(
     }
     ui.add_space(12.0);
     ui.separator();
-    let landed = envelope(ui, dir, text, said, scanner);
+    let landed = envelope(ui, landing, text, said, scanner);
     ui.separator();
-    if let Some(why) = refusal {
+    if let Some(why) = &landing.refusal {
         ui.colored_label(egui::Color32::LIGHT_RED, why);
     } else {
         ui.weak("nothing has arrived yet.");
@@ -87,7 +86,7 @@ pub(super) fn scanned(
 /// material landed.
 fn envelope(
     ui: &mut egui::Ui,
-    dir: &str,
+    landing: &Landing,
     text: &mut String,
     said: &mut Option<String>,
     scanner: &mut Scanner,
@@ -115,10 +114,30 @@ fn envelope(
             );
         });
     let ready = !text.trim().is_empty();
+    // **What landing costs, said before the control that spends it**
+    // (bl-f12d). One device holds one leaf (§9), so an envelope does not join
+    // this device's identities — it REPLACES the one running, overwriting the
+    // material in place and destroying a private key nothing on this device
+    // or the engine can hand back. Not a dialog and not a confirmation:
+    // §13.2 keeps this app unmodal, and a consequence an operator reads
+    // beside the button is worth more than one they dismiss to reach it.
+    if let Some(running) = &landing.replacing {
+        ui.add_space(4.0);
+        ui.colored_label(
+            egui::Color32::LIGHT_YELLOW,
+            format!(
+                "this device is {running}. Landing an envelope replaces that \
+                 identity: this device's certificate and its private key are \
+                 overwritten in place, the old key is destroyed, and getting it \
+                 back is a fresh mint from the engine.",
+            ),
+        );
+    }
+    ui.add_space(4.0);
     let mut landed = false;
     ui.horizontal(|ui| {
-        landed =
-            ui.add_enabled(ready, egui::Button::new("enroll")).clicked() && land(dir, text, said);
+        landed = ui.add_enabled(ready, egui::Button::new("enroll")).clicked()
+            && land(&landing.dir, text, said);
         // Beside paste, never instead of it (bl-d815). The camera is one way
         // to fill this field; a laptop screen read by eye is the other, and
         // the second one works on a device with no camera, no permission and
