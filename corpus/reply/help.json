@@ -78,9 +78,9 @@
           "verb": "prepare"
         },
         {
-          "detail": "Fires the detached `litany prompt` a `/prepare` made ready, with this goal as its whole tail, verbatim. Refuses when nothing is prepared. At a seat with no composer to hold it — a terminal, where each `yog gesture` is its own process — hand the `/prepare` reply's own `prepared` object back with `yog gesture --prepared '<that object>' '/prompt <goal…>'`. The conversation keeps running whatever yog does. The receipt's `conversation` is the minted name, and a name is an address: hand it back at `--agent` to any conversation verb or read.",
+          "detail": "Fires the detached `litany prompt` a `/prepare` made ready, with this goal as the whole payload, verbatim — nothing is prepended to it. Say no goal and the `/prepare` reply's own prefill fires instead, whole: the ball rung's `Ball <id>: <title>` header and body, or the path rung's `Working directory: <dir>` preamble. A bare start prepares no prefill, so there the goal is required. To fire a prefill with words of your own, send the two joined as one goal — that text is the reply's `prepared.goal`, and editing it is exactly what a seat with a composer does. Refuses when nothing is prepared. At a seat with no composer to hold it — a terminal, where each `yog gesture` is its own process — hand the `/prepare` reply's own `prepared` object back with `yog gesture --prepared '<that object>' '/prompt [<goal…>]'`. The conversation keeps running whatever yog does. The receipt's `conversation` is the minted name, and a name is an address: hand it back at `--agent` to any conversation verb or read.",
           "summary": "fire the prepared start with this goal, verbatim",
-          "usage": "/prompt <goal…>",
+          "usage": "/prompt [<goal…>]",
           "verb": "prompt"
         },
         {
@@ -312,7 +312,7 @@
           "verb": "step"
         },
         {
-          "detail": "The agent's own worktree read-only: goal, soul, summaries, skills and whatever work products it has written, as a sorted listing with each entry's size. Name a path exactly as the listing gives it to read that file's contents instead; only a file this same listing just named can be opened, and a large one comes back truncated with its true size. The listing is bounded, and says when it hit the bound. A conversation whose worktree has been torn down is said outright rather than shown as an empty directory. `--at` reads a commit's tree instead of the worktree — the same agent-context-files-as-of the window's notch pin shows — and a commit this conversation never recorded simply holds no files.",
+          "detail": "The agent's own worktree read-only: goal, soul, summaries, skills and any work product written there, as a sorted listing with each entry's size. Name a path exactly as the listing gives it to read that file's contents instead; only a file this same listing just named can be opened, and a large one comes back truncated with its true size. The listing is bounded, and says when it hit the bound. A conversation whose worktree has been torn down is said outright rather than shown as an empty directory. A conversation bound to a work target — a path or ball start — runs every tool step there instead, so its deliverable is not in this listing at all: the answer then carries `working_dir`, the directory it is in, and its absence means this listing is where the work lands. `--at` reads a commit's tree instead of the worktree — the same agent-context-files-as-of the window's notch pin shows — and a commit this conversation never recorded simply holds no files.",
           "summary": "the conversation's working files, and one file's contents",
           "usage": "/files [<path>] [--at <commit>]",
           "verb": "files"

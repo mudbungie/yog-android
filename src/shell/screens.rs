@@ -124,9 +124,24 @@ impl Shell {
                     if snap.conversations.is_empty() {
                         ui.weak("nothing here yet — say what to start below");
                     }
-                    for row in &snap.conversations {
+                    // Newest first, and each row says when (REMOTE §9.9,
+                    // bl-e837). Both readings spend the stamp the engine
+                    // carries; the clock is read once for the whole list so
+                    // no two rows are dated from different instants.
+                    let now = crate::roster::now_unix();
+                    for row in crate::roster::ordered(snap.conversations.clone()) {
                         let mark = if row.attention > 0 { " ●" } else { "" };
-                        let label = format!("{}{mark}\n{}", row.display, row.preview);
+                        let when = crate::roster::stamp(row.last_active_unix, now);
+                        let label = format!("{}{mark} · {when}\n{}", row.display, row.preview);
+                        // **Why the latest call did not run** (§9.10), where
+                        // the tone already inks the row: the hue is the
+                        // engine's reading and this is its words. A `Bad`
+                        // tone with no clause is the third thing it is — a
+                        // failure that left none — and says nothing extra.
+                        let label = match &row.failure {
+                            Some(why) => format!("{label}\n{why}"),
+                            None => label,
+                        };
                         // The row's ink is the ENGINE's reading of it, not a
                         // second one taken here (bl-ef9a). `Tone::Bad` is the
                         // one passive sighting of a conversation refused at

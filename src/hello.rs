@@ -45,14 +45,27 @@ use crate::frame;
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
-/// **2 since yog bl-77be**, which is exactly that case twice over: the
-/// advertised element gained `subject_cwd` and an invocation gained `cwd`
-/// (REMOTE §5.1, §5.3), and the corpus drift ledger refused the change at the
-/// standing version. A third meaning moved in the same release under an
-/// unchanged signature — REMOTE §5.5's follow frame is now an **append** —
-/// which no ledger can see, so a client that consumes that lane must read the
-/// section and not only re-vendor the fixtures.
-pub const PROTOCOL: u32 = 2;
+/// **4 since the re-vendor of bl-e837.** Three moves stand behind it and the
+/// last two are why an old build must not be left running: 2 was the
+/// tool-host pair (`subject_cwd` on an advertised element, `cwd` on an
+/// invocation — REMOTE §5.1, §5.3); **3** put `failure` on the conversation
+/// row, the agent answer and the queue row (§9.10); **4** put `flag` on the
+/// queue row (§9.11). `last_active_unix` rode in at 2 with §9.9.
+///
+/// **The version is the only thing that breaks an old seat, and it breaks it
+/// on purpose.** An unknown FIELD is tolerated — this codec reads the fields
+/// it spells and ignores the rest, which `codec::conv`'s own test pins — so
+/// none of those three shapes would have hurt a protocol-2 build. What ends
+/// it is this preface: fail-closed, both ways, by §3's design. A seat that
+/// does not follow the engine's number stops speaking to it, whatever it can
+/// or cannot read.
+///
+/// One meaning moved with no signature to see it, and it is still true:
+/// REMOTE §5.5's follow frame is an **append**, so a client that consumes
+/// that lane must read the section and not only re-vendor the fixtures
+/// (DESIGN §7 — this seat reads the lane one shot at a time, where the fold
+/// is assignment).
+pub const PROTOCOL: u32 = 4;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

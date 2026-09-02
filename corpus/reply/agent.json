@@ -85,6 +85,7 @@
       "agent": "r-0",
       "display": "r-0",
       "display_only": false,
+      "failure": "no credential for provider row \"work\"",
       "kind": "agent",
       "nudgeable": false,
       "ok": true,
@@ -110,6 +111,6 @@
       "tip": ""
     }
   ],
-  "protocol": 2,
+  "protocol": 3,
   "shape": "agent"
 }

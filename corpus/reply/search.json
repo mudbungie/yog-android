@@ -19,7 +19,7 @@
           "excerpt": "ws",
           "field": "summary",
           "offset": 3,
-          "workspace": "/ws"
+          "workspace": "ws"
         },
         {
           "agent": "c-1",
@@ -27,11 +27,11 @@
           "excerpt": "the gate",
           "field": "text",
           "offset": 12,
-          "workspace": "/ws"
+          "workspace": "ws"
         }
       ],
       "unreadable": [
-        "/p: not a repo"
+        "p: balls unlistable"
       ]
     },
     {

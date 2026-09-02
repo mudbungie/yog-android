@@ -17,7 +17,7 @@ fn convs() -> Value {
     json!({ "ok": true, "kind": "conversations",
             "rows": [{ "root_id": "a1", "display": "d", "display_only": false,
                        "state": "quiescent", "uncertain": false, "preview": "",
-                       "age_secs": 0, "attention": 0, "members": 1, "direct": 0,
+                       "age_secs": 0, "last_active_unix": 1_700_000_042_i64, "attention": 0, "members": 1, "direct": 0,
                        "stoppable": false, "stop_children": false, "depth": 0,
                        "tone": "plain" }] })
 }
@@ -235,4 +235,41 @@ fn a_file_of_the_previous_layout_is_discarded() {
     assert_ne!(older, body, "the stamp must be in the file to be lowered");
     std::fs::write(&at, older).unwrap();
     assert!(read(&at).is_none());
+}
+
+/// **A cache written by the last build discards cleanly** (bl-e837). The
+/// installed app stored its envelopes at PROTOCOL 2; this one speaks 4, and
+/// the file names the version it was written at, so it is refused whole
+/// rather than half-read. Two independent things would each refuse it — the
+/// stamp, and the rows themselves, which were written before
+/// `last_active_unix` existed and no longer decode — and the test pins both,
+/// because the second is what would catch a future author who decided the
+/// stamp was redundant.
+#[test]
+fn a_cache_from_the_previous_protocol_discards() {
+    let at = path();
+    std::fs::create_dir_all(at.parent().unwrap()).unwrap();
+    let old_row = json!({ "root_id": "a1", "display": "d", "display_only": false,
+                          "state": "quiescent", "uncertain": false, "preview": "",
+                          "age_secs": 0, "attention": 0, "members": 1, "direct": 0,
+                          "stoppable": false, "stop_children": false, "depth": 0,
+                          "tone": "plain" });
+    let stale = json!({
+        super::TAG: VERSION, "protocol": 2,
+        "focus": { "workspace": "home", "agent": null },
+        "workspaces": ws(),
+        "conversations": { "ok": true, "kind": "conversations", "rows": [old_row] },
+        "transcript": null });
+    std::fs::write(&at, stale.to_string()).unwrap();
+    assert!(read(&at).is_none(), "the version stamp refuses it");
+
+    // …and with the stamp forged to this build's, the rows still refuse: a
+    // conversation row without `last_active_unix` is not one this build can
+    // read (REMOTE §9.9).
+    let forged = stale.to_string().replace(
+        "\"protocol\":2",
+        &format!("\"protocol\":{}", crate::hello::PROTOCOL),
+    );
+    std::fs::write(&at, forged).unwrap();
+    assert!(read(&at).is_none(), "the rows refuse it too");
 }

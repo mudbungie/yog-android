@@ -88,7 +88,7 @@ pub(super) fn conv_flying() -> Vec<u8> {
     json!({ "ok": true, "kind": "conversations",
             "rows": [{ "root_id": "a1", "display": "d", "display_only": false,
                        "state": "in-flight", "uncertain": false, "preview": "",
-                       "age_secs": 0, "flight": "inference", "attention": 0,
+                       "age_secs": 0, "last_active_unix": 1_700_000_042_i64, "flight": "inference", "attention": 0,
                        "members": 1, "direct": 0, "stoppable": true,
                        "stop_children": false, "depth": 0, "tone": "live" }] })
     .to_string()
@@ -99,7 +99,7 @@ pub(super) fn conv_reply() -> Vec<u8> {
     json!({ "ok": true, "kind": "conversations",
             "rows": [{ "root_id": "a1", "display": "d", "display_only": false,
                        "state": "quiescent", "uncertain": false, "preview": "",
-                       "age_secs": 0, "attention": 0, "members": 1, "direct": 0,
+                       "age_secs": 0, "last_active_unix": 1_700_000_042_i64, "attention": 0, "members": 1, "direct": 0,
                        "stoppable": false, "stop_children": false, "depth": 0,
                        "tone": "plain" }] })
     .to_string()

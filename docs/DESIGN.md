@@ -64,6 +64,17 @@ hand-codec discipline (`src/boundary/codec.rs` there). `serde_json` enters as
 the parse substrate when that ball lands, matching the server's own framing
 dependency; serde *derive* stays a non-dependency, as upstream.
 
+**The corpus and the spoken version move together, and the version is the
+only thing that breaks an installed seat** (bl-e837). An unknown FIELD is
+tolerated — this codec is strict about the fields it spells and says nothing
+about extra ones, which `codec::conv`'s own test pins — so an engine that
+grows a column does not break a seat that predates it. The §3 preface is what
+breaks it, fail-closed and on purpose. So a protocol bump upstream is a
+**re-vendor and a rebuild here**, not a compatibility shim: re-vendor
+`corpus/` from a yog checkout at the new number, raise `hello::PROTOCOL` to
+match, decode whatever the moved shapes gained, and let the §14 cache's own
+version stamp discard what the previous build stored.
+
 **Every connection opens with a version preface (bl-93e3).** REMOTE §3 is the
 authority and this file cites rather than restates it: each end writes one
 frame, `{"protocol": <integer>}`, before it reads the peer's; a mismatch is
@@ -260,6 +271,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/res/drawable/ic_launcher_{foreground,background}.xml` + `res/mipmap-anydpi-v26/ic_launcher.xml` | the generated layers and the five lines of adaptive-icon wiring that name them | landed (bl-0b31) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape, and the live fold under them | landed (bl-0ed6, bl-4822) |
 | `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
+| `src/roster.rs` | the conversation list's two readings of the carried stamp: newest-first order, and how long ago each row says it is — pure, host-tested | landed (bl-e837) |
 | `src/outbox.rs` | the one rule the local echo needs: has this message come back in a transcript read yet — pure, host-tested | landed (bl-66fb) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
@@ -1211,11 +1223,12 @@ the seat neither derives them nor deposits a slash line: a `/stop` deposit is
 CONTENT, and content wakes the driver it meant to kill), and **the nudge**
 (landed bl-d09e — §8.2's re-prompt for a branch that stopped advancing,
 offered while the row states no flight; it deposits nothing, so a poked
-conversation carries no line saying it was poked).
+conversation carries no line saying it was poked), and **the roster's
+timestamps and failure clauses** (landed bl-e837 — REMOTE §9.9 and §9.10 put
+both on the row, so the ask became a re-vendor).
 **Upstream asks** (the wire does not carry the fact; a ball on the server's
-board, not a shim here): conversation timestamps on roster rows;
-conversation search; push notifications (the engine dials nothing, so a
-channel is a REMOTE design act, not an app feature).
+board, not a shim here): conversation search; push notifications (the engine
+dials nothing, so a channel is a REMOTE design act, not an app feature).
 **Already on this board:** entries — one device as a client of many engines
 (REMOTE §8.2, bl-d0d2).
 

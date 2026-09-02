@@ -22,6 +22,7 @@ pub mod icon;
 pub mod leaf;
 pub mod material;
 pub mod outbox;
+pub mod roster;
 pub mod rows;
 pub mod scan;
 pub mod seat;

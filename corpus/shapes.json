@@ -1,5 +1,5 @@
 {
-  "protocol": 2,
+  "protocol": 4,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -29,6 +29,7 @@
         "/context:object",
         "/display:string",
         "/display_only:bool",
+        "/failure:string",
         "/flight:string",
         "/held/reason:string",
         "/held/tool:string",
@@ -69,7 +70,7 @@
         "/tip:string",
         ":object"
       ],
-      "since": 2
+      "since": 3
     },
     "reply/answered": {
       "signature": [
@@ -107,6 +108,12 @@
         "/rows/[]/age_secs:number",
         "/rows/[]/agent:string",
         "/rows/[]/display:string",
+        "/rows/[]/failure:null",
+        "/rows/[]/failure:string",
+        "/rows/[]/flag/at:string",
+        "/rows/[]/flag/reason:string",
+        "/rows/[]/flag:null",
+        "/rows/[]/flag:object",
         "/rows/[]/held/reason:string",
         "/rows/[]/held/tool:string",
         "/rows/[]/held/tool_use:string",
@@ -123,7 +130,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 4
     },
     "reply/balls": {
       "signature": [
@@ -261,7 +268,9 @@
         "/rows/[]/direct:number",
         "/rows/[]/display:string",
         "/rows/[]/display_only:bool",
+        "/rows/[]/failure:string",
         "/rows/[]/flight:string",
+        "/rows/[]/last_active_unix:number",
         "/rows/[]/members:number",
         "/rows/[]/name:string",
         "/rows/[]/preview:string",
@@ -275,7 +284,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 3
     },
     "reply/deleted": {
       "signature": [
@@ -340,10 +349,11 @@
         "/rows/[]:object",
         "/rows:array",
         "/truncated:bool",
+        "/working_dir:string",
         "/worktree:bool",
         ":object"
       ],
-      "since": 1
+      "since": 2
     },
     "reply/flagged": {
       "signature": [

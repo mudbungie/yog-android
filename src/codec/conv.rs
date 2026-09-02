@@ -22,6 +22,14 @@ pub struct ConvRow {
     pub uncertain: bool,
     pub preview: String,
     pub age_secs: i64,
+    /// **When the subtree last acted**, as a unix epoch second (REMOTE §9.9).
+    /// Carried rather than derived: a seat holding `age_secs` alone could
+    /// subtract it from its own clock, and then every client says a different
+    /// time for one instant. It rides BESIDE the age and is not a second copy
+    /// of it — the age is the distance from the ENGINE's clock at answer time
+    /// and is that clock's only carrier, the stamp is absolute, and the pair
+    /// says strictly more than either half.
+    pub last_active_unix: i64,
     pub flight: Option<Flight>,
     pub attention: usize,
     pub members: usize,
@@ -30,6 +38,12 @@ pub struct ConvRow {
     pub stop_children: bool,
     pub depth: usize,
     pub tone: Tone,
+    /// **Why the latest model call failed** (REMOTE §9.10), the provider's
+    /// own first clause. **Absent, not null**, and that is load-bearing: a
+    /// reader must never have to tell *no failure* from *a failure with
+    /// nothing to say*, so a `Bad` tone with no clause beside it reads as
+    /// exactly the third thing it is — a call that failed and left no words.
+    pub failure: Option<String>,
     /// The standing alignment verdict, untyped until painted here.
     pub alignment: Option<Value>,
     pub ball: Option<ConvBall>,
@@ -110,6 +124,7 @@ pub(crate) fn row(v: &Value) -> Result<ConvRow, String> {
         uncertain: bool_of(o, "uncertain")?,
         preview: str_of(o, "preview")?,
         age_secs: i64_of(o, "age_secs")?,
+        last_active_unix: i64_of(o, "last_active_unix")?,
         flight,
         attention: usize_of(o, "attention")?,
         members: usize_of(o, "members")?,
@@ -118,6 +133,7 @@ pub(crate) fn row(v: &Value) -> Result<ConvRow, String> {
         stop_children: bool_of(o, "stop_children")?,
         depth: usize_of(o, "depth")?,
         tone: pick(o, "tone", &TONES)?,
+        failure: opt(o, "failure", str_of)?,
         alignment: o.get("alignment").cloned(),
         ball: match o.get("ball") {
             None | Some(Value::Null) => None,

@@ -16,6 +16,7 @@
         }
       ],
       "truncated": true,
+      "working_dir": "/home/u/proj",
       "worktree": true
     },
     {
@@ -28,6 +29,6 @@
       "worktree": false
     }
   ],
-  "protocol": 1,
+  "protocol": 2,
   "shape": "files"
 }
