@@ -13,7 +13,12 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <!-- The mark, as an adaptive icon whose two layers are GENERATED from
+         the same walk the in-app mark is drawn from (bl-0b31): no committed
+         binary, one source, and a test that pins the assets to it. -->
     <application android:label="@string/app_name"
+                 android:icon="@mipmap/ic_launcher"
+                 android:roundIcon="@mipmap/ic_launcher"
                  android:theme="@style/Theme.AppCompat.NoActionBar">
         <activity android:name=".MainActivity"
                   android:exported="true"

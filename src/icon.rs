@@ -24,6 +24,7 @@
 //! machinery grows back if a surface needs it; it is not an omission.
 
 mod arc;
+pub mod drawable;
 
 use arc::lune;
 pub use arc::{Rib, Shape};

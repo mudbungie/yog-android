@@ -252,6 +252,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
 | `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
+| `src/icon/drawable.rs` | the same walk emitted as Android `VectorDrawable` XML — the launcher icon as a derivation, pinned byte-for-byte against the committed assets | landed (bl-0b31) |
+| `android/…/res/drawable/ic_launcher_{foreground,background}.xml` + `res/mipmap-anydpi-v26/ic_launcher.xml` | the generated layers and the five lines of adaptive-icon wiring that name them | landed (bl-0b31) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape | landed (bl-0ed6) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
@@ -1027,6 +1029,19 @@ here is a defect.
   the inset is spent in one place, and a widget that cannot fit inside the
   band it was handed is a widget deciding the layout — say the smaller
   minimum, do not pad around it.
+- **The launcher icon is the mark, and it is a derivation** (bl-0b31). The
+  app's face outside the app is the same walk `shell/mark.rs` paints inside
+  it — emitted as an adaptive icon's two `VectorDrawable` layers by
+  `icon::drawable` and pinned byte-for-byte against the committed assets by
+  its own test, so a constant moved in the walk fails a test naming the file
+  to regenerate rather than leaving two pictures of one mark. **XML, and
+  never a PNG**: the disclosure gate refuses any binary it cannot read, which
+  is correct, and an icon is one of the two things a project usually commits
+  a binary for. There is no density fallback because minSdk 28 means there is
+  no device that needs one. The safe-zone geometry is Android's: a 108-unit
+  viewport whose central 72 is the unit square the walk works in, which puts
+  the mark's furthest ink at 64.2 units — inside the 66-unit circle every
+  launcher mask keeps.
 - **Touch targets:** every navigation row and action control stands at
   least 44 points tall, full width where it lists — `shell/mark.rs` holds
   the one constant and `screens.rs`'s row helper spends it. In-content
