@@ -27,6 +27,31 @@ use crate::seat::Snapshot;
 /// states no second maximum of its own.
 const FIELD_CAP: f32 = 132.0;
 
+/// **The field's own padding, and with it the field's own resting height**
+/// (bl-01a6). A `TextEdit` at rest is one text row inside a two-point margin
+/// — nineteen points of box, which at the bottom of a forty-four point band
+/// reads as a thin line pressed into a corner, and is not a target a thumb
+/// can hit. So the padding is derived rather than chosen: half the difference
+/// between the §13.2 touch floor and one line of body text, top and bottom,
+/// which makes the resting field exactly the floor **and** centres the hint
+/// in it rather than sitting it on a baseline. Derived and not a constant
+/// because the line is the platform's — a device with larger text gets a
+/// larger field, and the floor is never the thing that gives.
+///
+/// The text is already the transcript's size and nothing here sets it: a
+/// `TextEdit`'s default font selection resolves to `TextStyle::Body`, which
+/// is what `chat::row` labels a body with.
+fn padding(ui: &egui::Ui) -> egui::Margin {
+    let line = ui.text_style_height(&egui::TextStyle::Body);
+    let pad = ((super::mark::TOUCH - line) / 2.0).max(SIDE_PAD).round() as i8;
+    egui::Margin::symmetric(SIDE_PAD as i8, pad)
+}
+
+/// The breathing room either side of the text, and the floor under the
+/// derived vertical padding — a hint hard against the frame reads as a
+/// cramped box however tall it is.
+const SIDE_PAD: f32 = 8.0;
+
 /// The composer row: the one editable field plus a send control, shared by
 /// the transcript's composer and the conversation starter — the same gesture
 /// at two depths, already sharing a widget id (DESIGN §8). Returns the taken
@@ -94,6 +119,7 @@ pub(super) fn composer(ui: &mut egui::Ui, text: &mut String, hint: &str) -> Opti
                             .id(egui::Id::new(super::app::COMPOSER.id))
                             .desired_width(f32::INFINITY)
                             .desired_rows(1)
+                            .margin(padding(ui))
                             .hint_text(hint),
                     )
                 });

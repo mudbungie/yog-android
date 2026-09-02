@@ -592,6 +592,19 @@ key, and without it the IME committed no newline at all), which is also what
 a phone composer does with enter — the field grows to a cap and scrolls
 inside it, and the button is the one send.
 
+**The FIELD's own resting height is the touch floor** (bl-01a6). A `TextEdit`
+at rest is one text row inside a two-point margin — nineteen points of box,
+which at the bottom of a forty-four point band read as a thin line pressed
+into a corner, and is not a target a thumb can hit. The operator's word for
+it was *super tiny*. So the field carries padding derived rather than chosen:
+half the difference between §13.2's touch floor and one line of body text,
+above and below, which makes the resting field exactly the floor and centres
+the hint in it instead of sitting it on a baseline. Derived, because the line
+height is the platform's — a device with larger text gets a larger field, and
+the floor is never the thing that gives. The text was always the transcript's
+own size (a `TextEdit` resolves to `TextStyle::Body`, which is what a row's
+body label uses); what was missing was the box around it.
+
 **The row is allocated its own height, never the screen's remainder**
 (bl-193c). Both callers paint bottom-up, so a row that asks for what is left
 is handed the entire rest of the screen, and its two children then resolve
