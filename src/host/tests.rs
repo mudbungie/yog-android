@@ -4,8 +4,9 @@
 //! so this device's side of the wire is pinned rather than assumed.
 
 mod consent;
+mod redial;
 
-use super::{Host, Standing};
+use super::{Health, Host, Nap, Standing};
 use crate::codec::{Capture, Tool};
 use crate::foot::Foot;
 use crate::test_support::{material, mint_ca, mint_leaf, scratch, serve_many};
@@ -68,7 +69,17 @@ fn host_against(scripts: Vec<Vec<Vec<u8>>>) -> (Host, std::thread::JoinHandle<Ve
     let dir = pki();
     let (address, served) = serve_many(&dir, "ca", "server", scripts);
     let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
-    (Host::start(foot, table(), Box::new(dispatch)), served)
+    (
+        Host::start(foot, table(), Box::new(dispatch), unslept()),
+        served,
+    )
+}
+
+/// A nap that does not sleep and says nothing — the ladder is not what these
+/// tests are about, and a suite that rested a real second per redial would be
+/// a suite nobody runs.
+fn unslept() -> Nap {
+    Box::new(|_| {})
 }
 
 /// Poll until a standing satisfies `pass` — the host publishes on its own
@@ -90,6 +101,16 @@ fn settle(host: &mut Host, pass: &dyn Fn(&Standing) -> bool) -> Standing {
             "no matching standing; last: {standing:?}"
         );
         std::thread::sleep(Duration::from_millis(2));
+    }
+}
+
+/// The sentence a stopped host published, if it is stopped — the reading four
+/// tests share, so the three-state [`Health`] is matched in one place rather
+/// than at every assertion.
+fn stopped(standing: &Standing) -> Option<String> {
+    match &standing.health {
+        Health::Stopped(why) => Some(why.clone()),
+        Health::Serving | Health::Redialling(_) => None,
     }
 }
 
@@ -192,8 +213,8 @@ fn a_refused_advertisement_stops_the_host_with_the_engines_sentence() {
         .to_string()
         .into_bytes();
     let (mut host, _served) = host_against(vec![vec![refusal]]);
-    let standing = settle(&mut host, &|s| s.stopped.is_some());
-    assert_eq!(standing.stopped.as_deref(), Some("not registered here"));
+    let standing = settle(&mut host, &|s| stopped(s).is_some());
+    assert_eq!(stopped(&standing).as_deref(), Some("not registered here"));
     assert!(!standing.advertised);
     assert_eq!(standing.served, 0);
 }
@@ -210,9 +231,9 @@ fn a_refused_completion_stops_the_host_rather_than_answering_into_it() {
         )],
         vec![refusal],
     ]);
-    let standing = settle(&mut host, &|s| s.stopped.is_some());
+    let standing = settle(&mut host, &|s| stopped(s).is_some());
     assert_eq!(
-        standing.stopped.as_deref(),
+        stopped(&standing).as_deref(),
         Some("no invocation \"i1\" is in flight")
     );
 }
@@ -220,24 +241,12 @@ fn a_refused_completion_stops_the_host_rather_than_answering_into_it() {
 #[test]
 fn a_wrong_reply_to_the_follow_read_names_what_came_instead() {
     let (mut host, _served) = host_against(vec![vec![advertised()], vec![advertised()]]);
-    let standing = settle(&mut host, &|s| s.stopped.is_some());
-    let stopped = standing.stopped.unwrap_or_default();
+    let standing = settle(&mut host, &|s| stopped(s).is_some());
+    let said = stopped(&standing).unwrap_or_default();
     assert!(
-        stopped == "the engine answered advertised, not this machine's work",
-        "stopped: {stopped}"
+        said == "the engine answered advertised, not this machine's work",
+        "stopped: {said}"
     );
-}
-
-#[test]
-fn a_dead_engine_stops_the_host_with_the_dial_that_failed() {
-    let (mut host, served) = host_against(vec![vec![advertised()]]);
-    settle(&mut host, &|s| s.advertised);
-    // Once the one scripted connection is served the listener is gone, so the
-    // follow-class read cannot be dialled at all.
-    served.join().unwrap();
-    let standing = settle(&mut host, &|s| s.stopped.is_some());
-    assert!(standing.stopped.is_some());
-    assert!(standing.advertised);
 }
 
 #[test]
@@ -275,7 +284,7 @@ fn a_frame_that_goes_away_mid_run_stops_the_host_after_it_answers() {
         ],
     );
     let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
-    let mut host = Host::start(foot, table(), Box::new(slow_dispatch));
+    let mut host = Host::start(foot, table(), Box::new(slow_dispatch), unslept());
     // Waiting for the advertisement is what puts the drop INSIDE the run: the
     // publish that failed is the loop's, not the one right after presenting.
     settle(&mut host, &|s| s.advertised);

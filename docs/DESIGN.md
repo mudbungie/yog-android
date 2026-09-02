@@ -225,13 +225,14 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
-| `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
+| `src/transport.rs` | the Seat: one connection per ask, server name off the address; `Wire`, the two-class failure (the channel, or an answer that was a no) | landed (bl-48d9, class bl-8641) |
 | `src/test_support.rs` + `test_support/serve.rs` | tests only: openssl-minted PKI; the one-shot and scripted multi-connection mTLS answering servers | landed (bl-48d9, split bl-5a98) |
 | `src/rows.rs` + `rows/{build,compacted,project,project/blocks}.rs` | the transcript's one-line row projection: the row vocabulary (class, tone, role, fold), the per-entry match and its labels, the preview/body split — pure, no paint | landed (bl-0ed6) |
 | `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
-| `src/host.rs` | the tool host loop: advertise, ride the follow read, run, complete — and refuse a carried `cwd` (§6) | landed (bl-d366, bl-0ac8) |
+| `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, and the three-state health | landed (bl-d366, split bl-8641) |
+| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete — refuse a carried `cwd` (§6), redial a broken channel up the ladder, stop on a refusal | landed (bl-0ac8, bl-8641) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
@@ -327,6 +328,44 @@ accidentally spend a gesture its own certificate refuses.
 contradiction: the tool-host gestures are the tool-host gestures whatever
 grade the leaf carries. One code path, so the seat-with-a-host case and the
 foot-only case are the same case.
+
+**The host redials a broken channel and stops on a refusal** (bl-8641,
+reversing the founding ruling). The first ruling was that a channel which
+fails stops the host with the sentence that stopped it, on the argument that
+reconnect policy is a statement about how a device is supervised and a thread
+that silently redialled forever would hide a broken seat from the operator
+holding the phone. That argument was written for a box that sits still. This
+is a phone: it changes networks hourly, and one `receive: Software caused
+connection abort` on a wifi transition left the host dead until the app was
+restarted — the tool host of a device whose whole point is being carried
+around. **What made silent redialling wrong was the silence, not the redial.**
+So the standing line is a three-state fact — serving, reconnecting, stopped —
+and a host climbing back says `tools: reconnecting…` with the sentence that
+broke the channel, for as long as it is climbing.
+
+The ladder doubles from one second to thirty and stays there, forever, with no
+attempt count: a device that changes networks hourly has no number of failures
+after which giving up is the right answer, and thirty seconds is both fast
+enough to be back before the operator looks and slow enough not to be a spin.
+A channel that got as far as being accepted starts the ladder over, because
+the dial that just worked is not history the next one answers for. The
+presentation goes with the connection that carried it, so a redial presents
+again — which is why `advertised` is a fact about the channel that is up now.
+
+**What is NOT redialled is everything the wire refused.** `crate::transport::Wire`
+draws the line where the code already knows it, at the socket: a connection
+that would not open, a write that did not land, a read that died are the
+channel; the engine declining the advertisement, a completion posted into no
+slot, an answer of the wrong kind, a reply that will not decode and a version
+that cannot be spoken to are answers, and none of them changes for being asked
+again. A host that redialled a refusal would earn one refusal per pass forever
+and put a wall of sentences where a stop belongs. **One window is on the wrong
+side of that line and stays there**: REMOTE §3 rules that a peer which hung up
+mid-preface is refused exactly as a peer of the wrong version, so a channel
+that dies inside the preface's own round trip stops the host rather than
+redialling. Narrowing it would be a client amending REMOTE, which §1 forbids;
+the window is one connect away from a dial that just succeeded, and the ladder
+covers everything after it.
 
 **The deviation, and why it is lawful.** REMOTE §5.2 derives a host's
 advertisement from an operator-authored `<yog-data-root>/tools.json` naming an

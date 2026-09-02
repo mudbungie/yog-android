@@ -3,9 +3,13 @@
 //! the same shape — one loop, three gestures, every one of them an ordinary
 //! boundary verb typable at any seat.
 //!
+//! This file is the **handle** the frame holds and the standing it paints;
+//! the loop itself is `host::serve`, split out when redialling gave the
+//! worker a policy of its own (bl-8641).
+//!
 //! It is a *client*, not a server, and that is REMOTE §3's routing ruling: the
-//! ask never inverts. This thread dials the engine exactly as the seat model
-//! does, presents what this machine can run, then **rides a follow-class
+//! ask never inverts. The worker thread dials the engine exactly as the seat
+//! model does, presents what this machine can run, then **rides a follow-class
 //! read** for its next invocation — one ordinary ask whose answer takes as
 //! long as it takes. It runs what comes back and posts each capture as an
 //! ordinary act. The phone opens no listening socket, ever (DESIGN §1).
@@ -15,11 +19,18 @@
 //! Nothing in the engine treats presence as the routing predicate, which is
 //! exactly why that is safe (REMOTE §5, bl-024b).
 //!
-//! **It does not reconnect, and it does not die quietly.** A channel that
-//! fails stops the host with the sentence that stopped it, published for the
-//! frame to paint. Reconnect policy is a statement about how this device is
-//! supervised, and a background thread that silently redialled forever would
-//! hide a broken seat from the operator holding the phone.
+//! **It redials a broken channel and stops on a refusal** (bl-8641, reversing
+//! the founding ruling). The earlier one — a channel that fails stops the host
+//! with the sentence that stopped it — was written for a supervised box, and
+//! this is a phone: it changes networks hourly, and one `receive: Software
+//! caused connection abort` left the host dead until the app was restarted.
+//! What made silent redialling wrong was the silence, not the redial, so the
+//! standing line says `reconnecting` with the sentence that broke the channel
+//! for as long as it is climbing the ladder (§6). A refusal that is not the
+//! channel — the engine declining the advertisement, a version that cannot be
+//! spoken to, an answer of the wrong kind — still stops for good, because
+//! nothing about dialling again changes any of them. [`crate::transport::Wire`]
+//! is where the two are told apart.
 //!
 //! **One identity, two connections.** The seat model holds its own; this holds
 //! another, on the same material and therefore the same certificate common
@@ -42,30 +53,57 @@
 //! to exclude.
 
 use std::sync::mpsc;
+use std::time::Duration;
 
-use crate::codec::{Capture, Invocation};
+use crate::codec::Capture;
 use crate::foot::Foot;
+
+mod serve;
 
 /// What a host runs an invocation with: the tool's name and the model's own
 /// arguments in, a capture out. Owned and `Send` because it crosses onto the
 /// worker thread and outlives the frame that built it.
 pub type Dispatch = Box<dyn Fn(&str, &serde_json::Value) -> Capture + Send>;
 
+/// **How the worker waits between redials** — a parameter for [`Dispatch`]'s
+/// own reason: the ladder is policy, and a test that had to sleep through it
+/// would be a test of `std::thread::sleep`. The device passes exactly that;
+/// the suite passes a recorder and reads the schedule back.
+pub type Nap = Box<dyn Fn(Duration) + Send>;
+
+/// **Whether the host is serving, climbing back, or done.** One field with
+/// three states rather than two booleans and two sentences: a host is in
+/// exactly one of them, and the frame paints whichever it is (§6).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum Health {
+    /// A channel is up, or the first one is being opened.
+    #[default]
+    Serving,
+    /// The channel broke; the sentence that broke it, and a redial is
+    /// pending. Transient by construction — the worker is still alive.
+    Redialling(String),
+    /// Done, for good: a refusal no redial can mend, or a frame that stopped
+    /// reading. The worker has returned.
+    Stopped(String),
+}
+
 /// What the frame paints about this device's tool hosting: what is presented,
-/// what has been run, and the sentence that stopped it if one did.
+/// what has been run, and where the host stands.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Standing {
     /// The advertised tool names, in the order presented.
     pub tools: Vec<String>,
-    /// Whether the presentation has been accepted by the engine.
+    /// Whether the presentation has been accepted by the engine **on the
+    /// channel that is up now**. A redial clears it: the presentation went
+    /// with the connection that carried it.
     pub advertised: bool,
-    /// How many invocations this host has answered since it started.
+    /// How many invocations this host has answered since it started —
+    /// across every channel it has held, because it is the same host.
     pub served: usize,
     /// The tool that ran most recently, and how it ended.
     pub last: Option<String>,
-    /// The sentence that stopped the host. `Some` is a host that is no longer
-    /// running: a channel failure is terminal here, by ruling.
-    pub stopped: Option<String>,
+    /// Serving, redialling, or stopped.
+    pub health: Health,
 }
 
 /// The frame's handle on the host thread. Dropping it stops the host at its
@@ -78,14 +116,15 @@ pub struct Host {
 }
 
 impl Host {
-    /// Start the host over an opened seat, presenting `tools` and dispatching
-    /// through `run`. Both are parameters rather than reads of
-    /// [`crate::tools`] so the loop is testable against a table a test wrote,
-    /// and `run` is boxed rather than a bare `fn` because the real dispatch
-    /// closes over this app's own storage path (`crate::tools::run_in`).
-    pub fn start(foot: Foot, tools: Vec<crate::codec::Tool>, run: Dispatch) -> Self {
+    /// Start the host over an opened seat, presenting `tools`, dispatching
+    /// through `run` and resting between redials through `nap`. All three are
+    /// parameters rather than reads of [`crate::tools`] and the clock so the
+    /// loop is testable against a table a test wrote, and `run` is boxed
+    /// rather than a bare `fn` because the real dispatch closes over this
+    /// app's own storage path (`crate::tools::run_in`).
+    pub fn start(foot: Foot, tools: Vec<crate::codec::Tool>, run: Dispatch, nap: Nap) -> Self {
         let (tx, standings) = mpsc::channel();
-        let worker = std::thread::spawn(move || serve(&foot, tools, &run, &tx));
+        let worker = std::thread::spawn(move || serve::serve(&foot, tools, &run, &nap, &tx));
         Self {
             standings,
             last: Standing::default(),
@@ -108,96 +147,10 @@ impl Drop for Host {
         // The thread is not joined: it may be parked on a follow-class read
         // that answers only when there is work, and a frame that blocked on
         // that would be the UI freeze this client's whole shape excludes. The
-        // process ending is what ends it.
+        // process ending is what ends it — and a worker between redials ends
+        // at its next publish, which finds the receiver gone.
         drop(self.worker.take());
     }
-}
-
-/// Present, then wait, run and answer, until something stops it — and publish
-/// the sentence that did.
-fn serve(
-    foot: &Foot,
-    tools: Vec<crate::codec::Tool>,
-    run: &Dispatch,
-    out: &mpsc::Sender<Standing>,
-) {
-    let mut standing = Standing {
-        tools: tools.iter().map(|t| t.name.clone()).collect(),
-        ..Standing::default()
-    };
-    let _ = out.send(standing.clone());
-    standing.stopped = Some(hold(foot, tools, run, out, &mut standing));
-    let _ = out.send(standing);
-}
-
-/// One channel, served. The return is the sentence that stopped it: there is
-/// no success exit, so none is spelled — a host's only way out is a gesture
-/// that failed, and an `Ok` arm here would be one no state of the world can
-/// reach.
-///
-/// **Every wire crossing in this loop is a [`Foot`] method**, which is the
-/// bl-2040 narrowing: the three gestures REMOTE §4.2 allows a foot are the
-/// three this function can reach, and the general encode-any-gesture door is
-/// not in scope here at all.
-fn hold(
-    foot: &Foot,
-    tools: Vec<crate::codec::Tool>,
-    run: &Dispatch,
-    out: &mpsc::Sender<Standing>,
-    standing: &mut Standing,
-) -> String {
-    if let Err(why) = foot.advertise(tools) {
-        return why;
-    }
-    standing.advertised = true;
-    if out.send(standing.clone()).is_err() {
-        return "the frame stopped reading".to_owned();
-    }
-    loop {
-        let work = match foot.invocations() {
-            Ok(work) => work,
-            Err(why) => return why,
-        };
-        for invocation in work {
-            let capture = match &invocation.cwd {
-                None => run(&invocation.tool, &invocation.input),
-                Some(cwd) => unconsented(&invocation.tool, cwd),
-            };
-            standing.served += 1;
-            standing.last = Some(format!("{} → {}", invocation.tool, capture.exit_code));
-            if let Err(why) = answer(foot, &invocation, capture) {
-                return why;
-            }
-            if out.send(standing.clone()).is_err() {
-                return "the frame stopped reading".to_owned();
-            }
-        }
-    }
-}
-
-/// The refusal a carried `cwd` earns: the capture's three facts, the sentence
-/// on stderr where a tool's diagnostics go, and the key named — because the
-/// reader is a model and the fixer is an operator with another machine. It
-/// says what would run it instead rather than only what will not, which is
-/// REMOTE §5.4's own posture for every miss in this lane.
-fn unconsented(tool: &str, cwd: &str) -> Capture {
-    crate::tools::refused(
-        crate::tools::UNCONSENTED,
-        &format!(
-            "this machine does not run {tool} at a directory an invocation names: \
-             it advertises no \"subject_cwd\" consent, because it dispatches to a \
-             function of its own rather than spawning a program somewhere, and a \
-             phone holds no worktree of this conversation. {cwd} was not entered \
-             and nothing ran. Route this to the box that holds the server's \
-             worktrees, or load this machine's tool by name to run it where this \
-             machine runs things."
-        ),
-    )
-}
-
-/// Post one capture back, quoting the handle it answers.
-fn answer(foot: &Foot, invocation: &Invocation, capture: Capture) -> Result<(), String> {
-    foot.complete(invocation.id.clone(), capture)
 }
 
 #[cfg(test)]

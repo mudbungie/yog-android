@@ -11,6 +11,7 @@ use eframe::egui;
 
 use super::app::Shell;
 use super::boot::Running;
+use crate::host::Health;
 use crate::seat::Snapshot;
 
 impl Shell {
@@ -160,19 +161,25 @@ impl Shell {
     fn hosting(&mut self, ui: &mut egui::Ui) {
         let Some(host) = self.host_mut() else { return };
         let standing = host.standing();
-        let line = match (&standing.stopped, &standing.last) {
-            (Some(why), _) => format!("tools stopped: {why}"),
-            (None, Some(last)) => format!(
+        // Health first: a host that is climbing back says so with the
+        // sentence that broke the channel, rather than showing the last tool
+        // it ran as though it were still there (bl-8641).
+        let line = match (&standing.health, &standing.last) {
+            (Health::Stopped(why), _) => format!("tools stopped: {why}"),
+            (Health::Redialling(why), _) => format!("tools: reconnecting… · {why}"),
+            (Health::Serving, Some(last)) => format!(
                 "tools: {} · served {} · {last}",
                 standing.tools.join(", "),
                 standing.served
             ),
-            (None, None) if standing.advertised => {
+            (Health::Serving, None) if standing.advertised => {
                 format!("tools: {} · waiting", standing.tools.join(", "))
             }
-            (None, None) => "tools: presenting…".to_owned(),
+            (Health::Serving, None) => "tools: presenting…".to_owned(),
         };
-        if standing.stopped.is_some() {
+        // Red is for the one that will not mend itself. A redial is ordinary
+        // on a phone and reads as ordinary; the word carries it.
+        if matches!(standing.health, Health::Stopped(_)) {
             ui.colored_label(egui::Color32::LIGHT_RED, line);
         } else {
             ui.weak(line);

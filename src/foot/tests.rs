@@ -96,10 +96,15 @@ fn completing_quotes_the_handle_and_the_captures_three_facts() {
 fn an_answer_of_the_wrong_kind_stops_each_gesture_the_same_way() {
     let wrong = json!({ "ok": true, "kind": "workspaces", "rows": [] });
     let (foot, _s) = dialled(wrong.clone());
+    let refused = foot.advertise(vec![]).unwrap_err();
     assert_eq!(
-        foot.advertise(vec![]).unwrap_err(),
+        refused.sentence(),
         "the engine answered workspaces, not this machine's work"
     );
+    // And it is a REFUSAL, not a channel failure: the connection worked
+    // perfectly and carried an answer this gesture does not earn, so the host
+    // that redials a broken socket stops dead on this one (bl-8641).
+    assert!(!refused.transport());
     let (foot, _s) = dialled(wrong.clone());
     assert!(foot.invocations().is_err());
     let (foot, _s) = dialled(wrong);
@@ -116,10 +121,9 @@ fn an_answer_of_the_wrong_kind_stops_each_gesture_the_same_way() {
 fn a_carried_refusal_is_the_engines_sentence() {
     let refusal = json!({ "ok": false, "error": "client \"phone\" is foot grade" });
     let (foot, _served) = dialled(refusal);
-    assert_eq!(
-        foot.invocations().unwrap_err(),
-        "client \"phone\" is foot grade"
-    );
+    let refused = foot.invocations().unwrap_err();
+    assert_eq!(refused.sentence(), "client \"phone\" is foot grade");
+    assert!(!refused.transport());
 }
 
 /// The address is carried for the sentence a stopped host publishes; opening

@@ -38,7 +38,7 @@
 use crate::codec::reply::Reply;
 use crate::codec::{Act, Ask, Capture, Gesture, Invocation, Tool, encode};
 use crate::material::Material;
-use crate::transport::Seat;
+use crate::transport::{Seat, Wire};
 
 /// This device's end of a foot channel.
 pub struct Foot {
@@ -69,7 +69,7 @@ impl Foot {
     /// The receipt carries nothing, so nothing is handed back: what was
     /// presented is what was sent, and echoing it would be a second spelling
     /// of a fact the sender holds.
-    pub fn advertise(&self, tools: Vec<Tool>) -> Result<(), String> {
+    pub fn advertise(&self, tools: Vec<Tool>) -> Result<(), Wire> {
         match self.said(&Gesture::Act(Act::Advertise { tools }))? {
             Reply::Advertised => Ok(()),
             other => Err(wrong(&other)),
@@ -81,7 +81,7 @@ impl Foot {
     /// inverts (§3), so this device waits here rather than listening on a
     /// socket it would have to open. An empty answer is ordinary: a hold that
     /// ended quietly.
-    pub fn invocations(&self) -> Result<Vec<Invocation>, String> {
+    pub fn invocations(&self) -> Result<Vec<Invocation>, Wire> {
         match self.said(&Gesture::Ask(Ask::Invocations))? {
             Reply::Invocations(rows) => Ok(rows),
             other => Err(wrong(&other)),
@@ -96,7 +96,7 @@ impl Foot {
     /// completion — an expired handle, a slot addressed elsewhere — is
     /// something this device must stop against rather than keep answering
     /// into.
-    pub fn complete(&self, invocation: String, capture: Capture) -> Result<(), String> {
+    pub fn complete(&self, invocation: String, capture: Capture) -> Result<(), Wire> {
         match self.said(&Gesture::Act(Act::Complete {
             invocation,
             capture,
@@ -114,18 +114,21 @@ impl Foot {
     /// the sentence for a wrong one is [`wrong`]'s — one spelling shared by
     /// three callers, rather than one check that would leave each caller's
     /// own arm unreachable and unprovable.
-    fn said(&self, gesture: &Gesture) -> Result<Reply, String> {
+    fn said(&self, gesture: &Gesture) -> Result<Reply, Wire> {
         self.seat.answered(&encode(gesture))
     }
 }
 
 /// The wrong-kind sentence. It names the kind and never the rows it carried:
-/// a reply this device did not ask for is not content to render.
-fn wrong(reply: &Reply) -> String {
-    format!(
+/// a reply this device did not ask for is not content to render. A
+/// [`Wire::Refused`] and never a transport failure — the channel worked
+/// perfectly and carried an answer this gesture does not earn, so the host
+/// that redials a broken socket stops dead on this one (bl-8641).
+fn wrong(reply: &Reply) -> Wire {
+    Wire::Refused(format!(
         "the engine answered {}, not this machine's work",
         reply.kind()
-    )
+    ))
 }
 
 #[cfg(test)]

@@ -40,6 +40,28 @@ pub fn serve_many(
     serve_versioned(dir, ca, leaf, crate::hello::PROTOCOL, scripts)
 }
 
+/// **What one scripted connection does** (bl-8641). A reply list can say
+/// "answer nothing and terminate cleanly", which is an engine that answered
+/// badly; it cannot say "the socket went away mid-answer", which is what a
+/// phone that changed networks meets and the one class the tool host redials.
+pub enum Turn {
+    /// Write these reply frames, then the terminator.
+    Answer(Vec<Vec<u8>>),
+    /// Read the request and hang up — a FIN where an answer belongs.
+    Hangup,
+}
+
+/// [`serve_many`], with each connection's turn spelled — the entry point for
+/// a test that needs a channel to BREAK rather than to refuse.
+pub fn serve_turns(
+    dir: &Path,
+    ca: &str,
+    leaf: &str,
+    turns: Vec<Turn>,
+) -> (String, JoinHandle<Vec<Vec<u8>>>) {
+    scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns)
+}
+
 /// [`serve_many`], with the version this engine states made a parameter — the
 /// one knob a test needs to stand a skewed engine up (REMOTE §3's fail-closed
 /// mismatch). Every other caller gets this build's own `PROTOCOL`, so every
@@ -52,6 +74,23 @@ pub fn serve_versioned(
     protocol: u32,
     scripts: Vec<Vec<Vec<u8>>>,
 ) -> (String, JoinHandle<Vec<Vec<u8>>>) {
+    scripted(
+        dir,
+        ca,
+        leaf,
+        protocol,
+        scripts.into_iter().map(Turn::Answer).collect(),
+    )
+}
+
+/// The one implementation the three entry points above share.
+fn scripted(
+    dir: &Path,
+    ca: &str,
+    leaf: &str,
+    protocol: u32,
+    turns: Vec<Turn>,
+) -> (String, JoinHandle<Vec<Vec<u8>>>) {
     let config = config(dir, ca, leaf);
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let address = format!("127.0.0.1:{}", listener.local_addr().unwrap().port());
@@ -60,7 +99,7 @@ pub fn serve_versioned(
         .into_bytes();
     let handle = std::thread::spawn(move || {
         let mut requests = Vec::new();
-        for script in scripts {
+        for turn in turns {
             let (tcp, _) = listener.accept().unwrap();
             let conn = rustls::ServerConnection::new(Arc::clone(&config)).unwrap();
             let mut tls = rustls::StreamOwned::new(conn, tcp);
@@ -74,6 +113,11 @@ pub fn serve_versioned(
                 "the seat opened a connection without stating its version"
             );
             requests.push(crate::frame::read_frame(&mut tls).unwrap().unwrap());
+            let Turn::Answer(script) = turn else {
+                // Hang up: dropping the stream is a FIN where the answer
+                // belongs, which is the client's `receive:` error.
+                continue;
+            };
             for reply in &script {
                 crate::frame::write_frame(&mut tls, reply).unwrap();
             }

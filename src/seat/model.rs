@@ -161,7 +161,12 @@ fn fill(seat: &Seat, focus: &Focus, snap: &mut Snapshot) -> Result<(), String> {
 }
 
 fn answer(seat: &Seat, ask: &Ask) -> Result<Reply, String> {
-    seat.answered(&encode(&Gesture::Ask(ask.clone())))
+    // The transport's two classes collapse to the sentence here, and rightly:
+    // this model opens a connection per ask, so a broken channel is already
+    // re-dialled by the next pass and there is nothing for it to decide
+    // (bl-8641). The tool host, which holds one channel, is the caller that
+    // reads the class.
+    Ok(seat.answered(&encode(&Gesture::Ask(ask.clone())))?)
 }
 
 /// Post one message. The receipt is an `outcome` whose `ok` is the server's

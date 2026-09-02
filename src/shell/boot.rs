@@ -118,5 +118,9 @@ fn host(android: &AndroidApp, foot: Foot) -> Host {
         foot,
         crate::tools::advertisement(),
         Box::new(move |tool, input| crate::tools::run_in(tool, input, &data_dir)),
+        // The device's own rest between redials, which is the whole of what
+        // the parameter is for: the suite hands the loop a recorder instead
+        // and reads the ladder back without sleeping through it (bl-8641).
+        Box::new(std::thread::sleep),
     )
 }

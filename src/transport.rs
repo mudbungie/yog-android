@@ -27,6 +27,55 @@ use std::time::Duration;
 /// How long a seat waits on one answer before giving up on the connection.
 const ASK_TIMEOUT: Duration = Duration::from_mins(2);
 
+/// **Why a gesture did not come back, and which end of the wire is why**
+/// (bl-8641). Two classes, because exactly one caller distinction rides on
+/// them: a channel that broke is worth dialling again, and a far end that
+/// said no is not — the tool host redials the first forever and stops dead on
+/// the second. Every caller that does not care converts to the sentence and
+/// is unchanged (`From<Wire> for String`), which is what the seat model does:
+/// it opens a connection per ask anyway, so a broken channel is already
+/// re-dialled by its next pass and the class buys it nothing.
+///
+/// The line is drawn where this file already knows it — at the socket, not by
+/// reading sentences back. **The version preface is on the far side of it**:
+/// REMOTE §3 collapses a peer that hung up mid-preface into "the peer speaks
+/// no version" by ruling, so a channel that dies inside that one window
+/// stops the host rather than redialling. Narrowing that would be amending
+/// REMOTE from a client, which §1 forbids.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Wire {
+    /// The channel: a socket that would not open, a handshake that would not
+    /// build, a write that did not land, a read that died. The class a phone
+    /// meets every time it changes networks.
+    Transport(String),
+    /// An answer arrived and it was a no — the engine's own refusal, a reply
+    /// this end cannot read, a version that cannot be spoken to. Nothing
+    /// about dialling again changes any of them.
+    Refused(String),
+}
+
+impl Wire {
+    /// The sentence, for the frame that paints it and the caller that wanted
+    /// nothing else.
+    pub fn sentence(&self) -> String {
+        match self {
+            Self::Transport(said) | Self::Refused(said) => said.clone(),
+        }
+    }
+
+    /// Whether the channel is what failed — the one question a caller that
+    /// can dial again asks.
+    pub fn transport(&self) -> bool {
+        matches!(self, Self::Transport(_))
+    }
+}
+
+impl From<Wire> for String {
+    fn from(wire: Wire) -> Self {
+        wire.sentence()
+    }
+}
+
 /// A seat's end of the wire.
 pub struct Seat {
     config: Arc<rustls::ClientConfig>,
@@ -53,8 +102,8 @@ impl Seat {
 
     /// Ask once and decode the answer — the last frame of the stream, which
     /// today is the only frame. One `Err` for a refusal, an unreadable answer
-    /// and a socket that never opened alike: all three are the same fact to a
-    /// caller — this cannot be painted, and here is the sentence.
+    /// and a socket that never opened alike: the same fact to a caller that
+    /// only paints it, carrying [`Wire`]'s class for the one that redials.
     ///
     /// **`last()` is not the door to the follow lane** (REMOTE §5.5, bl-2842).
     /// Since yog bl-3655 a `Query::Follow` frame carries what landed *since
@@ -68,24 +117,27 @@ impl Seat {
     /// in a document the author will not be reading. The lane's door is
     /// [`ask`](Self::ask), which hands back every frame; the fold goes on top
     /// of it.
-    pub fn answered(&self, request: &Value) -> Result<Reply, String> {
+    pub fn answered(&self, request: &Value) -> Result<Reply, Wire> {
         let stream = self.ask(request)?;
-        let last = stream
-            .last()
-            .ok_or_else(|| "the engine ended the stream without answering".to_owned())?;
-        reply::decode(last).unwrap_or_else(Err)
+        let last = stream.last().ok_or_else(|| {
+            Wire::Refused("the engine ended the stream without answering".to_owned())
+        })?;
+        reply::decode(last)
+            .unwrap_or_else(Err)
+            .map_err(Wire::Refused)
     }
 
     /// Send one request envelope and read its whole reply stream — every
     /// frame up to the terminator. A stream of one is the ordinary answer.
-    pub fn ask(&self, request: &Value) -> Result<Vec<Value>, String> {
+    pub fn ask(&self, request: &Value) -> Result<Vec<Value>, Wire> {
         let mut tls = self.dial(request)?;
         // The engine's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
-        hello::confirm(&mut tls)?;
+        hello::confirm(&mut tls).map_err(Wire::Refused)?;
         let mut stream = Vec::new();
         loop {
-            let frame = frame::read_frame(&mut tls).map_err(|e| format!("receive: {e}"))?;
+            let frame = frame::read_frame(&mut tls)
+                .map_err(|e| Wire::Transport(format!("receive: {e}")))?;
             match frame {
                 Some(body) => stream.push(parsed(&body)?),
                 None => return Ok(stream),
@@ -96,17 +148,17 @@ impl Seat {
     /// Connect, handshake and send this end's whole half of the exchange — the
     /// handshake happens inside the first write, so what this hands back is a
     /// socket with a preface and an envelope on it and nothing yet read.
-    fn dial(&self, request: &Value) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
+    fn dial(&self, request: &Value) -> Result<StreamOwned<ClientConnection, TcpStream>, Wire> {
         let tcp = TcpStream::connect(&self.address)
-            .map_err(|e| format!("connect {}: {e}", self.address))?;
+            .map_err(|e| Wire::Transport(format!("connect {}: {e}", self.address)))?;
         // A timeout that failed to arm costs a slow failure, never a wrong
         // one — and Some(nonzero) cannot be refused, so an error arm here
         // would be an untestable branch.
         let _ = tcp.set_read_timeout(Some(ASK_TIMEOUT));
         let conn = ClientConnection::new(Arc::clone(&self.config), self.name.clone())
-            .map_err(|e| format!("tls {}: {e}", self.address))?;
+            .map_err(|e| Wire::Transport(format!("tls {}: {e}", self.address)))?;
         let mut tls = StreamOwned::new(conn, tcp);
-        send(&mut tls, request).map_err(|e| format!("send: {e}"))?;
+        send(&mut tls, request).map_err(|e| Wire::Transport(format!("send: {e}")))?;
         Ok(tls)
     }
 }
@@ -122,9 +174,12 @@ fn send(w: &mut dyn std::io::Write, request: &Value) -> std::io::Result<()> {
 }
 
 /// One frame's bytes as the JSON value the codec reads — the strict-decode
-/// discipline at the framing, said in the frame's own terms.
-fn parsed(body: &[u8]) -> Result<Value, String> {
-    serde_json::from_slice(body).map_err(|e| format!("receive: frame is not JSON: {e}"))
+/// discipline at the framing, said in the frame's own terms. A refusal and not
+/// a channel failure: the bytes arrived intact and said something this end
+/// cannot read, which dialling again cannot mend.
+fn parsed(body: &[u8]) -> Result<Value, Wire> {
+    serde_json::from_slice(body)
+        .map_err(|e| Wire::Refused(format!("receive: frame is not JSON: {e}")))
 }
 
 /// The name to verify the server certificate against, read off the address.
