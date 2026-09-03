@@ -2,8 +2,8 @@
 //! and every way an answer can be the wrong one.
 
 use super::{
-    Model, cache_in, conv_reply, material, model_against, ops, pki, serve_many, settle, tr_reply,
-    ws_reply,
+    Model, cache_in, conv_reply, material, model_against, nothing_set, ops, pki, serve_many,
+    settle, tr_reply, ws_reply,
 };
 use crate::transport::Seat;
 use serde_json::{Value, json};
@@ -24,7 +24,8 @@ fn boot_publishes_the_workspace_roster() {
 #[test]
 fn focus_deepens_and_backs_out_of_the_standing_set() {
     let (mut model, served) = model_against(vec![
-        vec![ws_reply()],   // boot
+        vec![ws_reply()], // boot
+        vec![nothing_set()],
         vec![ws_reply()],   // focus_workspace: refresh…
         vec![conv_reply()], // …now two questions deep
         vec![ws_reply()],   // focus_conversation: refresh…
@@ -52,6 +53,7 @@ fn focus_deepens_and_backs_out_of_the_standing_set() {
         ops(&requests),
         [
             "workspaces",
+            "roles",
             "workspaces",
             "conversations",
             "workspaces",
@@ -60,7 +62,7 @@ fn focus_deepens_and_backs_out_of_the_standing_set() {
             "workspaces"
         ]
     );
-    let transcript: Value = serde_json::from_slice(&requests[5]).unwrap();
+    let transcript: Value = serde_json::from_slice(&requests[6]).unwrap();
     assert_eq!(
         transcript,
         json!({ "op": "transcript", "workspace": "home", "agent": "a1" })

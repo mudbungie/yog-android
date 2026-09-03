@@ -63,6 +63,9 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         }),
+        "roles" => Gesture::Ask(Ask::Roles {
+            workspace: str_of(o, "workspace")?,
+        }),
         "providers" => Gesture::Ask(Ask::Providers {
             workspace: str_of(o, "workspace")?,
         }),

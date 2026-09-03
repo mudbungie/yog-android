@@ -288,6 +288,12 @@
           "verb": "providers"
         },
         {
+          "detail": "One row per role this workspace's config declares: the provider row and model id bound to it, the effort level it asks for, and whether it asks for the priority lane. This is what `/model`, `/effort` and `/priority` have set — read back from the same place they write it, so a control can open showing what is in force instead of blank. It is the other half of `/providers`, and the two do not overlap: that one is per provider row and says what a row is capable of, this one is per role and says what has been chosen. Under follow-the-tip these are the settings every conversation here resolves at its next step, not just the next one started. A workspace whose config declares no role answers an empty list rather than refusing — nothing set is a state a fresh workspace is really in. Scoped to the seat's workspace (`--ws`, or the focused one), exactly as `/providers` is.",
+          "summary": "what this workspace's roles are actually set to, and how they are tuned",
+          "usage": "/roles",
+          "verb": "roles"
+        },
+        {
           "detail": "One row per client registered in the seat's workspace: its name, whether it holds a live connection right now, and the tools it has advertised. Presence is read at the moment you ask and is true only then — a client that answers here may be gone a second later, which is why nothing durable records it. What each client advertises, by contrast, was written when it last presented its set and stands whether or not it is connected. A machine is registered by an operator's own act on the server, never over the wire.",
           "summary": "the machines registered in this workspace, who is connected, and what they offer",
           "usage": "/clients",

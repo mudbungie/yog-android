@@ -31,6 +31,11 @@ pub(super) struct Options {
     providers: Option<Value>,
     /// Each `models` reply, verbatim, keyed by the provider asked for.
     models: BTreeMap<String, Value>,
+    /// The `roles` reply, verbatim — what the workspace is actually set to
+    /// (bl-e9f9). It rides here rather than beside it because it is the same
+    /// per-workspace fact under the same pairing law, and the §14 cache
+    /// stores it with the rest.
+    roles: Option<Value>,
 }
 
 impl Options {
@@ -40,11 +45,13 @@ impl Options {
         workspace: Option<String>,
         providers: Option<Value>,
         models: BTreeMap<String, Value>,
+        roles: Option<Value>,
     ) -> Self {
         Self {
             workspace,
             providers,
             models,
+            roles,
         }
     }
 
@@ -54,25 +61,42 @@ impl Options {
     }
 
     /// The stored envelopes, for the cache.
-    pub(super) fn envelopes(&self) -> (Option<Value>, BTreeMap<String, Value>) {
-        (self.providers.clone(), self.models.clone())
+    pub(super) fn envelopes(&self) -> (Option<Value>, BTreeMap<String, Value>, Option<Value>) {
+        (
+            self.providers.clone(),
+            self.models.clone(),
+            self.roles.clone(),
+        )
     }
 
     /// Take one answer, dropping everything that belonged to another
     /// workspace — a fresh workspace's selectors start empty rather than
     /// inheriting the last one's.
     pub(super) fn learned(&mut self, workspace: &str, provider: Option<&str>, envelope: Value) {
-        if self.workspace.as_deref() != Some(workspace) {
-            *self = Self {
-                workspace: Some(workspace.to_owned()),
-                ..Self::default()
-            };
-        }
+        self.fresh(workspace);
         match provider {
             None => self.providers = Some(envelope),
             Some(provider) => {
                 self.models.insert(provider.to_owned(), envelope);
             }
+        }
+    }
+
+    /// Take the assignments read (bl-e9f9), under the same rule.
+    pub(super) fn assigned(&mut self, workspace: &str, envelope: Value) {
+        self.fresh(workspace);
+        self.roles = Some(envelope);
+    }
+
+    /// Drop everything that belonged to another workspace — a fresh
+    /// workspace's controls start empty rather than inheriting the last
+    /// one's.
+    fn fresh(&mut self, workspace: &str) {
+        if self.workspace.as_deref() != Some(workspace) {
+            *self = Self {
+                workspace: Some(workspace.to_owned()),
+                ..Self::default()
+            };
         }
     }
 
@@ -92,6 +116,9 @@ impl Options {
                 snap.models.insert(provider.clone(), names);
             }
         }
+        if let Some(Reply::Roles(rows)) = self.roles.as_ref().and_then(read) {
+            snap.roles = rows;
+        }
     }
 }
 
@@ -107,5 +134,10 @@ mod tests;
 /// the worker read them from, so the seat that paints before the first pass
 /// and the worker that keeps them cannot disagree about what was stored.
 pub(super) fn from_cache(kept: crate::cache::Envelopes) -> Options {
-    Options::resumed(kept.options_workspace, kept.providers, kept.models)
+    Options::resumed(
+        kept.options_workspace,
+        kept.providers,
+        kept.models,
+        kept.roles,
+    )
 }

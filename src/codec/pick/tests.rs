@@ -191,3 +191,79 @@ fn the_gate_is_the_selected_providers_own_row() {
     assert_eq!(tunable(&rows, None), (false, false));
     assert_eq!(tunable(&[], Some("acme")), (false, false));
 }
+
+/// **The assignment row, with the two subtleties that make it useful**
+/// (bl-e9f9): `effort` is the FILE's own word, so a level outside the gesture
+/// vocabulary reads back as itself rather than as nothing-set; `priority` is
+/// a plain bool, because `false` is what an omitted line means upstream.
+#[test]
+fn an_assignment_row_carries_the_files_own_word() {
+    let r = super::role(&json!({ "role": "worker", "provider": "anthropic",
+                                 "model": "claude-sonnet-5", "effort": "high",
+                                 "priority": true }))
+    .unwrap();
+    assert_eq!(
+        (r.role.as_str(), r.provider.as_str()),
+        ("worker", "anthropic")
+    );
+    assert_eq!(r.model, "claude-sonnet-5");
+    assert_eq!(r.effort.as_deref(), Some("high"));
+    assert!(r.priority);
+
+    // A word this build's vocabulary does not spell is still the file's, and
+    // is carried whole: flattening it to absent would say nothing is set.
+    let odd = super::role(&json!({ "role": "critic", "provider": "codex",
+                                   "model": "gpt-5.4", "effort": "extreme",
+                                   "priority": false }))
+    .unwrap();
+    assert_eq!(odd.effort.as_deref(), Some("extreme"));
+    assert_eq!(
+        crate::codec::Effort::parse("extreme"),
+        None,
+        "and it is outside the vocabulary"
+    );
+
+    // A real null is no level set at all.
+    let bare = super::role(&json!({ "role": "worker", "provider": "p",
+                                    "model": "m", "effort": null,
+                                    "priority": false }))
+    .unwrap();
+    assert_eq!(bare.effort, None);
+}
+
+#[test]
+fn a_malformed_assignment_row_refuses_by_name() {
+    assert!(
+        super::role(&json!("worker"))
+            .unwrap_err()
+            .contains("not a JSON")
+    );
+    let why = super::role(&json!({ "role": "worker", "provider": "p", "model": "m",
+                                   "effort": null }))
+    .unwrap_err();
+    assert!(why.contains("priority"), "{why}");
+}
+
+/// The row a phone tunes, and the empty answer that is an answer: a
+/// workspace with nothing set replies with no rows rather than refusing.
+#[test]
+fn the_worker_row_is_found_or_honestly_absent() {
+    let rows = vec![
+        super::role(
+            &json!({ "role": "compactor", "provider": "c", "model": "m1",
+                             "effort": null, "priority": false }),
+        )
+        .unwrap(),
+        super::role(&json!({ "role": "worker", "provider": "w", "model": "m2",
+                             "effort": "low", "priority": true }))
+        .unwrap(),
+    ];
+    let worker = super::worker(&rows).unwrap();
+    assert_eq!(worker.provider, "w");
+    assert_eq!(worker.model, "m2");
+    assert!(
+        super::worker(&[]).is_none(),
+        "nothing set is nothing to seed from"
+    );
+    assert!(super::worker(&rows[..1]).is_none());
+}

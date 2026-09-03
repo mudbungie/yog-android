@@ -96,6 +96,48 @@ impl Effort {
     }
 }
 
+/// **What a role is actually set to** (REMOTE §9.4's read, bl-e9f9): one row
+/// per role the workspace's lineage tip assigns, read from the same place the
+/// tuning gestures write — so a seat reads its own write back.
+///
+/// **`effort` is the FILE's own word, not this codec's vocabulary.** The
+/// config may hold a level the gesture set does not spell, and flattening
+/// such a word to absent would say *nothing is set* — the exact thing this
+/// read exists to end. So it rides as the string it is, and a surface shows
+/// it as itself.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RoleRow {
+    pub role: String,
+    pub provider: String,
+    pub model: String,
+    pub effort: Option<String>,
+    /// Plain, because `false` is what an omitted line means upstream.
+    pub priority: bool,
+}
+
+/// One assignment row.
+pub(crate) fn role(v: &Value) -> Result<RoleRow, String> {
+    let o = v.as_object().ok_or("role row: not a JSON object")?;
+    Ok(RoleRow {
+        role: str_of(o, "role")?,
+        provider: str_of(o, "provider")?,
+        model: str_of(o, "model")?,
+        effort: opt(o, "effort", str_of)?,
+        priority: bool_of(o, "priority")?,
+    })
+}
+
+/// **The row a phone tunes**: the worker's, or none — an engine that has
+/// nothing set answers the empty list rather than refusing, so "no rows" is
+/// an answer and not a failure.
+pub fn worker(rows: &[RoleRow]) -> Option<RoleRow> {
+    rows.iter().find(|row| row.role == WORKER).cloned()
+}
+
+/// The one role a phone assigns, named here because the read and the two
+/// gestures must agree about which row is theirs.
+pub const WORKER: &str = "worker";
+
 /// **What the selected provider will take** (bl-dfbb): the two capability
 /// booleans off the row the engine listed, and both false for a provider
 /// this seat has not picked or does not know. It is a read of the wire's own

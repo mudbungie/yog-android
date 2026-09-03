@@ -1,13 +1,14 @@
 //! The message deposit: what a composer's submit does, and what a refusal or
 //! an unreachable engine leaves in the banner.
 
-use super::{conv_reply, model_against, outcome, settle, tr_reply, ws_reply};
+use super::{conv_reply, model_against, nothing_set, outcome, settle, tr_reply, ws_reply};
 use serde_json::{Value, json};
 
 #[test]
 fn a_deposit_posts_the_composer_and_refreshes() {
     let (mut model, served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
@@ -26,7 +27,7 @@ fn a_deposit_posts_the_composer_and_refreshes() {
     });
     drop(model);
     let requests = served.join().unwrap();
-    let message: Value = serde_json::from_slice(&requests[4]).unwrap();
+    let message: Value = serde_json::from_slice(&requests[5]).unwrap();
     assert_eq!(
         message,
         json!({ "op": "message", "workspace": "home", "agent": "a1", "content": "hello" })
@@ -37,6 +38,7 @@ fn a_deposit_posts_the_composer_and_refreshes() {
 fn a_refused_deposit_reaches_the_banner() {
     let (mut model, _served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
@@ -90,6 +92,7 @@ fn wrong_reply_kinds_name_the_kind() {
     // conversations answered with an outcome.
     let (mut model, _s) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![outcome(true, "")],
         vec![ws_reply()],
@@ -108,6 +111,7 @@ fn wrong_reply_kinds_name_the_kind() {
     // transcript answered with workspaces.
     let (mut model, _s) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![ws_reply()],
@@ -128,6 +132,7 @@ fn wrong_reply_kinds_name_the_kind() {
     // the deposit's receipt answered with a transcript.
     let (mut model, _s) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
@@ -154,6 +159,7 @@ fn wrong_reply_kinds_name_the_kind() {
 fn a_deposits_fate_is_counted_for_the_echo_to_read() {
     let (mut model, _served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],

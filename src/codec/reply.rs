@@ -14,7 +14,7 @@ use serde_json::{Map, Value};
 
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
 use super::follow::{Stream, stream_of};
-use super::pick::{self, ProviderRow};
+use super::pick::{self, ProviderRow, RoleRow};
 use super::start::{self, Prepared};
 use super::tools::{Capture, Invocation, capture_of, invocation_of};
 use super::{ConvRow, Entry, WsRow, conv, transcript, ws};
@@ -61,6 +61,9 @@ pub enum Reply {
     Providers(Vec<ProviderRow>),
     /// One provider's model names, in the engine's order.
     Models(Vec<String>),
+    /// **What each role is set to** (bl-e9f9). An empty list is the answer
+    /// for a workspace with nothing assigned — never a refusal.
+    Roles(Vec<RoleRow>),
     /// **The answer in flight** (REMOTE §5.5): as much of it as has landed
     /// when the read was made. One shot per read, so this is the whole tail
     /// and not a delta to append — see `codec::follow`.
@@ -101,6 +104,7 @@ impl Reply {
             Self::Started { .. } => "started",
             Self::Providers(_) => "providers",
             Self::Models(_) => "models",
+            Self::Roles(_) => "roles",
             Self::Applied => "applied",
             Self::Nudged => "nudged",
             Self::Follow(_) => "follow",
@@ -138,6 +142,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "invocations" => Reply::Invocations(rows(o, invocation_of)?),
         "providers" => Reply::Providers(rows(o, pick::row)?),
         "models" => Reply::Models(pick::names(o)?),
+        "roles" => Reply::Roles(rows(o, pick::role)?),
         "applied" => Reply::Applied,
         "nudged" => Reply::Nudged,
         "follow" => Reply::Follow(stream_of(o)?),

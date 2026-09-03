@@ -42,7 +42,7 @@ use crate::seat::{Focus, Snapshot};
 /// `crate::envelope` gives the enroll payload, for its reason: a version
 /// with no name is read out of whatever JSON happens to be there.
 const TAG: &str = "yog-seat-cache";
-const VERSION: u64 = 2;
+const VERSION: u64 = 3;
 
 /// **What one answered pass carried, in the engine's own words.** Present
 /// exactly as deep as the focus went: a pass under no workspace asks one
@@ -62,6 +62,10 @@ pub struct Envelopes {
     pub options_workspace: Option<String>,
     pub providers: Option<Value>,
     pub models: std::collections::BTreeMap<String, Value>,
+    /// The `roles` reply — what the workspace is set to (bl-e9f9). Stored
+    /// with the options because it is the same per-workspace fact, so a
+    /// resumed seat's controls are seeded before the wire answers.
+    pub roles: Option<Value>,
 }
 
 /// Store one pass. The `Err` is for the caller's log and nothing else — a
@@ -76,7 +80,8 @@ pub fn write(path: &Path, focus: &Focus, kept: &Envelopes) -> Result<(), String>
         "transcript": kept.transcript,
         "options": { "workspace": kept.options_workspace,
                      "providers": kept.providers,
-                     "models": kept.models },
+                     "models": kept.models,
+                     "roles": kept.roles },
     });
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
@@ -161,6 +166,7 @@ fn options(value: &Value, focus: &Focus) -> Option<Envelopes> {
         options_workspace: workspace,
         providers: held.get("providers").filter(|v| !v.is_null()).cloned(),
         models,
+        roles: held.get("roles").filter(|v| !v.is_null()).cloned(),
         ..Envelopes::default()
     })
 }

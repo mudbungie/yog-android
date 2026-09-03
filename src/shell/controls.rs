@@ -21,6 +21,7 @@
 use eframe::egui;
 
 use super::app::Shell;
+use crate::codec::RoleRow;
 use crate::seat::Snapshot;
 
 /// The effort selector's width class. Narrower than a provider or a model
@@ -53,12 +54,28 @@ impl Shell {
             self.provider = None;
             self.model = None;
             self.effort = None;
-            self.priority = false;
+            self.priority = None;
         }
+        // **Truth overtakes the guess** (bl-e9f9): every act on this row is
+        // optimistic — the control shows the pick the moment it is tapped,
+        // because the round trip is seconds — and the assignments read is
+        // what settles it. When the seat's read count moves, whatever was
+        // standing optimistically goes and what the workspace ACTUALLY has
+        // is what paints. That covers a refusal for free: the engine never
+        // took it, so the read never carries it, so the control snaps back
+        // and the banner says why.
+        if self.tuned_at != snap.roles_read {
+            self.tuned_at = snap.roles_read;
+            self.provider = None;
+            self.model = None;
+            self.effort = None;
+            self.priority = None;
+        }
+        let set = crate::codec::pick::worker(&snap.roles);
         // **What the picked provider will take** (bl-dfbb), read off its own
         // row in covered code: the paint asks, it never derives.
         let (effort, priority) =
-            crate::codec::pick::tunable(&snap.providers, self.provider.as_deref());
+            crate::codec::pick::tunable(&snap.providers, provider(self, set.as_ref()).as_deref());
         ui.scope(|ui| {
             ui.spacing_mut().interact_size.y = super::mark::TOUCH;
             band(ui, |ui| {
@@ -67,8 +84,8 @@ impl Shell {
                 // only there while it is (bl-48fa).
                 self.stops(ui, snap);
                 let wide = (ui.available_width() - ui.spacing().item_spacing.x) / 2.0;
-                self.providers(ui, snap, wide);
-                self.models(ui, snap, wide);
+                self.providers(ui, snap, set.as_ref(), wide);
+                self.models(ui, snap, set.as_ref(), wide);
             });
             // **A second band, and only when there is something in it.** The
             // tuning controls cannot share the first: a selector narrow
@@ -83,10 +100,10 @@ impl Shell {
             if effort || priority {
                 band(ui, |ui| {
                     if effort {
-                        self.effort(ui);
+                        self.effort(ui, set.as_ref());
                     }
                     if priority {
-                        self.priority(ui);
+                        self.priority(ui, set.as_ref());
                     }
                 });
             }
@@ -97,8 +114,16 @@ impl Shell {
     /// model calls request. The vocabulary is closed and no wire read backs
     /// it, so the options are the codec's own constant; `off` is one of them
     /// and rides as the real null the engine reads.
-    fn effort(&mut self, ui: &mut egui::Ui) {
-        let shown = self.effort.clone().unwrap_or_else(|| "effort".to_owned());
+    fn effort(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>) {
+        // The read carries the FILE's own word, which may be one the gesture
+        // vocabulary does not spell (bl-e9f9). It is shown as itself — an
+        // operator seeing `extreme` is being told the truth, and the four
+        // words below are what they may change it TO.
+        let shown = self
+            .effort
+            .clone()
+            .or_else(|| set.and_then(|row| row.effort.clone()))
+            .unwrap_or_else(|| "effort".to_owned());
         let mut picked = None;
         egui::ComboBox::from_id_salt("effort")
             .selected_text(shown)
@@ -123,10 +148,12 @@ impl Shell {
     /// role's calls, or stop asking. A toggle and not a tri-state — `off`
     /// removes the line, and asking for the *standard* lane is a different
     /// intent no config key expresses (REMOTE §9.4).
-    fn priority(&mut self, ui: &mut egui::Ui) {
-        let mut on = self.priority;
+    fn priority(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>) {
+        let mut on = self
+            .priority
+            .unwrap_or_else(|| set.is_some_and(|row| row.priority));
         if ui.toggle_value(&mut on, "priority").clicked() {
-            self.priority = on;
+            self.priority = Some(on);
             if let Some(model) = self.model() {
                 model.set_priority(on);
             }
@@ -182,11 +209,8 @@ impl Shell {
     /// that is blocked is greyed **by the fact it states about itself** —
     /// still tappable, because the operator may be about to sign it in and a
     /// control that vanishes teaches nothing.
-    fn providers(&mut self, ui: &mut egui::Ui, snap: &Snapshot, wide: f32) {
-        let shown = self
-            .provider
-            .clone()
-            .unwrap_or_else(|| "provider".to_owned());
+    fn providers(&mut self, ui: &mut egui::Ui, snap: &Snapshot, set: Option<&RoleRow>, wide: f32) {
+        let shown = provider(self, set).unwrap_or_else(|| "provider".to_owned());
         let opened = egui::ComboBox::from_id_salt("provider")
             .selected_text(shown)
             .width(wide)
@@ -217,8 +241,8 @@ impl Shell {
     /// The model selector: this provider's models, and the tap that assigns
     /// one. Disabled until a provider is chosen — a model without its
     /// provider is not an assignment the wire can state.
-    fn models(&mut self, ui: &mut egui::Ui, snap: &Snapshot, wide: f32) {
-        let Some(provider) = self.provider.clone() else {
+    fn models(&mut self, ui: &mut egui::Ui, snap: &Snapshot, set: Option<&RoleRow>, wide: f32) {
+        let Some(provider) = provider(self, set) else {
             ui.add_enabled(
                 false,
                 egui::Button::new("model").min_size(egui::vec2(wide, 0.0)),
@@ -262,4 +286,13 @@ fn focused_row(snap: &Snapshot) -> Option<crate::codec::ConvRow> {
         .iter()
         .find(|row| row.root_id == agent)
         .cloned()
+}
+
+/// **The provider these controls are pointed at**: the optimistic pick if one
+/// is standing, else what the workspace is actually set to (bl-e9f9).
+fn provider(shell: &Shell, set: Option<&RoleRow>) -> Option<String> {
+    shell
+        .provider
+        .clone()
+        .or_else(|| set.map(|row| row.provider.clone()))
 }

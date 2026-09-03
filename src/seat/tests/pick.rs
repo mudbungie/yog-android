@@ -1,8 +1,13 @@
 //! **The controls row's selectors** (bl-0267): the two reads that populate
 //! them, the one act that spends them, and the workspace that owns all
-//! three. The row's other half — the acts on a turn — is `turn`.
+//! three. The row's other halves are `tuning` (the effort and priority
+//! gestures), `turn` (the acts on a conversation) and `loaded` (what the
+//! workspace is actually set to).
 
-use super::{Model, REST, cache_in, conv_reply, material, ops, pki, serve_many, settle, ws_reply};
+use super::{
+    Model, REST, cache_in, conv_reply, material, nothing_set, ops, pki, serve_many, settle,
+    ws_reply,
+};
 use crate::transport::Seat;
 use serde_json::{Value, json};
 
@@ -20,7 +25,7 @@ fn models_reply() -> Vec<u8> {
         .into_bytes()
 }
 
-fn applied() -> Vec<u8> {
+pub(super) fn applied() -> Vec<u8> {
     json!({ "ok": true, "kind": "applied" })
         .to_string()
         .into_bytes()
@@ -34,6 +39,7 @@ fn applied() -> Vec<u8> {
 fn the_selectors_read_their_options_and_the_pick_states_the_assignment_whole() {
     let (mut model, served) = super::model_against(vec![
         vec![ws_reply()],        // boot
+        vec![nothing_set()],     // the focus preload (bl-e9f9)
         vec![ws_reply()],        // focus: refresh…
         vec![conv_reply()],      // …two deep
         vec![providers_reply()], // the providers gesture
@@ -42,7 +48,8 @@ fn the_selectors_read_their_options_and_the_pick_states_the_assignment_whole() {
         vec![models_reply()], // the models gesture
         vec![ws_reply()],
         vec![conv_reply()],
-        vec![applied()], // the pick
+        vec![applied()],     // the pick
+        vec![nothing_set()], // …and the read that settles it
         vec![ws_reply()],
         vec![conv_reply()],
     ]);
@@ -73,6 +80,7 @@ fn the_selectors_read_their_options_and_the_pick_states_the_assignment_whole() {
         ops(&requests),
         [
             "workspaces",
+            "roles",
             "workspaces",
             "conversations",
             "providers",
@@ -82,19 +90,20 @@ fn the_selectors_read_their_options_and_the_pick_states_the_assignment_whole() {
             "workspaces",
             "conversations",
             "model",
+            "roles",
             "workspaces",
             "conversations"
         ]
     );
-    let asked: Value = serde_json::from_slice(&requests[3]).unwrap();
+    let asked: Value = serde_json::from_slice(&requests[4]).unwrap();
     assert_eq!(asked, json!({ "op": "providers", "workspace": "home" }));
-    let asked: Value = serde_json::from_slice(&requests[6]).unwrap();
+    let asked: Value = serde_json::from_slice(&requests[7]).unwrap();
     assert_eq!(
         asked,
         json!({ "op": "models", "workspace": "home", "provider": "acme" })
     );
     // The pick names all four facts, and the role is this seat's one.
-    let picked: Value = serde_json::from_slice(&requests[9]).unwrap();
+    let picked: Value = serde_json::from_slice(&requests[10]).unwrap();
     assert_eq!(
         picked,
         json!({ "op": "model", "workspace": "home", "role": "worker",
@@ -123,6 +132,7 @@ fn a_selector_gesture_with_no_workspace_focused_reaches_the_banner() {
 fn wrong_kinds_under_the_selectors_name_the_kind() {
     let (mut model, _s) = super::model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![ws_reply()], // providers answered with a roster
@@ -140,6 +150,7 @@ fn wrong_kinds_under_the_selectors_name_the_kind() {
 
     let (mut model, _s) = super::model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![ws_reply()], // models answered with a roster
@@ -157,6 +168,7 @@ fn wrong_kinds_under_the_selectors_name_the_kind() {
 
     let (mut model, _s) = super::model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![ws_reply()], // the pick answered with a roster
@@ -184,6 +196,7 @@ fn a_second_boot_offers_the_options_it_had() {
         "server",
         vec![
             vec![ws_reply()],
+            vec![nothing_set()],
             vec![ws_reply()],
             vec![conv_reply()],
             vec![providers_reply()],
@@ -206,86 +219,4 @@ fn a_second_boot_offers_the_options_it_had() {
     let snap = model.snapshot();
     assert_eq!(snap.focus.workspace.as_deref(), Some("home"));
     assert_eq!(snap.providers[0].name, "acme");
-}
-
-/// **The two tuning gestures** (REMOTE §9.4, bl-dfbb): the envelopes the
-/// engine reads back, the role this seat spends, and the receipt each earns.
-/// `off` is a real null and not a fourth word.
-#[test]
-fn the_tuning_gestures_state_the_role_and_the_level_the_wire_spells() {
-    let (mut model, served) = super::model_against(vec![
-        vec![ws_reply()],
-        vec![ws_reply()],
-        vec![conv_reply()],
-        vec![applied()], // effort high
-        vec![ws_reply()],
-        vec![conv_reply()],
-        vec![applied()], // effort off
-        vec![ws_reply()],
-        vec![conv_reply()],
-        vec![applied()], // priority on
-        vec![ws_reply()],
-        vec![conv_reply()],
-    ]);
-    settle(&mut model, &|s| !s.workspaces.is_empty());
-    model.focus_workspace(Some("home".into()));
-    settle(&mut model, &|s| !s.conversations.is_empty());
-
-    model.set_effort(Some(crate::codec::Effort::High));
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.conversations.is_empty()
-    });
-    model.set_effort(None);
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.conversations.is_empty()
-    });
-    model.set_priority(true);
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.conversations.is_empty()
-    });
-
-    drop(model);
-    let requests = served.join().unwrap();
-    assert_eq!(
-        serde_json::from_slice::<Value>(&requests[3]).unwrap(),
-        json!({ "op": "effort", "workspace": "home", "role": "worker", "level": "high" })
-    );
-    assert_eq!(
-        serde_json::from_slice::<Value>(&requests[6]).unwrap(),
-        json!({ "op": "effort", "workspace": "home", "role": "worker", "level": null })
-    );
-    assert_eq!(
-        serde_json::from_slice::<Value>(&requests[9]).unwrap(),
-        json!({ "op": "priority", "workspace": "home", "role": "worker", "on": true })
-    );
-}
-
-/// A tuning gesture with no workspace focused, and one answered with the
-/// wrong kind — the same two sentences every other act on this row earns.
-#[test]
-fn tuning_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
-    let (mut model, _s) = super::model_against(vec![vec![ws_reply()]]);
-    settle(&mut model, &|s| !s.workspaces.is_empty());
-    model.set_effort(Some(crate::codec::Effort::Low));
-    let snap = settle(&mut model, &|s| s.error.is_some());
-    assert_eq!(snap.error.as_deref(), Some("no workspace is focused"));
-    model.set_priority(false);
-    settle(&mut model, &|s| s.error.is_some());
-    drop(model);
-
-    let (mut model, _s) = super::model_against(vec![
-        vec![ws_reply()],
-        vec![ws_reply()],
-        vec![conv_reply()],
-        vec![ws_reply()], // the tuning act, answered with a roster
-    ]);
-    settle(&mut model, &|s| !s.workspaces.is_empty());
-    model.focus_workspace(Some("home".into()));
-    settle(&mut model, &|s| !s.conversations.is_empty());
-    model.set_priority(true);
-    let snap = settle(&mut model, &|s| s.error.is_some());
-    assert_eq!(
-        snap.error.as_deref(),
-        Some("tune: the engine answered workspaces instead")
-    );
 }

@@ -8,7 +8,7 @@
 //! channel BREAK in the middle of a live listener (bl-8641), so a pass can
 //! fail with more passes still to come.
 
-use super::{Model, cache_in, conv_reply, material, pki, settle, ws_named, ws_reply};
+use super::{Model, cache_in, conv_reply, material, nothing_set, pki, settle, ws_named, ws_reply};
 use crate::test_support::{Turn, serve_turns};
 use crate::transport::Seat;
 
@@ -55,6 +55,7 @@ fn a_failure_paints_only_once_it_has_persisted_and_a_success_clears_it_at_once()
 fn a_failed_pass_under_a_new_focus_publishes_no_other_focuss_rows() {
     let mut model = model_turns(vec![
         Turn::Answer(vec![ws_reply()]),
+        Turn::Answer(vec![nothing_set()]),
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Hangup,

@@ -10,7 +10,7 @@
 //! happens on the model's one worker thread, and the two sides talk over
 //! channels — no locks, so rule 7 stays vacuous here.
 
-use crate::codec::{ConvRow, Entry, ProviderRow, WsRow};
+use crate::codec::{ConvRow, Entry, ProviderRow, RoleRow, WsRow};
 
 /// What the frame paints: the standing set as of the last completed
 /// refresh, with the focus it was asked under — one value, published
@@ -33,6 +33,16 @@ pub struct Snapshot {
     /// IS the pairing, so no frame can paint one provider's list under
     /// another's name.
     pub models: std::collections::BTreeMap<String, Vec<String>>,
+    /// **What the focused workspace's roles are actually set to** (bl-e9f9),
+    /// as the engine last answered. Empty is two things a control must not
+    /// tell apart wrongly: a workspace with nothing assigned, and an engine
+    /// too old to answer the read at all — both mean *nothing to seed from*,
+    /// and neither is an error.
+    pub roles: Vec<RoleRow>,
+    /// How many times the assignments have been read. The controls watch it
+    /// move to know their optimistic value has been overtaken by truth —
+    /// they never read the number.
+    pub roles_read: usize,
     /// **What this seat's deposits have earned** (bl-66fb): how many the
     /// engine took, and how many it refused, since the worker started. The
     /// composer's echo reads the CHANGE and never the number — it remembers

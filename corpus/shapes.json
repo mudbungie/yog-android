@@ -590,6 +590,22 @@
       ],
       "since": 1
     },
+    "reply/roles": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/effort:null",
+        "/rows/[]/effort:string",
+        "/rows/[]/model:string",
+        "/rows/[]/priority:bool",
+        "/rows/[]/provider:string",
+        "/rows/[]/role:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 6
+    },
     "reply/routed": {
       "signature": [
         "/capture/exit_code:number",
@@ -1414,6 +1430,14 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/roles": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 6
     },
     "request/scan": {
       "signature": [

@@ -60,6 +60,19 @@ pub(super) fn started(seat: &Seat, focus: &Focus, goal: String) -> Result<(), St
     }
 }
 
+/// **What the focused workspace's roles are set to** (bl-e9f9), handed back
+/// as the engine's own envelope like the two option reads beside it.
+pub(super) fn roles(seat: &Seat, focus: &Focus) -> Result<(String, Value), String> {
+    let workspace = focused(focus)?;
+    let ask = Ask::Roles {
+        workspace: workspace.clone(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Roles(_), envelope) => Ok((workspace, envelope)),
+        (other, _) => Err(kind_err("roles", &other)),
+    }
+}
+
 /// **The focused workspace's providers** (bl-0267), handed back as the
 /// engine's own envelope: what the selectors hold is what the engine said,
 /// and the cache stores exactly that (§14).

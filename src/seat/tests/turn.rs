@@ -3,7 +3,7 @@
 //! (§8.2, bl-d09e). Split from `pick` on the row's own seam — what answers
 //! here, and what to do with what is answering.
 
-use super::{conv_reply, ops, settle, ws_reply};
+use super::{conv_reply, nothing_set, ops, settle, ws_reply};
 use serde_json::{Value, json};
 
 /// **The stop gesture is the op** (REMOTE §3.1, bl-48fa): the envelope names
@@ -15,6 +15,7 @@ use serde_json::{Value, json};
 fn stopping_sends_the_op_and_carries_litanys_verdict() {
     let (mut model, served) = super::model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
@@ -42,12 +43,12 @@ fn stopping_sends_the_op_and_carries_litanys_verdict() {
     );
     drop(model);
     let requests = served.join().unwrap();
-    let stopped: Value = serde_json::from_slice(&requests[4]).unwrap();
+    let stopped: Value = serde_json::from_slice(&requests[5]).unwrap();
     assert_eq!(
         stopped,
         json!({ "op": "stop", "workspace": "home", "agent": "a1", "children": false })
     );
-    let all: Value = serde_json::from_slice(&requests[8]).unwrap();
+    let all: Value = serde_json::from_slice(&requests[9]).unwrap();
     assert_eq!(all["children"], json!(true));
     // Nothing was deposited: a `/stop` line is content, and content wakes the
     // driver it meant to kill.
@@ -70,6 +71,7 @@ fn a_stop_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
 
     let (mut model, _s) = super::model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
@@ -97,6 +99,7 @@ fn nudging_re_prompts_without_depositing_anything() {
         .into_bytes();
     let (mut model, served) = super::model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
@@ -114,7 +117,7 @@ fn nudging_re_prompts_without_depositing_anything() {
     });
     drop(model);
     let requests = served.join().unwrap();
-    let asked: Value = serde_json::from_slice(&requests[4]).unwrap();
+    let asked: Value = serde_json::from_slice(&requests[5]).unwrap();
     assert_eq!(
         asked,
         json!({ "op": "nudge", "workspace": "home", "agent": "a1" })
@@ -137,6 +140,7 @@ fn a_nudge_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
 
     let (mut model, _s) = super::model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],

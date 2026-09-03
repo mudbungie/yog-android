@@ -33,16 +33,27 @@ pub(super) fn run(
         let _ = out.send(standing.pass(seat, cache, &focus, note.take()));
         match wait(seat, cmds, cadence, &mut standing, &focus, out) {
             Ok(Cmd::Workspace(workspace)) => {
+                let was = focus.workspace.take();
                 focus = Focus {
                     workspace,
                     agent: None,
+                };
+                // The assignments are a fact about the WORKSPACE, so they are
+                // read when the workspace changes and not when the focus
+                // merely deepens into a conversation inside it (bl-e9f9).
+                if was != focus.workspace {
+                    preload(seat, &focus, &mut standing);
                 }
             }
             Ok(Cmd::Conversation(workspace, agent)) => {
+                let was = focus.workspace.take();
                 focus = Focus {
                     workspace: Some(workspace),
                     agent: Some(agent),
                 };
+                if was != focus.workspace {
+                    preload(seat, &focus, &mut standing);
+                }
             }
             Ok(Cmd::Deposit(content)) => {
                 // The receipt is counted as well as reported: the composer's
@@ -65,17 +76,40 @@ pub(super) fn run(
                 note = super::acts::stop(seat, &focus, children).err();
             }
             Ok(Cmd::Nudge) => note = super::acts::nudge(seat, &focus).err(),
+            // A tuning act is followed by the read that makes it true: the
+            // control showed its pick optimistically, and this is what
+            // overtakes it (bl-e9f9).
             Ok(Cmd::Effort(level)) => {
                 note = super::acts::effort(seat, &focus, level).err();
+                preload(seat, &focus, &mut standing);
             }
-            Ok(Cmd::Priority(on)) => note = super::acts::priority(seat, &focus, on).err(),
+            Ok(Cmd::Priority(on)) => {
+                note = super::acts::priority(seat, &focus, on).err();
+                preload(seat, &focus, &mut standing);
+            }
             Ok(Cmd::Pick(provider, model)) => {
                 note = super::acts::pick(seat, &focus, &provider, &model).err();
+                preload(seat, &focus, &mut standing);
             }
             Ok(Cmd::Start(goal)) => note = super::acts::started(seat, &focus, goal).err(),
             Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
             Err(mpsc::RecvTimeoutError::Timeout) => {}
         }
+    }
+}
+
+/// **Read what the workspace is set to, and say nothing if it cannot be
+/// read** (bl-e9f9). This is a preload, not an answer to a gesture the
+/// operator made: its absence means the controls seed from nothing, which is
+/// exactly where they stood before this read existed. So every way it can
+/// fail is swallowed — including the one that will be common for a while, an
+/// engine that predates the read and refuses the op in band by name. A
+/// banner for that would be this app telling an operator off for running the
+/// engine they have.
+fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
+    if let Ok((workspace, envelope)) = super::acts::roles(seat, focus) {
+        standing.options.assigned(&workspace, envelope);
+        standing.reads += 1;
     }
 }
 

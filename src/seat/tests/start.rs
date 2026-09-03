@@ -1,13 +1,14 @@
 //! Starting a conversation: the §8.1 pair run as one act, the prepared body
 //! carried back whole, and every way either half can answer wrongly.
 
-use super::{conv_reply, model_against, ops, outcome, prepared, settle, ws_reply};
+use super::{conv_reply, model_against, nothing_set, ops, outcome, prepared, settle, ws_reply};
 use serde_json::{Value, json};
 
 #[test]
 fn starting_a_conversation_stages_then_fires_carrying_the_body_whole() {
     let (mut model, served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],        // focus_workspace refreshes…
         vec![conv_reply()],      // …two deep
         vec![prepared()],        // the staging
@@ -27,6 +28,7 @@ fn starting_a_conversation_stages_then_fires_carrying_the_body_whole() {
         ops(&requests),
         [
             "workspaces",
+            "roles",
             "workspaces",
             "conversations",
             "prepare",
@@ -35,14 +37,14 @@ fn starting_a_conversation_stages_then_fires_carrying_the_body_whole() {
             "conversations"
         ]
     );
-    let staging: Value = serde_json::from_slice(&requests[3]).unwrap();
+    let staging: Value = serde_json::from_slice(&requests[4]).unwrap();
     assert_eq!(
         staging,
         json!({ "op": "prepare", "workspace": "home",
                 "payload": { "rung": "bare" } })
     );
     // The body the engine stated goes back to it unchanged.
-    let firing: Value = serde_json::from_slice(&requests[4]).unwrap();
+    let firing: Value = serde_json::from_slice(&requests[5]).unwrap();
     assert_eq!(
         firing,
         json!({ "op": "prompt",
@@ -68,6 +70,7 @@ fn a_start_with_no_workspace_focused_reaches_the_banner() {
 fn a_staging_answered_with_the_wrong_kind_names_it() {
     let (mut model, _served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![ws_reply()], // wrong: the staging slot
@@ -89,6 +92,7 @@ fn a_staging_answered_with_the_wrong_kind_names_it() {
 fn a_refused_firing_reaches_the_banner_and_a_re_staging_is_accepted() {
     let (mut model, _served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![prepared()],
@@ -111,6 +115,7 @@ fn a_firing_answered_with_a_prepared_body_is_accepted() {
     // redden a banner over a conversation that had in fact started.
     let (mut model, _served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![prepared()],
@@ -131,6 +136,7 @@ fn a_firing_answered_with_a_prepared_body_is_accepted() {
 fn a_firing_answered_with_the_wrong_kind_names_it() {
     let (mut model, _served) = model_against(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![prepared()],

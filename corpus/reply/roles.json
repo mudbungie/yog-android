@@ -1,0 +1,34 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "roles",
+      "ok": true,
+      "rows": [
+        {
+          "effort": "high",
+          "model": "claude-sonnet-5",
+          "priority": true,
+          "provider": "anthropic",
+          "role": "worker"
+        },
+        {
+          "effort": null,
+          "model": "gpt-5.4-mini",
+          "priority": false,
+          "provider": "codex",
+          "role": "compactor"
+        },
+        {
+          "effort": "extreme",
+          "model": "gpt-5.4",
+          "priority": false,
+          "provider": "codex",
+          "role": "critic"
+        }
+      ]
+    }
+  ],
+  "protocol": 6,
+  "shape": "roles"
+}

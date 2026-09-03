@@ -8,7 +8,8 @@
 //! frame reads it, which is the one place it exists.
 
 use super::{
-    Model, cache_in, conv_flying, conv_reply, material, pki, serve_many, settle, tr_reply, ws_reply,
+    Model, cache_in, conv_flying, conv_reply, material, nothing_set, pki, serve_many, settle,
+    tr_reply, ws_reply,
 };
 use crate::codec::EntryKind;
 use crate::transport::Seat;
@@ -47,6 +48,7 @@ fn model_at(scripts: Vec<Vec<Vec<u8>>>) -> Model {
 fn a_writing_conversation_streams_its_tail_between_passes() {
     let mut model = model_at(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
@@ -90,6 +92,7 @@ fn a_writing_conversation_streams_its_tail_between_passes() {
 fn a_finished_turn_drops_the_fold_it_was_writing() {
     let mut model = model_at(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
@@ -119,6 +122,7 @@ fn a_finished_turn_drops_the_fold_it_was_writing() {
 fn a_live_read_that_fails_reaches_the_banner_and_the_lane_goes_on() {
     let mut model = model_at(vec![
         vec![ws_reply()],
+        vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],

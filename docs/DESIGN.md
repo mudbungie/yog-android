@@ -246,7 +246,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
 | `src/codec/follow.rs` | REMOTE §5.5's lane, read one shot at a time: the answer in flight as much of it as has landed | landed (bl-4822) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
-| `src/seat/options.rs` | what the selectors offer, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267) |
+| `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
@@ -1189,16 +1189,41 @@ here is a defect.
   the column instead of moving down (measured: 418 points in a 390-point
   column). One block under the composer, two rows when there is something in
   the second: that is still one place to look.
-- **Tap is the act, and a control shows only what this device did.** Nothing
-  in the row holds a draft: picking a model IS the assignment, and an engine
-  that refuses one says so in the same banner every other refusal uses. What
-  a selector displays is what this device SET — never a guess at what is set,
-  because no shape on the wire states a workspace's current assignment and
-  §8's rule is that a client re-deriving world state is inventing it. The
-  selection belongs to the workspace it was made in and goes when the focus
-  leaves it. A provider row is greyed **by the credential fact it states
-  about itself** and stays tappable: the operator may be about to sign it in,
-  and a control that vanishes teaches nothing.
+- **Tap is the act, and the controls load what the workspace actually has**
+  (operator ruling, bl-e9f9 — this replaces the *shows only what this device
+  set* rule the row shipped with). Nothing in the row holds a draft: picking
+  a model IS the assignment, and an engine that refuses one says so in the
+  same banner every other refusal uses. What a selector DISPLAYS is now the
+  workspace's own assignment, read from the lineage tip the tuning gestures
+  write to, so a seat reads its own write back and a fresh install shows what
+  is set rather than a row of placeholders. The old rule was not wrong when
+  it was written — no shape on the wire stated the assignment, and §8 forbids
+  re-deriving one — it was a gap in the wire, and REMOTE §9.4's read closed
+  it.
+
+  **An act is optimistic and the read is truth.** A tap paints immediately,
+  because the round trip is seconds; the assignments are re-read straight
+  after the act, and when that lands the optimistic value goes. A refusal is
+  covered by the same motion — the engine never took it, so the read never
+  carries it, so the control snaps back to what IS set and the banner says
+  why. Nothing needs a second mechanism for the refused case.
+
+  **The effort word is the file's, not this codec's vocabulary.** The config
+  may hold a level the four-word gesture set does not spell; it is shown as
+  itself, unselectable but never dropped, because flattening it to *nothing
+  set* would be this app lying about the workspace to keep its own
+  vocabulary tidy.
+
+  **An engine that predates the read says nothing.** The deployed build
+  refuses the op in band by name, and that means *no preload* — silently. A
+  banner there would be this app telling an operator off for running the
+  engine they have; the controls simply start empty, exactly as they did
+  before the read existed.
+
+  The selection belongs to the workspace it was made in and goes when the
+  focus leaves it. A provider row is greyed **by the credential fact it
+  states about itself** and stays tappable: the operator may be about to sign
+  it in, and a control that vanishes teaches nothing.
 - **The outbox: a sent message paints at once** (bl-66fb). A deposit is a
   round trip and a chat app that shows nothing for the length of one is a
   chat app you press twice, so the composer's text appears the instant it is

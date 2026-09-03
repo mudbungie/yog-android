@@ -90,14 +90,21 @@ pub(crate) struct Shell {
     pub(crate) picked_in: Option<String>,
     pub(crate) provider: Option<String>,
     pub(crate) model: Option<String>,
-    /// **The tuning this device set** (bl-dfbb): the effort level's own word
-    /// (`off` included — it is a value, not an absence, once somebody has
-    /// chosen it) and whether the priority lane was asked for. `None` is
-    /// "this device has set none", which is not the same as `off`, and no
-    /// shape on the wire states what the workspace is on — so these two show
-    /// what was SET here and travel with `picked_in`'s reset.
+    /// The assignments read at the moment an optimistic value was last set
+    /// (bl-e9f9). When the seat's count moves past it, truth has overtaken
+    /// the guess and the guess goes — whether the engine took the act or
+    /// refused it, which is why the fallback is the read and not a memory.
+    pub(crate) tuned_at: usize,
+    /// **The tuning this device just set** (bl-dfbb), held only until the
+    /// assignments read overtakes it (bl-e9f9). `None` is "nothing optimistic
+    /// standing", and what the controls then show is what the workspace
+    /// actually has. They travel with `picked_in`'s reset.
     pub(crate) effort: Option<String>,
-    pub(crate) priority: bool,
+    /// `Option`, not a bare bool: "nothing optimistic standing" and
+    /// "optimistically set to off" are different states, and telling them
+    /// apart is what keeps a toggle from snapping back for a cadence after
+    /// it is turned off (bl-e9f9).
+    pub(crate) priority: Option<bool>,
     /// **A platform back press this frame has not yet been taken** (bl-550e).
     /// Read once at the top of the pass and consumed by whatever has a depth
     /// to walk — the bar wherever it paints a back control, the scan screen
@@ -139,7 +146,8 @@ impl Shell {
             provider: None,
             model: None,
             effort: None,
-            priority: false,
+            priority: None,
+            tuned_at: 0,
             back: false,
             screen: None,
             mark_at: None,

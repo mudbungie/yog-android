@@ -2,7 +2,10 @@
 //! paints what the first one was told, at the focus it was left at, before a
 //! byte of wire — and a pass the engine did not answer never overwrites it.
 
-use super::{Model, REST, cache_in, conv_reply, material, ops, pki, serve_many, settle, ws_reply};
+use super::{
+    Model, REST, cache_in, conv_reply, material, nothing_set, ops, pki, serve_many, settle,
+    ws_reply,
+};
 use crate::transport::Seat;
 
 /// The whole story in one walk: a model that answered wrote what it was
@@ -17,7 +20,12 @@ fn a_second_boot_paints_the_last_answered_pass_before_the_wire_answers() {
         &dir,
         "ca",
         "server",
-        vec![vec![ws_reply()], vec![ws_reply()], vec![conv_reply()]],
+        vec![
+            vec![ws_reply()],
+            vec![nothing_set()],
+            vec![ws_reply()],
+            vec![conv_reply()],
+        ],
     );
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
     let mut model = Model::start(seat, REST, at.clone());
@@ -27,7 +35,7 @@ fn a_second_boot_paints_the_last_answered_pass_before_the_wire_answers() {
     drop(model);
     assert_eq!(
         ops(&served.join().unwrap()),
-        ["workspaces", "workspaces", "conversations"]
+        ["workspaces", "roles", "workspaces", "conversations"]
     );
 
     // Nothing listens on port 1, so this model never gets an answer at all.

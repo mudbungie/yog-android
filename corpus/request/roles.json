@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "roles",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 6,
+  "shape": "roles"
+}

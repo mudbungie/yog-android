@@ -31,7 +31,7 @@ fn what_was_learned_under_a_focus_paints_under_it() {
     assert_eq!(snap.providers[0].name, "acme");
     assert_eq!(snap.models["acme"], ["opus", "sonnet"]);
     assert_eq!(options.workspace().as_deref(), Some("home"));
-    let (stored, listed) = options.envelopes();
+    let (stored, listed, _) = options.envelopes();
     assert_eq!(stored, Some(providers()));
     assert_eq!(listed["acme"], models());
 }
@@ -50,7 +50,7 @@ fn options_belong_to_the_workspace_they_were_read_for() {
     assert!(snap.providers.is_empty());
 
     options.learned("away", Some("acme"), models());
-    let (stored, _) = options.envelopes();
+    let (stored, _, _) = options.envelopes();
     assert_eq!(
         stored, None,
         "the first workspace's list went with its focus"
@@ -75,7 +75,37 @@ fn nothing_learned_and_nothing_readable_both_paint_nothing() {
         Some("home".to_owned()),
         Some(json!({ "kind": "workspaces", "ok": true, "rows": [] })),
         [("acme".to_owned(), json!(7))].into_iter().collect(),
+        Some(json!({ "kind": "models", "ok": true, "rows": [] })),
     );
     junk.paint(&focus("home"), &mut snap);
     assert!(snap.providers.is_empty() && snap.models.is_empty());
+}
+
+/// The assignments are learned and painted under the same workspace rule as
+/// the options beside them (bl-e9f9), and go with the focus.
+#[test]
+fn the_assignments_belong_to_their_workspace_too() {
+    let assigned = json!({ "kind": "roles", "ok": true,
+                           "rows": [{ "role": "worker", "provider": "acme",
+                                      "model": "opus", "effort": null,
+                                      "priority": false }] });
+    let mut options = Options::default();
+    options.assigned("home", assigned.clone());
+    let mut snap = Snapshot::default();
+    options.paint(&focus("home"), &mut snap);
+    assert_eq!(snap.roles[0].provider, "acme");
+    let (_, _, stored) = options.envelopes();
+    assert_eq!(stored, Some(assigned.clone()));
+
+    let mut snap = Snapshot::default();
+    options.paint(&focus("away"), &mut snap);
+    assert!(
+        snap.roles.is_empty(),
+        "another workspace's focus paints none"
+    );
+
+    // Learning under another workspace drops what the first one held.
+    options.learned("away", None, providers());
+    let (_, _, stored) = options.envelopes();
+    assert_eq!(stored, None);
 }

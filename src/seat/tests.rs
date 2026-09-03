@@ -128,6 +128,15 @@ pub(super) fn outcome(ok: bool, stderr: &str) -> Vec<u8> {
     .into_bytes()
 }
 
+/// A workspace with nothing assigned: the empty list, which is an answer and
+/// not a refusal (bl-e9f9). Every script whose test focuses a workspace
+/// answers the preload with it.
+pub(super) fn nothing_set() -> Vec<u8> {
+    json!({ "ok": true, "kind": "roles", "rows": [] })
+        .to_string()
+        .into_bytes()
+}
+
 pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
     requests
         .iter()
@@ -141,8 +150,10 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 mod deposit;
 mod grace;
 mod live;
+mod loaded;
 mod pick;
 mod reads;
 mod resume;
 mod start;
+mod tuning;
 mod turn;

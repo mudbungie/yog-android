@@ -30,7 +30,7 @@ mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use follow::Stream;
-pub use pick::{Effort, ProviderRow};
+pub use pick::{Effort, ProviderRow, RoleRow};
 pub use request::decode;
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
@@ -118,6 +118,10 @@ pub enum Ask {
     /// time: every read starts holding nothing, so what comes back is the
     /// whole tail so far and this seat replaces rather than appends.
     Follow { workspace: String, agent: String },
+    /// **What each role is set to** (bl-e9f9): the assignments the
+    /// workspace's lineage tip holds, read from where the tuning gestures
+    /// write. Per workspace, like the two reads beside it.
+    Roles { workspace: String },
     /// One workspace's providers, with the credential fact each states about
     /// itself. Per workspace, because sign-ins are (bl-0267).
     Providers { workspace: String },
@@ -157,6 +161,9 @@ pub fn encode(gesture: &Gesture) -> Value {
         Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
         Gesture::Ask(Ask::Follow { workspace, agent }) => {
             json!({ "op": "follow", "workspace": workspace, "agent": agent })
+        }
+        Gesture::Ask(Ask::Roles { workspace }) => {
+            json!({ "op": "roles", "workspace": workspace })
         }
         Gesture::Ask(Ask::Providers { workspace }) => {
             json!({ "op": "providers", "workspace": workspace })
