@@ -83,8 +83,11 @@ pub(crate) struct Shell {
     /// **The outbox** (bl-66fb): the message this seat has sent and the
     /// engine has not yet shown back, in the composer's own state and nowhere
     /// near the projection — `crate::rows` is pure over what the engine
-    /// wrote down, and this is a message it has not written down yet.
-    pub(crate) echo: Option<Echo>,
+    /// wrote down, and this is a message it has not written down yet. The
+    /// type is `crate::outbox`'s and so is every decision about it: this file
+    /// is excluded from the coverage floor, and the echo's states are a
+    /// reading of the engine's answers rather than a paint fact (bl-07b1).
+    pub(crate) echo: Option<crate::outbox::Echo>,
     /// **What the composer's selectors are pointed at** (bl-0267), and the
     /// workspace that owns the pointing. This device shows what it SET, never
     /// a guess at what is set — no wire shape states a workspace's current
@@ -219,28 +222,4 @@ impl Shell {
             Running::Cold { .. } => String::new(),
         }
     }
-}
-
-/// **One message in flight from this seat** (bl-66fb) — the three states the
-/// operator sees, held as the two facts they are made of.
-///
-/// It paints the instant it is sent, because that is the whole point: the
-/// round trip is seconds and a chat app that shows nothing for seconds is a
-/// chat app you press twice. What it cannot know by itself is whether the
-/// engine took it, so it remembers the seat's deposit counters at the moment
-/// it was sent and watches for either to move.
-pub(crate) struct Echo {
-    /// What was sent — the text, so it can be given back if the deposit is
-    /// refused, and matched against the transcript when it comes home.
-    pub(crate) text: String,
-    /// Whether the engine's receipt has come back. Muted ink until it has,
-    /// then ordinary ink with a rule under it until the message appears in a
-    /// transcript read and this dissolves into that row.
-    pub(crate) landed: bool,
-    /// The conversation it was sent to. An echo is a message in ONE
-    /// conversation, and painting it under another would be the same wrong
-    /// claim every other pairing in this app refuses.
-    pub(crate) agent: Option<String>,
-    /// The deposit counters as they stood when this was sent.
-    pub(crate) at: (usize, usize),
 }

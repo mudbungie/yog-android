@@ -83,7 +83,7 @@ impl Shell {
     fn foot(&mut self, ui: &mut egui::Ui) {
         ui.weak(self.identity());
         ui.separator();
-        self.hosting(ui);
+        Self::hosting(ui);
         ui.add_space(8.0);
         ui.weak(
             "Thrall advertises what this machine can run, waits for work \
@@ -96,7 +96,7 @@ impl Shell {
     fn roster(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         ui.weak("workspaces");
         ui.weak(self.identity());
-        self.hosting(ui);
+        Self::hosting(ui);
         ui.separator();
         egui::ScrollArea::vertical().show(ui, |ui| {
             for row in &snap.workspaces {
@@ -206,7 +206,11 @@ impl Shell {
     /// What this device offers a session, one line (REMOTE §5). It rides the
     /// roster because that is the screen an operator lands on, and a tool host
     /// nobody can see is one nobody can tell has stopped.
-    fn hosting(&mut self, ui: &mut egui::Ui) {
+    ///
+    /// It takes no `self`: since bl-8bd0 the host belongs to the PROCESS and
+    /// this reads `state::standing()`, so a receiver here would be a claim
+    /// that the frame owns the fact.
+    fn hosting(ui: &mut egui::Ui) {
         let Some(standing) = crate::state::standing() else {
             return;
         };

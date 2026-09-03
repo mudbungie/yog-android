@@ -10,6 +10,7 @@ use std::path::Path;
 use serde_json::Value;
 
 use super::options::Options;
+use super::posted::Posted;
 use super::{Focus, Snapshot};
 use crate::cache::Envelopes;
 use crate::codec::reply::Reply;
@@ -39,10 +40,11 @@ pub(super) struct Standing {
     /// How many times the assignments have been read (bl-e9f9) — the
     /// controls' watermark for "your optimistic value has been overtaken".
     pub(super) reads: usize,
-    /// The deposits the engine took and refused (bl-66fb). Carried between
-    /// passes because a deposit is a gesture, not a pass — and painted into
-    /// every published snapshot for the same reason the options are.
-    posted: (usize, usize),
+    /// The deposits the engine took, refused, and **left in doubt** (bl-66fb,
+    /// widened in bl-07b1). Carried between passes because a deposit is a
+    /// gesture, not a pass — and painted into every published snapshot for the
+    /// same reason the options are.
+    posted: (usize, usize, usize),
     last: Snapshot,
     failed: u32,
     /// What was last WRITTEN to the cache, so a pass that changed nothing
@@ -61,7 +63,7 @@ impl Standing {
             options,
             live: None,
             reads: 0,
-            posted: (0, 0),
+            posted: (0, 0, 0),
             last: snap.clone(),
             failed: 0,
             stored: snap,
@@ -139,7 +141,7 @@ impl Standing {
             self.live = None;
         }
         let mut out = self.last.clone();
-        (out.landed, out.refused) = self.posted;
+        (out.landed, out.refused, out.doubted) = self.posted;
         out.roles_read = self.reads;
         // One tail on the glass, and none at rest (bl-e3d1). The gate is the
         // row's own flight, so the transcript's tail obeys exactly what the
@@ -222,12 +224,17 @@ pub(super) fn kind_err(asked: &str, got: &Reply) -> String {
 impl Standing {
     /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot
     /// see the receipt — the worker holds the wire — so what it watches is
-    /// this pair moving.
-    pub(super) fn posted(&mut self, took: bool) {
-        if took {
-            self.posted.0 += 1;
-        } else {
-            self.posted.1 += 1;
+    /// these counters moving.
+    ///
+    /// **Three, since bl-07b1**: a lost reply is not a refusal (yog REMOTE
+    /// §3), and counting it as one made the echo hand its text back to the
+    /// composer — an invitation to send a message the engine may already have
+    /// taken. The third counter is what lets the echo stand instead.
+    pub(super) fn posted(&mut self, fate: &Posted) {
+        match fate {
+            Posted::Took => self.posted.0 += 1,
+            Posted::Refused(_) => self.posted.1 += 1,
+            Posted::InDoubt(_) => self.posted.2 += 1,
         }
     }
 
@@ -251,9 +258,9 @@ impl Standing {
     /// and a failure is a sentence for the banner like any other — it does
     /// not stop the lane, because the next tick re-asks and is whole.
     pub(super) fn living(&mut self, seat: &Seat, focus: &Focus) -> Snapshot {
-        let read = super::acts::follow(seat, focus);
+        let read = super::asks::follow(seat, focus);
         let mut out = self.last.clone();
-        (out.landed, out.refused) = self.posted;
+        (out.landed, out.refused, out.doubted) = self.posted;
         out.roles_read = self.reads;
         match read {
             Ok(stream) => self.live = Some(stream),

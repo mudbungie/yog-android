@@ -57,41 +57,45 @@ pub(super) fn run(
             }
             Ok(Cmd::Deposit(content)) => {
                 // The receipt is counted as well as reported: the composer's
-                // echo has no other way to know its message landed (bl-66fb).
+                // echo has no other way to know its message landed (bl-66fb),
+                // and since bl-07b1 there are three fates to count rather than
+                // two — a lost reply is not a refusal, and an echo that read
+                // it as one would hand the operator back a draft the engine
+                // may already have taken.
                 let posted = super::acts::deposit(seat, &focus, content);
-                standing.posted(posted.is_ok());
-                note = posted.err();
+                standing.posted(&posted);
+                note = posted.note();
             }
             // The three selector gestures. A read's answer is learned as the
             // engine's own envelope (bl-0267); a failure is a sentence for
             // the banner exactly as an act's is.
             Ok(Cmd::Providers) => {
-                note = learned(super::acts::providers(seat, &focus), None, &mut standing);
+                note = learned(super::asks::providers(seat, &focus), None, &mut standing);
             }
             Ok(Cmd::Models(provider)) => {
-                let listed = super::acts::models(seat, &focus, &provider);
+                let listed = super::asks::models(seat, &focus, &provider);
                 note = learned(listed, Some(provider), &mut standing);
             }
             Ok(Cmd::StopTurn(children)) => {
-                note = super::acts::stop(seat, &focus, children).err();
+                note = super::acts::stop(seat, &focus, children).note();
             }
-            Ok(Cmd::Nudge) => note = super::acts::nudge(seat, &focus).err(),
+            Ok(Cmd::Nudge) => note = super::acts::nudge(seat, &focus).note(),
             // A tuning act is followed by the read that makes it true: the
             // control showed its pick optimistically, and this is what
             // overtakes it (bl-e9f9).
             Ok(Cmd::Effort(level)) => {
-                note = super::acts::effort(seat, &focus, level).err();
+                note = super::acts::effort(seat, &focus, level).note();
                 preload(seat, &focus, &mut standing);
             }
             Ok(Cmd::Priority(on)) => {
-                note = super::acts::priority(seat, &focus, on).err();
+                note = super::acts::priority(seat, &focus, on).note();
                 preload(seat, &focus, &mut standing);
             }
             Ok(Cmd::Pick(provider, model)) => {
-                note = super::acts::pick(seat, &focus, &provider, &model).err();
+                note = super::acts::pick(seat, &focus, &provider, &model).note();
                 preload(seat, &focus, &mut standing);
             }
-            Ok(Cmd::Start(goal)) => note = super::acts::started(seat, &focus, goal).err(),
+            Ok(Cmd::Start(goal)) => note = super::acts::started(seat, &focus, goal).note(),
             Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
             Err(mpsc::RecvTimeoutError::Timeout) => {}
         }
@@ -107,7 +111,7 @@ pub(super) fn run(
 /// banner for that would be this app telling an operator off for running the
 /// engine they have.
 fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
-    if let Ok((workspace, envelope)) = super::acts::roles(seat, focus) {
+    if let Ok((workspace, envelope)) = super::asks::roles(seat, focus) {
         standing.options.assigned(&workspace, envelope);
         standing.reads += 1;
     }

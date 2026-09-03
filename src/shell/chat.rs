@@ -21,6 +21,7 @@
 
 use eframe::egui;
 
+use crate::outbox::Fate;
 use crate::rows::{Fold, Role, Row};
 use crate::seat::Snapshot;
 
@@ -28,8 +29,15 @@ use crate::seat::Snapshot;
 /// where the row it will become is going to be. Muted while the engine has
 /// not answered, ordinary ink with a rule under it once it has — the rule is
 /// the "not yet in the transcript" mark, and it goes when the echo does.
-pub(crate) fn echo(ui: &mut egui::Ui, text: &str, landed: bool) {
-    let ink = if landed {
+///
+/// **The third state is in doubt** (yog REMOTE §3, bl-07b1): the reply was
+/// lost, so the engine may have taken this message and may not have. It keeps
+/// the unanswered ink — because that is what it is — and carries the contract
+/// under it in the operator's own words, naming the read that settles it. It
+/// is a state and not a control: there is no resend here, because a resend is
+/// a second message and the transcript below is already the recovery.
+pub(crate) fn echo(ui: &mut egui::Ui, text: &str, fate: Fate) {
+    let ink = if fate == Fate::Landed {
         role_hue(Role::User)
     } else {
         ui.visuals().weak_text_color()
@@ -38,10 +46,28 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, landed: bool) {
         stripe(ui, Some(Role::User));
         ui.add(egui::Label::new(egui::RichText::new(text).color(ink)).wrap());
     });
-    if landed {
+    if fate == Fate::InDoubt {
+        ui.horizontal(|ui| {
+            stripe(ui, None);
+            ui.add(
+                egui::Label::new(
+                    egui::RichText::new(IN_DOUBT)
+                        .small()
+                        .color(ui.visuals().warn_fg_color),
+                )
+                .wrap(),
+            );
+        });
+    }
+    if fate == Fate::Landed {
         ui.separator();
     }
 }
+
+/// What an in-doubt echo says under itself. It is the same fact the banner
+/// carried for one cadence, in the place the operator is looking and for as
+/// long as the doubt lasts.
+const IN_DOUBT: &str = "the reply was lost — this may or may not have been taken.     It was not sent again; the transcript will show it if it landed.";
 
 /// The fold triangles, and the mark a row with nothing to fold shows in their
 /// place so every payload starts at the same x.

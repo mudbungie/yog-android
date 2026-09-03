@@ -251,7 +251,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
-| `src/transport.rs` | the Seat: one connection per ask, server name off the address; `Wire`, the three-class failure (the channel, the engine's own no, an answer this end cannot use) | landed (bl-48d9, class bl-8641, third class bl-8bd0) |
+| `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
+| `src/transport/wire.rs` | `Wire`, the four-class failure and its two predicates: which end failed, and whether the act was written and never answered (§19.1) | landed (bl-8641, third class bl-8bd0, fourth bl-07b1, split out bl-07b1) |
 | `src/test_support.rs` + `test_support/serve.rs` | tests only: openssl-minted PKI; the one-shot and scripted multi-connection mTLS answering servers | landed (bl-48d9, split bl-5a98) |
 | `src/rows.rs` + `rows/{build,compacted,project,project/blocks}.rs` | the transcript's one-line row projection: the row vocabulary (class, tone, role, fold), the per-entry match and its labels, the preview/body split — pure, no paint | landed (bl-0ed6) |
 | `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
@@ -282,7 +283,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the live tick inside it | landed (bl-dfbb, out of `model.rs`) |
 | `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
-| `src/seat/acts.rs` | the two acts the seat posts: the message deposit and the §8.1 start pair | landed (bl-de96, out of `pass.rs`) |
+| `src/seat/acts.rs` | the acts the seat posts: the message deposit, the §8.1 start pair, the turn's stop and nudge, and the worker's tuning — none of them ever sent twice (§19.2) | landed (bl-de96, out of `pass.rs`) |
+| `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three and the live tail. Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, bl-4822, split out bl-07b1) |
+| `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
@@ -298,7 +301,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
 | `src/roster.rs` | the conversation list's two readings of the carried stamp: newest-first order, and how long ago each row says it is — pure, host-tested | landed (bl-e837) |
 | `src/live.rs` | the streaming tail's one rule: the lane's fold replaces the transcript's own tail, and at rest there is none — pure, host-tested | landed (bl-e3d1) |
-| `src/outbox.rs` | the one rule the local echo needs: has this message come back in a transcript read yet — pure, host-tested | landed (bl-66fb) |
+| `src/outbox.rs` | the local echo and every decision about it: has this message come back in a transcript read yet, and which of the three fates it stands in (§19.2) — pure, host-tested | landed (bl-66fb, the echo itself bl-07b1) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
 | `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
@@ -2472,3 +2475,123 @@ actually costs a battery over that time, which is the number §14.2 prices and
 no emulator can measure; and Doze's real behaviour on a phone that is genuinely
 still, screen off, off charge, for hours — the emulator never enters deep Doze
 on its own. Those are recorded as this rung's real-device residue on bl-8bd0.
+
+## 19. The lost reply: what an act in doubt does here (bl-07b1)
+
+yog's REMOTE §3 gained one bullet (its bl-d1f1) and it is the whole of this
+section's premise:
+
+> **A lost reply leaves an act IN DOUBT, and the recovery is a read — never a
+> resend.** A connection that dies between the engine completing an act and the
+> reply frame landing tells the client nothing about whether the effect ran, and
+> nothing on the wire can be added to say it: an act is not idempotent (§9.8 —
+> two clicks of Nudge are two nudges), an engine-side receipt journal could only
+> assert *dispatched*, never *committed* [...] So no idempotency token rides the
+> act envelope and no redelivery slot exists for acts: a client whose act earned
+> a transport error instead of a reply paints the failure and consults the world,
+> which is the durable record [...] **Asks are the opposite case and re-ask
+> freely**: a read is answered in place, and asking twice is asking once (§9.7).
+
+Nothing wire-visible moved — PROTOCOL stands at 8, the corpus is unchanged —
+so everything below is behaviour, and most of it was already right. What was
+not is named as a defect, because that is the half worth writing down.
+
+### 19.1 Where the doubt begins, and why the line is the write
+
+`transport::Wire` carries the class, and it gained a fourth member rather than
+a flag on an existing one:
+
+| class | what happened | dial again? | in doubt? |
+|---|---|---|---|
+| `Transport` | the channel failed **before** the gesture left | yes | no |
+| `Lost` | the gesture was written and **nothing answered it** | yes | **yes** |
+| `Refused` | the engine spoke, and said no | the leg decides (§18.5) | no |
+| `Unusable` | the engine spoke, and this end cannot read it | no | no |
+
+**The line is drawn by the framing, not by a guess.** An `io::Error` out of a
+write is that write's bytes not being accepted, and `frame`'s reader takes a
+length header and then exactly that many bytes without ever scanning — so a
+frame that failed mid-write is a frame no engine decoded, and a socket that
+would not open said nothing at all. Both are ordinary failures. A frame written
+whole is the opposite: this end cannot learn whether it arrived, whether it was
+answered, or whether the answer went into a socket that had already gone.
+
+**Two questions, two predicates, and keeping them apart is the point.**
+`Wire::transport()` is *is the channel what failed* — the tool host's ladder
+reads it, and `Lost` answers yes, because a foot that stopped on a dropped
+completion would be exactly the wifi-handover defect §18.5 exists to prevent.
+`Wire::in_doubt()` is *may the act have run anyway*, and only `Lost` answers
+yes. The engine's own preface is the one exchange after the write that is still
+definite, so a version this end cannot read stays `Unusable`: yog's listener
+writes its version before it reads a request frame (`wire::hello::admit`), so a
+peer that never stated one never read the gesture.
+
+**Asks consult none of it.** `seat::asks` — the selectors' three reads and the
+live tail — re-ask on the next tick with nothing remembered, and a read's
+failure is one sentence for the banner exactly as it always was. That is why
+those four functions moved out of `seat::acts` into a file of their own: the
+contract's own line is the seam, and a file that may resend is not the file
+that must not.
+
+### 19.2 The seat: three fates, and the draft that must not come back
+
+`seat::posted::Posted` is the outcome every act now ends in — `Took`,
+`Refused`, `InDoubt` — and `Snapshot` counts deposits in three rather than two.
+
+**The defect this closed is one tap wide.** The composer's echo watches the
+deposit counters move (bl-66fb): on a refusal it takes the operator's text back
+into the field, because the engine said no and saying it again is an ordinary
+first attempt. A lost reply used to count as a refusal — so a phone that
+dropped its connection mid-deposit handed the draft back, one tap from a second
+copy of a message the engine may already have taken. On a device whose radio
+drops connections routinely, that is the tempting reconnect-and-replay loop the
+contract forbids, wearing an operator's finger as its retry.
+
+So an act in doubt **keeps the echo standing**, marked, with the contract under
+it in the operator's own words — the reply was lost, this may or may not have
+been taken, it was not sent again, and the transcript will show it if it
+landed. It is a state and not a control: there is no resend button, because a
+resend is a second message and the read that settles it is the transcript the
+echo is already standing in. The seat re-reads that transcript every cadence
+without being asked, so the recovery needs no gesture at all — and when the row
+appears, the echo dissolves into it exactly as a landed one does.
+
+**Every act names its own read**, because "consult the world" is only useful if
+the client says which part: a deposit points at the transcript, a stop or nudge
+at the conversation's row and its `flight`, a start at the workspace's
+conversation list, and the three config writes at the assignments read the
+worker makes straight afterwards anyway (bl-e9f9). One sentence builder
+(`seat::posted`), so the contract is worded once.
+
+**The banner keeps the sentence for one cadence and the echo keeps it for as
+long as the doubt lasts**, which is the split that matters: an act's `note` is
+taken once and replaced by the next pass, and in-doubt is a durable fact about
+a particular message rather than a transient failure.
+
+### 19.3 The foot: the one gesture that may not be repeated
+
+The pocketed foot redials forever (§18.5), and a redial re-asserts the
+advertised set on every fresh channel. That is lawful and stays: a presentation
+is idempotent by design, and since PROTOCOL 8 the engine's own `wrote` reports
+whether it changed anything. **The completion is the gesture that may not be
+repeated**, and the loop already did the right thing — the capture is moved into
+the gesture and goes with the channel that could not carry it, and the redial
+presents and reads afresh rather than carrying an answer over. What was missing
+was that anyone had said so, and a test: the ladder had been proven on the
+`invocations` leg and never with a hangup on `complete`.
+
+**The recovery here is the engine's, and this device must not help.** REMOTE
+§5.3's invocation leg is at-least-once *by design*: a claim whose taker vanished
+is requeued (yog bl-e658), so the work this device could not answer is offered
+again on the next `invocations` read, and this device runs the tool again and
+answers the new delivery. Nothing here remembers an invocation id to suppress
+that — thrall's DESIGN §3.8 declines exactly the same memory and re-runs, and
+this is that ruling from the other side. A device that redials must not keep
+memory across the gap it redials over; the honest cost is that a tool can run
+twice, and it is the effect owner's to make safe, never the wire's to promise.
+
+**Nothing new is painted for it.** The shade and the roster already say
+`reconnecting` with the sentence that broke the channel, and a doubted
+completion adds nothing an operator can act on: the engine re-delivers, this
+device answers, and a mark for the seconds in between would be noise on the one
+surface a pocketed phone has.

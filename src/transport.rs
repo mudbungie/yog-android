@@ -14,6 +14,10 @@
 //! DNS name. Nothing to configure, nothing that can disagree with what was
 //! dialled.
 
+mod wire;
+
+pub use wire::Wire;
+
 use crate::codec::reply::{self, Reply};
 use crate::material::Material;
 use crate::{frame, hello};
@@ -26,62 +30,6 @@ use std::time::Duration;
 
 /// How long a seat waits on one answer before giving up on the connection.
 const ASK_TIMEOUT: Duration = Duration::from_mins(2);
-
-/// **Why a gesture did not come back, and which end of the wire is why**
-/// (bl-8641). Two classes, because exactly one caller distinction rides on
-/// them: a channel that broke is worth dialling again, and a far end that
-/// said no is not — the tool host redials the first forever and stops dead on
-/// the second. Every caller that does not care converts to the sentence and
-/// is unchanged (`From<Wire> for String`), which is what the seat model does:
-/// it opens a connection per ask anyway, so a broken channel is already
-/// re-dialled by its next pass and the class buys it nothing.
-///
-/// The line is drawn where this file already knows it — at the socket, not by
-/// reading sentences back. **The version preface is on the far side of it**:
-/// REMOTE §3 collapses a peer that hung up mid-preface into "the peer speaks
-/// no version" by ruling, so a channel that dies inside that one window
-/// stops the host rather than redialling. Narrowing that would be amending
-/// REMOTE from a client, which §1 forbids.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Wire {
-    /// The channel: a socket that would not open, a handshake that would not
-    /// build, a write that did not land, a read that died. The class a phone
-    /// meets every time it changes networks.
-    Transport(String),
-    /// **The engine spoke, and what it said is no** — its own refusal,
-    /// written as a sentence for an operator. Whether that is worth asking
-    /// again is the LEG's answer and not this one's (`host::serve`, following
-    /// thrall's bl-916d): a refusal of this device's *read* is REMOTE §5.1's
-    /// one-reader guard, which after a drop names this very device.
-    Refused(String),
-    /// **An answer this end cannot use**: a stream that ended without one, a
-    /// frame that is not JSON, a reply of a kind the gesture does not earn, a
-    /// version that cannot be spoken to. Asking again asks the same question
-    /// and gets the same answer, on every leg, so this class always stops.
-    Unusable(String),
-}
-
-impl Wire {
-    /// The sentence, for the frame that paints it and the caller that wanted
-    /// nothing else.
-    pub fn sentence(&self) -> String {
-        match self {
-            Self::Transport(said) | Self::Refused(said) | Self::Unusable(said) => said.clone(),
-        }
-    }
-
-    /// Whether the channel is what failed — the one question a caller that
-    /// can dial again asks.
-    pub fn transport(&self) -> bool {
-        matches!(self, Self::Transport(_))
-    }
-}
-
-impl From<Wire> for String {
-    fn from(wire: Wire) -> Self {
-        wire.sentence()
-    }
-}
 
 /// A seat's end of the wire.
 pub struct Seat {
@@ -151,8 +99,13 @@ impl Seat {
         hello::confirm(&mut tls).map_err(Wire::Unusable)?;
         let mut stream = Vec::new();
         loop {
-            let frame = frame::read_frame(&mut tls)
-                .map_err(|e| Wire::Transport(format!("receive: {e}")))?;
+            // **Lost and not `Transport`** (bl-07b1): the gesture is on the
+            // wire by the time this reads, so a channel that dies here is yog
+            // REMOTE §3's lost reply — the engine may have completed the act.
+            // The channel question is unchanged (`Wire::transport` answers yes
+            // to both), so the tool host's ladder reads exactly what it read.
+            let frame =
+                frame::read_frame(&mut tls).map_err(|e| Wire::Lost(format!("receive: {e}")))?;
             match frame {
                 Some(body) => stream.push(parsed(&body)?),
                 None => return Ok(stream),
@@ -173,6 +126,14 @@ impl Seat {
         let conn = ClientConnection::new(Arc::clone(&self.config), self.name.clone())
             .map_err(|e| Wire::Transport(format!("tls {}: {e}", self.address)))?;
         let mut tls = StreamOwned::new(conn, tcp);
+        // **A write that failed is not in doubt, and the framing is why**
+        // (bl-07b1). An `io::Error` out of a write is that write's bytes not
+        // being accepted, so a frame that failed mid-write is a frame the
+        // engine never received whole — and `frame`'s reader takes a length
+        // header and then exactly that many bytes, never scanning, so an
+        // incomplete frame is not decoded, never mind executed. The doubt
+        // therefore begins where the write ENDS, which is why the class here
+        // is the same one a socket that would not open earns.
         send(&mut tls, request).map_err(|e| Wire::Transport(format!("send: {e}")))?;
         Ok(tls)
     }

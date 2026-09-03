@@ -255,7 +255,12 @@ fn unconsented(tool: &str, cwd: &str) -> Capture {
     )
 }
 
-/// Post one capture back, quoting the handle it answers.
+/// Post one capture back, quoting the handle it answers. **A lost one is not
+/// re-posted and the next channel does not carry it** — the contract and its
+/// recovery are on [`Foot::complete`] (yog REMOTE §3, bl-07b1). What the
+/// redial re-asserts is the presentation, which is idempotent by design and
+/// says so in its own receipt: two of the three gestures may be repeated, and
+/// the one that may not is this one.
 fn answer(foot: &Foot, invocation: &Invocation, capture: Capture) -> Result<(), Wire> {
     foot.complete(invocation.id.clone(), capture)
 }

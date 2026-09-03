@@ -12,7 +12,7 @@
 
 pub(super) use super::Model;
 use super::Snapshot;
-pub(super) use crate::test_support::{material, serve_many};
+pub(super) use crate::test_support::{Turn, material, serve_many, serve_turns};
 use crate::test_support::{mint_ca, mint_leaf, scratch};
 use crate::transport::Seat;
 use serde_json::{Value, json};
@@ -34,6 +34,16 @@ pub(super) fn model_against(
 ) -> (Model, std::thread::JoinHandle<Vec<Vec<u8>>>) {
     let dir = pki();
     let (address, served) = serve_many(&dir, "ca", "server", scripts);
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    (Model::start(seat, REST, cache_in(&dir)), served)
+}
+
+/// [`model_against`], with each connection's turn spelled — the entry point
+/// for a test that needs a channel to BREAK under a gesture rather than to
+/// refuse it (bl-07b1: a lost reply is neither a refusal nor a failure).
+pub(super) fn model_turns(turns: Vec<Turn>) -> (Model, std::thread::JoinHandle<Vec<Vec<u8>>>) {
+    let dir = pki();
+    let (address, served) = serve_turns(&dir, "ca", "server", turns);
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
     (Model::start(seat, REST, cache_in(&dir)), served)
 }
@@ -148,6 +158,7 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 }
 
 mod deposit;
+mod doubt;
 mod grace;
 mod live;
 mod loaded;

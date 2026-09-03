@@ -5,7 +5,9 @@
 
 use super::{Seat, Wire, server_name};
 use crate::codec::reply::Reply;
-use crate::test_support::{material, mint_ca, mint_leaf, scratch, serve_once, serve_versioned};
+use crate::test_support::{
+    Turn, material, mint_ca, mint_leaf, scratch, serve_once, serve_turns, serve_versioned,
+};
 use serde_json::json;
 
 fn pki() -> std::path::PathBuf {
@@ -108,6 +110,36 @@ fn a_frame_that_is_not_json_refuses_on_receive() {
     assert!(!e.transport());
 }
 
+/// **The lost reply, at the socket** (yog REMOTE §3, bl-07b1). The gesture is
+/// written whole and the engine hangs up where the answer belongs, which is
+/// the one shape that tells this end nothing about whether the act ran. It is
+/// still the channel — the tool host must dial again — but it is no longer
+/// merely a failure, and the two questions are answered by two predicates.
+#[test]
+fn a_channel_that_dies_after_the_gesture_was_written_leaves_the_act_in_doubt() {
+    let dir = pki();
+    let (address, served) = serve_turns(&dir, "ca", "server", vec![Turn::Hangup]);
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let request = json!({ "op": "nudge", "workspace": "home", "agent": "a1" });
+    let e = seat.answered(&request).unwrap_err();
+    assert!(matches!(e, Wire::Lost(_)), "{e:?}");
+    assert!(
+        e.in_doubt(),
+        "the act was on the wire when the channel died"
+    );
+    assert!(e.transport(), "the channel is still what failed, so redial");
+    // The engine read the gesture before it hung up: this is the window the
+    // contract is about, not one where nothing was said.
+    assert_eq!(
+        served.join().unwrap(),
+        vec![request.to_string().into_bytes()]
+    );
+}
+
+/// **The other side of the same line.** A socket that would not open carried
+/// no byte of the act, so there is nothing to be in doubt about — and telling
+/// an operator otherwise every time a phone is out of range would make the
+/// word worthless where it means something.
 #[test]
 fn a_dead_address_refuses_on_connect() {
     let dir = pki();
@@ -117,6 +149,10 @@ fn a_dead_address_refuses_on_connect() {
     assert!(e.sentence().starts_with("connect 127.0.0.1:1:"), "{e:?}");
     // The channel class — the one the tool host climbs a ladder against.
     assert!(e.transport());
+    assert!(
+        !e.in_doubt(),
+        "nothing was written, so nothing may have run"
+    );
 }
 
 #[test]
@@ -144,6 +180,10 @@ fn a_server_off_the_operators_ca_never_completes_the_handshake() {
         "{said}"
     );
     assert!(e.transport());
+    // A handshake that never completed carried no application byte either
+    // (bl-07b1): the refusal happens inside the write, before a frame of it
+    // could be accepted.
+    assert!(!e.in_doubt(), "{said}");
     // The server side dies on its own half of the failed handshake.
     assert!(served.join().is_err());
 }

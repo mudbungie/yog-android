@@ -51,6 +51,14 @@ pub struct Snapshot {
     /// wire does not carry.
     pub landed: usize,
     pub refused: usize,
+    /// **How many deposits earned no reply at all** (yog REMOTE §3, bl-07b1).
+    /// A third counter and not a second reading of `refused`, because the two
+    /// are opposite instructions to the operator: a refusal is the engine
+    /// saying no, and the composer takes its draft back; an act in doubt may
+    /// have been taken, and the one thing that must not happen is its being
+    /// said again. The echo watches this move exactly as it watches the other
+    /// two, and stands where it is when it does.
+    pub doubted: usize,
     /// The last refresh's failure or a refused deposit, one sentence for
     /// the banner. `None` is "the engine answered".
     pub error: Option<String>,
@@ -66,9 +74,11 @@ pub struct Focus {
 }
 
 pub(crate) mod acts;
+mod asks;
 mod model;
 mod options;
 mod pass;
+mod posted;
 mod worker;
 
 pub use model::Model;

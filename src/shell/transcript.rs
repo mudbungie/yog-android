@@ -105,7 +105,7 @@ impl Shell {
                             // has not shown back yet (bl-66fb), where its row
                             // will be — above the answer to it.
                             if let Some(echo) = &self.echo {
-                                super::chat::echo(ui, &echo.text, echo.landed);
+                                super::chat::echo(ui, &echo.text, echo.fate);
                             }
                         });
                     });
@@ -130,33 +130,18 @@ impl Shell {
     fn deposit(&mut self, snap: &Snapshot, text: String) {
         let Some(model) = self.model() else { return };
         model.deposit(text.clone());
-        self.echo = Some(super::app::Echo {
-            text,
-            landed: false,
-            agent: snap.focus.agent.clone(),
-            at: (snap.landed, snap.refused),
-        });
+        self.echo = Some(crate::outbox::Echo::sent(text, snap));
     }
 
     /// **What became of the echo**, run once per frame before the transcript
-    /// is painted: the engine's receipt inks it, a refusal gives the text
-    /// back to the composer (the banner already carries the engine's own
-    /// sentence), and the message appearing in a transcript read dissolves it
-    /// into the row it became (`crate::outbox`).
+    /// is painted. The rule is `crate::outbox`'s and is proven there; this is
+    /// the one thing this file does with each of its three answers.
     pub(super) fn settle_echo(&mut self, snap: &Snapshot) {
-        let Some(echo) = &mut self.echo else { return };
-        if echo.agent != snap.focus.agent {
-            self.echo = None;
-            return;
-        }
-        if snap.refused > echo.at.1 {
-            self.composer = std::mem::take(&mut echo.text);
-            self.echo = None;
-            return;
-        }
-        echo.landed |= snap.landed > echo.at.0;
-        if crate::outbox::taken(&snap.transcript, &echo.text) {
-            self.echo = None;
+        let Some(echo) = self.echo.take() else { return };
+        match echo.settle(snap) {
+            crate::outbox::Settled::Standing(echo) => self.echo = Some(echo),
+            crate::outbox::Settled::Gone => {}
+            crate::outbox::Settled::Draft(text) => self.composer = text,
         }
     }
 }

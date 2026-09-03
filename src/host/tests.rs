@@ -5,6 +5,7 @@
 
 mod consent;
 mod disarm;
+mod doubt;
 mod redial;
 mod stopping;
 

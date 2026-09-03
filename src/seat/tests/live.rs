@@ -155,7 +155,7 @@ fn a_follow_with_nothing_focused_names_itself() {
     let (address, _served) = serve_many(&dir, "ca", "server", vec![vec![ws_reply()]]);
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
     assert_eq!(
-        crate::seat::acts::follow(&seat, &crate::seat::Focus::default()).unwrap_err(),
+        crate::seat::asks::follow(&seat, &crate::seat::Focus::default()).unwrap_err(),
         "follow: no conversation is focused"
     );
 }

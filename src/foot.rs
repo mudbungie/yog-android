@@ -104,6 +104,22 @@ impl Foot {
     /// completion — an expired handle, a slot addressed elsewhere — is
     /// something this device must stop against rather than keep answering
     /// into.
+    ///
+    /// **A completion whose reply is lost is never posted again** (yog REMOTE
+    /// §3, bl-d1f1). The capture is moved into the gesture and goes with the
+    /// channel; the redial that follows presents and reads afresh and carries
+    /// nothing over ([`crate::host`]'s ladder). That is the contract and not a
+    /// gap in it: an act with no reply is in doubt, and a resent `complete`
+    /// would be a second answer to one invocation.
+    ///
+    /// **The recovery is the engine's, and it is a read.** §5.3's invocation
+    /// leg is at-least-once by design — a claim dropped by a taker that
+    /// vanished is requeued (yog bl-e658) — so the invocation this device
+    /// could not answer is offered again on the next `invocations` read, and
+    /// this device runs it again and answers the new delivery. Nothing here
+    /// remembers an invocation id to suppress that, which is thrall's own
+    /// ruling (its DESIGN §3.8) read from the other side: memory across the
+    /// gap is exactly what a device that redials must not keep.
     pub fn complete(&self, invocation: String, capture: Capture) -> Result<(), Wire> {
         match self.said(&Gesture::Act(Act::Complete {
             invocation,
