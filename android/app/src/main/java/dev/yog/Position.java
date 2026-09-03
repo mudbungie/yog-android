@@ -25,18 +25,16 @@ import java.util.Locale;
  * clock can move. {@code Location#getTime} is the wall clock, and an hour-old
  * fix would read as brand new the moment that clock jumped.
  *
+ * <p>The span itself is spelled by {@link Span}, which the shade read shares —
+ * one ladder of units, so a "4 minutes" here and a "4 minutes" there cannot
+ * come to mean different things.
+ *
  * <p><b>An unknown is said, never guessed</b> ({@link Device}'s rule): a fix
  * with no accuracy says so rather than reporting a zero a caller would read as
  * perfect.
  */
 final class Position {
     private Position() {}
-
-    /** Under a minute and a half, seconds are the honest unit; past that, minutes. */
-    private static final long MINUTE_S = 90;
-
-    /** Past an hour and a half of minutes, hours are. */
-    private static final long HOUR_S = 90 * 60;
 
     /** The three lines, in the order a reader needs them. */
     static String said(Location where, boolean arrived, long waited) {
@@ -64,7 +62,7 @@ final class Position {
         long seconds =
                 (SystemClock.elapsedRealtimeNanos() - where.getElapsedRealtimeNanos())
                         / 1_000_000_000L;
-        String ago = "fixed " + spell(Math.max(seconds, 0)) + " ago";
+        String ago = "fixed " + Span.spell(seconds) + " ago";
         String from = ", from " + where.getProvider();
         if (arrived) {
             return ago + from + " — a new fix, taken while this call waited";
@@ -75,17 +73,5 @@ final class Position {
                 + "in the "
                 + waited
                 + " seconds this waited, so the device may have moved since.";
-    }
-
-    private static String spell(long seconds) {
-        if (seconds < MINUTE_S) {
-            return seconds + (seconds == 1 ? " second" : " seconds");
-        }
-        if (seconds < HOUR_S) {
-            long minutes = seconds / 60;
-            return minutes + (minutes == 1 ? " minute" : " minutes");
-        }
-        long hours = seconds / 3600;
-        return hours + (hours == 1 ? " hour" : " hours");
     }
 }

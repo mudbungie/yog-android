@@ -271,6 +271,10 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/sighted/bridge.rs` | android-only: the two static calls into `dev.yog.Sighted` | landed (bl-b0a9) |
 | `android/…/{Sighted,Still,Shot,Lens,Jpeg}.java` | the still's platform half: the door, the three gates (grant, foreground, the scanner holding the same camera), the camera2 burst, which lens and how big, and the frame on disk | landed (bl-b0a9) |
 | `android/…/{Fix,Position}.java` | the fix's platform half: the two grants and the device switch, a bounded wait over every live provider — and what one fix says, age always included | landed (bl-b0a9) |
+| `src/tools/shade.rs` | the shade read (§16.1 rung 2): `notifications` — its advertised element, the enable and the retention ruling it states, and the cap reading | landed (bl-5cbd) |
+| `src/tools/shade/bridge.rs` | android-only: the one static call into `dev.yog.Shade` | landed (bl-5cbd) |
+| `android/…/{Shade,ShadeService,Notice}.java` | the listener's platform half: the door, the service the operator enables, the two refusals it tells apart, and one notification as the lines a model reads | landed (bl-5cbd) |
+| `android/…/Span.java` | how long ago, in the unit a reader acts on — one ladder, shared by a fix's age and a notification's | landed (bl-5cbd, out of `Position.java`) |
 | `android/…/App.java` | the two handles a tool-host thread cannot get for itself: this app's context, and whether it is in front | landed (bl-f34f) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the live tick inside it | landed (bl-dfbb, out of `model.rs`) |
@@ -487,6 +491,25 @@ description a model reads. `camera` answers a **path** for `screenshot`'s
 reason, and `location` answers a fix's **age** beside its accuracy, because a
 position with no age is the one shape of this pair that could mislead while
 looking like an answer.
+
+**The shade read costs a service the operator enables, and keeps nothing**
+(§16.1 rung 2, bl-5cbd): `notifications` reads what this phone is currently
+showing — app, age, title, text — through a `NotificationListenerService`
+whose enable is a settings act rather than a permission an app may ask for.
+That shape is the point: it answers the read want `READ_SMS` would otherwise
+be asked for, at one act the operator can revoke, where the SMS pair is
+hard-restricted and its send half has no undo. Three rulings ride with it and
+each is written where it is met. **The grant is all-or-nothing** — a listener
+sees every notification on the device or none — so there is no per-app filter
+in this app, which would advertise a narrowing the OS does not enforce and be
+§16.1's refused per-tool toggle screen wearing another hat. **Nothing is
+retained**: the service overrides neither the posted nor the removed callback,
+holds no history, writes no file and logs nothing (logcat is device-wide), so
+every answer is the platform's own `getActiveNotifications` at the moment of
+the call — and the cost of that, a dismissed notification being gone and an
+unwatched moment being unanswerable, is stated in the description rather than
+papered over with a buffer. And **it is read-only**: a bound listener may also
+dismiss a notification and fire its buttons, and neither is built at this rung.
 
 **The interface tools need a platform service, and enabling it is the
 operator's act** (bl-1511, and §5's trust model unchanged): an app uid cannot
@@ -1643,6 +1666,37 @@ not invoke a tool — an invocation through the host channel needs an engine, a
 foot leaf and something to fire `/invoke`, which is bl-05b6's ball — so the
 refusal halves stay host tests, where they belong.
 
+**Three more are not about a screen either, and they are the only proof a
+platform SERVICE can have here** (bl-5cbd, §16.1 rung 2). A notification
+listener is declared, permissioned and bound entirely outside this app's own
+code, and every way of getting it wrong fails the same silent way: the enable
+appears to work and nothing ever binds. So the walk asserts the state a fresh
+install is in (no notification access — the state the tool refuses from), then
+performs the operator's act over the debug bridge (`cmd notification
+allow_listener`, which the design already names beside the settings toggle),
+then reads the platform's **`Live notification listeners`** back — the
+listeners it has actually CONNECTED, not the `Allowed` list, which is only the
+setting written back. The distinction is the whole beat: a component that does
+not exist is allowed just as readily and never appears among the live ones, so
+this is what catches a missing `<service>`, a missing
+`BIND_NOTIFICATION_LISTENER_SERVICE`, a missing listener intent-filter action,
+or a class the dex does not carry. The third beat posts a notification and
+asserts it stands in the shade while the listener is bound — the material and
+the reader in place at once, which is what bl-05b6 will join with an
+invocation. **What none of them proves is that this app READ it**, and no
+other evidence exists to look for: the retention ruling means a shade read
+leaves no trace anywhere, and one that did would be the defect rather than the
+proof.
+
+**Two harness findings that beat paid for**, in the shape of §17.5's. `cmd
+notification post` takes `[-t <title>] <tag> <text>` and splits on whitespace
+with no quoting of its own, so a quoted argument silently becomes two and the
+row lands under a tag nobody expected — every token in that beat is one word
+for that reason. And `dumpsys notification` **redacts** the content it prints
+(`android.title=String [length=3]`), which is why the match is on the record's
+`tag=` rather than its body; that redaction is the platform agreeing with this
+rung's own ruling that a shade is not material to leave lying in a dump.
+
 **It is not part of `make check` and will not become part of it.** It needs an
 SDK, an emulator and a built APK, and a lint gate that depends on an artifact
 a build step produced is a gate that cannot run on a clean box.
@@ -1750,7 +1804,7 @@ ball, ordered by what each costs:
 |---|---|---|---|
 | 1 — the paper tools | `device`, `clipboard_set`, `notify`, `open` | no service; `notify` wants the POST_NOTIFICATIONS runtime ask (API 33+); `open` is platform-refused from background (BAL, API 29+) and says so in band | **landed** (bl-f34f) |
 | 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | **landed** (bl-b0a9) |
-| 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | bl-5cbd |
+| 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | **landed** (bl-5cbd) |
 | 3 — the pocketed foot | no new tool: the host loop itself moves into a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off by default, an explicit operator act | bl-8bd0 |
 
 **Rung 1's one open platform question is closed, and the answer is in the
@@ -1828,6 +1882,43 @@ hard-restricted permissions (Play refuses them by policy; sideloads meet the
 appops gate), and sending SMS is the operator's own voice on a channel with no
 undo — not built without an explicit operator ruling. One enable instead of a
 hard-restricted grant, and the read want is answered whole.
+
+**Rung 2 landed with three rulings, and all three are about what a tool may
+know rather than what it may do** (bl-5cbd).
+
+*What a caller may read is the whole shade, and no filter is offered.* The
+platform's grant has one shape — a listener sees every notification on the
+device or none — so a per-app allowlist inside this app would advertise a
+narrowing the OS does not enforce, and it is this section's refused per-tool
+toggle screen in another costume: a second authority beside the OS grant,
+drifting the first time one of them is changed. The severability the house
+rule wants is the enable itself.
+
+*Nothing is retained, and that had to be decided rather than defaulted.* A
+listener service is a continuous feed — the one tool in this corpus that
+receives without being asked — so the tempting shape is a buffer that answers
+"what arrived while you were away". It is refused. The service overrides
+neither callback, holds no history, writes no file and logs nothing (logcat is
+device-wide, and a shade is the last material that belongs there); every answer
+is `getActiveNotifications` at the moment of the call, because the platform
+already holds the shade and a copy would be a second store of one fact,
+durable, on a device nothing sweeps, carrying exactly the material this rung
+exists to read. **The cost is real and is stated where the model reads it**: a
+dismissed notification is gone, and the tool cannot answer for a moment nobody
+asked about. A capability that forgets is worth more here than one that
+remembers, and saying so is cheaper than the buffer would have been.
+
+*The rung reads and does not act.* A bound listener may dismiss a notification
+and fire its buttons. Neither is built: those are acts on somebody else's app
+with no undo, and the ball that wants one is where that gets argued rather than
+arriving as a side effect of the enable.
+
+**What only a real device can answer** is the sideload's restricted-settings
+block (§6): over the debug bridge the enable is unconditional, so the emulator
+proves the service binds and the walk's own beats prove the states either side
+of the enable, while the block — which presents as a toggle that will not
+stick — meets an operator on a phone. Every refusal names it anyway, because
+the sentence has to be right before the device is met.
 
 **Rung 3 shares its grant with the attention lane.** A foreground service is
 the platform's one "my ask may stand" grant (REMOTE §14), and this device

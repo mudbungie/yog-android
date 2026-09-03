@@ -249,6 +249,9 @@ seed_cache running; relaunch
 capture running transcript
 
 fetch_beats
+# The shade beats last of all: the third one posts a notification, which puts a
+# row in the status bar of every picture taken after it.
+shade_beats
 
 # 6. THE PARITY GATE (yog docs/PARITY.md §5, bl-fe4c). Everything above judges
 #    where the walk went; this judges what it could REACH. The dumps captured

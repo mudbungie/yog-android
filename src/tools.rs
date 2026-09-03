@@ -29,6 +29,7 @@ use crate::codec::{Capture, Tool};
 mod bridged;
 mod files;
 mod paper;
+mod shade;
 mod shell;
 mod sighted;
 mod ui;
@@ -72,6 +73,7 @@ pub fn advertisement() -> Vec<Tool> {
     set.extend(ui::tools());
     set.extend(paper::tools());
     set.extend(sighted::tools());
+    set.extend(shade::tools());
     set
 }
 
@@ -95,6 +97,7 @@ pub fn run_in(tool: &str, input: &Value, data_dir: &str) -> Capture {
         ui::READ | ui::TAP | ui::TYPE | ui::KEY | ui::SHOT => ui::run(tool, o, data_dir),
         paper::DEVICE | paper::CLIPBOARD | paper::NOTIFY | paper::OPEN => paper::run(tool, o),
         sighted::CAMERA | sighted::LOCATION => sighted::run(tool, o, data_dir),
+        shade::NOTIFICATIONS => shade::run(o),
         other => refused(
             NO_SUCH_TOOL,
             &format!("this machine carries no tool called {other:?}"),

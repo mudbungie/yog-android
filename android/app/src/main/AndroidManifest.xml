@@ -82,6 +82,24 @@
             <meta-data android:name="android.accessibilityservice"
                        android:resource="@xml/accessibility_service_config" />
         </service>
+        <!-- The shade read (bl-5cbd, DESIGN §16.1 rung 2). Exported because
+             the SYSTEM is what binds a notification listener, and
+             BIND_NOTIFICATION_LISTENER_SERVICE is held by the system rather
+             than requested by us: declaring it here is what stops any other
+             app from binding this service, and the platform refuses to bind a
+             listener that does not declare it. There is no permission line up
+             top for this one and there cannot be — notification access is not
+             a permission an app may ask for, it is an enable the operator
+             performs in system settings (or a trusted device performs over the
+             debug bridge), which is exactly why this rung answers the read want
+             that READ_SMS would otherwise be asked for. -->
+        <service android:name=".ShadeService"
+                 android:exported="true"
+                 android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
         <!-- The scheduled fetch (bl-fcc5, DESIGN §17). Not exported: only the
              platform's own job scheduler starts it, and BIND_JOB_SERVICE is
              held by the SYSTEM rather than requested by us — declaring it

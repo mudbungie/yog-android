@@ -35,7 +35,10 @@
 # ITSELF, factored out of the paper bridge when the sighted pair became the
 # second door: it attaches to the JVM and resolves a class, so no host test
 # can reach a line of it, while the protocol beside it in `bridged.rs` stays
-# pure and under the floor. `src/shell/jvm.rs`
+# pure and under the floor. `src/tools/shade/bridge.rs` is the one call into
+# `dev.yog.Shade` (bl-5cbd), the same class again: the shade itself is a
+# platform read, while the advertised element, the cap reading and the
+# refusal a build with no device gives stay pure and under the floor. `src/shell/jvm.rs`
 # is that same JNI call, factored out when the camera became its second caller
 # (bl-d815), and `src/shell/camera.rs` is the camera's own half of it; the scan
 # screen (`src/shell/enroll/scan.rs`) is egui glue over both, while the decode
@@ -71,6 +74,7 @@ exclude-files = [
     "src/shell/sys.rs",
     "src/tools/bridged/door.rs",
     "src/tools/paper/bridge.rs",
+    "src/tools/shade/bridge.rs",
     "src/tools/sighted/bridge.rs",
     "src/tools/ui/bridge.rs",
 ]
