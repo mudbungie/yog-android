@@ -1,7 +1,7 @@
 +++
 title = "parity: export the seat's egui tree to the accessibility layer, act:<op> tags, coverage assertion over the bl-243b dumps"
 created = 1788329844
-updated = 1788397239
+updated = 1788397747
 claimant = "Droidtags"
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
@@ -18,3 +18,17 @@ The walk therefore gates on a narrow FALLBACK, and it is deliberately not the in
 The two do not collide. When accesskit lands, the walk's assertions move to the real tree and the probe either shrinks to the screen name or goes; nothing in bl-243b assumes a control inventory exists.
 
 What you inherit ready-made: the walk drives six screens with NO engine — a leaf minted per run makes the device a seat (Seat::open dials nothing), and the paint-first cache seeded from the vendored corpus supplies the rows, with the stored focus selecting which screen opens. That is the inventory instrument this ball says not to duplicate: add rows to the walk table, not a second harness.
+
+---
+
+FINDING — the accesskit route was walked end to end and failed on device, so the RULING's fallback condition is met. Recorded here as that ruling asks.
+
+The preferred route is not one feature toggle, and the missing part is documented nowhere upstream: eframe's accesskit feature enables egui-winit's, which pulls accesskit_winit — but accesskit_winit compiles its android adapter ONLY under its own accesskit_android feature, an implicit optional-dependency feature that is in no default set and that neither eframe nor egui-winit forwards. Without naming accesskit_winit directly, eframe constructs the null adapter (whose update_if_active body is empty) and every frame's tree is built and dropped. Measured: with the feature on and the dependency unnamed, accesskit_android is not in the android graph at all.
+
+Naming it works, and adds no Gradle work — the crate ships a prebuilt DEX and installs its own View.AccessibilityDelegate at runtime.
+
+Then the app ABORTS. Raising its first accessibility event, accesskit_android event.rs:64 unwraps the JNI call getParent().requestSendAccessibilityEvent(..); under GameActivity's surface view that call returns a JavaException, and the unwrap is a SIGABRT. Measured, not inferred: a full emulator walk with the feature in place painted the roster, captured the dump, and the next step found a dead app — SIGABRT, backtrace through accesskit_android::event::send_completed_event, panic 'called Result::unwrap() on an Err value: JavaException'. The same three lines with the same unwrap stand in the newest accesskit_android release, so waiting a version does not help.
+
+The dependency came back out for a reason bigger than the harness: an accessibility client is not only uiautomator, it is TalkBack. Shipping it would abort the app for exactly the users accessibility exists for, which is worse than exporting no tree at all.
+
+So the ruled fallback is taken — PARITY §6's own words, a debug-gated in-process inventory — and the exit ball is filed as bl-a6f3, carrying the failure and the exact restore steps. §5's assertion is unchanged: only where the inventory bytes come from differs, and the driver reads both shapes with one scanner, so the changeover is a deletion rather than a second gate.
