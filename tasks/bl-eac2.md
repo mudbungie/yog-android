@@ -1,7 +1,8 @@
 +++
 title = "design: the phone is a full seat and a thrall-class foot — the teleoperation tool corpus and the ledger re-scope"
 created = 1788398874
-updated = 1788398874
+updated = 1788398887
+claimant = "Footwright"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
