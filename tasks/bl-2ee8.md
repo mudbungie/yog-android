@@ -1,0 +1,8 @@
++++
+title = "the phone as minting seat: enroll, and the QR this device displays"
+created = 1788399006
+updated = 1788399006
+priority = 3
+root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
++++
+Op: enroll. DESIGN §11 said this device enrolls nobody, written under the chat-first framing; the full-seat ruling (bl-eac2 / §16.2) re-classes it: an operator-grade phone seat fires the §8.4 mint and DISPLAYS the answering envelope as a QR the next device scans — one trusted device bootstraps another (DESIGN §5, the mesh ruling), with no laptop in the loop. REMOTE §1.4 untouched: the acting machine is the already-trusted seat, the material travels by screen. Amend §11's enrolls-nobody clause when this lands; QR ENCODING is a new need (rxing decodes; check its encode half before assuming a dependency decision — rule 6 if one is needed). The §8.4 payload contract (1567 bytes at level M) binds the symbol this device renders. Full-seat re-scope, bl-eac2 / DESIGN §16.2 (operator ruling 2026-09-03: the phone is a full seat, not a chat-first companion). Closing this ball: grow the codec for exactly these ops (decision-table rows in tests/conformance/expect.rs move from Refuses to spelled — the codec grows per consumer, never speculatively), paint the controls with act: tags, extend the make screens walk where a new screen appears, and DELETE this group's parity.toml lines (the stale-exemption assertion enforces it). Serialize against the other §16.2 group balls — they share expect.rs, parity.toml and the shell surfaces (see the store's serialize-shared-surface guidance).
