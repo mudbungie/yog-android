@@ -1,7 +1,8 @@
 +++
 title = "re-vendor the wire at PROTOCOL 8, and say it out loud when a re-presentation actually restored the set: reply/advertised gained a required `wrote` boolean"
 created = 1788399978
-updated = 1788399978
+updated = 1788401636
+claimant = "Droidvendor"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
