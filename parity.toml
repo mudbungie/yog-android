@@ -13,7 +13,8 @@
 # **This file is where DESIGN §13.4's hand-kept ledger went.** That ledger was
 # prose, and prose cannot rot loudly: it filed conversation search under
 # "upstream asks — the wire does not carry the fact" while the engine's roster
-# carried `search` all along (bl-6cf3, found by this fold).
+# carried `search` all along, and the board had corrected itself a day
+# earlier (bl-4c2b) while the paragraph went on asserting the opposite.
 #
 # The two group reasons are the conformance decision table's own words
 # (`tests/conformance/expect.rs`), because they are the same decision seen from
@@ -77,5 +78,5 @@ update = "a world act outside the chat-loop slice (DESIGN §2)"
 enroll = "§8.4's minting side — this device is enrolled out of channel and enrolls nobody (DESIGN §11)"
 follow = "read one shot at a time while a turn is in flight, never fired by a tap; the view it populates is the transcript, which act:transcript reaches (DESIGN §7)"
 roles = "read at cadence to settle the controls row; what it populates is the selectors' own text, and no gesture asks for it (bl-e9f9)"
-search = "in-wire and unsurfaced — DESIGN §13.4 blamed upstream and was wrong; a seat surface is unbuilt (bl-6cf3)"
+search = "in-wire and unsurfaced — DESIGN §13.4 blamed upstream and was wrong; a seat surface is unbuilt (bl-4c2b)"
 seen = "unbuilt: this seat paints the attention mark on two screens and offers no gesture that answers it (bl-2889)"

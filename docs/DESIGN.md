@@ -1322,7 +1322,9 @@ wire does not carry the fact; a ball on the server's board, not a shim here".
 The engine's help table carries `search`, classed `control`, summarised by
 upstream as *find the text anywhere: balls, workspaces, conversations,
 transcripts*. It was an unbuilt surface wearing an upstream ask's clothes, and
-it read as green for as long as a person had to notice it (bl-6cf3). A second
+the board had already corrected itself (bl-4c2b) while this paragraph went on
+asserting the opposite — which is the case for the fold in one sentence: prose
+stays green until a person happens to reread it. A second
 sighting came out of the same fold: this seat paints an attention mark on two
 screens and fires no `seen`, so the queue it shows can only grow (bl-2889).
 
