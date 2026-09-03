@@ -660,7 +660,9 @@ absence is the value — so what came off the wire goes back on it unchanged.
 **One rung, and the other two are not omissions.** The bare rung is the whole
 slice: a phone is not where a work directory is chosen or a ball is bound. The
 richer rungs grow here when a surface on this device needs them, which is the
-rule the codec has kept since it landed.
+rule the codec has kept since it landed. (Narrowed by §16.2 under the
+full-seat ruling: the ball pane, bl-d587, is the first surface named as
+needing the ball rung — the growth rule stands, and it now has a customer.)
 
 **Two gestures on the wire, one act at the glass.** The staging and the firing
 are one thing to the operator — a sentence typed into the field at the bottom
@@ -918,7 +920,10 @@ took no protocol bump of their own (strict decode already refuses an unknown op
 in band). This client is on the enrolled side of both and sends neither; the
 decision is recorded in `tests/conformance/expect.rs` as `NOT_THE_MINTER`, and
 the corpus's `reply/enrolled` fixture was checked field for field against
-`src/envelope.rs` when it was vendored — they agree.
+`src/envelope.rs` when it was vendored — they agree. (The "sends neither"
+half is re-classed by §16.2's full-seat ruling: bl-2ee8 builds the minting
+side — this device fires the mint and displays the QR — and amends this
+clause when it lands. The enrolled side above is untouched.)
 
 **REMOTE §1.4 is untouched, and the reason is which machine acts.** The new
 device performs no channel act at all: an already-trusted **operator-grade**
@@ -1336,7 +1341,9 @@ What stays here is the shape of the ledger and nothing that can go stale in it:
   the gate.
 - **In-wire and unbuilt** is a `parity.toml` line whose citation is the ball
   that will build it. Deleting the line re-reddens the gate, which is the
-  severability test.
+  severability test. Since the full-seat re-scope (§16.2, bl-eac2) this class
+  is the whole of the fenced forty-three: the chat-loop-slice group reason is
+  retired and no line may cite DESIGN §2 as an absence's reason again.
 - **An upstream ask** — the wire does not carry the fact at all — is the one
   class the roster cannot see, because an op that does not exist is in no help
   table. Push notifications are the standing example: the engine dials nothing,
@@ -1616,3 +1623,177 @@ tapping a labelled control and the probe states only the mark's rectangle.
 Extending it to every control is the point at which this stops being a probe
 and starts being an accessibility tree written by hand; if a walk needs those
 screens, the honest next step is a ball that decides which of the two this is.
+
+## 16. The full seat and the teleoperation corpus (bl-eac2)
+
+Two operator rulings, 2026-09-03, and this section is the design they
+authorize:
+
+1. **The phone's role is Lernie AND Thrall** — a full seat plus a foot, not a
+   chat-first companion. The chat-loop slice stops being a scope fence.
+2. **Working teleoperation tools on the phone are wanted** — android tool
+   development is in scope in this chain.
+
+**The design lives here, not in REMOTE, and §12.1's own test says why**: *"an
+ask that is really about a phone would be an amendment there, and none has
+been."* Every teleoperation tool below is an ordinary REMOTE §5.1 advertised
+element — three facts, a capture as text — and every seat surface below is an
+op the vendored roster already classes `control`. Nothing in this section adds
+a noun, a verb, a field or a protocol; where a half needs a doc amendment it is
+this file's own (§8, §11, §13.4), each marked where it stands.
+
+### 16.1 Half A — the teleoperation corpus
+
+**Teleoperation means operating *through* the phone from elsewhere**: an agent,
+driven from any seat, spending tools whose subject is this device — what it can
+see, say, sense and show. The subject-locality invariant (REMOTE §5) is what
+makes the corpus lawful without a wire change: these tools' subject is the
+phone, so the phone is the executor, and the name a model loads
+(`<client>_<tool>`, §5.2) already says so.
+
+**Rung 0 stands and is the fallback.** The nine landed tools (§6: shell, the
+file trio, the five interface tools) already teleoperate — `ui_read`/`ui_tap`/
+`ui_type` can drive any app on the device by puppeting its glass. The corpus
+below adds the *direct, honest verbs* for what the interface tools can only do
+by puppetry, each priced in the platform's own currency. Four rungs, each a
+ball, ordered by what each costs:
+
+| rung | tools | platform cost | ball |
+|---|---|---|---|
+| 1 — the paper tools | `device`, `clipboard_set`, `notify`, `open` | no service; `notify` wants the POST_NOTIFICATIONS runtime ask (API 33+); `open` is platform-refused from background (BAL, API 29+) and says so in band | bl-f34f |
+| 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | bl-b0a9 |
+| 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | bl-5cbd |
+| 3 — the pocketed foot | no new tool: the host loop itself moves into a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off by default, an explicit operator act | bl-8bd0 |
+
+**Rung 2 IS the SMS-adjacent surface, and the SMS permissions are refused.**
+The teleoperation want behind "SMS" is reading what the phone was told — a 2FA
+code, a message — and the shade already carries it as the messaging app's
+notification text, behind one settings enable. `READ_SMS`/`SEND_SMS` are
+hard-restricted permissions (Play refuses them by policy; sideloads meet the
+appops gate), and sending SMS is the operator's own voice on a channel with no
+undo — not built without an explicit operator ruling. One enable instead of a
+hard-restricted grant, and the read want is answered whole.
+
+**Rung 3 shares its grant with the attention lane.** A foreground service is
+the platform's one "my ask may stand" grant (REMOTE §14), and this device
+should hold at most one: the service that keeps the host's `invocations` read
+standing is the same service bl-b82d's attention lane wants, so the two balls
+coordinate on one service with two lanes rather than founding a second. Unlike
+the attention half, the foot half is app-only — `invocations` is an existing
+follow-class read, gated on nothing upstream.
+
+**The consent surface is three gates that already exist, and no new one.**
+thrall's model is an operator-authored document whose entries are the consent
+(its DESIGN §3.4); this device's lawful deviation (§6) is that the table is
+built in, so the document cannot be the gate. What gates instead, in order of
+standing:
+
+1. **The mint.** A foot-grade leaf — or a seat leaf, whose host rides beside it
+   — is the operator's explicit enrollment of *this device as hands* (§9: the
+   grade is on the certificate, and minting it is the friction §4.2 wants).
+2. **Registration.** Which workspaces' agents can ever see the advertisement is
+   REMOTE §1.5's partition, decided at the engine by the operator.
+3. **The platform's own grants.** Each capability class is an OS permission or
+   a service enable the operator grants in system settings — severable there,
+   per capability, enforced by the one party that actually can (the OS), and
+   revoking it turns every invocation into an in-band refusal naming the
+   grant. A per-tool toggle screen inside the app was considered and refused:
+   it would be a second authority beside the OS grant, drifting the first time
+   the operator revoked one and not the other — the severability the house
+   rule wants is already where the capability is.
+
+Two standing rules carry over unchanged: **the advertisement is static and
+whole** (§6's two-tables argument, and one more since the usurper guard — a set
+that tracked permission state would rewrite the engine-side document on every
+grant flip), and **`subject_cwd` stays never-consented** (§6's invariant, with
+its test). A model reaches a phone tool only through the §5.2 `load` act, after
+a `get` that showed the descriptions — which is where the per-tool background
+and permission honesty (§6's containment rule) must be written, because it is
+the one text the model reads before spending a call.
+
+**Reconciliation with bl-5710 ("no tool corpus ships"), which this design does
+not reverse.** Three facts, verified against the yog store and REMOTE §5.4:
+
+- bl-5710 is **resolved, not standing**: the operator ruling of 2026-08-31
+  (*ship some basic tools — a default install must be able to write a file*)
+  landed as the worktree lane's last rung — the engine performs its own
+  builtins at its front door. Its residual (does thrall ship a *pool* corpus)
+  is thrall's question and blocks nothing here.
+- It **never governed a foot's advertised set**. Its defect was the shipped
+  worker grant offering names in every conversation's `tools:` array with
+  nothing behind them — a decoy paid for once per conversation. A phone tool
+  is in no grant: it reaches a model only through an explicit `load` from a
+  roster that shows presence, so the decoy shape cannot arise.
+- Its editorial lesson is kept as a rule of this corpus: **every refusal a
+  phone tool can earn names the one operator act that fixes it** (the grant,
+  the enable, the foreground fact), because a refusal that teaches is the
+  difference between a priced capability and a decoy.
+
+**The usurper hazard is inherited as a fix, not a defect.** thrall bl-2d78
+found the advertised set last-writer-wins under one identity; yog bl-1462
+closed it engine-side (REMOTE §5.1: a second parked `invocations` read refuses
+in band, and a set-changing advertisement is refused while one is parked). The
+phone inherits that guard for free; the visible residual is the same guard
+working — two processes serving under one CN is refused loudly, which §6's
+one-identity-two-connections shape never does.
+
+**Refused shapes, recorded**: the SMS permission pair (above); a generic
+run-any-intent tool (the wrapper meta-tool REMOTE §5.2 refused twice — `open`
+is typed instead); a clipboard *read* tool (platform-blocked in background,
+focused-app-only in foreground — `ui_read` is the honest alternative and reads
+what is actually on the glass); and any third-party wake path (§14.3's
+refusal, already ruled).
+
+### 16.2 Half B — the full-seat re-scope of the parity ledger
+
+**The fence is retired.** Forty-three of `parity.toml`'s lines cited one group
+reason — *outside the chat-loop slice (DESIGN §2)* — which was a scope
+statement wearing an exemption's clothes. Under ruling 1 a scope fence is no
+longer a reason: every line now cites the ball that will build its surface, or
+a reason that survives the ruling. **No line may cite §2 again.**
+
+**All forty-three became unbuilt-with-ball, and zero became
+per-platform-never.** Attacked before settling: every one is an engine act or
+read fired from glass — the typed-name armings, count fields and text bodies
+they want are things this app's composer and rows already do, and nothing
+about a phone refuses any of them. The reasons that DO survive are structural,
+and were never §2 citations: `follow` and `roles` are ops no gesture fires
+(their views are reached through other controls), and they stand unchanged;
+`search` (bl-4c2b) and `seen` (bl-2889) were already unbuilt-with-ball.
+`enroll` is the one re-classification: §11's "enrolls nobody" was the
+chat-first framing speaking, and under the mesh ruling (§5) a full phone seat
+mints and *displays* the QR the next device scans — bl-2ee8, which amends
+§11's clause when it lands.
+
+The groups mirror the seat's own, one ball each:
+
+| group | ops | ball |
+|---|---|---|
+| conversation acts | interrupt, fork, retarget, flag | bl-f97c |
+| the held tool call | answer, revoke, restore | bl-b39d |
+| work review | files, work-diff | bl-5a56 |
+| conversation machinery reads | agent, steps, step, rail, governing, inbox | bl-146b |
+| the ball pane | balls, workspace-balls, board, close, assign, release, create, update | bl-d587 |
+| candidates | fan, retire, deliver, science | bl-2f17 |
+| fleet and watch | fleet, disband, arm, disarm | bl-477e |
+| trail and attention | ops, ack, clear-trail, attention | bl-35bd |
+| admin and armed deletions | config, marks, scan, delete-agent, delete-workspace | bl-f645 |
+| roster and discovery | clients, lineages, help | bl-3685 |
+| the minting seat | enroll | bl-2ee8 |
+
+**Ordering.** The teleoperation corpus is the operator's stated want and goes
+first (bl-f34f → bl-b0a9 → bl-5cbd → bl-8bd0, serialized on `src/tools.rs` and
+`android/`). The seat groups serialize against one another — they share the
+conformance decision table, `parity.toml` and the shell's surfaces — and rank
+behind the corpus where they contend; bl-f97c and bl-b39d lead them, because
+interrupt and the held-call answer are the two the daily-chat workflow (W2)
+actually misses.
+
+**What does not move yet.** The conformance decision table's §2 constants
+(`tests/conformance/expect.rs`) remain true statements of the tree — this
+codec still spells none of those shapes — and each group ball moves exactly
+its own rows when it lands, which is the codec's standing
+grow-per-consumer rule. §8's "one rung" paragraph is narrowed rather than
+deleted: the bare start rung stays the default, and the ball rung becomes
+wanted when the ball pane (bl-d587) lands, which is §8's own growth rule
+doing what it says.
