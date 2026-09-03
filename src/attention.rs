@@ -43,7 +43,7 @@ use crate::transport::Seat;
 /// The material directory, as [`crate::shell`] spells it: the fetch is handed
 /// this app's private files directory and finds the wire under it, exactly
 /// where the enrollment channels write it.
-const WIRE: &str = "wire";
+pub(crate) const WIRE: &str = "wire";
 /// The fetch's own memory — a sibling of `wire/` and of `cache/`, never
 /// inside either. Nothing here is a key and nothing here is the world.
 const MEMORY: &str = "attention";

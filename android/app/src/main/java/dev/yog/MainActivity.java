@@ -101,6 +101,12 @@ public class MainActivity extends GameActivity {
         // first moment the grant can be read — and re-scheduling an identical
         // job is how JobScheduler is told nothing changed.
         Watch.arm(this);
+        // The pocketed foot (DESIGN §18). On resume for a second reason as
+        // well: a foreground service may only be started from a user-visible
+        // state (API 31+), and a resume IS that state. Re-starting one that is
+        // already running is how the platform is told nothing changed, and a
+        // device whose leaf is no longer a foot's has its hold stopped here.
+        Pocket.arm(this);
     }
 
     @Override

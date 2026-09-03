@@ -17,7 +17,6 @@ use super::boot::{Running, boot};
 use super::bridge::{Bridge, Field, FieldKind};
 use super::enroll::Scanner;
 use super::inset::InsetPx;
-use crate::host::Host;
 use crate::rows::AutoExpand;
 use crate::seat::Model;
 
@@ -218,15 +217,6 @@ impl Shell {
             Running::Seat { client, .. } => format!("{client} · {}", Component::Seat.brand()),
             Running::Foot { client, .. } => format!("{client} · {}", Component::Foot.brand()),
             Running::Cold { .. } => String::new(),
-        }
-    }
-
-    /// The tool host, whichever component holds one.
-    pub(crate) fn host_mut(&mut self) -> Option<&mut Host> {
-        match &mut self.running {
-            Running::Seat { host, .. } => host.as_mut(),
-            Running::Foot { host, .. } => Some(host),
-            Running::Cold { .. } => None,
         }
     }
 }

@@ -159,6 +159,19 @@ impl Host {
         }
     }
 
+    /// **Whether this host is still a host** — the question
+    /// [`crate::state::hold`] asks before it refuses a second one.
+    ///
+    /// [`Health::Stopped`] is the one state no redial mends, and it is
+    /// published as the worker returns, so a host that has said it is what a
+    /// host that is over looks like from the outside. The predicate is the
+    /// PUBLICATION and not the thread's own liveness: a `JoinHandle` finishes
+    /// a moment after the sentence is sent, and a process that read the thread
+    /// instead would answer differently depending on when it asked.
+    pub fn alive(&mut self) -> bool {
+        !matches!(self.standing().health, Health::Stopped(_))
+    }
+
     /// The latest published standing — non-blocking, like the seat model's
     /// snapshot, because the frame paints at its own cadence.
     pub fn standing(&mut self) -> Standing {

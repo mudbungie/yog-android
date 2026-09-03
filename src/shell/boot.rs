@@ -14,7 +14,6 @@ use winit::platform::android::activity::AndroidApp;
 
 use crate::bootstrap::{Component, Offer, Standing, offers, standing};
 use crate::foot::Foot;
-use crate::host::Host;
 use crate::seat::Model;
 
 /// How long the model rests between unprompted refreshes — the human
@@ -38,22 +37,22 @@ pub(crate) enum Running {
         dir: String,
     },
     /// The seat, with the tool host beside it — one identity, two
-    /// connections (REMOTE §5's refcounted presence).
+    /// connections (REMOTE §5's refcounted presence). The host itself is not
+    /// a field of this variant: it belongs to the PROCESS (`crate::state`,
+    /// DESIGN §18), because a pocketed foot outlives the activity that
+    /// started it and an activity that is destroyed and created again must
+    /// not build a second one.
     ///
     /// **The model is boxed** because this variant is the enum's largest by
     /// far — the handle carries a whole `Snapshot` of last-good rows
     /// (bl-de96) and the selectors' offerings (bl-0267) — and a cold device
     /// would otherwise carry that footprint to say "nothing is provisioned".
-    Seat {
-        model: Box<Model>,
-        host: Option<Host>,
-        client: String,
-    },
+    Seat { model: Box<Model>, client: String },
     /// The foot alone. No standing questions and no chat screens: a foot-grade
     /// leaf may say `advertise`, `invocations` and `complete` and nothing
     /// else (REMOTE §4.2), so a seat loop here would earn a refusal per pass
     /// forever.
-    Foot { host: Host, client: String },
+    Foot { client: String },
 }
 
 /// **The bootstrap gate**, run once at boot: read what is provisioned, and
@@ -75,11 +74,13 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
         // The foot holds ONE channel and it is the narrow one (bl-2040): the
         // three gestures §4.2 allows, and no seat this arm could accidentally
         // start.
-        Component::Foot => match Foot::open(material).map(|f| host(android, f)) {
-            Ok(host) => Running::Foot {
-                host,
-                client: enrolled.client,
-            },
+        Component::Foot => match Foot::open(material) {
+            Ok(foot) => {
+                host(android, foot);
+                Running::Foot {
+                    client: enrolled.client,
+                }
+            }
             Err(why) => cold(Some(why)),
         },
         // A leaf that says nothing says seat, and the server holds no leaf on
@@ -92,11 +93,15 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
         // seat's own banner already says why a channel failed, and a second
         // copy of that sentence would be noise.
         Component::Seat | Component::Server => match crate::transport::Seat::open(material) {
-            Ok(asker) => Running::Seat {
-                model: Box::new(Model::start(asker, CADENCE, cache_file(android))),
-                host: Foot::open(material).ok().map(|f| host(android, f)),
-                client: enrolled.client,
-            },
+            Ok(asker) => {
+                if let Ok(foot) = Foot::open(material) {
+                    host(android, foot);
+                }
+                Running::Seat {
+                    model: Box::new(Model::start(asker, CADENCE, cache_file(android))),
+                    client: enrolled.client,
+                }
+            }
             Err(why) => cold(Some(why)),
         },
     }
@@ -124,15 +129,21 @@ pub(super) fn wire_dir(android: &AndroidApp) -> std::path::PathBuf {
         .join("wire")
 }
 
-/// The tool host over one connection. The dispatch closes over this app's own
-/// storage, which is where a screenshot goes when a caller names no path — the
-/// one directory this uid can always write.
-fn host(android: &AndroidApp, foot: Foot) -> Host {
+/// **Take up the process's tool host over one connection**, unless it already
+/// holds a live one (`crate::state::hold`, DESIGN §18). Called on every boot,
+/// which is every activity creation — the second and later ones are the
+/// relaunch case, and the slot refusing them is what keeps one certificate to
+/// one parked `invocations` read (REMOTE §5.1).
+///
+/// The dispatch closes over this app's own storage, which is where a
+/// screenshot goes when a caller names no path — the one directory this uid
+/// can always write.
+fn host(android: &AndroidApp, foot: Foot) {
     let data_dir = android
         .internal_data_path()
         .map(|p| p.display().to_string())
         .unwrap_or_default();
-    Host::start(
+    crate::state::hold(crate::host::Host::start(
         foot,
         crate::tools::advertisement(),
         Box::new(move |tool, input| crate::tools::run_in(tool, input, &data_dir)),
@@ -140,5 +151,5 @@ fn host(android: &AndroidApp, foot: Foot) -> Host {
         // the parameter is for: the suite hands the loop a recorder instead
         // and reads the ladder back without sleeping through it (bl-8641).
         Box::new(std::thread::sleep),
-    )
+    ));
 }

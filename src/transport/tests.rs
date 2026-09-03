@@ -62,6 +62,30 @@ fn a_carried_refusal_is_the_engines_sentence() {
     assert_eq!(String::from(e), "no such workspace");
 }
 
+/// **The decoder's two errors are two different facts about who failed**
+/// (bl-8bd0). A reply this end cannot READ is unusable — no leg and no redial
+/// mends it — while an `ok: false` is the engine's own no, which on the follow
+/// read is REMOTE §5.1's one-reader guard and IS worth another dial
+/// (`host::serve`'s matrix). They shared one class until the redial matrix
+/// needed them apart, and `answered` was throwing the distinction away one
+/// line after the decoder made it.
+#[test]
+fn a_reply_this_end_cannot_read_is_unusable_and_not_the_engine_saying_no() {
+    let dir = pki();
+    // A kind this codec knows, without the field it is made of.
+    let malformed = json!({ "ok": true, "kind": "workspaces" });
+    let (address, _served) = serve_once(
+        &dir,
+        "ca",
+        "server",
+        vec![malformed.to_string().into_bytes()],
+    );
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let e = seat.answered(&json!({ "op": "workspaces" })).unwrap_err();
+    assert!(matches!(e, Wire::Unusable(_)), "{e:?}");
+    assert!(!e.transport());
+}
+
 #[test]
 fn an_empty_stream_is_an_engine_that_never_answered() {
     let dir = pki();

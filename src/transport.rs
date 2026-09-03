@@ -48,10 +48,17 @@ pub enum Wire {
     /// build, a write that did not land, a read that died. The class a phone
     /// meets every time it changes networks.
     Transport(String),
-    /// An answer arrived and it was a no — the engine's own refusal, a reply
-    /// this end cannot read, a version that cannot be spoken to. Nothing
-    /// about dialling again changes any of them.
+    /// **The engine spoke, and what it said is no** — its own refusal,
+    /// written as a sentence for an operator. Whether that is worth asking
+    /// again is the LEG's answer and not this one's (`host::serve`, following
+    /// thrall's bl-916d): a refusal of this device's *read* is REMOTE §5.1's
+    /// one-reader guard, which after a drop names this very device.
     Refused(String),
+    /// **An answer this end cannot use**: a stream that ended without one, a
+    /// frame that is not JSON, a reply of a kind the gesture does not earn, a
+    /// version that cannot be spoken to. Asking again asks the same question
+    /// and gets the same answer, on every leg, so this class always stops.
+    Unusable(String),
 }
 
 impl Wire {
@@ -59,7 +66,7 @@ impl Wire {
     /// nothing else.
     pub fn sentence(&self) -> String {
         match self {
-            Self::Transport(said) | Self::Refused(said) => said.clone(),
+            Self::Transport(said) | Self::Refused(said) | Self::Unusable(said) => said.clone(),
         }
     }
 
@@ -120,11 +127,19 @@ impl Seat {
     pub fn answered(&self, request: &Value) -> Result<Reply, Wire> {
         let stream = self.ask(request)?;
         let last = stream.last().ok_or_else(|| {
-            Wire::Refused("the engine ended the stream without answering".to_owned())
+            Wire::Unusable("the engine ended the stream without answering".to_owned())
         })?;
-        reply::decode(last)
-            .unwrap_or_else(Err)
-            .map_err(Wire::Refused)
+        // **The decoder already draws this line and it was being collapsed**
+        // (bl-8bd0): its OUTER error is a reply this end cannot read, its
+        // INNER one is the engine's own `ok: false` sentence. They are two
+        // different facts about who failed, and the redial matrix needs them
+        // apart — a refusal on the follow read is worth another dial and an
+        // unreadable answer never is.
+        match reply::decode(last) {
+            Err(unreadable) => Err(Wire::Unusable(unreadable)),
+            Ok(Err(refusal)) => Err(Wire::Refused(refusal)),
+            Ok(Ok(reply)) => Ok(reply),
+        }
     }
 
     /// Send one request envelope and read its whole reply stream — every
@@ -133,7 +148,7 @@ impl Seat {
         let mut tls = self.dial(request)?;
         // The engine's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
-        hello::confirm(&mut tls).map_err(Wire::Refused)?;
+        hello::confirm(&mut tls).map_err(Wire::Unusable)?;
         let mut stream = Vec::new();
         loop {
             let frame = frame::read_frame(&mut tls)
@@ -174,12 +189,12 @@ fn send(w: &mut dyn std::io::Write, request: &Value) -> std::io::Result<()> {
 }
 
 /// One frame's bytes as the JSON value the codec reads — the strict-decode
-/// discipline at the framing, said in the frame's own terms. A refusal and not
+/// discipline at the framing, said in the frame's own terms. Unusable and not
 /// a channel failure: the bytes arrived intact and said something this end
 /// cannot read, which dialling again cannot mend.
 fn parsed(body: &[u8]) -> Result<Value, Wire> {
     serde_json::from_slice(body)
-        .map_err(|e| Wire::Refused(format!("receive: frame is not JSON: {e}")))
+        .map_err(|e| Wire::Unusable(format!("receive: frame is not JSON: {e}")))
 }
 
 /// The name to verify the server certificate against, read off the address.

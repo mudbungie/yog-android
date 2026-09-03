@@ -129,11 +129,13 @@ impl Foot {
 
 /// The wrong-kind sentence. It names the kind and never the rows it carried:
 /// a reply this device did not ask for is not content to render. A
-/// [`Wire::Refused`] and never a transport failure — the channel worked
+/// [`Wire::Unusable`] and never a transport failure — the channel worked
 /// perfectly and carried an answer this gesture does not earn, so the host
-/// that redials a broken socket stops dead on this one (bl-8641).
+/// that redials a broken socket stops dead on this one (bl-8641), on every leg
+/// including the follow read that a bare refusal IS worth re-dialling
+/// (bl-8bd0: the two used to share one class and the matrix needs them apart).
 fn wrong(reply: &Reply) -> Wire {
-    Wire::Refused(format!(
+    Wire::Unusable(format!(
         "the engine answered {}, not this machine's work",
         reply.kind()
     ))

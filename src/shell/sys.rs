@@ -1,6 +1,6 @@
 //! The crate's ONE `unsafe` location (AGENTS.md rule 3, relaxed from
 //! `forbid` under bl-c761; `rules/unsafe-outside-sys.yml` is the
-//! enforcement, and its `ignores` list names exactly this file). Four raw
+//! enforcement, and its `ignores` list names exactly this file). Five raw
 //! effects live here, all at the process edge, and their soundness arguments
 //! are the file's:
 //!
@@ -16,6 +16,11 @@
 //!   entry the app has that no Activity is behind — the platform starts this
 //!   process for a job, and everything the run needs is the string it is
 //!   handed.
+//! * **`Java_dev_yog_Pocket_standing`** — the pocketed foot's entry (DESIGN
+//!   §18), the second of the two Java-calls-Rust doors and there for the same
+//!   reason: a foreground service may be asking while no Activity is in
+//!   front. The `Java_`-plus-package-plus-method name makes the symbol unique
+//!   by construction exactly as the fetch's does.
 //! * **the `WGPU_BACKEND` fold** — `std::env::set_var` is unsafe in edition
 //!   2024 because a concurrent `getenv` is UB. Here it runs first, on the
 //!   main thread, before eframe boots and before any thread this process
@@ -64,6 +69,29 @@ extern "system" fn Java_dev_yog_Watch_probe(
 ) -> jni::sys::jstring {
     let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
     let said = crate::attention::sweep(std::path::Path::new(&files))
+        .map(|notice| format!("{}\n{}", notice.title, notice.text))
+        .unwrap_or_default();
+    env.new_string(said)
+        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
+}
+
+/// **The pocketed foot's standing line, called from the foreground service**
+/// (DESIGN §18; `dev.yog.Pocket`). Java-calls-Rust for the fetch's reason: the
+/// service is asking about the process, not about a screen, and it may be
+/// asking while nothing is in front.
+///
+/// The same two-line protocol, and the same meaning for an empty answer —
+/// **nothing here to hold**, which is the service's whole stop condition. The
+/// decision is [`crate::pocket::line`]'s and is tested on the host; the state
+/// it reads is the process's one host ([`crate::state::standing`]).
+#[unsafe(no_mangle)]
+extern "system" fn Java_dev_yog_Pocket_standing(
+    mut env: jni::JNIEnv<'_>,
+    _class: jni::objects::JClass<'_>,
+    dir: jni::objects::JString<'_>,
+) -> jni::sys::jstring {
+    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
+    let said = crate::pocket::line(std::path::Path::new(&files), crate::state::standing())
         .map(|notice| format!("{}\n{}", notice.title, notice.text))
         .unwrap_or_default();
     env.new_string(said)

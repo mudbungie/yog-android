@@ -40,12 +40,21 @@ pull_parity() {       # pull_parity <destination>
 # exist. It is written where nothing tracked can reach it for the same reason
 # the disclosure gate refuses a committed key — a fabricated one still reads
 # like one.
-mint_material() {
+# The GRADE is the argument, and it is the only one, because the grade is the
+# only thing about a leaf this app reads (`src/leaf.rs`: REMOTE §4.2 puts it on
+# the certificate as `OU=foot`, and everything else is a seat). `mint_material
+# foot` is therefore the whole of "enrol this device as hands" — there is no
+# setting to seed beside it, which is DESIGN §9's derivation doing its job.
+mint_material() {      # mint_material [foot]
   local d="$OUT/material"; mkdir -p "$d"
+  # An `if`, not `[ ... ] && x=y`: under `set -e` the second form takes the
+  # whole list's status, so the ORDINARY seat call would end the walk.
+  local subject="/CN=screens-seat"
+  if [ "${1:-}" = foot ]; then subject="/OU=foot/CN=screens-foot"; fi
   openssl req -x509 -newkey rsa:2048 -nodes -days 1 -keyout "$d/ca.key" \
     -out "$d/ca.pem" -subj "/CN=screens-ca" >/dev/null 2>&1
   openssl req -newkey rsa:2048 -nodes -keyout "$d/client.key" -out "$d/client.csr" \
-    -subj "/CN=screens-seat" >/dev/null 2>&1
+    -subj "$subject" >/dev/null 2>&1
   openssl x509 -req -in "$d/client.csr" -CA "$d/ca.pem" -CAkey "$d/ca.key" \
     -CAcreateserial -days 1 -out "$d/client.pem" >/dev/null 2>&1
   # A closed port on the device's OWN loopback. The dial fails fast, the

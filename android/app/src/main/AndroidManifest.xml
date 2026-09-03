@@ -48,6 +48,24 @@
          the case the whole rung is for. It is a normal permission: the
          installer grants it, no dialog, no runtime ask. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- The pocketed foot (bl-8bd0, DESIGN §18). Both are normal permissions
+         the installer grants outright: FOREGROUND_SERVICE is the one every
+         foreground service has needed since API 28, and API 34 added a second
+         one PER TYPE — without the matching line `startForeground` throws
+         SecurityException rather than degrading. The TYPE is `specialUse`
+         because the platform's own clock rules the alternatives out: Android
+         15 stops a `dataSync` service after six hours in any 24 and bars it
+         from a BOOT_COMPLETED start, and a foot is meant to be reachable for
+         days; `connectedDevice` is uncapped but names a Bluetooth/NFC/USB
+         companion and carries a runtime prerequisite this app has no business
+         declaring. `specialUse` is the platform's "none of the above" — no
+         cap, no prerequisite — and the `<property>` on the service below is
+         where its justification is written. That property is reviewed by Play
+         and never by the platform; this app is `publish = false` and ships
+         through no store, so the sentence is true because it was written to
+         be, not because anything checks it. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
@@ -109,5 +127,23 @@
         <service android:name=".Watch"
                  android:exported="false"
                  android:permission="android.permission.BIND_JOB_SERVICE" />
+        <!-- The pocketed foot (bl-8bd0, DESIGN §18). Not exported: nothing
+             outside this app may start it, and nothing needs to — the one
+             starter is MainActivity's own resume, which is also the state the
+             API 31+ background-start restriction exempts.
+
+             `stopWithTask` is left at its default of false ON PURPOSE, and it
+             is the attribute this whole rung turns on: swiping the app out of
+             Recents destroys the Activity, and a foot that went with it would
+             be absent exactly when the phone is pocketed. The host survives
+             that because it belongs to the PROCESS (`crate::state`) rather
+             than to the activity, and this service is what keeps the process
+             from being frozen or evicted. -->
+        <service android:name=".Pocket"
+                 android:exported="false"
+                 android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                      android:value="This device is enrolled as a remote tool host. The service holds one outbound mTLS connection to its operator's own engine so tool calls addressed to this phone are answered while it is in a pocket. No other foreground service type describes an inbound-work connection: dataSync is capped at six hours, and connectedDevice means a Bluetooth, NFC or USB companion." />
+        </service>
     </application>
 </manifest>

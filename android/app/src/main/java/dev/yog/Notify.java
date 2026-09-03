@@ -56,6 +56,9 @@ final class Notify {
     /** The channel the scheduled fetch posts on. */
     static final String ATTENTION = "yog.attention";
 
+    /** The channel the pocketed foot's standing notification lives on. */
+    static final String FOOT = "yog.foot";
+
     /**
      * The attention post's fixed id: a later one REPLACES the one before it,
      * so a pocketed phone carries one standing row instead of a stack of
@@ -71,6 +74,14 @@ final class Notify {
     /** Whether the system's dialog has been answered this run. */
     private static volatile boolean answered;
 
+    /**
+     * The pocketed foot's standing post (DESIGN §18): the notification a
+     * foreground service HOLDS, so it is never replaced by anything else. It
+     * sits at the top of the id space because tool posts count up from 1 —
+     * reaching it would take two billion of them in one run.
+     */
+    static final int HOLDING = Integer.MAX_VALUE;
+
     /** Tool notification ids, so a second post does not replace the first. */
     private static final AtomicInteger POSTED = new AtomicInteger();
 
@@ -83,12 +94,34 @@ final class Notify {
         if (!manager.areNotificationsEnabled()) {
             return App.ERR + ask(ctx);
         }
-        manager.createNotificationChannel(described(channel));
+        int id = ATTENTION.equals(channel) ? STANDING : POSTED.incrementAndGet();
+        manager.notify(id, build(ctx, channel, title, text, false));
+        return App.OK + "posted notification " + id;
+    }
+
+    /**
+     * Build one, without posting it. The foreground service (DESIGN §18) needs
+     * the Notification itself rather than an id — {@code startForeground} takes
+     * the object — and this is the one builder either caller uses, so a
+     * notification from yog looks like a notification from yog wherever it
+     * came from.
+     *
+     * <p>{@code ongoing} is the standing kind: it is not dismissed by a tap and
+     * it is not auto-cancelled, because it is the operator's evidence that this
+     * phone is holding a lane open.
+     */
+    static Notification build(
+            Context ctx, String channel, String title, String text, boolean ongoing) {
+        NotificationManager manager = ctx.getSystemService(NotificationManager.class);
+        if (manager != null) {
+            manager.createNotificationChannel(described(channel));
+        }
         Notification.Builder building =
                 new Notification.Builder(ctx, channel)
                         .setSmallIcon(android.R.drawable.stat_notify_chat)
                         .setContentTitle(title)
-                        .setAutoCancel(true);
+                        .setOngoing(ongoing)
+                        .setAutoCancel(!ongoing);
         if (!text.isEmpty()) {
             building.setContentText(text).setStyle(new Notification.BigTextStyle().bigText(text));
         }
@@ -96,9 +129,7 @@ final class Notify {
         if (tap != null) {
             building.setContentIntent(tap);
         }
-        int id = ATTENTION.equals(channel) ? STANDING : POSTED.incrementAndGet();
-        manager.notify(id, building.build());
-        return App.OK + "posted notification " + id;
+        return building.build();
     }
 
     /**
@@ -136,6 +167,20 @@ final class Notify {
 
     /** A channel, and what the operator reads about it in system settings. */
     private static NotificationChannel described(String channel) {
+        if (FOOT.equals(channel)) {
+            NotificationChannel foot =
+                    new NotificationChannel(
+                            FOOT, "Serving tools", NotificationManager.IMPORTANCE_LOW);
+            foot.setDescription(
+                    "Shown while this phone is enrolled as hands and is holding its tool"
+                        + " connection open so an agent can reach it while it is pocketed. That"
+                        + " connection stays up, and the radio wakes with it — this is the"
+                        + " battery cost of being reachable. It starts because this device"
+                        + " carries a Thrall (foot-grade) leaf; provision it a Lernie leaf"
+                        + " instead, or stop yog under Settings > Apps > Active apps, and it"
+                        + " does not.");
+            return foot;
+        }
         if (!ATTENTION.equals(channel)) {
             return new NotificationChannel(
                     TOOLS, "Agent notifications", NotificationManager.IMPORTANCE_DEFAULT);

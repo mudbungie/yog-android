@@ -34,33 +34,78 @@ use crate::codec::{Capture, Invocation, Tool};
 use crate::foot::Foot;
 use crate::transport::Wire;
 
-/// The first rest after a channel breaks, and the longest one. A phone that
-/// walks out of the house should be back within half a minute of the wifi
-/// coming back, and a phone with no network at all should not be dialling in
-/// a spin — so the ladder doubles from a second to thirty and stays there,
-/// forever. There is no attempt count: a device that changes networks hourly
-/// has no number of failures after which giving up is the right answer.
+/// The first rest after a channel breaks, and the floor the series returns to.
+/// It is short because the ordinary case is a blip that is over by the time it
+/// is noticed — a phone walking back into the house — and because a channel
+/// that SERVED starts the ladder again, so this is the rest a healthy phone
+/// almost always pays.
 const FIRST: Duration = Duration::from_secs(1);
-const LONGEST: Duration = Duration::from_secs(30);
+
+/// The longest rest between dials. A phone with no network at all must settle
+/// to a slow cadence rather than burn a core, and there is no attempt count: a
+/// device that changes networks hourly has no number of failures after which
+/// giving up is the right answer.
+///
+/// **It is above [`PREDECESSOR`] on purpose** (bl-8bd0, thrall's own constant).
+/// The floor below is a fixed wait, so a cap under it would make the ladder
+/// inert for the one ending that repeats — a rival permanently holding this
+/// device's read would then be dialled every 32 seconds forever, which on a
+/// pocketed phone is a handshake and a radio wake a minute for as long as the
+/// battery lasts. Above it, the series climbs past the floor and that case
+/// settles at a minute like any other.
+const LONGEST: Duration = Duration::from_secs(64);
+
+/// **How long a vanished predecessor of THIS device can still hold its claim**
+/// (REMOTE §5.1, adopted from thrall's redial in bl-8bd0). A read parked when
+/// its connection died does not leave until the engine tries to answer it, so
+/// a redial inside that window is refused naming this very device — the stale
+/// predecessor, not a rival. REMOTE states the bound as a contract rather than
+/// an accident: *"Its life is the hold and not the connection's ...
+/// `Mailbox::take` drops the claim on the way out, before the caller writes
+/// the answer, so a peer that vanished without a FIN frees the slot within one
+/// hold's width — thirty seconds."* Two seconds over the stated width, because
+/// this end's window began before it noticed the drop.
+const PREDECESSOR: Duration = Duration::from_secs(32);
 
 /// The next rest up the ladder.
 pub(super) fn climb(wait: Duration) -> Duration {
     (wait * 2).min(LONGEST)
 }
 
-/// Why one channel ended.
+/// Why one channel ended, and the two facts the ladder reads off it.
 enum Stop {
     /// The frame stopped reading — nobody is left to publish to, so there is
     /// nothing a new channel could be for.
     Gone,
-    /// The wire, in its own two classes: redial a broken channel, stop on a
-    /// refusal.
-    Wire(Wire),
+    /// A gesture did not land.
+    Wire {
+        /// Which class failed ([`crate::transport::Wire`]).
+        why: Wire,
+        /// Whether the gesture in flight was the follow-class read. It is the
+        /// LEG and never the engine's prose, because a device that decided its
+        /// own lifetime by reading sentences would be one the far end could
+        /// rewrite by rewording.
+        read: bool,
+        /// Whether the engine answered a read on this channel before it ended.
+        /// One answered read — even an empty one — is the engine having parked
+        /// this device for its own hold, which is the evidence that the
+        /// channel was real, and a hammering loop cannot manufacture it.
+        served: bool,
+    },
 }
 
 /// Present, then wait, run and answer — and when the channel breaks, climb
-/// the ladder and do it again. The only ways out are a refusal that redialling
-/// cannot mend and a frame that stopped reading.
+/// the ladder and do it again. The only ways out are an ending no redial can
+/// mend and a frame that stopped reading.
+///
+/// **The matrix is three rows and it is thrall's** (bl-8bd0, its bl-916d):
+/// the wire is always worth another dial; a refusal of this device's READ is
+/// REMOTE §5.1's one-reader guard naming a predecessor whose claim is already
+/// expiring, so it waits one hold's width and asks again; every other refusal
+/// and every unusable answer ends the host. Taking the read's refusal as final
+/// is what made a phone's first network flap permanent — the engine still held
+/// the dead connection's parked read, refused the redial naming this very
+/// device, and the foot stopped for good three seconds after a wifi handover.
 pub(super) fn serve(
     foot: &Foot,
     tools: Vec<Tool>,
@@ -79,19 +124,30 @@ pub(super) fn serve(
     let _ = out.send(standing.clone());
     let mut wait = FIRST;
     loop {
-        let broke = match hold(foot, tools.clone(), run, out, &mut standing) {
+        let (broke, floor, served) = match hold(foot, tools.clone(), run, out, &mut standing) {
             Stop::Gone => return,
-            Stop::Wire(wire) if wire.transport() => wire.sentence(),
-            Stop::Wire(wire) => {
-                standing.health = Health::Stopped(wire.sentence());
+            Stop::Wire { why, served, .. } if why.transport() => (why.sentence(), FIRST, served),
+            Stop::Wire {
+                why: why @ Wire::Refused(_),
+                read: true,
+                served,
+            } => (why.sentence(), PREDECESSOR, served),
+            Stop::Wire { why, .. } => {
+                standing.health = Health::Stopped(why.sentence());
                 let _ = out.send(standing);
                 return;
             }
         };
-        // A channel that got as far as being accepted starts the ladder over:
-        // the last dial worked, so the next one has no history to answer for.
-        // The presentation goes with the connection that carried it.
-        if standing.advertised {
+        // **A channel that ANSWERED A READ starts the ladder over**, which is
+        // thrall's rule and not "a channel that was accepted": an answered
+        // read is the engine having parked this device for its own hold, and
+        // an accepted advertisement is not — a rival holding this device's
+        // read refuses every read while accepting every advertisement, so the
+        // weaker predicate would reset the ladder forever on exactly the
+        // ending that must back off. A phone that walks back into the house
+        // is still back within a second of the wifi, because the channel it
+        // lost had been served.
+        if served {
             wait = FIRST;
         }
         standing.advertised = false;
@@ -99,7 +155,7 @@ pub(super) fn serve(
         if out.send(standing.clone()).is_err() {
             return;
         }
-        nap(wait);
+        nap(wait.max(floor));
         wait = climb(wait);
         standing.health = Health::Serving;
     }
@@ -120,11 +176,16 @@ fn hold(
     out: &mpsc::Sender<Standing>,
     standing: &mut Standing,
 ) -> Stop {
+    let mut served = false;
     // The first presentation's reading is discarded on purpose: a fresh
     // channel writes whenever the engine held something else, and there is no
     // rival in that. Only the re-assertion below can mean one.
     if let Err(why) = foot.advertise(tools.clone()) {
-        return Stop::Wire(why);
+        return Stop::Wire {
+            why,
+            read: false,
+            served,
+        };
     }
     standing.advertised = true;
     if out.send(standing.clone()).is_err() {
@@ -133,8 +194,15 @@ fn hold(
     loop {
         let work = match foot.invocations() {
             Ok(work) => work,
-            Err(why) => return Stop::Wire(why),
+            Err(why) => {
+                return Stop::Wire {
+                    why,
+                    read: true,
+                    served,
+                };
+            }
         };
+        served = true;
         for invocation in work {
             let capture = match &invocation.cwd {
                 None => run(&invocation.tool, &invocation.input),
@@ -143,10 +211,20 @@ fn hold(
             standing.served += 1;
             standing.last = Some(format!("{} → {}", invocation.tool, capture.exit_code));
             if let Err(why) = answer(foot, &invocation, capture) {
-                return Stop::Wire(why);
+                return Stop::Wire {
+                    why,
+                    read: false,
+                    served,
+                };
             }
             match foot.advertise(tools.clone()) {
-                Err(why) => return Stop::Wire(why),
+                Err(why) => {
+                    return Stop::Wire {
+                        why,
+                        read: false,
+                        served,
+                    };
+                }
                 Ok(true) => standing.restored += 1,
                 Ok(false) => {}
             }

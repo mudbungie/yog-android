@@ -207,8 +207,9 @@ impl Shell {
     /// roster because that is the screen an operator lands on, and a tool host
     /// nobody can see is one nobody can tell has stopped.
     fn hosting(&mut self, ui: &mut egui::Ui) {
-        let Some(host) = self.host_mut() else { return };
-        let standing = host.standing();
+        let Some(standing) = crate::state::standing() else {
+            return;
+        };
         // Health first: a host that is climbing back says so with the
         // sentence that broke the channel, rather than showing the last tool
         // it ran as though it were still there (bl-8641).

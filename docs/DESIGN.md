@@ -251,15 +251,18 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
-| `src/transport.rs` | the Seat: one connection per ask, server name off the address; `Wire`, the two-class failure (the channel, or an answer that was a no) | landed (bl-48d9, class bl-8641) |
+| `src/transport.rs` | the Seat: one connection per ask, server name off the address; `Wire`, the three-class failure (the channel, the engine's own no, an answer this end cannot use) | landed (bl-48d9, class bl-8641, third class bl-8bd0) |
 | `src/test_support.rs` + `test_support/serve.rs` | tests only: openssl-minted PKI; the one-shot and scripted multi-connection mTLS answering servers | landed (bl-48d9, split bl-5a98) |
 | `src/rows.rs` + `rows/{build,compacted,project,project/blocks}.rs` | the transcript's one-line row projection: the row vocabulary (class, tone, role, fold), the per-entry match and its labels, the preview/body split — pure, no paint | landed (bl-0ed6) |
 | `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
 | `src/tools/bridged.rs` | the two-line answer protocol every Java bridge speaks, and the one parser that reads it — pure | landed (bl-f34f, out of `tools/ui.rs`) |
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
-| `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, and the three-state health | landed (bl-d366, split bl-8641) |
-| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), redial a broken channel up the ladder, stop on a refusal, count a re-assertion the engine wrote | landed (bl-0ac8, bl-8641, bl-cc54) |
+| `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, the three-state health, and whether it is still a host | landed (bl-d366, split bl-8641, `alive` bl-8bd0) |
+| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0) |
+| `src/state.rs` | the process's one live tool host (§18.1) — the crate's only lock, so a foot outlives the activity and a relaunch cannot build a second | landed (bl-8bd0) |
+| `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
+| `android/…/Pocket.java` | the foreground service that holds the process: the `specialUse` grant, the standing notification it is required to carry, and the two acts that end it | landed (bl-8bd0) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements and argument reading — pure | landed (bl-1511, protocol out bl-f34f) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
@@ -284,7 +287,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where the mark went, said to logcat once per change | landed (bl-243b) |
-| `scripts/screens.sh` + `scripts/screens-seed.sh` | the headless emulator loop (§15): boot, install, walk, capture, judge — and the two seeds (a minted leaf, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b) |
+| `scripts/screens.sh` + `scripts/screens-seed.sh` | the headless emulator loop (§15): boot, install, walk, capture, judge — and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0) |
+| `scripts/screens-platform.sh` + `scripts/screens-background.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the two background lanes: the scheduled fetch (§17) and the pocketed foot (§18) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0) |
 | `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
 | `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
@@ -309,7 +313,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/camera.rs` | android-only: the five static calls into `dev.yog.Camera`, activity passed in | landed (bl-d815) |
 | `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
-| `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App` | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9) |
+| `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE + FOREGROUND_SERVICE_SPECIAL_USE), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App`, and the two lanes armed on resume | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9, bl-fcc5, bl-8bd0) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
 
@@ -1805,7 +1809,7 @@ ball, ordered by what each costs:
 | 1 — the paper tools | `device`, `clipboard_set`, `notify`, `open` | no service; `notify` wants the POST_NOTIFICATIONS runtime ask (API 33+); `open` is platform-refused from background (BAL, API 29+) and says so in band | **landed** (bl-f34f) |
 | 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | **landed** (bl-b0a9) |
 | 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | **landed** (bl-5cbd) |
-| 3 — the pocketed foot | no new tool: the host loop itself moves into a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off by default, an explicit operator act | bl-8bd0 |
+| 3 — the pocketed foot | no new tool: the host loop is held open by a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off unless the leaf is foot-grade | **landed** (bl-8bd0, §18) |
 
 **Rung 1's one open platform question is closed, and the answer is in the
 platform's own source** (bl-f34f). *Is a clipboard WRITE restricted the way a
@@ -1920,13 +1924,15 @@ of the enable, while the block — which presents as a toggle that will not
 stick — meets an operator on a phone. Every refusal names it anyway, because
 the sentence has to be right before the device is met.
 
-**Rung 3 shares its grant with the attention lane.** A foreground service is
-the platform's one "my ask may stand" grant (REMOTE §14), and this device
-should hold at most one: the service that keeps the host's `invocations` read
-standing is the same service bl-b82d's attention lane wants, so the two balls
-coordinate on one service with two lanes rather than founding a second. Unlike
-the attention half, the foot half is app-only — `invocations` is an existing
-follow-class read, gated on nothing upstream.
+**Rung 3 shares its grant with the attention lane, and §18 is where it landed.**
+A foreground service is the platform's one "my ask may stand" grant (REMOTE
+§14), and this device should hold at most one: the service that keeps the
+host's `invocations` read standing is the same service bl-b82d's attention lane
+wants. `dev.yog.Pocket` is that service, founded by this rung with **one lane
+and room for the second** — bl-b82d adds its lane to this class rather than
+declaring another, and §18.6 states what it inherits. Unlike the attention
+half, the foot half is app-only: `invocations` is an existing follow-class
+read, gated on nothing upstream.
 
 **The consent surface is three gates that already exist, and no new one.**
 thrall's model is an operator-authored document whose entries are the consent
@@ -2194,3 +2200,275 @@ beat reddens exactly when the thing it is checking for is present. Both fetch
 beats hold the dump in a variable and match with a herestring. It cost two
 full walks and it is the shape to look for whenever a harness beat fails only
 under `pipefail`.
+
+## 18. The pocketed foot: a foreground service holds the lane (bl-8bd0)
+
+Rung 3 of §16.1, and the gap it closes is the one §16.1's own table names:
+until this rung the tool host served only while the app process lived.
+Backgrounded, the platform ends a cached app's sockets and the foot is absent
+until somebody looks at the phone — fine for a seat with hands beside it,
+wrong for a device enrolled AS hands.
+
+**The whole of it: a foreground service holds the PROCESS, and the host was
+moved out of the activity so there is a process worth holding.** No new tool,
+no new gesture, no engine dependency. `invocations` is the same follow-class
+read it always was.
+
+### 18.1 The host belongs to the process now
+
+Until this rung the `Host` handle was a field of `shell::boot::Running`, so its
+lifetime was the activity's — and the platform destroys the activity when the
+app is swiped out of Recents (`stopWithTask` defaults to false; the service
+survives, the activity does not). A foot that went with the screen would be
+absent exactly when the phone is pocketed, which is the rung's whole subject.
+
+`src/state.rs` is the crate's first lock and AGENTS.md rule 7's named home for
+it: one slot, holding **at most one LIVE host**. Two things fall out of that
+and both are the point.
+
+- **A stopped host does not own the slot forever.** `Health::Stopped` is a
+  refusal no redial mends, and it is published as the worker returns, so
+  `Host::alive` reads the PUBLICATION rather than the thread — a `JoinHandle`
+  finishes a moment later, and a predicate that read it would answer
+  differently depending on when it was asked. Without this the operator's own
+  remedy (open the app) would silently do nothing inside a process that had
+  stopped one.
+- **A latent race is dissolved rather than papered over.** An activity that is
+  destroyed and created again — the ordinary android relaunch — used to build a
+  *second* `Host` on this device's certificate while the first worker was still
+  parked on its `invocations` read, which REMOTE §5.1's one-reader guard refuses
+  naming this very device. The slot refusing the second is what makes that
+  question unaskable.
+
+The frame reads `state::standing()` where it used to hold a handle, so the
+roster's tools line and the shade's notification are written from one fact.
+
+### 18.2 The operator act is the leaf, and there is no switch
+
+§16.1's consent surface is three gates that already exist, and this rung adds
+none. **A foot-grade leaf IS the act**: REMOTE §4.2 puts the grade on the
+certificate, §9's bootstrap discipline derives the component from it and never
+stores one, so a device carrying `OU=foot` holds its lane while pocketed and
+every other device does not. `crate::pocket::line` answers `None` for anything
+else, and `None` is the service's whole stop condition.
+
+**An in-app toggle was considered and refused**, for §16.1's own reason: a
+second authority beside the fact the certificate already states, disagreeing the
+first time an operator replaced a leaf without visiting the switch. It would
+also have to be *stored*, and a stored want is exactly the second home §9
+refused for the component itself. The severability the house rule wants is
+already where the capability is — re-provision a Lernie leaf and the next
+resume takes the hold down, which the walk asserts.
+
+**The platform's own switches are the other two**, and they are real: the
+`Serving tools` notification channel in system settings (whose description
+carries the price), and **Active apps → Stop**, which Android documents as
+removing the whole app from memory. Neither is duplicated in this app.
+
+`MainActivity.onResume` arms it, for §17.5's reason and one more of its own: an
+API 31+ foreground service may only be started from a user-visible state, and a
+resume IS that state. Re-starting a service that already runs is how the
+platform is told nothing changed.
+
+### 18.3 The type is `specialUse`, because the alternatives have clocks on them
+
+Android 15 (API 35, which this app targets) permits `dataSync` and
+`mediaProcessing` foreground services **six hours in any 24**, then calls
+`Service.onTimeout` and throws if the service does not stop itself. For a foot
+that is meant to be reachable for days that is not a price, it is a defect on a
+timer — and `dataSync` is additionally barred from being started by a
+`BOOT_COMPLETED` receiver on 15. `connectedDevice` is exempt from both but
+means a Bluetooth/NFC/USB companion and carries a runtime prerequisite this app
+has no business declaring. **`specialUse` is the platform's own "none of the
+above"**: uncapped, no runtime prerequisite, and its
+`PROPERTY_SPECIAL_USE_FGS_SUBTYPE` is where the honest sentence goes. That
+property is reviewed by Play and never by the platform; this crate is
+`publish = false` and ships through no store, so the sentence is true because it
+was written to be, not because anything checks it. `FOREGROUND_SERVICE` and
+`FOREGROUND_SERVICE_SPECIAL_USE` are both declared — API 34 made the per-type
+permission mandatory, and without it `startForeground` throws `SecurityException`
+rather than degrading.
+
+**No BOOT_COMPLETED receiver, and the reason is not the platform's.**
+`specialUse` is *not* on Android 15's barred list, so one would be lawful. It
+would also be useless: this service cannot CREATE a lane. A service may start a
+process with no Activity in it, and this app's tool bridges resolve their
+classes through handles android-activity fills on the way to `android_main`
+(`src/shell/jvm.rs`), so a host built from a service would be a foot whose
+platform tools all refuse. `onStartCommand` returns `START_NOT_STICKY` for the
+same reason. **The honest limit: after a reboot the foot is absent until the app
+is opened once.** The scheduled fetch (§17) is `setPersisted` and still wakes
+the operator about attention, so the phone is not silent — only its hands are.
+The named exit is **bl-d22d**, which is about making a host startable without
+an Activity — a question about the bridges rather than about the service, and a
+bigger one than this rung.
+
+### 18.4 What the notification says, and where the price is stated
+
+The notification is not decoration: a foreground service without one is a
+service the platform kills, and it is the only surface a pocketed phone has.
+`crate::pocket::notice` writes it from the host's standing, in the roster's own
+vocabulary — one fact, two surfaces, and a phone that says `reconnecting` on
+the glass must not say `serving` in the shade. Four states and no fifth:
+
+| standing | title | what the line under it carries |
+|---|---|---|
+| serving, presented | *this phone is standing by as hands* | how many tools are offered, and either "nothing called yet" or the served count and the last tool — then the price |
+| serving, not yet presented | *this phone is offering its tools* | how many tools are being presented, and the price |
+| redialling | *this phone is reconnecting* | the sentence that broke the channel, that no tool call reaches this phone until it returns, and that yog keeps trying more slowly each time |
+| stopped | *this phone has stopped serving* | the sentence that ended it, and that **nothing is on the network now** — the other half of an honest price |
+| hands, no lane | *this phone is not serving* | the one act that answers both of its causes |
+
+**A healed disarming is appended wherever it applies**, in `host::RESTORED`'s
+own words and with a count. REMOTE §5.1's guard heals a replaced advertised set
+automatically; being *told* is the part that is not automatic, the roster is
+where it is painted, and a pocketed phone's roster is not being looked at.
+
+**The price is stated in both places it is read** (the house rule): the
+channel's description in system settings, which is where a standing cost
+belongs (§17.3's precedent) and which also names the two acts that end it, and
+the notification's own text, which is what the operator actually sees. §14.2
+prices this rung as a permanent notification and radio wakes and this says so
+in the operator's own words.
+
+**A stopped lane does NOT stop the service, and that was a decision.** The
+tempting shape is to stop when the host stops, since a stopped host spends
+nothing. It is refused: the notification is then the only evidence that a
+pocketed phone has stopped answering, and a service that vanished would take
+that evidence with it. A stopped host holds no socket and no thread — the line
+says exactly that — so what stands is a notification and a resident process,
+which is the cheapest possible way to keep an operator-actionable fact where
+the operator will meet it.
+
+**Without `POST_NOTIFICATIONS` the service still runs**; Android documents the
+notification as simply absent from the drawer while remaining in the
+foreground-services manager. Nothing here asks for the grant — a service is not
+a screen, and `Notify` is where the ask lives.
+
+### 18.5 The redial ledger: what this client takes from thrall, and what it does not
+
+thrall's redial loop (its bl-916d, `src/run/redial.rs`) is the same problem on a
+box that roams less. Reading it against this client's landed ladder (bl-8641)
+found a defect that would have made this whole rung a lie, so the ledger is not
+a formality. **Adopted:**
+
+- **Classification by who failed at which leg, never by the engine's prose.** A
+  device that decided its own lifetime by reading sentences would be one the far
+  end could rewrite by rewording. `Stop::Wire { why, read, served }` carries the
+  leg; `crate::transport::Wire` carries the class.
+- **The three-row matrix, which needed a third class here.** `Wire` had two
+  variants and collapsed *the engine said no* with *the engine said something
+  unreadable* — the decoder already draws that line (its outer error is
+  unreadable, its inner one is the engine's `ok: false`) and `answered` was
+  discarding it. `Wire::Unusable` is that line made visible: a stream that ended
+  without answering, a frame that is not JSON, a reply of a kind the gesture does
+  not earn, a version that cannot be spoken to.
+- **THE ONE REFUSAL THAT MUST BE RETRIED, and it is the defect.** A read parked
+  when the connection dropped does not leave until the engine tries to answer
+  it, so a redial inside that window meets REMOTE §5.1's one-reader guard
+  refusing **this very device** — its own dying predecessor, not a rival. This
+  client treated every refusal as final, so a phone's *first wifi handover*
+  stopped its foot for good, three seconds after the drop, with a sentence
+  naming itself. A pocketed foot cannot have that defect and it is the one this
+  rung exists to prevent.
+- **The predecessor floor, at thrall's own constant.** 32 seconds — REMOTE
+  §5.1 states one hold's width as a contract (*"a peer that vanished without a
+  FIN frees the slot within one hold's width — thirty seconds"*), plus two,
+  because this end's window began before it noticed the drop. Asking sooner
+  earns the same sentence and spends a handshake to hear it.
+- **An advertise-refusal still ends the channel** (bl-2d78's settlement): that
+  one means another connection holds this device's read with a different set in
+  force. Two refusals, two answers, never collapsed into one retry.
+- **A channel that SERVED returns the ladder to its floor** — replacing this
+  client's weaker "a channel that was accepted". The two differ exactly where it
+  matters: a rival holding this device's read accepts every advertisement while
+  refusing every read, so the weaker predicate would reset the ladder forever on
+  the one ending that has to back off. An answered read — an empty one counts —
+  is the engine having parked this device for its own hold.
+- **No disarm knowledge across redials.** A `wrote: true` on a channel's FIRST
+  presentation says nothing and is discarded (`host::serve`, bl-cc54); a redial
+  makes a fresh channel, so that silence holds across one. Nothing is remembered
+  over the gap and there is nothing to resume.
+- **No deadline of its own**, and no attempt count. A device that changes
+  networks hourly has no number of failures after which giving up is right.
+
+**Deliberate divergences, each with its reason:**
+
+- **The cap moved from 30 seconds to thrall's 64, and it had to.** This
+  client's 30 was chosen so a phone walking back into the house is served again
+  within half a minute — but a cap *under* the 32-second floor makes the ladder
+  inert for the one ending that repeats, so a rival permanently holding this
+  device's read would be dialled every 32 seconds for as long as the battery
+  lasted. Above it, the series climbs past the floor and that case settles at a
+  minute. The half-minute promise is kept by the reset, not by the cap: a
+  channel that was served starts again at one second, which is what a wifi
+  handover is.
+- **The entry is opened per host, not per dial**, as thrall does — but this
+  client's `Foot` is opened once by `shell::boot` and outlives every channel,
+  because the material read is a fact about this box and asking it again would
+  ask the same question.
+- **No `notice` callback.** thrall prints the ending sentence as it happens
+  because under a loop it is no longer returned; this client publishes a
+  `Standing` on every boundary and the sentence rides `Health::Redialling`,
+  which the roster and the shade both read. Same requirement, and this end
+  already had the channel for it.
+- **A single-entry process does not exit.** thrall still exits when it cannot be
+  a foot at all, because supervision is the right owner on a server box. There is
+  no supervisor on a phone and no exit code anything would read; the equivalent
+  is `Health::Stopped` reaching both surfaces, which §18.4 is about.
+
+### 18.6 Doze, flaps, and what bl-b82d inherits
+
+**Doze does not take the socket away, and that is the platform's own rule.**
+Network access is restricted per UID for processes below the
+foreground-service threshold; a running foreground service puts this process
+at `PROCESS_STATE_FOREGROUND_SERVICE`, which is above it. What Doze still costs
+is *wakeups*: a foreground service grants no wakelock, so with the CPU
+suspended nothing here fires on time. **So the redial is the feature, not the
+fallback.** A phone changes networks, sleeps, and comes back with a dead TCP
+mapping the far end has not noticed; the ladder above is what turns that into a
+one-second gap instead of a dead foot.
+
+**Vendor task killers remain the residual §14.2 named** and no design here can
+answer them: an OEM power manager that stops a foreground service is doing what
+Android's own Active-apps switch does, and the app cannot tell them apart.
+
+**bl-b82d adds its lane to `dev.yog.Pocket`, not a second service.** What it
+inherits: the grant and the type (one `specialUse` service per device), the
+`Notify` channel discipline (its own channel, its own description, its own
+price), the arming point (`MainActivity.onResume`), and `START_NOT_STICKY`. What
+it must decide for itself is the lane's own stop condition and whether the
+service should stand when only one of the two lanes is wanted — the natural
+shape being that the service runs while EITHER lane answers, which is what
+`pocket::line` returning `None` already means for this one.
+
+### 18.7 What the emulator proves, and what only a device can
+
+Host tests at the coverage floor own the decision: which devices hold the
+pocket, what the shade says in every state a host can publish, and the whole
+redial matrix over a real mTLS server (`src/pocket/tests.rs`,
+`src/state/tests.rs`, `src/host/tests/redial.rs`). `make screens` owns the half
+no host test can reach — whether the PLATFORM accepts any of it — in seven
+beats (`scripts/screens-background.sh`), which is also why the two background
+lanes moved into their own file: unlike the read-only platform beats, these
+MOVE the device.
+
+The walk asserts, in order: a **seat**-grade device holds no foreground service
+(the off-by-default half, without which the next beat would prove the opposite
+of the design); a foot-grade leaf makes the platform hold `dev.yog/.Pocket`;
+the platform **promoted** it (`isForeground=true`, which is what puts this
+process above the Doze threshold) and recorded the **specialUse** type; a
+notification stands on the foot channel; the process **survives a background
+kill with the screen away** (`am kill` reaps a package's background processes,
+and a foreground-service process is not one — surviving it is precisely the
+property this rung buys); the hold stands through an **airplane-mode cycle**,
+with the flap itself asserted before the survival is judged; and
+**re-provisioning a seat leaf stops the hold**, which is the operator act
+reversed.
+
+**What only a real device can answer**, and none of it is dodged here: whether
+a vendor's power manager leaves the service alone for days; what the hold
+actually costs a battery over that time, which is the number §14.2 prices and
+no emulator can measure; and Doze's real behaviour on a phone that is genuinely
+still, screen off, off charge, for hours — the emulator never enters deep Doze
+on its own. Those are recorded as this rung's real-device residue on bl-8bd0.

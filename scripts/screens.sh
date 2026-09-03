@@ -132,6 +132,11 @@ echo "screens: installing $APK" >&2
 # screens and judges where the walk went, and neither beat there is about a
 # screen at all.
 . scripts/screens-platform.sh
+# The two background lanes — the scheduled fetch and the pocketed foot — in
+# their own file again: those beats MOVE the device (home and back, a forced
+# job, a re-provisioned leaf, airplane mode), while the file above only reads
+# what the platform already holds.
+. scripts/screens-background.sh
 arm_parity
 
 relaunch() {
@@ -252,6 +257,10 @@ fetch_beats
 # The shade beats last of all: the third one posts a notification, which puts a
 # row in the status bar of every picture taken after it.
 shade_beats
+# The pocketed foot after them, because it is the one set of beats that changes
+# what this device IS — it re-provisions the leaf as foot-grade and back — and
+# every screen above wants the seat it was walked with.
+pocket_beats
 
 # 6. THE PARITY GATE (yog docs/PARITY.md §5, bl-fe4c). Everything above judges
 #    where the walk went; this judges what it could REACH. The dumps captured

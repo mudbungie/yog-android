@@ -68,18 +68,94 @@ fn a_dead_engine_is_redialled_with_the_dial_that_failed_standing() {
     assert_eq!(rests.recv().unwrap(), Duration::from_secs(2));
 }
 
-/// The ladder itself: it doubles, it stops at half a minute, and it never
-/// stops climbing back — a device that changes networks hourly has no number
-/// of failures after which giving up is the right answer.
+/// The ladder itself: it doubles, it stops at a minute, and it never stops
+/// climbing back — a device that changes networks hourly has no number of
+/// failures after which giving up is the right answer.
+///
+/// **The cap is above the predecessor floor and that is why it is 64** (bl-8bd0,
+/// thrall's own constant). A cap under the 32-second floor would make the
+/// ladder inert for the one ending that repeats — a rival permanently holding
+/// this device's read would be dialled every 32 seconds for as long as the
+/// battery lasted.
 #[test]
-fn the_ladder_doubles_to_thirty_seconds_and_stays_there() {
+fn the_ladder_doubles_to_a_minute_and_stays_there() {
     let walk: Vec<u64> = std::iter::successors(Some(Duration::from_secs(1)), |d| {
         Some(crate::host::serve::climb(*d))
     })
     .take(8)
     .map(|d| d.as_secs())
     .collect();
-    assert_eq!(walk, [1, 2, 4, 8, 16, 30, 30, 30]);
+    assert_eq!(walk, [1, 2, 4, 8, 16, 32, 64, 64]);
+}
+
+/// **The defect a pocketed phone would have died of** (bl-8bd0, adopting
+/// thrall's bl-916d). A read parked when the connection dropped does not leave
+/// until the engine tries to answer it, so the redial a second later meets
+/// REMOTE §5.1's one-reader guard refusing *this very device* — its own
+/// predecessor, not a rival. Taken as final it made the first wifi handover
+/// permanent; taken as what it is, the host waits one hold's width and asks
+/// again.
+#[test]
+fn a_refusal_of_the_follow_read_waits_out_this_devices_own_predecessor() {
+    let dir = pki();
+    let refusal = json!({ "ok": false, "error": "client \"phone\" already holds a parked read" })
+        .to_string()
+        .into_bytes();
+    let (address, _served) = serve_many(
+        &dir,
+        "ca",
+        "server",
+        // One connection per GESTURE, as every foot gesture is: the
+        // advertisement lands, and the refusal is the answer to the follow
+        // read that follows it.
+        vec![vec![advertised()], vec![refusal], vec![advertised()]],
+    );
+    let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let (nap, rests) = recording();
+    let mut host = Host::start(foot, table(), Box::new(dispatch), nap);
+    let standing = settle(&mut host, &|s| matches!(s.health, Health::Redialling(_)));
+    let Health::Redialling(why) = standing.health else {
+        unreachable!()
+    };
+    assert_eq!(why, "client \"phone\" already holds a parked read");
+    // One hold's width and two seconds, not the ladder's first rung: asking
+    // sooner earns the same sentence and spends a handshake to hear it.
+    assert_eq!(rests.recv().unwrap(), Duration::from_secs(32));
+}
+
+/// **A channel that ANSWERED A READ starts the ladder over**, and an accepted
+/// advertisement does not. The two differ exactly where it matters: a rival
+/// holding this device's read accepts every advertisement while refusing every
+/// read, so resetting on acceptance would reset forever on the one ending that
+/// has to back off. Here the ladder climbs across two channels that were never
+/// served and returns to its floor on the third, which was.
+#[test]
+fn a_channel_that_was_served_returns_the_ladder_to_its_floor() {
+    let dir = pki();
+    let (address, _served) = serve_turns(
+        &dir,
+        "ca",
+        "server",
+        vec![
+            Turn::Answer(vec![advertised()]),
+            Turn::Hangup,
+            Turn::Answer(vec![advertised()]),
+            Turn::Hangup,
+            Turn::Answer(vec![advertised()]),
+            // An empty answer to the follow read is ordinary — a hold that
+            // ended quietly — and it is the evidence that this channel was
+            // real.
+            Turn::Answer(vec![work(json!([]))]),
+            Turn::Hangup,
+        ],
+    );
+    let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let (nap, rests) = recording();
+    let host = Host::start(foot, table(), Box::new(dispatch), nap);
+    assert_eq!(rests.recv().unwrap(), Duration::from_secs(1));
+    assert_eq!(rests.recv().unwrap(), Duration::from_secs(2));
+    assert_eq!(rests.recv().unwrap(), Duration::from_secs(1));
+    drop(host);
 }
 
 /// **The recovery the ball is about**: the follow read dies on the wire — the
