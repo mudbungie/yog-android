@@ -112,6 +112,14 @@ ADB_BIN="$ADB_BIN" SERIAL="$SERIAL" EMU="$EMU" timeout 420 bash -c '
   done' || die "boot did not complete (see $OUT/emulator.log)"
 
 echo "screens: installing $APK" >&2
+# Uninstall first, so the walk judges what THIS build does rather than what a
+# previous one left behind (bl-fcc5). `-r` upgrades in place and keeps the
+# app's data AND its scheduled jobs — and the scheduled fetch's job is
+# `setPersisted`, so it outlives even a reboot of this AVD. A walk that
+# inherited it would report the fetch armed on a build that never armed
+# anything. The uninstall is allowed to fail: on a fresh AVD there is nothing
+# to remove, which is not an error.
+"${ADB[@]}" uninstall "$PKG" >/dev/null 2>&1 || true
 "${ADB[@]}" install -r -g "$APK" >/dev/null || die "install failed"
 
 # The seeds — key material and the paint-first cache — are the other half of
@@ -119,6 +127,11 @@ echo "screens: installing $APK" >&2
 # file DOES with it. Sourced rather than executed, because they speak to the
 # same emulator through the same `ADB` and the same `$OUT`.
 . scripts/screens-seed.sh
+# The platform's own book — the grants it accepted and the job it holds — read
+# in its own file for the same seam reason the seeds have one: this file walks
+# screens and judges where the walk went, and neither beat there is about a
+# screen at all.
+. scripts/screens-platform.sh
 arm_parity
 
 relaunch() {
@@ -199,27 +212,7 @@ tap_mark() {
 
 : > "$OUT/verdict.txt"
 
-# THE GRANTS THE TELEOPERATION CORPUS ASKS FOR, as the INSTALLER sees them
-# (bl-b0a9). A runtime permission is a chain of three: a manifest declaration,
-# an installer that accepted it, and a grant. This install is `-g`, so every
-# runtime permission is granted outright — which makes the emulator the one
-# place the GRANTED half of each tool's gate is observable, and makes a missing
-# manifest line loud: an undeclared permission is not refused at install, it is
-# silently never granted, and the tool then refuses forever on a device where
-# the operator did everything right.
-#
-# What this does NOT do is invoke a tool. Putting an invocation through the
-# host channel to a device needs an engine, a foot leaf and something to fire
-# `/invoke` at it, none of which exists yet — that is bl-05b6's ball, and the
-# refusal halves stay host tests.
-held=$("${ADB[@]}" shell dumpsys package "$PKG" 2>/dev/null | tr -d '\r')
-for want in CAMERA POST_NOTIFICATIONS ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION; do
-  if printf '%s\n' "$held" | grep -q "android.permission.$want: granted=true"; then
-    verdict pass "grant: $want is declared, accepted and held"
-  else
-    verdict fail "grant: $want is not held — is it declared in AndroidManifest.xml?"
-  fi
-done
+held_grants
 
 echo "screens: walking" >&2
 
@@ -228,9 +221,11 @@ echo "screens: walking" >&2
 wipe_app; relaunch
 capture cold configuration
 
+
 # 2. A leaf, and this device is a seat. The roster is "main".
 mint_material; seed_cache roster; relaunch
 capture roster roster
+
 
 # 3. THE STANDING ASSERTION: the configuration surface is reachable from the
 #    roster, by the one control that leads there. Then the mark toggles back —
@@ -252,6 +247,8 @@ capture transcript transcript
 #    walked screen actually painted.
 seed_cache running; relaunch
 capture running transcript
+
+fetch_beats
 
 # 6. THE PARITY GATE (yog docs/PARITY.md §5, bl-fe4c). Everything above judges
 #    where the walk went; this judges what it could REACH. The dumps captured

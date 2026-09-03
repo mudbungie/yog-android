@@ -13,8 +13,9 @@ import android.os.Build;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * The notification tool's platform half: the permission, the channel, and the
- * post (DESIGN §16.1).
+ * The app's ONE notification mechanism: the permission, the channels, and the
+ * post. Two callers and no second copy — the {@code notify} tool an agent
+ * spends (DESIGN §16.1) and the scheduled fetch (DESIGN §17, {@link Watch}).
  *
  * <h2>The grant, and the one act that fixes a refusal</h2>
  *
@@ -32,10 +33,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * names the settings act instead, which is the act that works even when
  * nothing is on screen.
  *
- * <h2>What this is not</h2>
+ * <h2>Two channels, because the operator may want one and not the other</h2>
  *
- * A tool an agent invokes to reach the operator's pocket — not the seat's own
- * attention machinery, which is the app's and fires on its own rungs.
+ * A tool's notification is an agent reaching the operator's pocket; the
+ * attention channel is the seat's own machinery saying a workspace wants
+ * them. Separate channels put the choice between them in Android's own
+ * settings, per channel, which is where a capability's severability belongs
+ * (§16.1's refused per-tool toggle screen, for its reason: a second authority
+ * beside the OS grant drifts the first time one of them is revoked). The
+ * attention channel's description states what leaving it on costs, because
+ * that switch is also the fetch's own off switch — see {@link Watch}.
  */
 final class Notify {
     private Notify() {}
@@ -43,8 +50,18 @@ final class Notify {
     /** This class's permission-request id; {@link Camera} holds the other. */
     static final int REQUEST = 0x0A;
 
-    /** The channel every tool-posted notification lands on. */
-    private static final String CHANNEL = "yog.tools";
+    /** The channel a tool-posted notification lands on. */
+    static final String TOOLS = "yog.tools";
+
+    /** The channel the scheduled fetch posts on. */
+    static final String ATTENTION = "yog.attention";
+
+    /**
+     * The attention post's fixed id: a later one REPLACES the one before it,
+     * so a pocketed phone carries one standing row instead of a stack of
+     * them. Tool posts count up from 1 and cannot collide with it.
+     */
+    static final int STANDING = 0;
 
     /** The one act that fixes a notification refusal, wherever it is met. */
     private static final String SETTINGS_ACT =
@@ -54,11 +71,11 @@ final class Notify {
     /** Whether the system's dialog has been answered this run. */
     private static volatile boolean answered;
 
-    /** Notification ids, so a second post does not replace the first. */
+    /** Tool notification ids, so a second post does not replace the first. */
     private static final AtomicInteger POSTED = new AtomicInteger();
 
-    /** Post one, or say which act would let one be posted. */
-    static String post(Context ctx, String title, String text) {
+    /** Post one on `channel`, or say which act would let one be posted. */
+    static String post(Context ctx, String channel, String title, String text) {
         NotificationManager manager = ctx.getSystemService(NotificationManager.class);
         if (manager == null) {
             return App.ERR + "this device has no notification service.";
@@ -66,11 +83,9 @@ final class Notify {
         if (!manager.areNotificationsEnabled()) {
             return App.ERR + ask(ctx);
         }
-        manager.createNotificationChannel(
-                new NotificationChannel(
-                        CHANNEL, "Agent notifications", NotificationManager.IMPORTANCE_DEFAULT));
+        manager.createNotificationChannel(described(channel));
         Notification.Builder building =
-                new Notification.Builder(ctx, CHANNEL)
+                new Notification.Builder(ctx, channel)
                         .setSmallIcon(android.R.drawable.stat_notify_chat)
                         .setContentTitle(title)
                         .setAutoCancel(true);
@@ -81,9 +96,33 @@ final class Notify {
         if (tap != null) {
             building.setContentIntent(tap);
         }
-        int id = POSTED.incrementAndGet();
+        int id = ATTENTION.equals(channel) ? STANDING : POSTED.incrementAndGet();
         manager.notify(id, building.build());
         return App.OK + "posted notification " + id;
+    }
+
+    /**
+     * Whether a post on `channel` would land — and, when the runtime grant is
+     * what is missing and this app is in front, the system's own dialog on the
+     * way past. The scheduled fetch asks this before it arms and before it
+     * dials: a fetch whose only product is a notification nobody may see is
+     * battery spent for nothing.
+     *
+     * <p>A channel that does not exist yet is allowed: it is created by the
+     * first post, and Android grants a new channel the importance it is
+     * created with.
+     */
+    static boolean armed(Context ctx, String channel) {
+        NotificationManager manager = ctx.getSystemService(NotificationManager.class);
+        if (manager == null) {
+            return false;
+        }
+        if (!manager.areNotificationsEnabled()) {
+            raise(ctx);
+            return false;
+        }
+        NotificationChannel existing = manager.getNotificationChannel(channel);
+        return existing == null || existing.getImportance() != NotificationManager.IMPORTANCE_NONE;
     }
 
     /**
@@ -95,23 +134,49 @@ final class Notify {
         answered = true;
     }
 
-    /** The sentence a refusal carries — and the raise itself, where one is possible. */
+    /** A channel, and what the operator reads about it in system settings. */
+    private static NotificationChannel described(String channel) {
+        if (!ATTENTION.equals(channel)) {
+            return new NotificationChannel(
+                    TOOLS, "Agent notifications", NotificationManager.IMPORTANCE_DEFAULT);
+        }
+        NotificationChannel attention =
+                new NotificationChannel(
+                        ATTENTION, "Attention", NotificationManager.IMPORTANCE_DEFAULT);
+        attention.setDescription(
+                "When a workspace wants you. yog checks on the system's own schedule — no "
+                    + "sooner than every 15 minutes, and hours apart when the phone is in deep"
+                    + " sleep. Each check is one short connection over the network you are"
+                    + " already on, and nothing runs in between. Turning this off also stops"
+                    + " the checking.");
+        return attention;
+    }
+
+    /** The sentence a refusal carries. */
     private static String ask(Context ctx) {
+        if (!raise(ctx)) {
+            return "this app may not post notifications on this device: " + SETTINGS_ACT;
+        }
+        return "this app may not post notifications yet: Android's own permission dialog has "
+                + "just been raised on the device — grant it there and call again, or "
+                + SETTINGS_ACT;
+    }
+
+    /** Raise the system's own dialog, where one is possible; whether it went up. */
+    private static boolean raise(Context ctx) {
         Activity front = App.front();
         if (front == null
                 || answered
                 || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
                 || ctx.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
                         == PackageManager.PERMISSION_GRANTED) {
-            return "this app may not post notifications on this device: " + SETTINGS_ACT;
+            return false;
         }
         front.runOnUiThread(
                 () ->
                         front.requestPermissions(
                                 new String[] {Manifest.permission.POST_NOTIFICATIONS}, REQUEST));
-        return "this app may not post notifications yet: Android's own permission dialog has "
-                + "just been raised on the device — grant it there and call again, or "
-                + SETTINGS_ACT;
+        return true;
     }
 
     /** Tapping the notification opens this app, when the launcher knows how. */

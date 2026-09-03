@@ -1381,9 +1381,20 @@ What stays here is the shape of the ledger and nothing that can go stale in it:
   retired and no line may cite DESIGN §2 as an absence's reason again.
 - **An upstream ask** — the wire does not carry the fact at all — is the one
   class the roster cannot see, because an op that does not exist is in no help
-  table. Push notifications are the standing example: the engine dials nothing,
-  so a channel is a REMOTE design act rather than an app feature. Entries — one
-  device as a client of many engines — is the other (REMOTE §8.2, bl-d0d2).
+  table. Entries — one device as a client of many engines — is the standing
+  example (REMOTE §8.2, bl-d0d2).
+
+  **Push notifications used to be the other, and are not one any more**
+  (bl-fcc5). The line read: *"the engine dials nothing, so a channel is a
+  REMOTE design act rather than an app feature."* The first half is still
+  true and is now a ruling rather than a gap — REMOTE §14.3 refuses
+  engine-initiated contact on physics before posture, and refuses the vendor
+  relay on what it costs. The second half was the error: the want behind
+  "push" is *attention reaches a pocketed phone*, and §17 answers it entirely
+  app-side, with no wire change and nothing asked of anyone. An absence
+  whose remedy is in this repository was never an upstream ask, which is the
+  §13.4 lesson a second time: this paragraph asserted a dependency the board
+  had already dissolved.
   **Anything an upstream ask claims must be checked against the roster before
   it is written here**, which is exactly the check that had never been run.
 
@@ -1912,3 +1923,144 @@ grow-per-consumer rule. §8's "one rung" paragraph is narrowed rather than
 deleted: the bare start rung stays the default, and the ball rung becomes
 wanted when the ball pane (bl-d587) lands, which is §8's own growth rule
 doing what it says.
+
+## 17. The scheduled fetch: attention reaches a pocketed phone (bl-fcc5)
+
+Rung 1 of yog REMOTE §14, whole. The gap it closes is stated there and is
+platform-shaped, not wire-shaped: *"a phone seat learns its turn has come at
+its next read, and a phone in a pocket performs none: the platform ends a
+backgrounded app's sockets and schedules it nothing."* The engine initiates
+nothing toward a client (REMOTE §3) and §14.3 refuses every shape that would
+change that — an engine-side punch at a phone whose NAT mapping is dead, a
+vendor push relay, an out-of-band mail adapter. What is left is the platform's
+own door, and this section is this app walking through it.
+
+**The whole of it: the OS runs a job, the job performs one ordinary ask, a
+rise becomes a notification.** No wire change, no new gesture, no engine
+dependency, nothing upstream to wait for.
+
+### 17.1 What it asks
+
+`Query::Workspaces` — the roster read this seat already performs at cadence.
+Its rows carry `attention`, the per-workspace count the roster screen paints
+its `●` from (`src/shell/screens.rs`), and that is the cheapest
+attention-shaped read the vendored corpus answers: one connection, one frame,
+rows a handful long, and nothing derived on this end that the engine did not
+already say. REMOTE §14.1's `Query::Attention` lane — the standing ask,
+answered as a sequence — is upstream's ball (yog bl-09aa) and rung 2's
+(bl-b82d); this rung is gated on nobody and could land the day it was
+designed.
+
+### 17.2 What wakes a human
+
+**A rise, and only a rise.** `src/attention.rs` keeps what each workspace's
+attention stood at when it was last announced. A count that stayed put was
+already announced; a count that FELL is the operator having dealt with it. So
+a notification is posted only for a workspace whose attention is higher than
+its own last announced number — and every run, silent or not, records what it
+saw, so a count that drops and climbs again wakes the operator a second time.
+Rows are joined into one notification, never one apiece.
+
+**The post replaces, it never appends** (`Notify.STANDING`, a fixed id): a
+pocketed phone carries one standing attention row rather than a stack of
+them. That is REMOTE §14.1's own rule about frames, arriving at the same
+answer from the platform's side.
+
+**Every failure is silence.** No material, an engine that will not answer, an
+answer this end cannot read: the run ends with no notification and *no state
+written*, and the next schedule tries again. A phone in a pocket must never
+nag about network — the operator did not ask for a fetch report. The one
+direction the design deliberately fails in is the other one: an unreadable
+memory file reads as *nothing announced*, which can cost one notification the
+operator has seen before and can never cost a wake that does not happen.
+
+**It never writes the paint-first cache** (§14). That cache has one writer,
+the seat model's worker; a fetch that stored a roster over a focus the
+operator had taken deeper would paint the wrong screen on the next resume. The
+fetch's memory is its own file — `<internal>/attention/seen.json`, a sibling
+of `wire/` and of `cache/`, one writer and one reader, holding no key and no
+world.
+
+### 17.3 What it costs, and where the operator turns it off
+
+**JobScheduler, not WorkManager.** WorkManager's whole job on API 28+ is to
+build the same `JobInfo` and add a database to remember it. This app schedules
+ONE periodic job with no chaining and no work graph, so the library would be a
+dependency (AGENTS.md rule 6, and it drags Room and a startup provider) bought
+for an API already in the platform.
+
+**The OS owns the cadence and the battery price is the platform's floor.**
+`setPeriodic` is a request: 15 minutes is the platform's minimum rather than
+this app's choice, and in Doze the run is batched into a maintenance window
+and can be hours late. Each run is one short mTLS connection and a handful of
+rows; the job declares a network requirement, so a phone with no network is
+never woken to fail. **Timeliness is what this rung does not solve and cannot**
+— that bound is the platform's (REMOTE §14.2), and rung 2 is what buys it,
+with a permanent notification and radio wakes as the price.
+
+**The off switch is Android's own, and it is one switch.** The `Attention`
+notification channel carries the cost statement above in its own description,
+where the operator reads it in system settings, and `Watch` asks
+`Notify.armed` both before it arms AND at the top of every run — so silencing
+the channel stops the *checking* as well as the telling, and a run that finds
+it silenced cancels the job. A fetch whose only product is a notification
+nobody may see is battery spent for nothing. There is no second switch inside
+the app: that would be a second authority beside the OS grant, drifting the
+first time one of them was revoked (§16.1's refused per-tool toggle screen,
+for its reason).
+
+**It is armed on every resume**, from `MainActivity` — which is also the
+resume after the permission dialog is answered, and re-scheduling an identical
+job is how JobScheduler is told nothing changed. It is `setPersisted(true)`
+(hence the `RECEIVE_BOOT_COMPLETED` declaration, which receives no broadcast
+and exists only because JobScheduler requires it for persistence): a fetch
+that quietly stopped at the next reboot until the operator happened to open
+the app is the silent degradation this design excludes, and a phone that
+reboots in a pocket is the case the rung is for. An unenrolled device is not
+gated separately — the run stats one directory and returns, and duplicating
+the material contract in Java to avoid that would be a second copy of a fact
+`src/material.rs` owns.
+
+### 17.4 The direction of the call, and what a test can reach
+
+**Java calls Rust here, where every other bridge is Rust calling Java.** A job
+may start this process with no Activity ever created, and `ndk_context`'s
+globals are filled by android-activity on the way to `android_main` — so a
+bridge asking the JVM for a class would be reading a handle nothing had
+written. `dev.yog.Watch` declares one `native String probe(String dir)`;
+`Java_dev_yog_Watch_probe` lives in `src/shell/sys.rs`, the crate's one
+`unsafe` location, and is four lines over `attention::sweep`. The answer is
+the two-line protocol this crate already speaks (title, then the line under
+it), and an empty string is silence.
+
+**So the decision is host-testable and is tested at the floor**: the sweep
+dials a real one-shot mTLS server on loopback (the transport's own recipe) and
+the suite drives a first rise, a repeat, a fall, an empty roster, and every
+class of silence — no material, half material, material that will not build a
+seat, an engine that does not answer, an answer to another question. What only
+a device can prove is that the platform actually RUNS the job: `make screens`
+reads `dumpsys jobscheduler` back and fails if this app has no periodic job
+armed after a launch.
+
+### 17.5 Two platform findings the walk paid for
+
+**A job scheduled in the first resume after a force-stop or an install can be
+cancelled by the platform seconds later.** `JobScheduler.schedule` returns
+`RESULT_SUCCESS`, `dumpsys` shows the registration for a moment, and it is
+gone — the cancellation the stopped state implies landing after the call that
+made it. It was measured on a cold-booted emulator, where the race is wide;
+on a warm one the same sequence sticks. **This is why `MainActivity` arms on
+every resume rather than once at startup**, which was written for the
+permission dialog's sake and turns out to be load-bearing for a second
+reason: the next resume re-arms, so the exposure is one period at worst and
+nothing an operator can reach is left holding a promise the platform dropped.
+`make screens` judges a resume for the same reason — it asks the question in
+the window where the answer means something.
+
+**A `grep -q` on a piped `dumpsys` fails on the runs that MATCH.** `dumpsys
+jobscheduler` is hundreds of kilobytes, `grep -q` exits at the first hit, the
+writer takes SIGPIPE, and `set -o pipefail` makes the pipeline 141 — so the
+beat reddens exactly when the thing it is checking for is present. Both fetch
+beats hold the dump in a variable and match with a herestring. It cost two
+full walks and it is the shape to look for whenever a harness beat fails only
+under `pipefail`.

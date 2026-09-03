@@ -10,6 +10,7 @@
 //! (yog REMOTE §3) and mirrored here — where the two implementations
 //! disagree, one of them is a bug.
 
+pub mod attention;
 pub mod bootstrap;
 pub mod cache;
 pub mod codec;

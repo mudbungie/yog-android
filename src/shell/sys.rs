@@ -1,6 +1,6 @@
 //! The crate's ONE `unsafe` location (AGENTS.md rule 3, relaxed from
 //! `forbid` under bl-c761; `rules/unsafe-outside-sys.yml` is the
-//! enforcement, and its `ignores` list names exactly this file). Three raw
+//! enforcement, and its `ignores` list names exactly this file). Four raw
 //! effects live here, all at the process edge, and their soundness arguments
 //! are the file's:
 //!
@@ -8,6 +8,14 @@
 //!   by symbol name once the Activity is up. `unsafe(no_mangle)` asserts the
 //!   unmangled symbol collides with nothing: this crate is the process's
 //!   only Rust, and the glue declares exactly this name.
+//! * **`Java_dev_yog_Watch_probe`** — the scheduled fetch's entry (DESIGN
+//!   §17), resolved by the JNI's own name mangling rather than by a
+//!   registration call. The same collision argument holds, and the name is
+//!   not free-form: it is `Java_` plus the class's package path plus the
+//!   method, which is what makes it unique by construction. It is the one
+//!   entry the app has that no Activity is behind — the platform starts this
+//!   process for a job, and everything the run needs is the string it is
+//!   handed.
 //! * **the `WGPU_BACKEND` fold** — `std::env::set_var` is unsafe in edition
 //!   2024 because a concurrent `getenv` is UB. Here it runs first, on the
 //!   main thread, before eframe boots and before any thread this process
@@ -35,6 +43,31 @@ extern "Rust" fn android_main(app: AndroidApp) {
     // getenv exists yet (the whole argument is this file's doc header).
     unsafe { std::env::set_var("WGPU_BACKEND", "gles") };
     super::app::run(app);
+}
+
+/// **The scheduled fetch, called from the platform's job** (DESIGN §17;
+/// `dev.yog.Watch`). The direction is Java-calls-Rust and not the bridges'
+/// Rust-calls-Java, because a job may start this process with no Activity
+/// ever created — `ndk_context`'s globals are filled by android-activity on
+/// the way to [`android_main`], so a bridge asking the JVM for a class would
+/// be reading a handle nothing had written.
+///
+/// Two lines out, the answer protocol this crate already speaks: the title,
+/// then the line under it. An empty string is silence, which is every failure
+/// and every run that found nothing new — the decision is
+/// [`crate::attention::sweep`]'s and is tested on the host.
+#[unsafe(no_mangle)]
+extern "system" fn Java_dev_yog_Watch_probe(
+    mut env: jni::JNIEnv<'_>,
+    _class: jni::objects::JClass<'_>,
+    dir: jni::objects::JString<'_>,
+) -> jni::sys::jstring {
+    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
+    let said = crate::attention::sweep(std::path::Path::new(&files))
+        .map(|notice| format!("{}\n{}", notice.title, notice.text))
+        .unwrap_or_default();
+    env.new_string(said)
+        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
 }
 
 /// The process `JavaVM`, off the handle android-activity carries.

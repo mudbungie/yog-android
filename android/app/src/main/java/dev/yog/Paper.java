@@ -79,7 +79,7 @@ public final class Paper {
         if (ctx == null) {
             return App.ERR + App.NO_CONTEXT;
         }
-        return Notify.post(ctx, title, text);
+        return Notify.post(ctx, Notify.TOOLS, title, text);
     }
 
     /** Open a URL, or hand text to the share sheet. */

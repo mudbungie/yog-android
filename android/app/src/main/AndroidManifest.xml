@@ -38,6 +38,16 @@
          the enrollment scanner, and a permission is the app's, not a
          feature's. GPS is a feature this app can do without, so the device
          without one still installs. -->
+    <!-- The scheduled fetch (bl-fcc5, DESIGN §17). NOT a boot receiver and
+         nothing here receives the broadcast: this is the permission
+         JobScheduler REQUIRES before it will accept `setPersisted(true)`, and
+         without it `Watch.arm` throws instead of scheduling. Persisted
+         because a fetch that quietly stopped at the next reboot until the
+         operator happened to open the app is exactly the silent degradation
+         this app's design excludes — and a phone that reboots in a pocket is
+         the case the whole rung is for. It is a normal permission: the
+         installer grants it, no dialog, no runtime ask. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
@@ -72,5 +82,14 @@
             <meta-data android:name="android.accessibilityservice"
                        android:resource="@xml/accessibility_service_config" />
         </service>
+        <!-- The scheduled fetch (bl-fcc5, DESIGN §17). Not exported: only the
+             platform's own job scheduler starts it, and BIND_JOB_SERVICE is
+             held by the SYSTEM rather than requested by us — declaring it
+             here is what stops anything else from binding this service, and
+             JobScheduler refuses to schedule a job whose service does not
+             declare it. -->
+        <service android:name=".Watch"
+                 android:exported="false"
+                 android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 </manifest>

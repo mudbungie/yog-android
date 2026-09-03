@@ -96,6 +96,11 @@ public class MainActivity extends GameActivity {
     protected void onResume() {
         super.onResume();
         App.resumed(this);
+        // The scheduled fetch (DESIGN §17). On resume rather than on create,
+        // because the resume AFTER the notification dialog is answered is the
+        // first moment the grant can be read — and re-scheduling an identical
+        // job is how JobScheduler is told nothing changed.
+        Watch.arm(this);
     }
 
     @Override
