@@ -66,12 +66,20 @@ impl Foot {
     /// set lands under is the connection's certificate common name, and a
     /// `client` field would let any connection overwrite any other's.
     ///
-    /// The receipt carries nothing, so nothing is handed back: what was
-    /// presented is what was sent, and echoing it would be a second spelling
-    /// of a fact the sender holds.
-    pub fn advertise(&self, tools: Vec<Tool>) -> Result<(), Wire> {
+    /// **The receipt's one reading is handed back** (PROTOCOL 8, yog bl-66d4):
+    /// `wrote` — whether the engine changed the stored set or found it
+    /// identical to the one presented and compared. The set is still not
+    /// echoed, and this is not an echo of it: it is a fact about the engine's
+    /// *document*, and the one fact in this exchange this box cannot compute
+    /// for itself.
+    ///
+    /// What it MEANS depends on which presentation earned it, which this
+    /// method cannot know — so it reports the reading and the judgement is
+    /// [`crate::host`]'s, the only layer that knows whether a channel had
+    /// already presented.
+    pub fn advertise(&self, tools: Vec<Tool>) -> Result<bool, Wire> {
         match self.said(&Gesture::Act(Act::Advertise { tools }))? {
-            Reply::Advertised => Ok(()),
+            Reply::Advertised { wrote } => Ok(wrote),
             other => Err(wrong(&other)),
         }
     }

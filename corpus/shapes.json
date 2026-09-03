@@ -1,5 +1,5 @@
 {
-  "protocol": 7,
+  "protocol": 8,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -13,9 +13,10 @@
       "signature": [
         "/kind:string",
         "/ok:bool",
+        "/wrote:bool",
         ":object"
       ],
-      "since": 1
+      "since": 8
     },
     "reply/agent": {
       "signature": [

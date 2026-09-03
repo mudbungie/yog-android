@@ -259,7 +259,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/bridged.rs` | the two-line answer protocol every Java bridge speaks, and the one parser that reads it — pure | landed (bl-f34f, out of `tools/ui.rs`) |
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
 | `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, and the three-state health | landed (bl-d366, split bl-8641) |
-| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete — refuse a carried `cwd` (§6), redial a broken channel up the ladder, stop on a refusal | landed (bl-0ac8, bl-8641) |
+| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), redial a broken channel up the ladder, stop on a refusal, count a re-assertion the engine wrote | landed (bl-0ac8, bl-8641, bl-cc54) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements and argument reading — pure | landed (bl-1511, protocol out bl-f34f) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
@@ -400,6 +400,35 @@ A channel that got as far as being accepted starts the ladder over, because
 the dial that just worked is not history the next one answers for. The
 presentation goes with the connection that carried it, so a redial presents
 again — which is why `advertised` is a fact about the channel that is up now.
+
+**The set is re-asserted at the end of every hand-off, and a re-assertion
+that WROTE is said out loud** (bl-cc54, following thrall bl-2d78 and yog
+bl-66d4). Both of REMOTE §5.1's guards over the advertised set stand on this
+client holding a *parked read* — a second follow-class read under one identity
+is refused, and an advertisement that would change the set in force is refused
+while a read is parked. This loop is serial, so for the whole runtime of a
+tool the device holds no read at all and neither guard covers it: a second
+connection bearing this device's certificate may replace the set in that
+window. Presenting again after each completion bounds the exposure to one
+tool's runtime instead of forever, and it costs an idle host nothing — no
+hand-off, no gesture.
+
+**Knowing is the other half, and it is what PROTOCOL 8 bought.** The receipt
+carries `wrote` — false when the engine found the stored set identical and
+compared, true when it changed the document — so a re-assertion that wrote is
+this device being told the set it offers was not the set in force. The
+restoration is automatic; being told is not. It is counted onto the standing
+(`restored`) and painted beside the tools line in the words of
+`host::RESTORED`, which name both readings an operator can act on — another
+connection bearing this device's identity, or an engine that lost the set —
+because the device cannot tell them apart and guessing would be worse than
+saying so. **A `true` on a channel's FIRST presentation says nothing** and is
+discarded: every fresh channel, a redial's included, presents into whatever
+the engine happens to hold, and the ordinary first presentation writes. Only a
+presentation made after work this device just did can tell a rival from a
+beginning. The count does not clear on a redial — unlike `advertised` it is
+not a fact about the connection that is up, it is something that happened to
+this device.
 
 **What is NOT redialled is everything the wire refused.** `crate::transport::Wire`
 draws the line where the code already knows it, at the socket: a connection
@@ -1859,9 +1888,19 @@ not reverse.** Three facts, verified against the yog store and REMOTE §5.4:
 found the advertised set last-writer-wins under one identity; yog bl-1462
 closed it engine-side (REMOTE §5.1: a second parked `invocations` read refuses
 in band, and a set-changing advertisement is refused while one is parked). The
-phone inherits that guard for free; the visible residual is the same guard
+phone inherits that guard for free, and the visible residual is the same guard
 working — two processes serving under one CN is refused loudly, which §6's
 one-identity-two-connections shape never does.
+
+**But the guard is not free of a window, and the phone opens it itself**
+(bl-cc54). Both halves of it stand on a parked read, and a foot executing a
+tool holds none: this loop is serial, so for a tool's whole runtime the device
+is absent and its set may be replaced with no refusal. The remedy is §6's —
+re-assert at the end of every hand-off, which bounds the window to one tool's
+runtime, and read the receipt's `wrote` (PROTOCOL 8), which turns a silent
+self-heal into a sentence on the roster. Neither half is a client amending
+REMOTE: the re-assertion is an ordinary §5.1 gesture, and `wrote` is a field
+the engine now states.
 
 **Refused shapes, recorded**: the SMS permission pair (above); a generic
 run-any-intent tool (the wrapper meta-tool REMOTE §5.2 refused twice — `open`

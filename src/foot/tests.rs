@@ -34,20 +34,32 @@ fn sent(served: std::thread::JoinHandle<Vec<u8>>) -> Value {
 /// client** — the identity a set lands under is the connection's.
 #[test]
 fn advertising_sends_the_table_and_names_no_client() {
-    let (foot, served) = dialled(json!({ "ok": true, "kind": "advertised" }));
+    let (foot, served) = dialled(json!({ "ok": true, "kind": "advertised", "wrote": false }));
     let tools = vec![Tool {
         name: "echo".into(),
         description: "say it back".into(),
         input_schema: json!({ "type": "object" }),
         subject_cwd: false,
     }];
-    assert_eq!(foot.advertise(tools), Ok(()));
+    assert_eq!(foot.advertise(tools), Ok(false));
     assert_eq!(
         sent(served),
         json!({ "op": "advertise", "tools": [
             { "name": "echo", "description": "say it back",
               "input_schema": { "type": "object" } }] })
     );
+}
+
+/// **The receipt's reading is handed back, not swallowed** (REMOTE §5.1,
+/// PROTOCOL 8). This surface reports what the engine said about its own
+/// document and judges none of it: what a `true` MEANS depends on which
+/// presentation earned it, and only the host loop knows that.
+#[test]
+fn advertising_answers_whether_the_engine_wrote() {
+    for wrote in [false, true] {
+        let (foot, _served) = dialled(json!({ "ok": true, "kind": "advertised", "wrote": wrote }));
+        assert_eq!(foot.advertise(vec![]), Ok(wrote));
+    }
 }
 
 /// The follow-class read. An empty answer is ordinary — a hold that ended

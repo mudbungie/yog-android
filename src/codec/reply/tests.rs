@@ -133,7 +133,7 @@ fn every_answer_names_its_own_kind() {
         ),
         (Reply::Conversations(vec![]), "conversations"),
         (Reply::Transcript(vec![]), "transcript"),
-        (Reply::Advertised, "advertised"),
+        (Reply::Advertised { wrote: false }, "advertised"),
         (
             Reply::Invocations(vec![Invocation {
                 id: "i".into(),
@@ -175,10 +175,10 @@ fn every_answer_names_its_own_kind() {
 #[test]
 fn the_routing_legs_replies_read_back() {
     assert_eq!(
-        decode(&json!({ "ok": true, "kind": "advertised" }))
+        decode(&json!({ "ok": true, "kind": "advertised", "wrote": false }))
             .unwrap()
             .unwrap(),
-        Reply::Advertised
+        Reply::Advertised { wrote: false }
     );
     let work = json!({ "ok": true, "kind": "invocations",
                        "rows": [{ "invocation": "i1", "tool": "shell",
@@ -203,6 +203,35 @@ fn the_routing_legs_replies_read_back() {
         panic!("wrong reply");
     };
     assert_eq!(capture.unwrap_or_default().stdout, "o");
+}
+
+/// **The advertisement's receipt carries the engine's own reading** (REMOTE
+/// §5.1, PROTOCOL 8): whether it wrote the stored set or found it identical
+/// and compared. Both values read back as themselves — the whole point of the
+/// field is that they are different answers.
+#[test]
+fn the_advertisement_receipt_carries_whether_the_engine_wrote() {
+    for wrote in [false, true] {
+        assert_eq!(
+            decode(&json!({ "ok": true, "kind": "advertised", "wrote": wrote }))
+                .unwrap()
+                .unwrap(),
+            Reply::Advertised { wrote }
+        );
+    }
+}
+
+/// **A receipt with no `wrote` refuses, naming the field.** Absent must not
+/// read as `false`: `false` is "nothing was restored", the reassuring answer,
+/// and an engine too old to tell would hand this device exactly that on the
+/// one event the field exists to make audible.
+#[test]
+fn a_receipt_that_states_no_reading_refuses_rather_than_reassuring() {
+    let miss = decode(&json!({ "ok": true, "kind": "advertised" })).unwrap_err();
+    assert!(miss.contains("wrote"), "{miss}");
+    let mistyped =
+        decode(&json!({ "ok": true, "kind": "advertised", "wrote": "yes" })).unwrap_err();
+    assert!(mistyped.contains("wrote"), "{mistyped}");
 }
 
 /// **The answer to a firing** (§8.1), and the last frame of the two-gesture

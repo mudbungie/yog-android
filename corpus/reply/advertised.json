@@ -3,9 +3,15 @@
   "frames": [
     {
       "kind": "advertised",
-      "ok": true
+      "ok": true,
+      "wrote": false
+    },
+    {
+      "kind": "advertised",
+      "ok": true,
+      "wrote": true
     }
   ],
-  "protocol": 1,
+  "protocol": 8,
   "shape": "advertised"
 }

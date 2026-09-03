@@ -232,6 +232,19 @@ impl Shell {
         } else {
             ui.weak(line);
         }
+        // **A disarming that healed itself is still worth a sentence**
+        // (REMOTE §5.1, bl-cc54): the set this device offers was replaced
+        // while it was running a tool, and the host put it back. Yellow and
+        // not red, by the rule above — it HAS mended itself — but not weak
+        // either, because two processes claiming one device's name is
+        // something only an operator can end. The words are
+        // `host::RESTORED`'s; this line only says how many times.
+        if standing.restored > 0 {
+            ui.colored_label(
+                egui::Color32::LIGHT_YELLOW,
+                format!("{} (×{})", crate::host::RESTORED, standing.restored),
+            );
+        }
     }
 
     pub(super) fn focus_workspace(&self, workspace: Option<String>) {

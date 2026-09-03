@@ -20,6 +20,7 @@ fn an_invocation_carrying_a_working_directory_is_refused_naming_the_key() {
                            "cwd": "/w/home/agents/c-1",
                            "input": { "say": "hi" } }]))],
         vec![routed("i1")],
+        vec![advertised()],
         vec![],
     ]);
     let standing = settle(&mut host, &|s| s.served == 1);
@@ -53,6 +54,7 @@ fn a_null_working_directory_is_no_working_directory_and_the_tool_runs() {
                            "input": { "say": "hi" } }]),
         )],
         vec![routed("i1")],
+        vec![advertised()],
         vec![],
     ]);
     let standing = settle(&mut host, &|s| s.served == 1);

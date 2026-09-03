@@ -41,10 +41,19 @@ pub enum Reply {
     Conversations(Vec<ConvRow>),
     /// One conversation's transcript rows, in message order.
     Transcript(Vec<Entry>),
-    /// The receipt an advertisement earns. It carries nothing: what was
-    /// presented is what was sent, and echoing it back would be a second
-    /// spelling of a fact the sender holds.
-    Advertised,
+    /// The receipt an advertisement earns, carrying **whether the engine
+    /// wrote** (REMOTE §5.1, PROTOCOL 8): `false` when it found the stored set
+    /// identical to the one presented and compared, `true` when the document
+    /// changed. The set itself is not echoed — what was presented is what was
+    /// sent — and `wrote` is not an echo either: it is the one fact in this
+    /// exchange the advertising box cannot compute for itself.
+    ///
+    /// **Required rather than absent-reads-false**, which is the engine's
+    /// ruling and the right one: absent would read as *"nothing was restored"*
+    /// — the reassuring answer — on exactly the build too old to tell. So a
+    /// receipt in the pre-8 shape refuses here by name rather than decoding
+    /// into a comfortable `false`.
+    Advertised { wrote: bool },
     /// The follow-class read's rows — this machine's work.
     Invocations(Vec<Invocation>),
     /// **A conversation that is now running** (§8.1) — what firing a staged
@@ -97,7 +106,7 @@ impl Reply {
             Self::Workspaces { .. } => "workspaces",
             Self::Conversations(_) => "conversations",
             Self::Transcript(_) => "transcript",
-            Self::Advertised => "advertised",
+            Self::Advertised { .. } => "advertised",
             Self::Invocations(_) => "invocations",
             Self::Routed { .. } => "routed",
             Self::Prepared(_) => "prepared",
@@ -134,7 +143,9 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         },
         "conversations" => Reply::Conversations(rows(o, conv::row)?),
         "transcript" => Reply::Transcript(rows(o, transcript::entry)?),
-        "advertised" => Reply::Advertised,
+        "advertised" => Reply::Advertised {
+            wrote: bool_of(o, "wrote")?,
+        },
         "prepared" => Reply::Prepared(start::reply_of(o)?),
         "started" => Reply::Started {
             conversation: str_of(o, "conversation")?,

@@ -4,7 +4,9 @@
 //! so this device's side of the wire is pinned rather than assumed.
 
 mod consent;
+mod disarm;
 mod redial;
+mod stopping;
 
 use super::{Health, Host, Nap, Standing};
 use crate::codec::{Capture, Tool};
@@ -47,8 +49,21 @@ fn dispatch(tool: &str, input: &Value) -> Capture {
     }
 }
 
+/// The ordinary receipt: the engine compared and wrote nothing (REMOTE §5.1,
+/// PROTOCOL 8). Every presentation in this file earns this one except where a
+/// test is about the other reading.
 fn advertised() -> Vec<u8> {
-    json!({ "ok": true, "kind": "advertised" })
+    receipt(false)
+}
+
+/// The receipt that says the engine **wrote** — on a re-assertion, this
+/// device's set having been replaced while it was busy.
+fn restored() -> Vec<u8> {
+    receipt(true)
+}
+
+fn receipt(wrote: bool) -> Vec<u8> {
+    json!({ "ok": true, "kind": "advertised", "wrote": wrote })
         .to_string()
         .into_bytes()
 }
@@ -131,17 +146,28 @@ fn it_advertises_then_runs_what_it_is_handed_and_completes_it() {
         vec![work(json!([{ "invocation": "i1", "tool": "echo",
                            "input": { "say": "hi" } }]))],
         vec![routed("i1")],
+        // The hand-off ends with the set re-asserted (REMOTE §5.1).
+        vec![advertised()],
         // The loop asks again; the script ends there, which stops the host.
         vec![],
     ]);
     let standing = settle(&mut host, &|s| s.served == 1);
     assert_eq!(standing.tools, ["echo"]);
+    // Nothing was disarmed: the re-assertion's receipt says the engine
+    // compared and wrote nothing, which is the ordinary answer.
+    assert_eq!(standing.restored, 0);
     assert!(standing.advertised);
     assert_eq!(standing.last.as_deref(), Some("echo → 0"));
     let requests = served.join().unwrap();
     assert_eq!(
         ops(&requests),
-        ["advertise", "invocations", "complete", "invocations"]
+        [
+            "advertise",
+            "invocations",
+            "complete",
+            "advertise",
+            "invocations"
+        ]
     );
     // The presentation names no client: the identity is the intake's.
     let presented: Value = serde_json::from_slice(&requests[0]).unwrap();
@@ -171,6 +197,7 @@ fn an_empty_answer_is_ordinary_and_the_host_asks_again() {
             json!([{ "invocation": "i2", "tool": "echo", "input": {} }]),
         )],
         vec![routed("i2")],
+        vec![advertised()],
         vec![],
     ]);
     settle(&mut host, &|s| s.served == 1);
@@ -181,6 +208,7 @@ fn an_empty_answer_is_ordinary_and_the_host_asks_again() {
             "invocations",
             "invocations",
             "complete",
+            "advertise",
             "invocations"
         ]
     );
@@ -195,104 +223,29 @@ fn two_invocations_in_one_answer_run_in_order() {
             { "invocation": "b", "tool": "echo", "input": {} }
         ]))],
         vec![routed("a")],
+        vec![advertised()],
         vec![routed("b")],
+        vec![advertised()],
         vec![],
     ]);
     let standing = settle(&mut host, &|s| s.served == 2);
     assert_eq!(standing.served, 2);
+    // Every hand-off re-asserts, so the completions are no longer adjacent.
     let requests = served.join().unwrap();
+    assert_eq!(
+        ops(&requests),
+        [
+            "advertise",
+            "invocations",
+            "complete",
+            "advertise",
+            "complete",
+            "advertise",
+            "invocations"
+        ]
+    );
     let first: Value = serde_json::from_slice(&requests[2]).unwrap();
-    let second: Value = serde_json::from_slice(&requests[3]).unwrap();
+    let second: Value = serde_json::from_slice(&requests[4]).unwrap();
     assert_eq!(first["invocation"], "a");
     assert_eq!(second["invocation"], "b");
-}
-
-#[test]
-fn a_refused_advertisement_stops_the_host_with_the_engines_sentence() {
-    let refusal = json!({ "ok": false, "error": "not registered here" })
-        .to_string()
-        .into_bytes();
-    let (mut host, _served) = host_against(vec![vec![refusal]]);
-    let standing = settle(&mut host, &|s| stopped(s).is_some());
-    assert_eq!(stopped(&standing).as_deref(), Some("not registered here"));
-    assert!(!standing.advertised);
-    assert_eq!(standing.served, 0);
-}
-
-#[test]
-fn a_refused_completion_stops_the_host_rather_than_answering_into_it() {
-    let refusal = json!({ "ok": false, "error": "no invocation \"i1\" is in flight" })
-        .to_string()
-        .into_bytes();
-    let (mut host, _served) = host_against(vec![
-        vec![advertised()],
-        vec![work(
-            json!([{ "invocation": "i1", "tool": "echo", "input": {} }]),
-        )],
-        vec![refusal],
-    ]);
-    let standing = settle(&mut host, &|s| stopped(s).is_some());
-    assert_eq!(
-        stopped(&standing).as_deref(),
-        Some("no invocation \"i1\" is in flight")
-    );
-}
-
-#[test]
-fn a_wrong_reply_to_the_follow_read_names_what_came_instead() {
-    let (mut host, _served) = host_against(vec![vec![advertised()], vec![advertised()]]);
-    let standing = settle(&mut host, &|s| stopped(s).is_some());
-    let said = stopped(&standing).unwrap_or_default();
-    assert!(
-        said == "the engine answered advertised, not this machine's work",
-        "stopped: {said}"
-    );
-}
-
-#[test]
-fn a_frame_that_stopped_reading_stops_the_host() {
-    // Dropping the handle drops the receiver, which is what a frame that went
-    // away looks like from the worker's side: the host stops at its next
-    // publish rather than looping into a void. One scripted connection is
-    // therefore the whole script — a second would be a connection the stopped
-    // host never makes.
-    let (host, served) = host_against(vec![vec![advertised()]]);
-    drop(host);
-    // The drop does not join: it cannot, because the worker may be parked on a
-    // read that answers only when there is work, and a frame blocking on that
-    // is the freeze this client's whole shape excludes. That this test returns
-    // at all is the assertion.
-    assert_eq!(ops(&served.join().unwrap()), ["advertise"]);
-}
-
-#[test]
-fn a_frame_that_goes_away_mid_run_stops_the_host_after_it_answers() {
-    let dir = pki();
-    // Three connections and no more: the host advertises, is handed work, and
-    // posts the capture — then finds nobody reading and stops. A fourth would
-    // be a read the stopped host never makes.
-    let (address, served) = serve_many(
-        &dir,
-        "ca",
-        "server",
-        vec![
-            vec![advertised()],
-            vec![work(
-                json!([{ "invocation": "i1", "tool": "echo", "input": {} }]),
-            )],
-            vec![routed("i1")],
-        ],
-    );
-    let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
-    let mut host = Host::start(foot, table(), Box::new(slow_dispatch), unslept());
-    // Waiting for the advertisement is what puts the drop INSIDE the run: the
-    // publish that failed is the loop's, not the one right after presenting.
-    settle(&mut host, &|s| s.advertised);
-    drop(host);
-    // The invocation still ran and was still answered: a frame going away does
-    // not abandon work the engine is waiting on.
-    assert_eq!(
-        ops(&served.join().unwrap()),
-        ["advertise", "invocations", "complete"]
-    );
 }

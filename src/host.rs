@@ -60,6 +60,25 @@ use crate::foot::Foot;
 
 mod serve;
 
+/// **What this device says when a re-assertion actually wrote** (REMOTE §5.1,
+/// PROTOCOL 8, yog bl-66d4). The engine writes only a set that DIFFERS, so a
+/// `true` on a presentation after a channel's first means the set in force was
+/// not the set this device offers: something replaced it while this box was
+/// executing a tool and therefore holding no read for the engine's guards to
+/// protect (REMOTE §5's two guards both stand on a parked read).
+///
+/// The restoration is automatic and has already happened by the time this is
+/// painted — being told is the part that is not, and it is the whole of what
+/// this chain was for. It names both readings, because this device cannot tell
+/// them apart and guessing would be worse than saying so.
+///
+/// It lives here rather than in the screen that paints it for the reason every
+/// sentence in this crate does: `src/shell/` is platform glue no host test can
+/// reach, and the words are the remedy.
+pub const RESTORED: &str = "this device's advertised set was replaced while a tool was running, \
+    and has been put back. Either another connection is bearing this device's identity, or the \
+    engine lost the set it was holding.";
+
 /// What a host runs an invocation with: the tool's name and the model's own
 /// arguments in, a capture out. Owned and `Send` because it crosses onto the
 /// worker thread and outlives the frame that built it.
@@ -100,6 +119,14 @@ pub struct Standing {
     /// How many invocations this host has answered since it started —
     /// across every channel it has held, because it is the same host.
     pub served: usize,
+    /// **How many times a re-assertion found this device's set replaced**
+    /// (REMOTE §5.1, PROTOCOL 8): each one is a disarming this host healed,
+    /// and [`RESTORED`] is the sentence it earns. A count and not a flag, for
+    /// `served`'s reason — it is the same host across every channel, and
+    /// twice is a different fact from once. It does not clear on a redial:
+    /// unlike `advertised`, it is not a fact about the connection that is up,
+    /// it is something that happened to this device.
+    pub restored: usize,
     /// The tool that ran most recently, and how it ended.
     pub last: Option<String>,
     /// Serving, redialling, or stopped.

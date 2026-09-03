@@ -102,6 +102,7 @@ fn a_channel_that_dies_mid_answer_is_redialled_and_the_host_serves_again() {
                 json!([{ "invocation": "i1", "tool": "echo", "input": {} }]),
             )]),
             Turn::Answer(vec![routed("i1")]),
+            Turn::Answer(vec![advertised()]),
             Turn::Answer(vec![]),
         ],
     );
@@ -124,6 +125,7 @@ fn a_channel_that_dies_mid_answer_is_redialled_and_the_host_serves_again() {
             "advertise",
             "invocations",
             "complete",
+            "advertise",
             "invocations"
         ]
     );

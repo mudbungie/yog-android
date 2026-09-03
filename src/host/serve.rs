@@ -1,8 +1,30 @@
-//! **The loop the worker runs**: present, wait, run, answer — and what it
-//! does when that stops (bl-8641). Split from the handle in `host.rs` because
-//! the two answer different questions: what the frame holds, and what the
-//! thread does. The reconnect ruling and the class boundary it stands on are
-//! stated there and in [`crate::transport::Wire`]; this file is the ladder.
+//! **The loop the worker runs**: present, wait, run, answer, present again —
+//! and what it does when that stops (bl-8641). Split from the handle in
+//! `host.rs` because the two answer different questions: what the frame holds,
+//! and what the thread does. The reconnect ruling and the class boundary it
+//! stands on are stated there and in [`crate::transport::Wire`]; this file is
+//! the ladder.
+//!
+//! **The set is re-asserted at the end of every hand-off** (REMOTE §5.1,
+//! bl-cc54, following thrall's bl-2d78). Both of the engine's guards over the
+//! advertised set stand on this client holding a *parked read* — the second
+//! follow-class read is refused, and an advertisement that would change the
+//! set in force is refused while the read is parked — and this loop is serial,
+//! so for the whole runtime of a tool this device holds no read at all and
+//! neither guard covers it. In that window another connection bearing this
+//! device's certificate may replace the set. Re-presenting bounds the damage
+//! to one tool's runtime instead of forever, and it costs an idle host
+//! nothing: no hand-off, no gesture.
+//!
+//! **And since PROTOCOL 8 it also buys knowing.** The receipt carries `wrote`
+//! (yog bl-66d4), so a re-assertion that WROTE is this device being told the
+//! set it presents was not the set in force — a disarming, healed silently
+//! until the field existed. It is counted onto the standing and painted, which
+//! is the whole remedy ([`super::RESTORED`]). **A `true` on a channel's FIRST
+//! presentation says nothing** and is discarded: every fresh channel presents
+//! into whatever the engine happens to hold, and an ordinary first one writes.
+//! Only a presentation this device made after work it just did can tell a
+//! rival from a beginning.
 
 use std::sync::mpsc;
 use std::time::Duration;
@@ -98,7 +120,10 @@ fn hold(
     out: &mpsc::Sender<Standing>,
     standing: &mut Standing,
 ) -> Stop {
-    if let Err(why) = foot.advertise(tools) {
+    // The first presentation's reading is discarded on purpose: a fresh
+    // channel writes whenever the engine held something else, and there is no
+    // rival in that. Only the re-assertion below can mean one.
+    if let Err(why) = foot.advertise(tools.clone()) {
         return Stop::Wire(why);
     }
     standing.advertised = true;
@@ -119,6 +144,11 @@ fn hold(
             standing.last = Some(format!("{} → {}", invocation.tool, capture.exit_code));
             if let Err(why) = answer(foot, &invocation, capture) {
                 return Stop::Wire(why);
+            }
+            match foot.advertise(tools.clone()) {
+                Err(why) => return Stop::Wire(why),
+                Ok(true) => standing.restored += 1,
+                Ok(false) => {}
             }
             if out.send(standing.clone()).is_err() {
                 return Stop::Gone;

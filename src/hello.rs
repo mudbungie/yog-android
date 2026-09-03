@@ -45,8 +45,8 @@ use crate::frame;
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
-/// **7 since the re-vendor of bl-fe4c.** Six moves stand behind it and the
-/// last five are why an old build must not be left running: 2 was the
+/// **8 since the re-vendor of bl-cc54.** Seven moves stand behind it and the
+/// last six are why an old build must not be left running: 2 was the
 /// tool-host pair (`subject_cwd` on an advertised element, `cwd` on an
 /// invocation — REMOTE §5.1, §5.3); **3** put `failure` on the conversation
 /// row, the agent answer and the queue row (§9.10); **4** put `flag` on the
@@ -59,8 +59,10 @@ use crate::frame;
 /// provider whether either can be asked for at all; and **7** put `surface`
 /// on every `reply/help` row — the interface-parity classification (yog
 /// `docs/PARITY.md` §2), two values, `control` for an op every seat owes a
-/// discoverable interactable and `machine` for one spoken only by programs.
-/// `last_active_unix` rode in at 2 with §9.9.
+/// discoverable interactable and `machine` for one spoken only by programs;
+/// and **8** put `wrote` on `reply/advertised` — a required boolean saying
+/// whether the engine changed the stored set or found it identical and
+/// compared (§5.1, yog bl-66d4). `last_active_unix` rode in at 2 with §9.9.
 ///
 /// **7 is the bump this client consumes without decoding a byte of it.** The
 /// `help` reply is a recorded refusal here, so the field reaches this repo as
@@ -68,6 +70,15 @@ use crate::frame;
 /// `crate::parity` reads the classification straight out of the vendored
 /// corpus, which is why the roster of ops this seat owes a control is the
 /// engine's own list rather than one kept here.
+///
+/// **8 is the one this device reads as a device.** The other six moved shapes
+/// a seat paints; this one moved the foot's own receipt, and this box is a
+/// foot — so `wrote` is decoded (`codec::reply`), carried out of
+/// [`crate::foot::Foot::advertise`], and judged by the host loop, where a
+/// `true` on a re-assertion is this machine learning its advertised set was
+/// replaced while it was off running a tool (DESIGN §6). The seat half reads
+/// nothing off it: a seat never advertises, so it never earns the receipt —
+/// the desktop seat's own re-vendor reached the same conclusion.
 ///
 /// **A move in a shape this codec does not spell still moves this number,
 /// and that is the point.** `governing` is a recorded refusal here (it is
@@ -89,7 +100,7 @@ use crate::frame;
 /// that lane must read the section and not only re-vendor the fixtures
 /// (DESIGN §7 — this seat reads the lane one shot at a time, where the fold
 /// is assignment).
-pub const PROTOCOL: u32 = 7;
+pub const PROTOCOL: u32 = 8;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";
