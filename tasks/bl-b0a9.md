@@ -1,7 +1,8 @@
 +++
 title = "teleop rung 1b, the sighted pair: a camera still and a location fix, each behind its runtime permission"
 created = 1788398990
-updated = 1788398990
+updated = 1788399811
+claimant = "Sightline"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
