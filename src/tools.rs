@@ -30,6 +30,7 @@ mod bridged;
 mod files;
 mod paper;
 mod shell;
+mod sighted;
 mod ui;
 
 #[cfg(test)]
@@ -70,6 +71,7 @@ pub fn advertisement() -> Vec<Tool> {
     ];
     set.extend(ui::tools());
     set.extend(paper::tools());
+    set.extend(sighted::tools());
     set
 }
 
@@ -92,6 +94,7 @@ pub fn run_in(tool: &str, input: &Value, data_dir: &str) -> Capture {
         files::LIST => files::list(o),
         ui::READ | ui::TAP | ui::TYPE | ui::KEY | ui::SHOT => ui::run(tool, o, data_dir),
         paper::DEVICE | paper::CLIPBOARD | paper::NOTIFY | paper::OPEN => paper::run(tool, o),
+        sighted::CAMERA | sighted::LOCATION => sighted::run(tool, o, data_dir),
         other => refused(
             NO_SUCH_TOOL,
             &format!("this machine carries no tool called {other:?}"),

@@ -32,7 +32,9 @@ fn the_advertisement_is_the_table_and_every_element_is_three_facts() {
             "device",
             "clipboard_set",
             "notify",
-            "open"
+            "open",
+            "camera",
+            "location"
         ]
     );
     for tool in &set {

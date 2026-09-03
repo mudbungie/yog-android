@@ -49,9 +49,12 @@ import com.google.androidgamesdk.gametextinput.InputConnection;
  * operator is looking at the dialog" from "the operator said no" — the
  * platform's own {@code checkSelfPermission} answers DENIED for both, and a
  * scan screen that cannot tell them apart either spins forever or gives up on
- * a dialog still on screen. It routes on the request code, because two
- * classes ask now: {@link Camera} for the enrollment scanner and
- * {@link Notify} for the notification tool.
+ * a dialog still on screen. It routes on the request code, because four
+ * classes ask now: {@link Camera} for the enrollment scanner, {@link Notify}
+ * for the notification tool, and {@link Still} and {@link Fix} for the sighted
+ * pair (bl-b0a9). A class that owns an ask owns the constant that names its
+ * answers — the scanner's id stays the scanner's, so a tool's dialog can never
+ * be read as an answer to the screen's.
  *
  * <p>{@code onCreate}/{@code onResume}/{@code onPause} hand {@link App} the
  * two things a tool running on the host thread cannot get for itself: this
@@ -82,6 +85,10 @@ public class MainActivity extends GameActivity {
             Camera.answered(grants);
         } else if (request == Notify.REQUEST) {
             Notify.answered();
+        } else if (request == Still.REQUEST) {
+            Still.answered();
+        } else if (request == Fix.REQUEST) {
+            Fix.answered();
         }
     }
 

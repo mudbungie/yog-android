@@ -30,7 +30,12 @@
 # there for the same reason: it is four static calls into `dev.yog.Paper`,
 # while the schemas, the argument reading and the two-line protocol its
 # answers arrive in (`src/tools/bridged.rs`) are pure and stay UNDER the
-# floor. `src/shell/jvm.rs`
+# floor. `src/tools/sighted/bridge.rs` is the same two calls into
+# `dev.yog.Sighted` (bl-b0a9), and `src/tools/bridged/door.rs` is the call
+# ITSELF, factored out of the paper bridge when the sighted pair became the
+# second door: it attaches to the JVM and resolves a class, so no host test
+# can reach a line of it, while the protocol beside it in `bridged.rs` stays
+# pure and under the floor. `src/shell/jvm.rs`
 # is that same JNI call, factored out when the camera became its second caller
 # (bl-d815), and `src/shell/camera.rs` is the camera's own half of it; the scan
 # screen (`src/shell/enroll/scan.rs`) is egui glue over both, while the decode
@@ -64,7 +69,9 @@ exclude-files = [
     "src/shell/screens.rs",
     "src/shell/transcript.rs",
     "src/shell/sys.rs",
+    "src/tools/bridged/door.rs",
     "src/tools/paper/bridge.rs",
+    "src/tools/sighted/bridge.rs",
     "src/tools/ui/bridge.rs",
 ]
 ignore-panics = true

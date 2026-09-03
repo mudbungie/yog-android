@@ -25,6 +25,22 @@
          all. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- The sighted pair (bl-b0a9, DESIGN §16.1 rung 1b). Declarations, not
+         asks: dev.yog.Fix raises the dialog when a fix is first wanted and
+         this app is in front, and refuses in band naming the settings act when
+         it is not held. BOTH are declared because Android 12+ lets the
+         operator answer a fine ask with "approximate" — the fix that comes
+         back carries its own accuracy and dev.yog.Position states it, so a
+         coarse answer is legible rather than refused. ACCESS_BACKGROUND_
+         LOCATION is deliberately NOT declared: it is a separate settings trip,
+         and while the foot serves foreground-only the fix is honest without
+         it. The camera tool needs no new line — CAMERA is declared above for
+         the enrollment scanner, and a permission is the app's, not a
+         feature's. GPS is a feature this app can do without, so the device
+         without one still installs. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <!-- The mark, as an adaptive icon whose two layers are GENERATED from
          the same walk the in-app mark is drawn from (bl-0b31): no committed
          binary, one source, and a test that pins the assets to it. -->

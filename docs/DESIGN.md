@@ -266,6 +266,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/paper.rs` | the paper tools (§16.1 rung 1): `device`, `clipboard_set`, `notify`, `open` — their advertised elements, the price each states, and the argument reading | landed (bl-f34f) |
 | `src/tools/paper/bridge.rs` | android-only: the JNI into `dev.yog.Paper`, one signature built per argument count | landed (bl-f34f) |
 | `android/…/{Paper,Device,Notify,Open}.java` | the paper tools' platform half: the door, the three device reads, the notification grant and post, the typed intent | landed (bl-f34f) |
+| `src/tools/sighted.rs` | the sighted pair (§16.1 rung 1b): `camera` and `location` — their advertised elements, the price each states, the lens reading and where a still lands | landed (bl-b0a9) |
+| `src/tools/bridged/door.rs` | android-only: the call every bridge makes — a class of this app's resolved once, a static reached by name, the descriptor built from the argument count | landed (bl-b0a9, out of `tools/paper/bridge.rs`) |
+| `src/tools/sighted/bridge.rs` | android-only: the two static calls into `dev.yog.Sighted` | landed (bl-b0a9) |
+| `android/…/{Sighted,Still,Shot,Lens,Jpeg}.java` | the still's platform half: the door, the three gates (grant, foreground, the scanner holding the same camera), the camera2 burst, which lens and how big, and the frame on disk | landed (bl-b0a9) |
+| `android/…/{Fix,Position}.java` | the fix's platform half: the two grants and the device switch, a bounded wait over every live provider — and what one fix says, age always included | landed (bl-b0a9) |
 | `android/…/App.java` | the two handles a tool-host thread cannot get for itself: this app's context, and whether it is in front | landed (bl-f34f) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the live tick inside it | landed (bl-dfbb, out of `model.rs`) |
@@ -300,7 +305,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/camera.rs` | android-only: the five static calls into `dev.yog.Camera`, activity passed in | landed (bl-d815) |
 | `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
-| `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on its request code, the lifecycle hand-off to `App` | landed (bl-c761, bl-d815, bl-f34f) |
+| `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App` | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
 
@@ -443,6 +448,16 @@ the API 33+ runtime grant and `open` meets the API 29+ background-launch
 refusal, and both ask BEFORE they act rather than reporting success for a call
 the platform silently dropped: a background `startActivity` throws nothing and
 logs one line, which is exactly the shape that would make a tool a decoy.
+
+**The sighted pair is the same sentence answered twice more, one rung up**
+(§16.1, bl-b0a9): `camera` and `location` cost a runtime grant, so what bounds
+each is an OS permission the operator holds and can revoke, plus a foreground
+fact the platform enforces itself. Each asks before it acts and refuses in band
+naming the one act that lifts the refusal, and each states that price in the
+description a model reads. `camera` answers a **path** for `screenshot`'s
+reason, and `location` answers a fix's **age** beside its accuracy, because a
+position with no age is the one shape of this pair that could mislead while
+looking like an answer.
 
 **The interface tools need a platform service, and enabling it is the
 operator's act** (bl-1511, and §5's trust model unchanged): an app uid cannot
@@ -1575,6 +1590,19 @@ looking at is a loop that will eventually lie to you — which is why `make
 screens` builds nothing and refuses an APK that is not there, rather than
 quietly rebuilding one.
 
+**One beat is not about a screen at all** (bl-b0a9): before the walk, the run
+asserts that every runtime permission the teleoperation corpus asks for is
+**declared, accepted and held** on the installed app, read back out of
+`dumpsys package`. A runtime permission is a chain of three — the manifest
+line, an installer that took it, the grant — and the emulator installs with
+`-g`, so it is the one place the granted end of that chain is observable. The
+failure it exists to catch is silent everywhere else: an undeclared permission
+is not refused at install, it is simply never granted, and the tool then
+refuses forever on a device where the operator did everything right. It does
+not invoke a tool — an invocation through the host channel needs an engine, a
+foot leaf and something to fire `/invoke`, which is bl-05b6's ball — so the
+refusal halves stay host tests, where they belong.
+
 **It is not part of `make check` and will not become part of it.** It needs an
 SDK, an emulator and a built APK, and a lint gate that depends on an artifact
 a build step produced is a gate that cannot run on a clean box.
@@ -1681,7 +1709,7 @@ ball, ordered by what each costs:
 | rung | tools | platform cost | ball |
 |---|---|---|---|
 | 1 — the paper tools | `device`, `clipboard_set`, `notify`, `open` | no service; `notify` wants the POST_NOTIFICATIONS runtime ask (API 33+); `open` is platform-refused from background (BAL, API 29+) and says so in band | **landed** (bl-f34f) |
-| 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | bl-b0a9 |
+| 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | **landed** (bl-b0a9) |
 | 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | bl-5cbd |
 | 3 — the pocketed foot | no new tool: the host loop itself moves into a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off by default, an explicit operator act | bl-8bd0 |
 
@@ -1700,6 +1728,57 @@ than watching one device do it is the stronger answer here, because the
 question was never *does this phone allow it* but *what does the platform
 permit* — and a read-back check cannot even be built, the READ being the half
 that is blocked.
+
+**Rung 1b answered two questions this section left open, and both answers are
+about honesty rather than mechanism** (bl-b0a9).
+
+*What a still ANSWERS.* A path, and the file lives in **the app's own storage
+under one fixed name** (`camera.jpg`), overwritten by the next call unless the
+caller names its own. Three facts decide it. A capture is text (REMOTE §5.3),
+so the bytes cannot ride the wire and encoding them would be this client
+adding a shape to the boundary — the screenshot's answer, given again because
+it is the same question. The app's storage is the one directory this uid can
+always write, which is why the interface tools already default there. And a
+timestamped name per shot would leave an agent that photographs all day
+filling private storage nobody is watching, on a device with no sweep; a
+caller that wants to keep two names the second itself. The capture sentence
+carries what a reader can act on without the image: the dimensions, the byte
+count, which lens, and the path.
+
+**The honest limit rides with it: nothing in this repo fetches those bytes
+back.** `read_file` answers text, so a JPEG through it is replacement
+characters, and no gesture on the wire carries a file. The path is a handle
+for the operator holding the phone (or the cable), and `ui_read` remains what
+a model should read when the question is *what is on the screen*. That gap is
+the screenshot's too, it is a **wire** question rather than a client one, and
+no ask has been made — recording it here is the point, because a tool
+description that implied otherwise would be the decoy shape again.
+
+*What a fix must SAY.* Three lines — the position, the accuracy in metres, and
+**always the age** — because the failure mode is not a refusal, it is a model
+acting on a stale fix: a phone indoors for an hour still has a last-known
+location and it is somewhere else. Two details make the age load-bearing
+rather than decorative. It is computed from the platform's **monotonic**
+elapsed-realtime stamp, not `Location#getTime`, because a clock correction
+would otherwise make an hour-old fix read as new. And an answer states its
+**provenance** — a new fix taken while the call waited, or the last one this
+device recorded — rather than deriving staleness from a threshold constant
+this design would then have to defend; the caller is told which it is and the
+age tells it how much that matters. A fix with no accuracy says *accuracy
+unknown* rather than reporting a zero, which is `device`'s rule for a battery
+that reports no level.
+
+*Three gates, and one of them is this app's own scanner.* The runtime grant
+(the dialog once per run when this app is in front, on **each tool's own
+request code** through the bl-d815 hook, and the settings act named otherwise —
+`notify`'s shape, and the scanner's request id stays the scanner's so a tool's
+answer can never be read as an answer to the enroll screen's ask); the
+foreground fact, which the platform enforces for the camera and for a new fix
+alike; and, for the still only, **the enrollment scanner holding the same
+camera** — opening it twice would evict that session and leave an operator
+staring at a dead preview mid-enrollment, so a scan in progress refuses in band
+naming the act that clears it. It is reachable precisely because a still needs
+this app in front, which is when the scan screen might be up.
 
 **Rung 2 IS the SMS-adjacent surface, and the SMS permissions are refused.**
 The teleoperation want behind "SMS" is reading what the phone was told — a 2FA

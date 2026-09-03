@@ -198,6 +198,29 @@ tap_mark() {
 }
 
 : > "$OUT/verdict.txt"
+
+# THE GRANTS THE TELEOPERATION CORPUS ASKS FOR, as the INSTALLER sees them
+# (bl-b0a9). A runtime permission is a chain of three: a manifest declaration,
+# an installer that accepted it, and a grant. This install is `-g`, so every
+# runtime permission is granted outright — which makes the emulator the one
+# place the GRANTED half of each tool's gate is observable, and makes a missing
+# manifest line loud: an undeclared permission is not refused at install, it is
+# silently never granted, and the tool then refuses forever on a device where
+# the operator did everything right.
+#
+# What this does NOT do is invoke a tool. Putting an invocation through the
+# host channel to a device needs an engine, a foot leaf and something to fire
+# `/invoke` at it, none of which exists yet — that is bl-05b6's ball, and the
+# refusal halves stay host tests.
+held=$("${ADB[@]}" shell dumpsys package "$PKG" 2>/dev/null | tr -d '\r')
+for want in CAMERA POST_NOTIFICATIONS ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION; do
+  if printf '%s\n' "$held" | grep -q "android.permission.$want: granted=true"; then
+    verdict pass "grant: $want is declared, accepted and held"
+  else
+    verdict fail "grant: $want is not held — is it declared in AndroidManifest.xml?"
+  fi
+done
+
 echo "screens: walking" >&2
 
 # 1. Nothing provisioned: the bootstrap chooser, which is every device's first

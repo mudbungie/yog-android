@@ -8,12 +8,24 @@
 //! cannot be forgotten.
 //!
 //! It lives here rather than beside its first caller because there is more
-//! than one bridge now — the interface tools' service (`tools::ui`) and the
-//! paper tools' platform half (`tools::paper`) — and a protocol with two
-//! definitions is a protocol that drifts. The parser is pure and is tested
-//! below; the JNI on the far side of it is the device's to answer for.
+//! than one bridge now — the interface tools' service (`tools::ui`), the paper
+//! tools' platform half (`tools::paper`) and the sighted pair
+//! (`tools::sighted`) — and a protocol with two definitions is a protocol that
+//! drifts. The parser is pure and is tested below; the JNI on the far side of
+//! it is the device's to answer for.
+//!
+//! [`Door`] is the call that speaks it, and it is here for the same reason:
+//! two doors resolve a class of this app's and marshal N strings into a
+//! descriptor built from their count, and a second copy of that would drift
+//! from the first inside a week (bl-b0a9).
 
 use crate::codec::Capture;
+
+#[cfg(target_os = "android")]
+mod door;
+
+#[cfg(target_os = "android")]
+pub(crate) use door::Door;
 
 /// The verdict a bridged tool that could not act earns — a service that is
 /// not enabled, a permission that is not held, an app that is not in front,

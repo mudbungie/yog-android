@@ -70,6 +70,16 @@ final class Session {
         return problem;
     }
 
+    /**
+     * Whether the scanner holds this device's camera right now (bl-b0a9). A
+     * still opened while it does would evict this session and leave an operator
+     * staring at a dead preview mid-enrollment, so {@link Still} asks first and
+     * refuses naming the act that clears it.
+     */
+    static boolean busy() {
+        return device != null || session != null || reader != null;
+    }
+
     static byte[] frame() {
         byte[] taken = latest;
         latest = null;
@@ -118,7 +128,8 @@ final class Session {
         return "ok\n";
     }
 
-    private static void shut(AutoCloseable it) {
+    /** Package-visible since bl-b0a9: {@link Shot} closes the same three kinds of handle. */
+    static void shut(AutoCloseable it) {
         try {
             if (it != null) {
                 it.close();
