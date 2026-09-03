@@ -1,7 +1,8 @@
 +++
 title = "teleop rung 3, the pocketed foot: a foreground service holds the host lane so invocations reach a phone in a pocket"
 created = 1788398991
-updated = 1788398991
+updated = 1788402480
+claimant = "Pocketfoot"
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
