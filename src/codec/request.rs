@@ -63,6 +63,11 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         }),
+        // The row menu's three (DESIGN §13.5, bl-f97c). One arm, because one
+        // gesture: `codec::row` states the subject once and the choice is its
+        // own enum. `fork` is deliberately not among them and refuses below
+        // by name — the reason is in that file's header, not a `_` here.
+        "interrupt" | "retarget" | "flag" => Gesture::Act(super::row::decode(op.as_str(), o)?),
         "roles" => Gesture::Ask(Ask::Roles {
             workspace: str_of(o, "workspace")?,
         }),

@@ -23,6 +23,7 @@ pub mod follow;
 pub mod pick;
 pub mod reply;
 pub mod request;
+mod row;
 pub mod start;
 pub mod tools;
 mod transcript;
@@ -32,6 +33,7 @@ pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use follow::Stream;
 pub use pick::{Effort, ProviderRow, RoleRow};
 pub use request::decode;
+pub use row::RowAct;
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
 pub use transcript::{Block, Entry, EntryKind};
@@ -77,6 +79,16 @@ pub enum Act {
     /// message — nothing is added to the transcript — it is a detached
     /// `litany advance`, so it says nothing and asks the driver to go on.
     Nudge { workspace: String, agent: String },
+    /// **An act addressed to one conversation's ROW** (DESIGN §13.5,
+    /// bl-f97c): interrupt, retarget or flag, whichever the row's long-press
+    /// menu fired. The subject is stated once here and the choice is
+    /// [`RowAct`]; `codec::row` is where the three spellings and the reason
+    /// for the grouping live.
+    Row {
+        workspace: String,
+        agent: String,
+        act: RowAct,
+    },
     /// **Set a role's reasoning level** (REMOTE §9.4, bl-dfbb) — how much
     /// reasoning its model calls request. `None` is `off`: the absence of a
     /// level rather than a fourth level, which is what the engine reads.
@@ -181,6 +193,11 @@ pub fn encode(gesture: &Gesture) -> Value {
         Gesture::Act(Act::Nudge { workspace, agent }) => {
             json!({ "op": "nudge", "workspace": workspace, "agent": agent })
         }
+        Gesture::Act(Act::Row {
+            workspace,
+            agent,
+            act,
+        }) => row::encode(workspace, agent, act),
         Gesture::Act(Act::Effort {
             workspace,
             role,

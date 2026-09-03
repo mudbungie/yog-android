@@ -138,6 +138,39 @@ fn every_act_in_doubt_names_itself_and_the_read_that_settles_it() {
             "The workspace's conversation list says",
             Box::new(|m: &super::Model| m.start_conversation("look".into())),
         ),
+        // The row menu's three (§13.5, bl-f97c). None of them is idempotent
+        // either, and the third is the one that has to say out loud that no
+        // read here settles it — which is a sentence the contract allows and
+        // a claim it would not.
+        Case(
+            "interrupt",
+            "The conversation's transcript says whether the text landed",
+            Box::new(|m: &super::Model| {
+                m.row_act(
+                    "a1".into(),
+                    crate::codec::RowAct::Interrupt {
+                        content: "no, this".into(),
+                    },
+                );
+            }),
+        ),
+        Case(
+            "retarget",
+            "No read this seat makes says whether it landed",
+            Box::new(|m: &super::Model| m.row_act("a1".into(), crate::codec::RowAct::Retarget)),
+        ),
+        Case(
+            "flag",
+            "The conversation's row carries the attention mark",
+            Box::new(|m: &super::Model| {
+                m.row_act(
+                    "a1".into(),
+                    crate::codec::RowAct::Flag {
+                        reason: "wandered".into(),
+                    },
+                );
+            }),
+        ),
     ];
     for Case(act, read, fire) in cases {
         let mut turns = focused();

@@ -85,6 +85,15 @@ pub enum Reply {
     /// carries nothing: the act stated the assignment whole, so an echo would
     /// be a second spelling of what the sender already holds.
     Applied,
+    /// **The receipt a flag earns** (DESIGN §13.5, bl-f97c). It carries
+    /// nothing but its own `ok`: the act stated the reason, and what the flag
+    /// DID is a row on the ops trail and a mark on the conversation's own
+    /// row — which is the read this seat already makes every cadence, and so
+    /// the read that settles a lost one.
+    ///
+    /// The other two row acts answer `outcome`, which this codec already
+    /// reads; only the flag has a receipt of its own.
+    Flagged,
     /// One invocation's standing after a call (REMOTE §5.3). `capture` is
     /// **absent** rather than empty while the far side still runs it, so a
     /// reader never has to tell "not finished" from "finished saying
@@ -116,6 +125,7 @@ impl Reply {
             Self::Roles(_) => "roles",
             Self::Applied => "applied",
             Self::Nudged => "nudged",
+            Self::Flagged => "flagged",
             Self::Follow(_) => "follow",
         }
         .to_owned()
@@ -156,6 +166,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "roles" => Reply::Roles(rows(o, pick::role)?),
         "applied" => Reply::Applied,
         "nudged" => Reply::Nudged,
+        "flagged" => Reply::Flagged,
         "follow" => Reply::Follow(stream_of(o)?),
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,

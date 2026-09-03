@@ -17,7 +17,7 @@
 //! frame must still be refused by name.
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
-use super::expect::{ACT, ASKING_SIDE, BARE_RUNG, NO_SEED, NOT_THE_MINTER, READ};
+use super::expect::{ACT, ASKING_SIDE, BARE_RUNG, NO_FORK_POINT, NO_SEED, NOT_THE_MINTER, READ};
 
 pub const REQUESTS: &[(&str, Expect)] = &[
     ("ack", Refuses(ACT)),
@@ -46,14 +46,14 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("enroll", Refuses(NOT_THE_MINTER)),
     ("fan", Refuses(ACT)),
     ("files", Refuses(READ)),
-    ("flag", Refuses(ACT)),
+    ("flag", Reads),
     ("fleet", Refuses(ACT)),
     ("follow", Reads),
-    ("fork", Refuses(ACT)),
+    ("fork", Refuses(NO_FORK_POINT)),
     ("governing", Refuses(READ)),
     ("help", Refuses(READ)),
     ("inbox", Refuses(READ)),
-    ("interrupt", Refuses(ACT)),
+    ("interrupt", Reads),
     ("invocations", Reads),
     ("invoke", Refuses(ASKING_SIDE)),
     ("lineages", Refuses(READ)),
@@ -82,7 +82,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("rail", Refuses(READ)),
     ("release", Refuses(ACT)),
     ("restore", Refuses(ACT)),
-    ("retarget", Refuses(ACT)),
+    ("retarget", Reads),
     ("retire", Refuses(ACT)),
     ("roles", Reads),
     ("revoke", Refuses(ACT)),

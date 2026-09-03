@@ -80,6 +80,16 @@ pub(super) fn run(
                 note = super::acts::stop(seat, &focus, children).note();
             }
             Ok(Cmd::Nudge) => note = super::acts::nudge(seat, &focus).note(),
+            // **A row act needs no read after it** (§13.5). The three write
+            // nothing a control is showing optimistically — unlike the tuning
+            // pair below, whose whole point is that the assignments read
+            // overtakes the guess — and what each of them DID lands in the
+            // standing set this loop is already re-asking for: the transcript,
+            // the row's flight, the row's attention mark. So the gesture wakes
+            // the pass and the pass is the recovery.
+            Ok(Cmd::Row(agent, act)) => {
+                note = super::acts::row(seat, &focus, agent, act).note();
+            }
             // A tuning act is followed by the read that makes it true: the
             // control showed its pick optimistically, and this is what
             // overtakes it (bl-e9f9).

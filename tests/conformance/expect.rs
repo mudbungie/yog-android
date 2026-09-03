@@ -45,6 +45,19 @@ pub const READ: &str = "a world read outside the chat-loop slice (DESIGN §2)";
 /// An act on the world outside the chat loop and the tool-host trio.
 pub const ACT: &str = "a world act outside the chat-loop slice (DESIGN §2)";
 
+/// **`fork` is the one row act this seat cannot fire, and the reason is a
+/// missing READ rather than a missing surface** (DESIGN §13.5, bl-f97c). Its
+/// three siblings — `interrupt`, `retarget`, `flag` — moved to `Reads` when
+/// the conversation row's menu landed. `fork` did not, because its `from` is a
+/// fork point and the engine's own `fork::Attempt` says *"Empty is not a value
+/// — the composer refuses to fire without one, because a fork with no ref is a
+/// different gesture."* Nothing this seat reads names one: the marks and the
+/// tip ride `agent` (bl-146b) and the lineage names ride `lineages` (bl-3685),
+/// both unbuilt. So the frame goes on being refused by name, which is the
+/// honest answer rather than a shape half-spelled.
+pub const NO_FORK_POINT: &str =
+    "the row act whose fork point no read here names — bl-99fd builds the picking surface";
+
 /// REMOTE §4.2, on the foot's gesture set: *"Note which of §5.3's four verbs
 /// is absent — `invoke`, the asking side's. A foot is invoked; it never
 /// invokes."* `capture` is that verb's read half and goes with it.

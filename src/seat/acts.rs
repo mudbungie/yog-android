@@ -23,6 +23,10 @@ use crate::transport::Seat;
 use super::pass::kind_err;
 use super::posted::{Posted, faulted};
 
+mod row;
+
+pub(super) use row::row;
+
 /// Post one message. The receipt is an `outcome` whose `ok` is the server's
 /// own verdict; anything else is a sentence for the banner.
 pub(super) fn deposit(seat: &Seat, focus: &Focus, content: String) -> Posted {

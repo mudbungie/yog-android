@@ -249,6 +249,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
+| `src/codec/row.rs` | the row acts' three spellings and the `flagged` receipt (§13.5), plus the three readings the menu is built from — one roster, one home, shared by the codec, the seat and the paint | landed (bl-f97c) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
 | `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
@@ -284,13 +285,15 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the live tick inside it | landed (bl-dfbb, out of `model.rs`) |
 | `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
 | `src/seat/acts.rs` | the acts the seat posts: the message deposit, the §8.1 start pair, the turn's stop and nudge, and the worker's tuning — none of them ever sent twice (§19.2) | landed (bl-de96, out of `pass.rs`) |
+| `src/seat/acts/row.rs` | the three acts addressed to a conversation ROW rather than to the focus (§13.5), and the read that settles each in doubt — including the one that says out loud that none does | landed (bl-f97c) |
 | `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three and the live tail. Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, bl-4822, split out bl-07b1) |
 | `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/place.rs` | the second host-tested sliver: which side of a control its list opens on and how tall it may be, so an opened popup lands inside the tappable area — pure, and the only half of §13.2's geometry a test can reach | landed (bl-78c2) |
 | `src/shell/controls/drop.rs` | android-only: the drop-down that spends it — `Popup` over a button, because `ComboBox` places its list against the display | landed (bl-78c2) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
-| `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
+| `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, the banner and the one list-row helper every navigation list paints through | landed (bl-5a98) |
+| `src/shell/screens/rows.rs` | android-only: the conversation list and the acts its rows carry (§13.5) — the long-press menu, its three items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-f97c, out of `screens.rs`) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where the mark went, said to logcat once per change | landed (bl-243b) |
 | `scripts/screens.sh` + `scripts/screens-seed.sh` | the headless emulator loop (§15): boot, install, walk, capture, judge — and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0) |
 | `scripts/screens-platform.sh` + `scripts/screens-background.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the two background lanes: the scheduled fetch (§17) and the pocketed foot (§18) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0) |
@@ -1494,6 +1497,100 @@ What stays here is the shape of the ledger and nothing that can go stale in it:
   **Anything an upstream ask claims must be checked against the roster before
   it is written here**, which is exactly the check that had never been run.
 
+### 13.5 The conversation row's acts, and the menu that carries them (bl-f97c)
+
+`src/codec/row.rs`, `src/seat/acts/row.rs`, `src/shell/screens/rows.rs`.
+**The first surface in this app that is opened by a gesture rather than by a
+tap**, and the first act that addresses something other than the focus. The
+operator's ruling (2026-09-03) is the shape: *the surface for the conversation
+acts is a long-press context menu on the conversation row*, and the desktop
+seat lands the same design on the same day off the same fact — egui
+synthesizes a secondary click from a touch long-press, so one design serves
+both platforms and each gets its native trigger for free.
+
+**The gesture is egui's, and it was verified before it was built on.** A touch
+held past `max_click_duration` (0.8 s) marks the widget under it `LONG_TOUCHED`,
+which `Response::secondary_clicked` reports alongside a real right-click. The
+two triggers are exclusive rather than layered: `could_any_button_be_click`
+goes false the moment a press outruns that duration, so the release of a long
+press is not also a click and opening the menu never navigates into the
+conversation as well. egui also wakes itself to check a held press, which is
+the half a harness depends on — no event arrives while a finger rests. All of
+that is read out of egui 0.36.1; **the walk is what proves it on a device**
+(§15.4's `row-menu` beat), and if it ever stops holding, the parity gate goes
+red naming all three ops rather than the app going quietly inert.
+
+**The roster is three, and the fourth is a missing READ.** `interrupt` cuts the
+conversation off mid-work and sends it the composer's text; `retarget` settles
+it onto this workspace's config lineage; `flag` raises a human look with a
+reason. `fork` is the group's fourth act and is not offered: its `from` is a
+fork point, a commit of the conversation's own history or a `config/<name>`
+head, and the engine's own `fork::Attempt` says *"Empty is not a value — the
+composer refuses to fire without one, because a fork with no ref is a different
+gesture."* Nothing this seat reads names one — the marks and the tip ride the
+`agent` read (bl-146b) and the lineage names ride `lineages` (bl-3685), both
+unbuilt. A free-text field where an operator types a commit sha on a phone is
+not a surface; it is this app asking the operator to be the read §8 forbids it
+to derive. So the item is absent rather than dead, `fork` keeps its
+`parity.toml` line re-cited to bl-99fd, and the conformance table goes on
+refusing its frame by name.
+
+**The composer is the parameter, and that is the whole of the staging.** Two of
+the three need text, and this app has exactly one place text is typed (§13.2's
+one shared row at two depths). So an item that needs text spends what is in the
+composer at the moment it fires, and is **disabled with the reason stated
+beside it** when there is none — `interrupt — type the text first`. Disabled
+rather than absent, and the reason spelled rather than left to the grey: a
+greyed control says a thing is not live and nothing about what would make it
+live (the desktop's §4.20 reading, which transfers). Only an act that takes a
+parameter spends the field; a retarget that emptied it would eat a draft it
+never read.
+
+**Nothing is armed, and stating why is the point.** The desktop's §4.20 makes a
+destructive act a PLACE with an arming, and none of these three is one: an
+interrupt keeps everything already committed (its cut tool call is reported to
+the model in band as having produced no result), a retarget discards nothing
+and kills nothing, and a flag *"changes nothing else"*. That is a reading of
+the three ops rather than a policy this seat adopts — and it is consistent with
+the tree, where `stop` has been a bare button on the controls row since bl-48fa
+and an interrupt is a stop with a message after it. **The first row act whose
+product is that its subject is gone is where this app earns an arming**
+(`delete-agent`, bl-f645), and it should follow §4.20 rather than invent a
+second idiom. §13.2's *tap is the act; there is no apply* still governs
+everything here.
+
+**The subject is the row, not the focus** — the one structural difference from
+every other act this seat posts, and the reason they have a file of their own.
+A long press names its own conversation; nothing has to be opened first, and
+the operator's current depth may not reach the wire. So the workspace comes
+from the focus (a row is only ever painted under one) and the agent is carried
+in beside it. The seat's test fires all three at a conversation it has never
+focused, which is what a regression reaching for `focus.agent` would fail.
+
+**The menu is a popup, so it obeys `shell::place`** — the same rule at a fourth
+site (§13.2's last bullet). egui's own `Popup::context_menu` opens at the
+pointer and falls back against `Context::content_rect`, which on Android is the
+whole display, gesture-nav zone included; a menu opened from a row near the
+floor would paint where taps never reach the app. It is assembled instead from
+`Popup::menu`'s pieces with the side and the cap `place::fit` decided, exactly
+as `controls/drop.rs` does, and **anchored to the ROW rather than to the
+finger** — which is what makes it the same geometry as a selector's list and
+lets one assertion cover both. The assertion gained one axis rather than a
+second copy: a row is two or three lines where a selector is always one touch
+target, so the sweep now runs every anchor HEIGHT as well as every position,
+including a zero-height anchor (what a pointer-anchored popup would hand in)
+and one taller than the band itself.
+
+**Three fates, and one of them has no read.** Every row act is `seat::posted`'s
+three-way outcome and none is idempotent, so a lost reply is never re-sent
+(§19). Two can name the read that settles them — an interrupt's text appears in
+the conversation's transcript, a flag's mark on the conversation's own row.
+**A retarget cannot**, because what it writes is a mark the `agent` read
+carries and this seat does not make that read. Its sentence says so outright
+rather than naming a read that would not show it: a recovery this app has not
+got must not be claimed, and §19's contract is satisfied by an honest *no read
+here says which* — the gap is bl-146b's, and it is cited.
+
 ## 14. The paint-first cache (bl-de96)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -1673,6 +1770,7 @@ The walk, and the standing assertions it exists for:
 | `settings` | — tap the mark | **the configuration surface is reachable from the roster** |
 | `back-to-roster` | — tap the mark | the mark toggles: a way in with no way out is the same defect wearing the other face |
 | `conversations` | focus at a workspace | the conversation list paints under its focus |
+| `row-menu` | — hold the first row | **the long-press synthesis works on a device**, and the three conversation acts are on the glass (§13.5) |
 | `transcript` | focus at a conversation, at rest | the chat screen paints under its focus, and the nudge is offered |
 | `running` | the same, with the stop gates on | the two stop controls paint under the engine's own gates |
 | `parity` | — every dump above | **every `control`-classed op is reachable or cited** (§15.5) |
@@ -2071,7 +2169,7 @@ The groups mirror the seat's own, one ball each:
 
 | group | ops | ball |
 |---|---|---|
-| conversation acts | interrupt, fork, retarget, flag | bl-f97c |
+| conversation acts | interrupt, retarget, flag — **landed** (§13.5); `fork` held back on a read it needs | bl-f97c, then bl-99fd |
 | the held tool call | answer, revoke, restore | bl-b39d |
 | work review | files, work-diff | bl-5a56 |
 | conversation machinery reads | agent, steps, step, rail, governing, inbox | bl-146b |

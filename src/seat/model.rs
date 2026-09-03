@@ -44,6 +44,11 @@ pub(super) enum Cmd {
     StopTurn(bool),
     /// Re-prompt the focused conversation from where it stands.
     Nudge,
+    /// **One act on a NAMED conversation** (§13.5): the agent the row's menu
+    /// was opened on, and which of the three it fired. One command for the
+    /// group because they are one gesture — the roster has one home, and it
+    /// is `codec::RowAct`.
+    Row(String, crate::codec::RowAct),
     Stop,
 }
 
@@ -158,6 +163,18 @@ impl Model {
     /// conversation is at rest.
     pub fn nudge(&self) {
         let _ = self.cmds.send(Cmd::Nudge);
+    }
+
+    /// **Fire one of the conversation row's acts** (§13.5, bl-f97c) at the
+    /// conversation the menu was opened on — never at the focus, which is why
+    /// the agent is carried rather than read from it: a long-press names its
+    /// own subject, and the operator need not have opened it first.
+    ///
+    /// Not idempotent, any of the three, so nothing here is ever sent twice:
+    /// a lost reply becomes the banner's sentence and the read that settles
+    /// it (`seat::acts::row`).
+    pub fn row_act(&self, agent: String, act: crate::codec::RowAct) {
+        let _ = self.cmds.send(Cmd::Row(agent, act));
     }
 
     /// Start a new conversation in the focused workspace with `goal` as its

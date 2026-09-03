@@ -52,6 +52,13 @@
 # and the bridge vocabulary it spends live in `src/scan.rs`, which is pure and
 # stays UNDER the floor — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
+# `src/shell/screens/rows.rs` is the conversation list split out of
+# `screens.rs` (bl-f97c) and inherits its class exactly: egui `Popup` and
+# `Button` calls, `cfg(target_os = "android")` to the last line. The seam it
+# is drawn on is the one that already existed — the menu's PLACEMENT is
+# `place.rs`, which is pure and asserted, and the menu's ROSTER is
+# `codec::row`'s three readings (`op`, `wants`, `with`), which are pure and
+# asserted too. What is left here is which widget gets which of them.
 #
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
 [default]
@@ -78,6 +85,7 @@ exclude-files = [
     "src/shell/inset.rs",
     "src/shell/jvm.rs",
     "src/shell/screens.rs",
+    "src/shell/screens/rows.rs",
     "src/shell/transcript.rs",
     "src/shell/sys.rs",
     "src/tools/bridged/door.rs",

@@ -127,6 +127,12 @@ pub(crate) struct Shell {
     /// news.
     pub(crate) screen: Option<&'static str>,
     pub(crate) mark_at: Option<[i32; 4]>,
+    /// **Where the first conversation row was painted** (§15.2, bl-f97c), in
+    /// device pixels. Its long press is the only way into the row menu, and
+    /// like the mark it carries no accessibility node — so it is the second
+    /// control a harness cannot otherwise find. Frame-scoped like the mark:
+    /// a screen that stops painting rows stops saying where one is.
+    pub(crate) row_at: Option<[i32; 4]>,
     probed: String,
 }
 
@@ -158,6 +164,7 @@ impl Shell {
             back: false,
             screen: None,
             mark_at: None,
+            row_at: None,
             probed: String::new(),
         }
     }

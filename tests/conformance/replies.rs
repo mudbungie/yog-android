@@ -32,7 +32,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("enrolled", Refuses(NOT_THE_MINTER)),
     ("fanned", Refuses(UNSENT)),
     ("files", Refuses(UNSENT)),
-    ("flagged", Refuses(UNSENT)),
+    ("flagged", Reads),
     ("floored", Refuses(UNSENT)),
     ("follow", Reads),
     ("governing", Refuses(UNSENT)),

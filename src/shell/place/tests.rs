@@ -170,13 +170,59 @@ fn holds_is_the_two_edges_and_a_hundredth_of_a_point_of_slack() {
     }));
 }
 
-/// **The ratchet** (bl-78c2). The class was fixed twice at other sites and
-/// came back a third time because nothing asserted it. This is the
-/// assertion: for every control position on three screen shapes, every list
-/// height including *unmeasured*, and every gap, an opened list lies inside
-/// the tappable area. Composing `fit` with `list` is the whole point — `fit`
-/// decides and `list` says what egui will paint from that decision, so the
-/// two disagreeing is exactly the defect.
+/// **A conversation row's menu is the same geometry** (bl-f97c). The row menu
+/// is a popup like a selector's list, and it is anchored to the ROW rather
+/// than to the finger precisely so that it is — one rule, one assertion, and
+/// no second arithmetic to keep in step. What differs is only the anchor: a
+/// row is where the list is rather than where the controls are, and it is
+/// TALLER than a control (a display line, a preview, sometimes a failure
+/// clause), which is the axis the sweep below gained.
+///
+/// The two sightings an operator gets: a row at the top of the list opens
+/// downward, and a row resting on the floor opens up.
+#[test]
+fn a_rows_menu_opens_into_the_room_the_row_has() {
+    let top_row = Band {
+        top: 120.0,
+        bottom: 180.0,
+    };
+    let placed = fit(AREA, top_row, 0.0, 200.0).expect("room below");
+    assert!(!placed.above, "a row near the top has its room below it");
+    assert!(AREA.holds(list(AREA, top_row, 0.0, placed)));
+
+    // The last row before the controls row, on a list long enough to reach
+    // the floor: below it there is nothing, so the menu goes up.
+    let last_row = Band {
+        top: 760.0,
+        bottom: 820.0,
+    };
+    let placed = fit(AREA, last_row, 0.0, 200.0).expect("room above");
+    assert!(placed.above, "a row on the floor has its room above it");
+    let band = list(AREA, last_row, 0.0, placed);
+    assert_eq!(
+        band,
+        Band {
+            top: 560.0,
+            bottom: 760.0
+        }
+    );
+    assert!(AREA.holds(band));
+}
+
+/// **The ratchet** (bl-78c2, widened by bl-f97c). The class was fixed twice at
+/// other sites and came back a third time because nothing asserted it. This is
+/// the assertion: for every anchor position on three screen shapes, every
+/// anchor HEIGHT, every list height including *unmeasured*, and every gap, an
+/// opened list lies inside the tappable area. Composing `fit` with `list` is
+/// the whole point — `fit` decides and `list` says what egui will paint from
+/// that decision, so the two disagreeing is exactly the defect.
+///
+/// The heights are the fourth axis and the menu is why: a selector is always
+/// one touch target tall, so the sweep only ever asked about 44 points. A
+/// conversation row is two or three lines, a zero-height anchor is what a
+/// pointer-anchored popup would hand in, and 400 is an anchor taller than two
+/// of the three areas — which `held` must clamp into a band with no room on
+/// either side rather than into a list outside it.
 #[test]
 fn an_opened_list_never_leaves_the_tappable_area() {
     let areas = [
@@ -190,6 +236,7 @@ fn an_opened_list_never_leaves_the_tappable_area() {
             bottom: 100.25,
         },
     ];
+    let talls = [0.0, 44.0, 60.0, 400.0];
     let wants = [0.0, 18.0, 100.0, 2000.0, f32::INFINITY];
     let gaps = [0.0, 4.0, 12.0];
     let (mut opened, mut flipped, mut refused) = (0_u32, 0_u32, 0_u32);
@@ -197,23 +244,26 @@ fn an_opened_list_never_leaves_the_tappable_area() {
         let reach = area.bottom - area.top + 40.0;
         for step in 0..40_u16 {
             let top = area.top - 20.0 + f32::from(step) * reach / 40.0;
-            let anchor = Band {
-                top,
-                bottom: top + 44.0,
-            };
-            for wanted in wants {
-                for gap in gaps {
-                    let Some(placed) = fit(area, anchor, gap, wanted) else {
-                        refused += 1;
-                        continue;
-                    };
-                    opened += 1;
-                    flipped += u32::from(placed.above);
-                    let band = list(area, anchor, gap, placed);
-                    assert!(
-                        area.holds(band),
-                        "{band:?} escaped {area:?}: anchor {anchor:?}, gap {gap}, wanted {wanted}"
-                    );
+            for tall in talls {
+                let anchor = Band {
+                    top,
+                    bottom: top + tall,
+                };
+                for wanted in wants {
+                    for gap in gaps {
+                        let Some(placed) = fit(area, anchor, gap, wanted) else {
+                            refused += 1;
+                            continue;
+                        };
+                        opened += 1;
+                        flipped += u32::from(placed.above);
+                        let band = list(area, anchor, gap, placed);
+                        assert!(
+                            area.holds(band),
+                            "{band:?} escaped {area:?}: anchor {anchor:?}, gap {gap}, \
+                             wanted {wanted}"
+                        );
+                    }
                 }
             }
         }

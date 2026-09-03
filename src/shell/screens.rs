@@ -15,6 +15,8 @@ use super::mark::Back;
 use crate::host::Health;
 use crate::seat::Snapshot;
 
+mod rows;
+
 impl Shell {
     /// Everything below the top inset: the yog mark, then the component this
     /// launch is running, and then the screen its focus depth selects.
@@ -104,103 +106,11 @@ impl Shell {
                 let label = format!("{}{mark} · {} agents", row.workspace, row.agents);
                 // Tapping a workspace focuses it, and the focus is what the
                 // worker asks `conversations` at.
-                if tap(ui, label.into(), "conversations") {
+                if tap(ui, label.into(), "conversations").clicked() {
                     self.focus_workspace(Some(row.workspace.clone()));
                 }
             }
         });
-    }
-
-    pub(super) fn conversations(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str) {
-        // The starter rides the BOTTOM of this screen, where the composer
-        // sits on the next one: starting a conversation and speaking into one
-        // are the same gesture to a thumb, so they are in the same place. The
-        // bottom of this layout is the platform's floor — `app::pass` spends
-        // the inset once, for every screen (bl-9cfd) — and **what claims it
-        // first is what may never be pushed off it** (bl-192c): the controls
-        // and the starter, then the chrome and the list in what remains.
-        ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            // The same controls row as the transcript's, under the same
-            // composer (§13.2, bl-0267): a model is picked for the WORKSPACE,
-            // so it is picked from the screen that lists it as readily as
-            // from a conversation inside it.
-            self.controls(ui, snap);
-            self.starter(ui);
-            ui.add_space(4.0);
-            ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                if self.bar(ui, workspace, &Back::To("workspaces")) {
-                    self.focus_workspace(None);
-                }
-                banner(ui, snap);
-                ui.separator();
-                egui::ScrollArea::vertical()
-                    .min_scrolled_height(0.0)
-                    .show(ui, |ui| {
-                        ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                            if snap.conversations.is_empty() {
-                                ui.weak("nothing here yet — say what to start below");
-                            }
-                            // Newest first, and each row says when (REMOTE §9.9,
-                            // bl-e837). Both readings spend the stamp the engine
-                            // carries; the clock is read once for the whole list so
-                            // no two rows are dated from different instants.
-                            let now = crate::roster::now_unix();
-                            for row in crate::roster::ordered(snap.conversations.clone()) {
-                                let mark = if row.attention > 0 { " ●" } else { "" };
-                                let when = crate::roster::stamp(row.last_active_unix, now);
-                                let label =
-                                    format!("{}{mark} · {when}\n{}", row.display, row.preview);
-                                // **Why the latest call did not run** (§9.10), where
-                                // the tone already inks the row: the hue is the
-                                // engine's reading and this is its words. A `Bad`
-                                // tone with no clause is the third thing it is — a
-                                // failure that left none — and says nothing extra.
-                                let label = match &row.failure {
-                                    Some(why) => format!("{label}\n{why}"),
-                                    None => label,
-                                };
-                                // The row's ink is the ENGINE's reading of it, not a
-                                // second one taken here (bl-ef9a). `Tone::Bad` is the
-                                // one passive sighting of a conversation refused at
-                                // the provider rung: the badge set is frozen at four,
-                                // so such a conversation comes to rest `stopped` — the
-                                // word `/stop` owns — and a list where the two read
-                                // identically is a list that cannot be scanned.
-                                // `Tone::Weak` is a start whose driver has written no
-                                // branch yet. `chat::tone_hue` is the same map the
-                                // transcript spends, so this app has one colour
-                                // vocabulary and it is the desktop's.
-                                let ink = super::chat::tone_hue(ui, row.tone);
-                                let label = egui::RichText::new(label).color(ink);
-                                if tap(ui, label, "transcript")
-                                    && let Some(model) = self.model()
-                                {
-                                    model.focus_conversation(
-                                        workspace.to_owned(),
-                                        row.root_id.clone(),
-                                    );
-                                }
-                            }
-                        });
-                    });
-            });
-        });
-    }
-
-    /// The one field that starts a conversation. It shares the composer's
-    /// widget id with the chat screen's, and deliberately: only one of the
-    /// two is ever on screen, they are the same gesture at two depths, and
-    /// the IME bridge addresses exactly one field by that id (bl-014e).
-    fn starter(&mut self, ui: &mut egui::Ui) {
-        if let Some(goal) = super::composer::composer(
-            ui,
-            &mut self.composer,
-            "start a conversation",
-            &["prepare", "prompt"],
-        ) && let Some(model) = self.model()
-        {
-            model.start_conversation(goal);
-        }
     }
 
     /// What this device offers a session, one line (REMOTE §5). It rides the
@@ -273,10 +183,10 @@ pub(super) fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
 /// this row's tap reaches (PARITY §2, *"the owed interactable for a read is
 /// the affordance that reaches the view it populates"*), which is the one
 /// thing that differs between the two lists.
-fn tap(ui: &mut egui::Ui, label: egui::RichText, op: &str) -> bool {
+pub(super) fn tap(ui: &mut egui::Ui, label: egui::RichText, op: &str) -> egui::Response {
     let control =
         egui::Button::new(label).min_size(egui::vec2(ui.available_width(), super::mark::TOUCH));
     let response = ui.add(control);
     super::act::act(ui, &response, op);
-    response.clicked()
+    response
 }

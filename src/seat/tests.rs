@@ -165,6 +165,7 @@ mod loaded;
 mod pick;
 mod reads;
 mod resume;
+mod row;
 mod start;
 mod tuning;
 mod turn;

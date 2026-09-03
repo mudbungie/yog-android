@@ -137,6 +137,13 @@ echo "screens: installing $APK" >&2
 # job, a re-provisioned leaf, airplane mode), while the file above only reads
 # what the platform already holds.
 . scripts/screens-background.sh
+# How the harness REACHES a control (`screens-reach.sh`). Its own file because
+# it answers a question none of the others do: this app's accessibility tree is
+# empty (§15.1), so every control in it is unaddressable by name and the only
+# way to one is a rectangle the app itself reported plus a synthesized gesture
+# at it. That was one control and one gesture until the row menu (§13.5) made
+# it two of each, which is the seam.
+. scripts/screens-reach.sh
 arm_parity
 
 relaunch() {
@@ -203,18 +210,6 @@ capture() {            # capture <name> <expected-screen>
   esac
 }
 
-# Where the mark is, in device pixels, as the app itself reported it. The mark
-# carries no text and no accessibility node; this is the only way to find it,
-# and it is the app's own answer rather than a coordinate guessed here.
-tap_mark() {
-  settle
-  local rect; rect=$(printf '%s' "$SETTLED" | sed -n 's/.*mark=\([0-9,]*\).*/\1/p')
-  [ -n "$rect" ] || { verdict fail "the screen reported no mark to tap"; return 0; }
-  local x y w h; IFS=, read -r x y w h <<<"$rect"
-  "${ADB[@]}" logcat -c || true
-  "${ADB[@]}" shell input tap $((x + w / 2)) $((y + h / 2))
-}
-
 : > "$OUT/verdict.txt"
 
 held_grants
@@ -243,6 +238,17 @@ capture back-to-roster roster
 # 4. The two deeper screens, each selected by the focus stored beside its rows.
 seed_cache conversations; relaunch
 capture conversations conversations
+
+# 4b. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
+#     `conversations` with a menu up, exactly as it says `transcript` with the
+#     stop gates on — but the three conversation acts exist nowhere else, and
+#     the parity gate below can only see a control a walked screen painted.
+#     This beat is also the ONLY place the long-press synthesis is proven on a
+#     device rather than read out of egui's source: no menu, no `act:` tags, and
+#     the gate goes red naming all three ops.
+long_press_row
+capture row-menu conversations
+
 seed_cache transcript; relaunch
 capture transcript transcript
 

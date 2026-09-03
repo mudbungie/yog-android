@@ -12,7 +12,7 @@
 //! emptiness is evidence in the run rather than a claim in a document.
 //!
 //! So the app states it instead, in the one channel an APK has (logcat), and
-//! states exactly **two facts — neither of which is world content**:
+//! states exactly **three facts — none of which is world content**:
 //!
 //! - **the name of the screen the dispatch chose**, written at the arm that
 //!   chose it, so the name has one home and cannot drift from the branch;
@@ -21,6 +21,12 @@
 //!   all, so it is the one control a harness cannot otherwise find. It says
 //!   where a tap must land; the app is still the thing that decides what a
 //!   tap there means.
+//! - **where the first conversation row was painted** (bl-f97c), on the one
+//!   screen that has rows. It is the mark's case exactly: the row menu opens
+//!   on a long press and nothing else opens it, and a row carries no node a
+//!   harness can address. Only the FIRST — the walk needs one row to press,
+//!   and a rectangle per row would be a channel that grows with the WORLD
+//!   rather than with the app, which is the line this file draws.
 //!
 //! **Nothing else may go down this channel.** No bar title, no row label, no
 //! identity: logcat is device-wide and readable by anything holding the debug
@@ -64,30 +70,54 @@ impl Shell {
     /// own and cannot get the scale wrong. egui works in points; the scale is
     /// read here, at the paint, from the context that laid the rect out.
     pub(crate) fn note_mark(&mut self, ui: &egui::Ui, rect: egui::Rect) {
-        let ppp = ui.ctx().pixels_per_point();
-        let px = |v: f32| (v * ppp).round() as i32;
-        self.mark_at = Some([
-            px(rect.left()),
-            px(rect.top()),
-            px(rect.width()),
-            px(rect.height()),
-        ]);
+        self.mark_at = Some(pixels(ui, rect));
+    }
+
+    /// Record where the first conversation row was painted, in device pixels
+    /// and by the same arithmetic the mark takes.
+    pub(crate) fn note_row(&mut self, ui: &egui::Ui, rect: egui::Rect) {
+        self.row_at = Some(pixels(ui, rect));
     }
 
     /// Say it, at the end of the pass and only when it changed.
     pub(super) fn probe(&mut self) {
         let mark = self.mark_at.take();
+        let row = self.row_at.take();
         let Some(screen) = self.screen.take() else {
             return;
         };
-        let line = match mark {
-            Some([x, y, w, h]) => format!("{MARKER} screen={screen} mark={x},{y},{w},{h}"),
-            None => format!("{MARKER} screen={screen}"),
-        };
+        let mut line = format!("{MARKER} screen={screen}");
+        if let Some(at) = mark {
+            line.push_str(&format!(" mark={}", spell(at)));
+        }
+        if let Some(at) = row {
+            line.push_str(&format!(" row={}", spell(at)));
+        }
         if self.probed == line {
             return;
         }
         log::info!("{line}");
         self.probed = line;
     }
+}
+
+/// A rect in **device pixels** — the unit `adb shell input tap` takes, so the
+/// harness does no arithmetic of its own and cannot get the scale wrong. egui
+/// works in points; the scale is read here, at the paint, from the context
+/// that laid the rect out. One helper because two rectangles now cross this
+/// channel and a second copy of the rounding would be a second answer.
+fn pixels(ui: &egui::Ui, rect: egui::Rect) -> [i32; 4] {
+    let ppp = ui.ctx().pixels_per_point();
+    let px = |v: f32| (v * ppp).round() as i32;
+    [
+        px(rect.left()),
+        px(rect.top()),
+        px(rect.width()),
+        px(rect.height()),
+    ]
+}
+
+/// One rectangle in the harness's own comma-separated spelling.
+fn spell([x, y, w, h]: [i32; 4]) -> String {
+    format!("{x},{y},{w},{h}")
 }
