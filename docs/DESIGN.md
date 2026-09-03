@@ -287,6 +287,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three and the live tail. Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, bl-4822, split out bl-07b1) |
 | `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
+| `src/shell/place.rs` | the second host-tested sliver: which side of a control its list opens on and how tall it may be, so an opened popup lands inside the tappable area — pure, and the only half of §13.2's geometry a test can reach | landed (bl-78c2) |
+| `src/shell/controls/drop.rs` | android-only: the drop-down that spends it — `Popup` over a button, because `ComboBox` places its list against the display | landed (bl-78c2) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the three screens by focus depth over the model's snapshot | landed (bl-5a98) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where the mark went, said to logcat once per change | landed (bl-243b) |
@@ -1226,9 +1228,13 @@ here is a defect.
   what is left above them. **The transcript is what gives way**, down to
   nothing — which needs saying to egui, since a `ScrollArea` refuses to be
   shorter than its `min_scrolled_height` however little room it is given
-  (the composer's own defect, bl-9cfd, one level up). Measured in the rect
-  harness at 320 and 400 points, keyboard up and down, tuning band shown:
-  nothing paints past the floor.
+  (the composer's own defect, bl-9cfd, one level up). Measured at 320 and 400
+  points, keyboard up and down, tuning band shown: nothing paints past the
+  floor. **That measurement was a throwaway rig and no harness of it was ever
+  committed** (recorded here by bl-78c2, which went looking for one): the
+  claim is a reading somebody took, not an assertion anything re-runs, which
+  is exactly how the same class reached a third site. `shell/place.rs` is the
+  first committed geometry assertion in this tree.
 - **The platform's insets are the interface's edges, and they are spent
   once.** `app::pass` pads the top inset and **shrinks the rect every screen
   is painted into by the bottom one** (the taller of the keyboard and the
@@ -1243,6 +1249,35 @@ here is a defect.
   the inset is spent in one place, and a widget that cannot fit inside the
   band it was handed is a widget deciding the layout — say the smaller
   minimum, do not pad around it.
+- **An opened list is inside the tappable area, and that is asserted rather
+  than remembered** (bl-78c2). The two rules above make the floor structural
+  for everything a screen LAYS OUT. A popup is not laid out: egui gives it an
+  `Area` of its own, positioned by `RectAlign::find_best_align` against
+  `Context::content_rect` and constrained to the same — the viewport minus
+  egui's **safe area**, which is a first-class notion `egui-winit` fills in on
+  iOS and nowhere else. On Android it is zero, so `content_rect` is the whole
+  display, gesture-nav zone included, and the selectors sit on the floor by
+  design (the controls row is the last thing the bottom-up stack adds). A list
+  opening downward from one therefore painted where taps never reach the app.
+  The rule: **a list opens into the room the tappable area actually has** —
+  below its control when it fits there, above when that side is roomier,
+  capped to the room either way and scrolling inside the cap; when neither
+  side has room, nothing opens, because a list an operator cannot tap is worse
+  than a control that did not respond.
+
+  Two things about how it is built are the point rather than detail. **It is
+  not a `ComboBox`**: the combo exposes neither its popup's alignment nor a
+  constraint rect, so there is no setter to reach for, and `controls/drop.rs`
+  assembles the same `Popup::menu`-over-a-button one layer down. And **the
+  rule is not in the paint**. `shell/place.rs` decides and states the band
+  egui will then paint; it is pure, host-tested, and stays out of
+  `tarpaulin.toml`'s exclusions. That seam exists because this class had been
+  fixed twice — bl-9cfd's floor, bl-192c's floor-first order — with nothing
+  but prose to hold it, and came back a third time at the one site neither
+  reached. The composition *fit → list ⊆ tappable area* is asserted over a
+  sweep of screen shapes, control positions and list heights: the first
+  geometry assertion in this tree, and the reason there need not be a fourth
+  fix.
 - **The launcher icon is the mark, and it is a derivation** (bl-0b31). The
   app's face outside the app is the same walk `shell/mark.rs` paints inside
   it — emitted as an adaptive icon's two `VectorDrawable` layers by
@@ -1283,11 +1318,13 @@ here is a defect.
   They are a **second band** under the first rather than more controls in it,
   for a measured reason: three selectors and a toggle beside the conversation
   acts leave a model selector too narrow to read a model name in at a
-  320-point width, and egui's own wrapping layout does not answer it — a
-  `ComboBox` does not declare its width to the wrap check, so it overflows
-  the column instead of moving down (measured: 418 points in a 390-point
-  column). One block under the composer, two rows when there is something in
-  the second: that is still one place to look.
+  320-point width, and egui's own wrapping layout does not answer it — the
+  `ComboBox` these selectors were did not declare its width to the wrap
+  check, so it overflowed the column instead of moving down (measured: 418
+  points in a 390-point column), and the drop-down that replaced it truncates
+  at its width rather than wrapping (bl-78c2). Either way the second row is
+  allocated, not wrapped into. One block under the composer, two rows when
+  there is something in the second: that is still one place to look.
 - **Tap is the act, and the controls load what the workspace actually has**
   (operator ruling, bl-e9f9 — this replaces the *shows only what this device
   set* rule the row shipped with). Nothing in the row holds a draft: picking

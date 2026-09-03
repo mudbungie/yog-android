@@ -15,6 +15,7 @@ use eframe::egui;
 use super::super::act;
 use super::super::app::Shell;
 use crate::codec::RoleRow;
+use crate::shell::place::Band;
 
 /// The effort selector's width class. Narrower than a provider or a model
 /// selector because its whole vocabulary is four short words.
@@ -24,7 +25,7 @@ impl Shell {
     /// **The effort selector**: the vocabulary is closed and no wire read
     /// backs it, so the options are the codec's own constant; `off` is one of
     /// them and rides as the real null the engine reads.
-    pub(super) fn effort(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>) {
+    pub(super) fn effort(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>, area: Band) {
         // The read carries the FILE's own word, which may be one the gesture
         // vocabulary does not spell (bl-e9f9). It is shown as itself — an
         // operator seeing `extreme` is being told the truth, and the four
@@ -35,18 +36,15 @@ impl Shell {
             .or_else(|| set.and_then(|row| row.effort.clone()))
             .unwrap_or_else(|| "effort".to_owned());
         let mut picked = None;
-        let opened = egui::ComboBox::from_id_salt("effort")
-            .selected_text(shown)
-            .width(EFFORT)
-            .show_ui(ui, |ui| {
-                for level in crate::codec::pick::LEVELS {
-                    let label = crate::codec::Effort::label(level);
-                    if ui.selectable_label(false, &label).clicked() {
-                        picked = Some((level, label));
-                    }
+        let opened = super::drop::drop_down(ui, area, "effort", shown, EFFORT, |ui| {
+            for level in crate::codec::pick::LEVELS {
+                let label = crate::codec::Effort::label(level);
+                if ui.selectable_label(false, &label).clicked() {
+                    picked = Some((level, label));
                 }
-            });
-        act::act(ui, &opened.response, "effort");
+            }
+        });
+        act::act(ui, &opened, "effort");
         if let Some((level, label)) = picked {
             self.effort = Some(label);
             if let Some(model) = self.model() {

@@ -26,6 +26,7 @@ use eframe::egui;
 use super::app::Shell;
 use crate::seat::Snapshot;
 
+mod drop;
 mod pick;
 mod tune;
 
@@ -66,6 +67,18 @@ impl Shell {
             self.tuned_at = snap.roles_read;
             self.forget_picks();
         }
+        // **The tappable area, read off the rect the inset was already spent
+        // into** (bl-78c2). `app::pass` shrinks what every screen is painted
+        // into by the platform's bottom inset (bl-9cfd), and this `ui` is
+        // that rect — so taking its two edges here reads the one spend
+        // rather than performing a second one. The selectors need it because
+        // an opened list is NOT laid out inside it: egui gives a popup an
+        // `Area` of its own against the whole display, which is how a list
+        // reached the gesture-nav zone (`shell::place`).
+        let area = crate::shell::place::Band {
+            top: ui.max_rect().top(),
+            bottom: ui.max_rect().bottom(),
+        };
         let set = crate::codec::pick::worker(&snap.roles);
         // **What the picked provider will take** (bl-dfbb), read off its own
         // row in covered code: the paint asks, it never derives.
@@ -81,23 +94,25 @@ impl Shell {
                 // only there while it is (bl-48fa).
                 self.stops(ui, snap);
                 let wide = (ui.available_width() - ui.spacing().item_spacing.x) / 2.0;
-                self.providers(ui, snap, set.as_ref(), wide);
-                self.models(ui, snap, set.as_ref(), wide);
+                self.providers(ui, snap, set.as_ref(), wide, area);
+                self.models(ui, snap, set.as_ref(), wide, area);
             });
             // **A second band, and only when there is something in it.** The
             // tuning controls cannot share the first: a selector narrow
             // enough to fit beside two others at a 320-point width is one an
             // operator cannot read a model name in (measured). egui's own
-            // wrapping layout does not answer this — a `ComboBox` does not
-            // declare its width to the wrap check, so it overflows the edge
-            // instead of moving down (measured: 418 points in a 390-point
-            // column) — so the second row is allocated rather than wrapped
-            // into. It is the same controls block under the composer, not a
-            // new place to look (§13.2).
+            // wrapping layout does not answer this either — the `ComboBox`
+            // these selectors were did not declare its width to the wrap
+            // check, so it overflowed the edge instead of moving down
+            // (measured: 418 points in a 390-point column), and the
+            // drop-down that replaced it (bl-78c2) truncates at its width
+            // rather than wrapping — so the second row is allocated rather
+            // than wrapped into, either way. It is the same controls block
+            // under the composer, not a new place to look (§13.2).
             if effort || priority {
                 band(ui, |ui| {
                     if effort {
-                        self.effort(ui, set.as_ref());
+                        self.effort(ui, set.as_ref(), area);
                     }
                     if priority {
                         self.priority(ui, set.as_ref());

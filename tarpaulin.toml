@@ -21,8 +21,15 @@
 # host test can reach a line of them; CI's android leg is their compile
 # check, and on-device verification is operator-assisted (DESIGN §3). Named
 # file by file rather than `src/shell/*` because the shell also holds
-# host-testable pure code (`src/shell/span.rs`, the UTF-16 span math) that
-# stays UNDER the 100% floor. `src/tools/ui/bridge.rs` is the same class and
+# host-testable pure code — `src/shell/span.rs` (the UTF-16 span math) and
+# `src/shell/place.rs` (where an opened list is allowed to paint, bl-78c2) —
+# that stays UNDER the 100% floor. `src/shell/controls/drop.rs` is the
+# android half of that second pair and is named here for the usual reason:
+# it is egui `Popup` and `Frame` calls, while the RULE it spends — which side
+# of a control a list opens on, and how tall it may be — is `place.rs`, which
+# is pure and asserted. The seam is drawn exactly there because this class of
+# defect (a control painting into the gesture-nav dead zone) had been fixed
+# twice with nothing but prose to hold it, and came back a third time. `src/tools/ui/bridge.rs` is the same class and
 # is named for the same reason: it is the JNI call itself, and the seam is
 # drawn so everything up to it — the schemas, the argument reading, the
 # two-line answer protocol — stays testable without a device. `src/shell/jvm.rs`
@@ -61,6 +68,7 @@ exclude-files = [
     "src/shell/chat.rs",
     "src/shell/composer.rs",
     "src/shell/controls.rs",
+    "src/shell/controls/drop.rs",
     "src/shell/controls/pick.rs",
     "src/shell/controls/tune.rs",
     "src/shell/enroll.rs",

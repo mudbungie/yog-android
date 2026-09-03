@@ -35,10 +35,14 @@ impl Shell {
         // rows than room pushed the controls and the composer straight
         // through the floor and under the gesture-nav bar, because a bound
         // rect is not a clip: `app::pass` bounds what a screen is GIVEN
-        // (bl-9cfd), and nothing made the overflow give way. Measured in the
-        // rect harness at 320 and 400 points, keyboard up and down, with the
-        // tuning band shown: the controls, the composer and the knobs all
-        // painted past the floor before this, and none of them does after.
+        // (bl-9cfd), and nothing made the overflow give way. Measured at 320
+        // and 400 points, keyboard up and down, with the tuning band shown:
+        // the controls, the composer and the knobs all painted past the floor
+        // before this, and none of them does after. That rig was a throwaway
+        // and nothing of it was committed (bl-78c2 went looking) — so this
+        // paragraph is a reading somebody took, not an assertion anything
+        // re-runs. `shell::place` is where the geometry that IS asserted
+        // lives.
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
             // Closest to the floor: the acts on this conversation, then the
             // composer that rides above the keyboard.

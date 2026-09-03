@@ -7,9 +7,12 @@
 //! Everything platform-bound is `cfg(target_os = "android")`: the host gate
 //! never compiles it, CI's android leg is its compile check, and it is
 //! excluded from coverage with its reasoning in `tarpaulin.toml`. What IS
-//! host-testable — the UTF-16 span math — stays out of the exclusion and
-//! under the 100% floor.
+//! host-testable — the UTF-16 span math, and where an opened list is allowed
+//! to paint — stays out of the exclusion and under the 100% floor. Geometry
+//! is in that second class on purpose (bl-78c2): a layout rule the suite
+//! cannot reach is a layout rule that gets fixed once per sighting.
 
+pub mod place;
 pub mod span;
 
 #[cfg(target_os = "android")]
