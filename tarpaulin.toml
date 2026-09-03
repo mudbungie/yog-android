@@ -26,6 +26,11 @@
 # is named for the same reason: it is the JNI call itself, and the seam is
 # drawn so everything up to it — the schemas, the argument reading, the
 # two-line answer protocol — stays testable without a device. `src/shell/jvm.rs`
+# `src/tools/paper/bridge.rs` is the third of that class (bl-f34f) and is
+# there for the same reason: it is four static calls into `dev.yog.Paper`,
+# while the schemas, the argument reading and the two-line protocol its
+# answers arrive in (`src/tools/bridged.rs`) are pure and stay UNDER the
+# floor. `src/shell/jvm.rs`
 # is that same JNI call, factored out when the camera became its second caller
 # (bl-d815), and `src/shell/camera.rs` is the camera's own half of it; the scan
 # screen (`src/shell/enroll/scan.rs`) is egui glue over both, while the decode
@@ -59,6 +64,7 @@ exclude-files = [
     "src/shell/screens.rs",
     "src/shell/transcript.rs",
     "src/shell/sys.rs",
+    "src/tools/paper/bridge.rs",
     "src/tools/ui/bridge.rs",
 ]
 ignore-panics = true

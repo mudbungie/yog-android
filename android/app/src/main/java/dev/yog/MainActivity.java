@@ -43,13 +43,22 @@ import com.google.androidgamesdk.gametextinput.InputConnection;
  * against. The loop stops; every later press pays the same price. A plain
  * {@code EditText} never restarts input on a keystroke.
  *
- * <h2>The one other override (bl-d815)</h2>
+ * <h2>The other overrides (bl-d815, bl-f34f)</h2>
  *
  * {@code onRequestPermissionsResult} is the only signal that separates "the
- * operator is looking at the camera dialog" from "the operator said no" — the
+ * operator is looking at the dialog" from "the operator said no" — the
  * platform's own {@code checkSelfPermission} answers DENIED for both, and a
  * scan screen that cannot tell them apart either spins forever or gives up on
- * a dialog still on screen. It is handed straight to {@link Camera}.
+ * a dialog still on screen. It routes on the request code, because two
+ * classes ask now: {@link Camera} for the enrollment scanner and
+ * {@link Notify} for the notification tool.
+ *
+ * <p>{@code onCreate}/{@code onResume}/{@code onPause} hand {@link App} the
+ * two things a tool running on the host thread cannot get for itself: this
+ * app's context, and whether it is in front. The second is not a nicety —
+ * Android has refused an activity launch from a background app since API 29
+ * and reports nothing when it does, so the {@code open} tool must be able to
+ * ask before it acts.
  *
  * We cannot edit that class, but the listener it installs on the surface view
  * is replaceable: the InputConnection registers itself with
@@ -69,12 +78,29 @@ public class MainActivity extends GameActivity {
     public void onRequestPermissionsResult(
             int request, String[] permissions, int[] grants) {
         super.onRequestPermissionsResult(request, permissions, grants);
-        Camera.answered(grants);
+        if (request == Camera.REQUEST) {
+            Camera.answered(grants);
+        } else if (request == Notify.REQUEST) {
+            Notify.answered();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        App.resumed(this);
+    }
+
+    @Override
+    protected void onPause() {
+        App.paused(this);
+        super.onPause();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        App.created(this);
         final InputConnection ic = GtiAccess.inputConnection(mSurfaceView);
         if (ic == null) {
             return;

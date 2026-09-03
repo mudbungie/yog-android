@@ -39,8 +39,13 @@ public final class Camera {
     /** The prefix a refusal carries, matching {@link InterfaceService#ERR}. */
     static final String ERR = "err\n";
 
-    /** The permission request's own id; nothing else in this app requests one. */
-    private static final int REQUEST = 0xCA;
+    /**
+     * The permission request's own id. Package-visible since bl-f34f, when
+     * {@link Notify} became the second thing in this app that asks: the
+     * activity's one result hook routes on the code, so a class that owns an
+     * ask owns the constant that names its answers.
+     */
+    static final int REQUEST = 0xCA;
 
     /**
      * Whether the dialog has been raised, and whether it has been answered.

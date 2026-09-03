@@ -28,7 +28,11 @@ fn the_advertisement_is_the_table_and_every_element_is_three_facts() {
             "ui_tap",
             "ui_type",
             "ui_key",
-            "screenshot"
+            "screenshot",
+            "device",
+            "clipboard_set",
+            "notify",
+            "open"
         ]
     );
     for tool in &set {

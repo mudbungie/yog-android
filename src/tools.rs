@@ -26,7 +26,9 @@ use serde_json::{Map, Value, json};
 
 use crate::codec::{Capture, Tool};
 
+mod bridged;
 mod files;
+mod paper;
 mod shell;
 mod ui;
 
@@ -67,6 +69,7 @@ pub fn advertisement() -> Vec<Tool> {
         files::list_tool(),
     ];
     set.extend(ui::tools());
+    set.extend(paper::tools());
     set
 }
 
@@ -88,6 +91,7 @@ pub fn run_in(tool: &str, input: &Value, data_dir: &str) -> Capture {
         files::WRITE => files::write(o),
         files::LIST => files::list(o),
         ui::READ | ui::TAP | ui::TYPE | ui::KEY | ui::SHOT => ui::run(tool, o, data_dir),
+        paper::DEVICE | paper::CLIPBOARD | paper::NOTIFY | paper::OPEN => paper::run(tool, o),
         other => refused(
             NO_SUCH_TOOL,
             &format!("this machine carries no tool called {other:?}"),

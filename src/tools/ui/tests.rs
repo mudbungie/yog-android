@@ -1,10 +1,11 @@
-//! The interface tools' pure half: the advertised elements, the argument
-//! reading, and the two-line protocol the platform service speaks. The JNI
-//! itself is the device's to answer for; everything up to it is asserted
-//! here, which is why the seam sits where it does.
+//! The interface tools' pure half: the advertised elements and the argument
+//! reading. The two-line protocol they answer in is `tools::bridged`'s and is
+//! tested there. The JNI itself is the device's to answer for; everything up
+//! to it is asserted here, which is why the seam sits where it does.
 
-use super::{REFUSED, SHOT_NAME, absent, answer, run, tools};
+use super::{SHOT_NAME, absent, run, tools};
 use crate::tools::BAD_INPUT;
+use crate::tools::bridged::REFUSED;
 use serde_json::json;
 
 fn args(v: serde_json::Value) -> serde_json::Map<String, serde_json::Value> {
@@ -29,33 +30,6 @@ fn the_table_names_every_interface_tool_and_says_what_it_needs() {
             tool.name
         );
         assert_eq!(tool.input_schema["type"], "object");
-    }
-}
-
-#[test]
-fn the_two_line_protocol_splits_into_the_captures_three_facts() {
-    let ok = answer("ok\nthe payload\nsecond line");
-    assert_eq!(ok.stdout, "the payload\nsecond line");
-    assert_eq!(ok.stderr, "");
-    assert_eq!(ok.exit_code, 0);
-    let err = answer("err\nthe service is not enabled");
-    assert_eq!(err.stdout, "");
-    assert_eq!(err.stderr, "the service is not enabled\n");
-    assert_eq!(err.exit_code, REFUSED);
-    // An empty payload is an ordinary answer, not a malformed one.
-    assert_eq!(answer("ok\n").stdout, "");
-}
-
-#[test]
-fn an_answer_in_no_protocol_at_all_says_so_rather_than_guessing() {
-    for reply in ["", "ok", "what", "\n"] {
-        let capture = answer(reply);
-        assert_eq!(capture.exit_code, REFUSED, "for {reply:?}");
-        assert!(
-            capture.stderr.contains("unreadable"),
-            "for {reply:?}: {}",
-            capture.stderr
-        );
     }
 }
 

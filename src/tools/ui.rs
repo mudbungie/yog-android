@@ -16,14 +16,16 @@
 //! would put a connectivity-rate fact into a durable document, which is the
 //! defect REMOTE §5 was amended to remove.
 //!
-//! **What is pure lives here and is tested**: the advertised elements, the
-//! argument reading, and the two-line answer protocol the Java side speaks.
-//! The JNI itself is [`bridge`], android-only and excluded from coverage —
-//! the seam is drawn so that everything except the platform call is verified
-//! without a device.
+//! **What is pure lives here and is tested**: the advertised elements and the
+//! argument reading. The two-line answer protocol the Java side speaks is
+//! [`super::bridged`]'s, shared with the paper tools since bl-f34f — one
+//! protocol, one parser. The JNI itself is [`bridge`], android-only and
+//! excluded from coverage — the seam is drawn so that everything except the
+//! platform call is verified without a device.
 
 use serde_json::{Map, Value, json};
 
+use super::bridged::answer;
 use super::{BAD_INPUT, arg, object_schema, refused};
 use crate::codec::{Capture, Tool};
 
@@ -35,12 +37,6 @@ pub(crate) const TAP: &str = "ui_tap";
 pub(crate) const TYPE: &str = "ui_type";
 pub(crate) const KEY: &str = "ui_key";
 pub(crate) const SHOT: &str = "screenshot";
-
-/// The verdict an interface tool that could not act earns — the service is
-/// off, nothing readable is in front, no field holds focus, the platform
-/// refused. One code, because the sentence is what a caller acts on and a
-/// second number would be a second thing to keep in step.
-const REFUSED: i32 = 1;
 
 /// The name a screenshot lands under when the caller states no path. It sits
 /// in the app's own storage, which is the one directory this uid can always
@@ -152,29 +148,12 @@ fn coord(o: &Map<String, Value>, key: &str) -> Option<i32> {
         .and_then(|n| i32::try_from(n).ok())
 }
 
-/// The Java side's two-line answer as a capture. `ok\n…` is the payload and
-/// `err\n…` is the sentence; anything else is a bridge this crate and that
-/// class no longer agree on, which is worth saying plainly rather than
-/// guessing at.
-pub(crate) fn answer(reply: &str) -> Capture {
-    match reply.split_once('\n') {
-        Some(("ok", payload)) => super::answered(payload.to_owned()),
-        Some(("err", why)) => refused(REFUSED, why),
-        _ => refused(
-            REFUSED,
-            &format!("the interface service answered something unreadable: {reply:?}"),
-        ),
-    }
-}
-
-/// The bridge, or the sentence a build without one gives. A host build has no
-/// Android to ask, and saying so beats a tool that silently does nothing —
-/// the suite exercises this arm, which is why the seam is a function rather
-/// than a `cfg` inside every caller.
+/// The bridge, or the sentence a build without one gives — [`super::bridged`]
+/// holds both the protocol and this refusal's shape, because the paper tools
+/// speak the same one.
 #[cfg(not(target_os = "android"))]
 pub(crate) fn absent() -> String {
-    "err\nthis build has no Android interface to read: the tool exists only on the device"
-        .to_owned()
+    super::bridged::absent("Android interface to read")
 }
 
 #[cfg(not(target_os = "android"))]

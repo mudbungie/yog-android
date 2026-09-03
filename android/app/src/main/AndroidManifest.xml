@@ -13,6 +13,18 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <!-- The paper tools (bl-f34f, DESIGN §16.1). Both are declarations, not
+         asks: ACCESS_NETWORK_STATE is a normal permission the installer
+         grants outright, and it is what lets `device` say which kind of
+         network this phone is on rather than guessing from a socket.
+         POST_NOTIFICATIONS is a runtime grant on API 33+ — declaring it only
+         makes the ask possible; dev.yog.Paper raises the dialog when a
+         notification is first wanted and the app is in front, and refuses in
+         band naming the settings act when it is not held. `device`'s battery
+         and storage reads and the clipboard write need no permission at
+         all. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- The mark, as an adaptive icon whose two layers are GENERATED from
          the same walk the in-app mark is drawn from (bl-0b31): no committed
          binary, one source, and a test that pins the assets to it. -->

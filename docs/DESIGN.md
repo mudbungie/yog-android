@@ -256,12 +256,17 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rows.rs` + `rows/{build,compacted,project,project/blocks}.rs` | the transcript's one-line row projection: the row vocabulary (class, tone, role, fold), the per-entry match and its labels, the preview/body split — pure, no paint | landed (bl-0ed6) |
 | `src/rows/turns.rs` + `turns/{steps,counts}.rs` | the turn rollup: where a turn is, when its machinery folds to one aggregate line, and the census that line says | landed (bl-0ed6) |
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
+| `src/tools/bridged.rs` | the two-line answer protocol every Java bridge speaks, and the one parser that reads it — pure | landed (bl-f34f, out of `tools/ui.rs`) |
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
 | `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, and the three-state health | landed (bl-d366, split bl-8641) |
 | `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete — refuse a carried `cwd` (§6), redial a broken channel up the ladder, stop on a refusal | landed (bl-0ac8, bl-8641) |
-| `src/tools/ui.rs` | the interface tools: their advertised elements, argument reading, and the two-line answer protocol — pure | landed (bl-1511) |
+| `src/tools/ui.rs` | the interface tools: their advertised elements and argument reading — pure | landed (bl-1511, protocol out bl-f34f) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
 | `android/…/{InterfaceService,UiTree,Gestures,Screens}.java` | the platform service: read the node tree, dispatch a tap, type, press a system control, screenshot | landed (bl-1511) |
+| `src/tools/paper.rs` | the paper tools (§16.1 rung 1): `device`, `clipboard_set`, `notify`, `open` — their advertised elements, the price each states, and the argument reading | landed (bl-f34f) |
+| `src/tools/paper/bridge.rs` | android-only: the JNI into `dev.yog.Paper`, one signature built per argument count | landed (bl-f34f) |
+| `android/…/{Paper,Device,Notify,Open}.java` | the paper tools' platform half: the door, the three device reads, the notification grant and post, the typed intent | landed (bl-f34f) |
+| `android/…/App.java` | the two handles a tool-host thread cannot get for itself: this app's context, and whether it is in front | landed (bl-f34f) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the live tick inside it | landed (bl-dfbb, out of `model.rs`) |
 | `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
@@ -295,7 +300,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/camera.rs` | android-only: the five static calls into `dev.yog.Camera`, activity passed in | landed (bl-d815) |
 | `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
-| `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA), games-activity trio, the OnKeyListener backspace shim, the permission-result hook | landed (bl-c761, bl-d815) |
+| `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on its request code, the lifecycle hand-off to `App` | landed (bl-c761, bl-d815, bl-f34f) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
 
@@ -423,6 +428,21 @@ stderr and an exit code and nothing downstream carries a second shape.
 by probe on a current device rather than assumed: a shell (`sh -c`, under this
 machine's own 60-second bound, terminated and reported as the shell's own
 `timeout` verdict), and file read / write / list.
+
+**The paper tools are the same sentence answered four more times** (§16.1,
+bl-f34f): `device`, `clipboard_set`, `notify` and `open` need no platform
+service at all, so what bounds each is one OS rule, and each rule was read
+before the tool was advertised rather than after. The clipboard WRITE is
+allowed with no focus and no permission — AOSP's own
+`ClipboardService.clipboardAccessAllowed` reaches its focused-window and
+default-IME tests only under `OP_READ_CLIPBOARD`, while its
+`OP_WRITE_CLIPBOARD` arm is *"Writing is allowed without focus"*, unchanged in
+every branch from android10 to main — which is why there is a
+`clipboard_set` and no clipboard read (§16.1's refused shapes). `notify` meets
+the API 33+ runtime grant and `open` meets the API 29+ background-launch
+refusal, and both ask BEFORE they act rather than reporting success for a call
+the platform silently dropped: a background `startActivity` throws nothing and
+logs one line, which is exactly the shape that would make a tool a decoy.
 
 **The interface tools need a platform service, and enabling it is the
 operator's act** (bl-1511, and §5's trust model unchanged): an app uid cannot
@@ -1660,10 +1680,26 @@ ball, ordered by what each costs:
 
 | rung | tools | platform cost | ball |
 |---|---|---|---|
-| 1 — the paper tools | `device`, `clipboard_set`, `notify`, `open` | no service; `notify` wants the POST_NOTIFICATIONS runtime ask (API 33+); `open` is platform-refused from background (BAL, API 29+) and says so in band | bl-f34f |
+| 1 — the paper tools | `device`, `clipboard_set`, `notify`, `open` | no service; `notify` wants the POST_NOTIFICATIONS runtime ask (API 33+); `open` is platform-refused from background (BAL, API 29+) and says so in band | **landed** (bl-f34f) |
 | 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | bl-b0a9 |
 | 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | bl-5cbd |
 | 3 — the pocketed foot | no new tool: the host loop itself moves into a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off by default, an explicit operator act | bl-8bd0 |
+
+**Rung 1's one open platform question is closed, and the answer is in the
+platform's own source** (bl-f34f). *Is a clipboard WRITE restricted the way a
+read is?* No: `ClipboardService.clipboardAccessAllowed` applies the
+focused-window and default-IME tests only under `OP_READ_CLIPBOARD`; its
+`OP_WRITE_CLIPBOARD` arm is three lines — *"Writing is allowed without
+focus"*, `allowed = true`, break — and is identical in every AOSP branch from
+android10 through main. Two limits ride with it and both are written where a
+model reads them: a denied write is a bare `return` from a void binder call,
+so nothing throws and nothing reports (the one denial left to meet is the
+`WRITE_CLIPBOARD` appop set to ignore, which defaults to allowed), and Android
+13+ auto-clears a clip about an hour after it is set. Reading the rule rather
+than watching one device do it is the stronger answer here, because the
+question was never *does this phone allow it* but *what does the platform
+permit* — and a read-back check cannot even be built, the READ being the half
+that is blocked.
 
 **Rung 2 IS the SMS-adjacent surface, and the SMS permissions are refused.**
 The teleoperation want behind "SMS" is reading what the phone was told — a 2FA
