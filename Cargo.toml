@@ -83,6 +83,20 @@ eframe = { version = "0.36", default-features = false, features = [
     "default_fonts",
     "android-game-activity",
 ] }
+# **NOT `accesskit`, and the reason is a crash** (bl-fe4c, DESIGN §15.1). The
+# ruling for the parity gate preferred exporting egui's accessibility tree to
+# the platform, and the route was walked: eframe's `accesskit` feature plus the
+# `accesskit_winit` dependency that actually selects the android adapter (the
+# feature alone is a no-op — it falls through to a null adapter). It works
+# until an accessibility client attaches, and then the process ABORTS:
+# `accesskit_android` `event.rs:64` unwraps the JNI call
+# `getParent().requestSendAccessibilityEvent(..)` while raising its first
+# event, the call returns a JavaException under GameActivity's surface view,
+# and the unwrap is a `SIGABRT` (measured on the emulator; the same lines stand
+# in the newest release). That is every TalkBack user's app dying, not a test
+# inconvenience, so the dependency is out and the gate reads the debug-gated
+# fallback inventory instead. bl-a6f3 is the exit ball: put this back when
+# upstream stops unwrapping.
 # winit: eframe's own windowing layer, named directly for the AndroidApp
 # handle type and the activity input types the bridge speaks.
 winit = { version = "0.30", features = ["android-game-activity"] }

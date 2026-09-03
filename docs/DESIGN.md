@@ -1308,31 +1308,40 @@ the grade is what a leaf may say, never a second registration — the Thrall
 screen says so while a seat runs (W3), and the engine's own enrollment
 refusal for a taken name is upstream's half of the same sentence.
 
-### 13.4 The parity ledger
+### 13.4 The parity ledger is a file, not this section (bl-fe4c)
 
-What a phone LLM app has, and where this seat stands. **In-wire** (this
-codec already carries the fact — build it here): the conversation list with
-unread marks and status ink (landed), starting a conversation (landed), the
-send control (landed), streaming-at-cadence reads (landed §7), settings
-reachable from anywhere (landed), the drawn mark, the standing bar, the
-multiline composer and the touch-target floor (children of this section), and
-the provider/model selectors (landed bl-0267 — three ops the wire always had
-and this codec did not spell), and **the stop control** (landed bl-48fa —
-REMOTE §3.1 states the gesture as an op and puts both gates on the row, so
-the seat neither derives them nor deposits a slash line: a `/stop` deposit is
-CONTENT, and content wakes the driver it meant to kill), and **the nudge**
-(landed bl-d09e — §8.2's re-prompt for a branch that stopped advancing,
-offered while the row states no flight; it deposits nothing, so a poked
-conversation carries no line saying it was poked), and **the roster's
-timestamps and failure clauses** (landed bl-e837 — REMOTE §9.9 and §9.10 put
-both on the row, so the ask became a re-vendor), and **the effort/priority
-tuning pair** (landed bl-dfbb — REMOTE §9.4 minted the two gestures and
-widened the providers row with the capability each provider will take).
-**Upstream asks** (the wire does not carry the fact; a ball on the server's
-board, not a shim here): conversation search; push notifications (the engine
-dials nothing, so a channel is a REMOTE design act, not an app feature).
-**Already on this board:** entries — one device as a client of many engines
-(REMOTE §8.2, bl-d0d2).
+This section used to carry the ledger itself: a paragraph of what a phone LLM
+app has and where this seat stood, kept by hand, in three groups — in-wire and
+built, in-wire and unbuilt, upstream ask. **It is now `parity.toml`**, one line
+per absent op with a citation, machine-checked on every walk against the
+engine's own roster (§15.5). One home, and a loud one.
+
+**The fold was not bookkeeping — the prose had rotted and only a machine
+noticed.** The ledger filed *conversation search* under upstream asks, "the
+wire does not carry the fact; a ball on the server's board, not a shim here".
+The engine's help table carries `search`, classed `control`, summarised by
+upstream as *find the text anywhere: balls, workspaces, conversations,
+transcripts*. It was an unbuilt surface wearing an upstream ask's clothes, and
+it read as green for as long as a person had to notice it (bl-6cf3). A second
+sighting came out of the same fold: this seat paints an attention mark on two
+screens and fires no `seen`, so the queue it shows can only grow (bl-2889).
+
+What stays here is the shape of the ledger and nothing that can go stale in it:
+
+- **In-wire and built** is not a list any more — it is the set of `act:` tags a
+  walk observes, which is derived rather than asserted (§15.5). The balls that
+  built each control remain in the log; the state of the tree is a question for
+  the gate.
+- **In-wire and unbuilt** is a `parity.toml` line whose citation is the ball
+  that will build it. Deleting the line re-reddens the gate, which is the
+  severability test.
+- **An upstream ask** — the wire does not carry the fact at all — is the one
+  class the roster cannot see, because an op that does not exist is in no help
+  table. Push notifications are the standing example: the engine dials nothing,
+  so a channel is a REMOTE design act rather than an app feature. Entries — one
+  device as a client of many engines — is the other (REMOTE §8.2, bl-d0d2).
+  **Anything an upstream ask claims must be checked against the roster before
+  it is written here**, which is exactly the check that had never been run.
 
 ## 14. The paint-first cache (bl-de96)
 
@@ -1394,19 +1403,56 @@ fail on. `scripts/screens.sh` is the loop; `scripts/screens-seed.sh` is what
 puts the device in each state, split from it because a seed is what a screen
 IS and the loop is what is DONE with it.
 
-### 15.1 The accessibility tree is empty, and no harness can fix that
+### 15.1 The accessibility tree still cannot be read, and now we know why
 
 The ball behind this section asked for structural assertions read out of
-`uiautomator dump`. **That surface does not exist for this app.** egui paints
-into one opaque view, so the dump comes back as a single
-`android.view.View` — no label, no button, no row, and byte-for-byte the same
-XML on every screen this app has. Nothing about the harness changes it; the
-information is not in the platform's hands.
+`uiautomator dump`, and **that surface does not exist**: egui paints into one
+opaque view, so the dump comes back as a single `android.view.View` — no label,
+no button, no row, and byte-for-byte the same XML on every screen. The dump is
+captured beside every screenshot anyway, so the emptiness lives in the run's
+own evidence rather than in a sentence somebody has to believe.
 
-The dump is captured beside every screenshot regardless. An empty tree stated
-in a document is a claim; six identical dumps in a run's own output are
-evidence, and the day some future stack does populate it, the same files say
-so without anyone re-checking this paragraph.
+**bl-fe4c walked the way out and it was a dead end.** The parity gate (§15.5)
+wanted exactly that tree, and its ruling preferred exporting it over any
+self-report. What was found, in this order, is worth keeping because each step
+looks like the answer until the next one:
+
+1. **eframe's `accesskit` feature alone does nothing here.** It enables
+   `egui-winit/accesskit`, which pulls `accesskit_winit` — whose android
+   adapter compiles only under that crate's own `accesskit_android` feature, an
+   implicit optional-dependency feature in no default set which neither eframe
+   nor egui-winit forwards. The fall-through is a `null` adapter whose update
+   method has an empty body: every frame's tree is built and dropped, and the
+   dump is as empty as before. eframe is Android-aware enough to `compile_error!`
+   on the wrong activity backend here, and still never enables the right
+   adapter — that guard is the gap's fingerprint.
+2. **Naming `accesskit_winit` directly does put the real adapter in.** No
+   Gradle work and no Java of ours: the crate carries a prebuilt DEX and
+   installs its own `View.AccessibilityDelegate` on the GameActivity surface at
+   runtime.
+3. **And then the app aborts.** Raising its first accessibility event,
+   `accesskit_android` (`event.rs:64`) unwraps the JNI call
+   `getParent().requestSendAccessibilityEvent(..)`; under GameActivity's
+   surface view that call returns a `JavaException`, and the unwrap is a
+   `SIGABRT`. Measured on the emulator, in this walk's own output: the roster
+   painted, the dump attached, and the next step found a dead app and a
+   launcher. The same three lines with the same unwrap stand in the newest
+   `accesskit_android` release, so it is not a version behind.
+
+**So the dependency came out, and the reason is users rather than tests.** An
+accessibility client is not only `uiautomator` — it is TalkBack. Shipping this
+would abort the app for exactly the people accessibility exists for, which is
+worse than exporting no tree at all. The manifest records the failure at the
+line where the dependency would go; **bl-a6f3 is the named exit**, and it is
+one feature, one dependency and one deletion when upstream stops unwrapping.
+
+**The fallback is PARITY §6's own** — *"a debug-gated in-process inventory: the
+shell serializes the act-tags it painted to a file the harness reads. No new
+dependency; weaker, because it is self-reported rather than observed"* — and
+the assertion in §5 is unchanged either way, because only where the inventory
+bytes come from differs. `src/shell/act.rs` is the recorder; what it can
+honestly claim, and the disclosure argument for the channel it writes to, are
+stated there.
 
 ### 15.2 So the app states what it painted
 
@@ -1461,12 +1507,13 @@ one place that already knows.
 
 ### 15.4 What gates
 
-**Only structure.** The screen the app says it painted, against the screen the
-walk asked for. No golden image and no pixel diff: a picture that fails on a
+**Structure, and reachability.** The screen the app says it painted, against
+the screen the walk asked for — then, once, what the whole walk could reach
+(§15.5). Still no golden image and no pixel diff: a picture that fails on a
 font bump teaches nobody anything, and the PNGs are for eyes, not for
 assertions.
 
-The walk, and the standing assertion it exists for:
+The walk, and the standing assertions it exists for:
 
 | step | seed | asserts |
 | --- | --- | --- |
@@ -1475,7 +1522,21 @@ The walk, and the standing assertion it exists for:
 | `settings` | — tap the mark | **the configuration surface is reachable from the roster** |
 | `back-to-roster` | — tap the mark | the mark toggles: a way in with no way out is the same defect wearing the other face |
 | `conversations` | focus at a workspace | the conversation list paints under its focus |
-| `transcript` | focus at a conversation | the chat screen paints under its focus |
+| `transcript` | focus at a conversation, at rest | the chat screen paints under its focus, and the nudge is offered |
+| `running` | the same, with the stop gates on | the two stop controls paint under the engine's own gates |
+| `parity` | — every dump above | **every `control`-classed op is reachable or cited** (§15.5) |
+
+**The seeds grew a state, not a screen** (bl-fe4c). `transcript` and `running`
+are the same screen; what differs is the conversation row's own gates, which
+REMOTE §3.1 and §9.4 put on the row so no client derives them. Three controls
+live behind those gates — *stop*, *stop all* and the *nudge* — and a walk that
+only ever saw one state could not observe the other's controls at all. The
+`running` seed sets the two booleans to their other lawful value; it invents no
+field and reads no spelling the codec does not already decode. The options the
+controls row is made of (the providers reply, the roles the workspace is
+actually set to, one provider's models) are seeded for the same reason: without
+them there is no picked provider, so the model selector is disabled and the
+§9.4 tuning band does not paint.
 
 The pair in the middle is the assertion the loop was built for. It found its
 first defect immediately and the defect was in the harness's own premises: the
@@ -1489,7 +1550,63 @@ quietly rebuilding one.
 SDK, an emulator and a built APK, and a lint gate that depends on an artifact
 a build step produced is a gate that cannot run on a clean box.
 
-### 15.5 What it does not reach yet
+### 15.5 The parity gate: what the walk could REACH (bl-fe4c)
+
+The steps above answer *did the app go where it said it would*. The last beat
+answers a different question, and it is the operator requirement behind yog's
+`docs/PARITY.md`: **if something is interactable in the desktop seat it must
+exist here**, caught mechanically rather than noticed by hand.
+
+**Against one roster, never against the other client.** Components meet at the
+interface, never pairwise (PARITY §2): a client-vs-client diff has no authority
+when the two disagree and goes quadratic at a third surface. The authority is
+the engine's own help table, whose rows carry `surface` since protocol 7 —
+`control` for an op every seat owes a discoverable interactable, `machine` for
+one spoken only by programs — and it reaches this repo inside the corpus that
+is already vendored and already replayed. Raising the bar is therefore an edit
+at yog: one classification changes, and on the next re-vendor this gate reddens
+until a control or a cited exemption answers it.
+
+**The tag is `act:<op>`** (PARITY §4), with the op token — the help row's
+`verb`, the envelope's `op`, the corpus filename — as the one name, so no
+translation table is born. The visible label stays a human word. It was meant
+to ride the control's accessibility node; §15.1 is why it rides a file
+instead: written at the paint site of the widget that fires the op, into
+app-private storage, armed by a directory the harness creates. What that
+self-report can still honestly claim — *this control was laid out and its
+rectangle was on the glass* — is argued in `src/shell/act.rs`, and it is
+weaker than an observation in exactly one way: nothing outside this app
+confirms it.
+
+**The four assertions** are PARITY §5's, over three strings — the vendored
+roster, the observed tags, and `parity.toml`:
+
+    roster − exemptions ⊆ inventory      (coverage)
+    tags(inventory) ⊆ ops(corpus)        (no unknown tag)
+    ∀e ∈ exemptions: e ∈ roster          (no rotted exemption)
+    ∀e ∈ exemptions: e ∉ inventory       (no stale exemption)
+
+The last two are what stop the exemption file becoming a place to hide. The
+judgement is `src/parity`, pure and under the 100% floor; the driver is
+`tests/parity.rs`, `#[ignore]`d because the inventory does not exist until a
+device has been driven, and run by the walk with `PARITY_DUMPS` pointed at
+the run's output. It reads `.tags` (today's inventory) and `.ui.xml` (the
+dump, still captured) with one scanner that looks for the token rather than
+for a format, so the changeover at bl-a6f3 deletes code instead of adding a
+gate. **The half that needs no device gates on every `make
+check`**: `src/parity/tests.rs` reads this tree's own `parity.toml` against the
+vendored roster, so an exemption that stops parsing, stops citing, or names an
+op the engine no longer classes `control` reddens without an emulator.
+
+**Presence is the claim; depth is this harness's** (PARITY §5). The gate says a
+tagged node exists in the walked tree. That it is reachable in bounded
+gestures, unclipped and on a screen an operator can get to are §15.4's
+assertions and stay there. And **unproven is red**: a control that exists only
+on a screen the walk never visits fails honestly — extend the walk, or move the
+control. That is why `running` exists, and it is the shape of every future
+answer to a coverage failure.
+
+### 15.6 What it does not reach yet
 
 The screens behind a text button — the two enrollment screens and the server
 bootstrap — are named by the probe but not walked, because reaching them means

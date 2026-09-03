@@ -8,402 +8,468 @@
         {
           "detail": "Deposits the text in the selected conversation's inbox and wakes its driver so it reads it (`litany message`). The text is the whole tail, verbatim — spacing and newlines reach the model unchanged, and no flag is read out of it. Takes the workspace and the agent from the seat; refuses when nothing is selected.",
           "summary": "send the text to the selected conversation and wake its driver",
+          "surface": "control",
           "usage": "/message <text…>",
           "verb": "message"
         },
         {
           "detail": "Stops whatever is running the selected conversation and then deposits the text (`litany stop`, then `litany message`), so the model reads it now instead of at the end of what it is doing. The deposit is what restarts the conversation — there is no separate resume — so this leaves it running on your new text. Work already committed is kept, and a tool call cut off mid-flight is reported to the model in band as having produced no result. With nothing running it is simply a send. Two lines on the trail, one for each half, because the stop can be declined while the text still lands. The text is the whole tail, verbatim; no flag is read out of it, `children` included — use `/stop children` for a subtree. Takes the workspace and the agent from the seat; refuses when nothing is selected. Ctrl+Enter in the composer is this gesture.",
           "summary": "cut the selected conversation off mid-work and send it this text",
+          "surface": "control",
           "usage": "/interrupt <text…>",
           "verb": "interrupt"
         },
         {
           "detail": "Kills the driver running the selected conversation (`litany stop`). Everything it has already committed is kept, and it can be messaged again afterwards. Say `children` to stop the agents it spawned too, not only the one at its root.",
           "summary": "kill the selected conversation's driver; `children` cascades",
+          "surface": "control",
           "usage": "/stop [children]",
           "verb": "stop"
         },
         {
           "detail": "One workspace-wide sweep (`litany scan`): delivers pending inbox mail and deposits an epitaph for any agent that died silently. Acts on the focused workspace, not on the selection.",
           "summary": "flush the focused workspace's inboxes and deposit epitaphs",
+          "surface": "control",
           "usage": "/scan",
           "verb": "scan"
         },
         {
           "detail": "Runs the model on the selected conversation as it is, with nothing added (`litany advance`): no new message, no goal retyped, the same conversation continued. This is the fix for a first turn that died before it reached the model — a missing sign-in, a provider row that was wrong — sign in, then nudge, and the turn is dispatched again in place. The driver runs detached, so it keeps going whatever yog does. Takes the workspace and the agent from the seat; refuses when nothing is selected, and does nothing while a driver is already running the conversation.",
           "summary": "prompt the selected conversation again from where it already stands",
+          "surface": "control",
           "usage": "/nudge",
           "verb": "nudge"
         },
         {
           "detail": "You do not need this to make a config edit reach a running conversation: a conversation follows its lineage's head at every step boundary, so a model you pick now governs this one at its next step by itself. What this changes is which *lineage* it follows — and it is the way out of the one state that has no head to follow, where two or more lineages have diverged over the conversation's fork point and it is held there until somebody says which. This runs `litany retarget`: it marks the conversation, and the conversation's own driver re-forks it onto this workspace's lineage at its next step, replaying everything it has already done on top — nothing is discarded and nothing is killed. It takes effect at that next step, never mid-step, which in practice is the message you send after it. Takes the workspace and the conversation from the seat; a conversation already on that lineage is a clean no-op litany reports for itself, and litany declines the move when the target does not describe the role it runs as.",
           "summary": "settle the selected conversation onto this workspace's config lineage",
+          "surface": "control",
           "usage": "/retarget",
           "verb": "retarget"
         },
         {
           "detail": "Delivers a ball (`bl close`): folds `main` into its worktree, runs the project's pre-commit gate, squashes the work onto the target branch and removes the worktree. A failing gate aborts and leaves the ball claimed. With no id, the focused ball; stamped with its claimant, never your login name.",
           "summary": "close a ball (the focused one by default) and deliver its work",
+          "surface": "control",
           "usage": "/close [id]",
           "verb": "close"
         },
         {
           "detail": "Claims a ready ball for the seat's workspace (`bl claim`), which is what binds the ball to it: a bound ball is one a workspace holds. With no id, the focused ball.",
           "summary": "claim a ready ball for this workspace",
+          "surface": "control",
           "usage": "/assign [id]",
           "verb": "assign"
         },
         {
           "detail": "Lets a ball go (`bl unclaim`): the workspace stops holding it and anyone can claim it again. Nothing already committed in its worktree is lost. With no id, the focused ball.",
           "summary": "unclaim a ball this workspace holds",
+          "surface": "control",
           "usage": "/release [id]",
           "verb": "release"
         },
         {
           "detail": "Creates a ball in the seat's project (`bl create`) and prints nothing but its id in the reply. The title is the words before any flag; `--body` carries the rest of the description. Both are whitespace-normalized — a line is a line. The four scheduling facts the board orders on ride here too: `--priority` (a number, higher first), `--tag` (repeatable), `--parent` and `--needs` (a blocker `ID[:OP]`, `OP` defaulting to claim). A subtask is `--parent E` plus `/update E --needs <new>:close`; balls judges them and its refusal rides back.",
           "summary": "create a ball in the focused project",
+          "surface": "control",
           "usage": "/create <title…> [--body <text…>] [--priority N] [--tag T] [--parent ID] [--needs ID[:OP]]",
           "verb": "create"
         },
         {
           "detail": "Amends a ball (`bl update`). At least one field is required, or the line asked for nothing; give any combination. `--note` appends to the ball's journal rather than replacing anything. The scheduling facts each have a clearing form beside them — `--no-priority`, `--no-parent`, and `--no-tag T` / `--no-needs ID` which drop one named entry. Repeat `--tag` to add several. With no id, the focused ball.",
           "summary": "amend a ball's title, body, schedule, or append a journal note",
+          "surface": "control",
           "usage": "/update [id] [--title T] [--body B] [--note N] [--priority N|--no-priority] [--tag T|--no-tag T] [--parent ID|--no-parent] [--needs ID[:OP]|--no-needs ID]",
           "verb": "update"
         },
         {
           "detail": "Runs everything a new conversation needs before it is prompted: the mint, the workspace if it does not exist yet, and the ball rung's `bl` steps. The rung is said outright, never inferred — nothing is the bare rung, `dir` a work directory, `ball` the selected ball (or `--new` to mint one). Its reply is what `/prompt` then fires; an existing ball's spec comes from the seat's roster.",
           "summary": "the start flow's mutating half: seed, workspace, ball rung",
+          "surface": "control",
           "usage": "/prepare | /prepare dir <path> | /prepare ball [--new <title…> [--body <text…>]]",
           "verb": "prepare"
         },
         {
           "detail": "Fires the detached `litany prompt` a `/prepare` made ready, with this goal as the whole payload, verbatim — nothing is prepended to it. Say no goal and the `/prepare` reply's own prefill fires instead, whole: the ball rung's `Ball <id>: <title>` header and body, or the path rung's `Working directory: <dir>` preamble. A bare start prepares no prefill, so there the goal is required. To fire a prefill with words of your own, send the two joined as one goal — that text is the reply's `prepared.goal`, and editing it is exactly what a seat with a composer does. Refuses when nothing is prepared. At a seat with no composer to hold it — a terminal, where each `yog gesture` is its own process — hand the `/prepare` reply's own `prepared` object back with `yog gesture --prepared '<that object>' '/prompt [<goal…>]'`. The conversation keeps running whatever yog does. The receipt's `conversation` is the minted name, and a name is an address: hand it back at `--agent` to any conversation verb or read.",
           "summary": "fire the prepared start with this goal, verbatim",
+          "surface": "control",
           "usage": "/prompt [<goal…>]",
           "verb": "prompt"
         },
         {
           "detail": "Asks balls for `n` private attempt worktrees off one pinned tip of the focused ball's delivery target, and answers with the prepared start once per candidate, each bound to its own worktree — fire them with `/prompt`, one per candidate, with whatever variation you want between them. `n` of 1 or 0 materializes nothing and hands back the ordinary claim binding, which is the same path with one candidate. Nothing records that the candidates belong together: they share a target and a base commit, and that is what makes them siblings.",
           "summary": "spread the prepared start over n isolated candidate attempts",
+          "surface": "control",
           "usage": "/fan <n>",
           "verb": "fan"
         },
         {
           "detail": "Releases the named candidate's worktree. Its source ref — and so its whole diff — stays addressable, because a rejected candidate is one that was never delivered and yog deletes nothing on an opinion. The ref goes too only when `cadence.yaml`'s `retention:` block declares a `keep_min` for this project and the candidate has outlived it. Retiring changes no delivery target, ever.",
           "summary": "release a candidate's worktree; keep its source ref unless retention says not to",
+          "surface": "control",
           "usage": "/retire <handle>",
           "verb": "retire"
         },
         {
           "detail": "Delivers the named candidate onto the focused ball's own `work/<id>` ref — the same recursive delivery `bl close` later performs one level up, so accepting neither closes the ball nor changes what its close delivers. The summary is the whole tail, verbatim: it becomes the delivery subject, which balls tags with the handle — the only acceptance mark there is, derived from the target's history rather than stored. A stale candidate refuses before anything merges: message its agent to incorporate the current target in its own worktree and deliver again. Rejection has no verb — a loser is simply never delivered.",
           "summary": "accept one candidate: the ordinary source-to-target delivery of its attempt",
+          "surface": "control",
           "usage": "/deliver <handle> <summary…>",
           "verb": "deliver"
         },
         {
           "detail": "Forks the selected conversation from `--from` — a commit of its own history (the mark you pinned) or a `config/<name>` head for a clean start — and gives the fork this goal (`litany dispatch`). `--role` is what names the model: litany reads the provider and model id from the role's entry in the config lineage governing that ref, at its head, so a role that lineage does not declare is refused there. `--skills` pins each named skill's instructions into the fork's context. To compare candidates, fire this more than once from the same mark: they group themselves under that mark's rule in the chat, because siblings of one mark is a fact about the refs and not a list anything keeps. Everything after `--goal` is the goal, verbatim. Takes the workspace and the conversation from the seat.",
           "summary": "try this conversation again from a point in its history",
+          "surface": "control",
           "usage": "/fork --from <ref> --role <role> [--skills a,b] --goal <the goal…>",
           "verb": "fork"
         },
         {
           "detail": "A tool host says what it can do. The whole tail is the set, as a JSON array whose elements are `{\"name\": …, \"description\": …, \"input_schema\": …}` — the name a single path component, the description one string, the schema a JSON Schema carried through untouched. The set replaces whatever this client advertised before, and it is stored only when it differs, so re-presenting an unchanged set on every reconnect writes nothing. Two elements sharing a name is refused outright; two machines both offering `Bash` is ordinary. It names no client: the identity it lands under is the certificate the connection presented, so a caller inside the world — the deposit inbox, `yog gesture`, the window — has none and is refused.",
           "summary": "present this machine's tool set into the workspaces it is registered in",
+          "surface": "machine",
           "usage": "/advertise <json array>",
           "verb": "advertise"
         },
         {
           "detail": "Queues one call in a tool host's mailbox and answers the handle it is known by. It does NOT wait: the engine's intake is one thread for the whole world, so what a tool takes is waited out by the caller, with `/capture <handle>` until an answer lands. The client must advertise that tool right now, or this refuses saying so — the same correction a machine that dropped a tool earns. The tool name is the one the host advertised, never the prefixed name a model sees. Whether the machine is connected is deliberately not checked: a tool host holds its connection only while it is waiting, so a busy one looks absent — what makes a vanished machine visible is your own deadline.",
           "summary": "route one tool call to the machine that advertised it",
+          "surface": "machine",
           "usage": "/invoke <client> <tool> <json input>",
           "verb": "invoke"
         },
         {
           "detail": "The tool host's half of the routing leg. The capture is `{\"stdout\": …, \"stderr\": …, \"exit_code\": …}` — litany's own tool contract, one for one. Only the machine the invocation was addressed to may answer it; a handle addressed to anyone else reads as absent, which is the same sentence a handle nobody minted earns. A caller inside the world has no certificate and therefore no invocations, and is refused.",
           "summary": "answer one routed invocation with what running it captured",
+          "surface": "machine",
           "usage": "/complete <invocation> <json capture>",
           "verb": "complete"
         },
         {
           "detail": "Unmakes the focused workspace and releases the balls it held. Fail-closed at fire time wherever it is asked: refused unless the workspace is yog's own, nothing in it is live, and the name you type matches it exactly.",
           "summary": "unmake the focused workspace; the typed name is the arming",
+          "surface": "control",
           "usage": "/delete-workspace <typed name>",
           "verb": "delete-workspace"
         },
         {
           "detail": "Removes the selected conversation and everything litany holds for it — its ref, worktree, steps and inbox. Refused while it is live. A bare line deletes the one conversation; typing its name is what arms taking its descendants with it, and without that litany declines a subtree nobody confirmed.",
           "summary": "delete the selected conversation; the typed name arms taking its children too",
+          "surface": "control",
           "usage": "/delete-agent [typed name]",
           "verb": "delete-agent"
         },
         {
           "detail": "Arms the alignment monitor on the focused workspace, pinned to the model you name. From then on, whenever an agent commits, one small tool-less call reads its goal and the work since the last check and answers aligned, drifting or diverged with one sentence — recorded on the ops trail, which is the only thing it does by default. The question it asks lives in an editable policy file, seeded beside the settings the first time you arm. Costs money per check; `/disarm` ends it.",
           "summary": "watch this workspace's agents with a cheap model, and say when work drifts",
+          "surface": "control",
           "usage": "/arm <model>",
           "verb": "arm"
         },
         {
           "detail": "Removes the focused workspace's monitor setting. No further checks are made and nothing further is charged; every verdict already recorded stays on the trail.",
           "summary": "stop watching this workspace",
+          "surface": "control",
           "usage": "/disarm",
           "verb": "disarm"
         },
         {
           "detail": "Records that this conversation wants a human look, and why, as its own row on the ops trail. It changes nothing else — it does not stop, message or touch the conversation. It is also the one verb an alignment responder is granted by default, so that signalling out is a call with a shape rather than a sentence someone has to read.",
           "summary": "raise an attention item on the selected conversation, with a reason",
+          "surface": "control",
           "usage": "/flag <why…>",
           "verb": "flag"
         },
         {
           "detail": "Arms the loop on the focused workspace: from then on, whenever it holds fewer than <cap> balls of the focused project, it claims the top ready one and starts a drone on it — the same start a ▶ Start click makes, through the same spend ceiling. It renders as facts on the board (how full, how often it looks, when it last acted) and every spawn and reap is a row on the trail. It never stops anything that is running. Add a `lease_min` to its cadence.yaml entry and it will also release a claim whose conversations have gone quiet for that long, recording the comparison that decided it. `/disband` ends it.",
           "summary": "run the focused project's ready balls here, up to this many at once",
+          "surface": "control",
           "usage": "/fleet <cap>",
           "verb": "fleet"
         },
         {
           "detail": "Removes the focused workspace's fleet setting. Nothing further is claimed, started or released; everything already running is untouched and keeps its ball. Its own verb rather than a cap of zero, which is an armed loop that spawns nothing and still reaps.",
           "summary": "stop running a fleet in this workspace",
+          "surface": "control",
           "usage": "/disband",
           "verb": "disband"
         },
         {
           "detail": "With text after the destination, writes one configuration file, carrying its entire new contents. The destination decides how it lands: `brazen` is validated by bz before it is written, into the seat's own workspace (its providers, sign-ins and model cache belong to that workspace and nowhere else); `models`, `cadence` and a `workflow` are refused if they name a provider row brazen does not have; a lineage (`branch` advances one, `fork` starts one from another, `orphan` starts a fresh one) is committed by `litany config` on the seat's workspace. The text is everything after the destination's words, verbatim — whitespace is part of a config file. With nothing after the destination, reads its current bytes instead — a file not there yet answers empty text, a lineage answers what its tip holds at that path, and `/lineages` lists the lineages and the paths to ask for.",
           "summary": "read or write a config file: the destination's words, then the text (or nothing)",
+          "surface": "control",
           "usage": "/config brazen|models|cadence <text…> | /config workflow <name> <text…> | /config branch|orphan <lineage> <path> <text…> | /config fork <lineage> <source> <path> <text…>",
           "verb": "config"
         },
         {
           "detail": "Each agent tracks on a balls branch of its own, in a task space of its own — so two agents' task churn never collides. With a branch name, points the focused workspace's space at that branch; `balls/tasks` is the project's shared board, which is the branch an agent is pointed at when it is raised to work an existing project. Subagents inherit the space they were dispatched from, so a descent works one set of tasks. The answer is the branch re-read afterwards, beside the space it is a branch of, never an echo of what was asked. With no branch, reads the current one instead of changing it.",
           "summary": "read, or amend, the branch this agent tracks its tasks on",
+          "surface": "control",
           "usage": "/marks | /marks <branch>",
           "verb": "marks"
         },
         {
           "detail": "Assigns a model to a role for the whole focused workspace: one write, into providers.yaml on the workspace's default config lineage, through `litany config`. A provider row brazen does not have, and a row whose dialect cannot carry a yog turn, are each refused before anything is written. It reaches the conversations already running too — a conversation follows its lineage's head at every step boundary, so this governs the one in front of you at its next step, and every other one here, and the next one started.",
           "summary": "give a role this model, on the focused workspace's config lineage",
+          "surface": "control",
           "usage": "/model <role> <provider> <model-id>",
           "verb": "model"
         },
         {
           "detail": "Sets the role's effort level in the same providers.yaml assignment `/model` writes, on the same lineage and through the same `litany config` — so it reaches every conversation following that lineage at its next step, with nothing else to press. `off` removes the line, which is the only way to say no level: absent means none requested and the provider's own default governs, so there is no third state to write. Whether a given model honors the level is the wire's fact and is not gated here — a model that declines it says so in the step's own failure, which is where you will read it. Refuses a role this workspace's config does not declare, and any word outside the four.",
           "summary": "how much reasoning this role's model calls request",
+          "surface": "control",
           "usage": "/effort <role> <low|medium|high|off>",
           "verb": "effort"
         },
         {
           "detail": "Turns the priority lane on or off for the role's model calls, in the same providers.yaml assignment `/model` writes and reaching running conversations the same way. A checkbox, not a choice of lanes: `off` removes the line, and off is the provider's own default lane — asking for the standard lane outright is a different intent that no setting expresses. Whether the account has a priority lane at all is the wire's fact, caught at the first call under it rather than here. Not every provider takes the request; the provider list says which do. Refuses a role this workspace's config does not declare.",
           "summary": "ask this role's provider for its priority lane",
+          "surface": "control",
           "usage": "/priority <role> <on|off>",
           "verb": "priority"
         },
         {
           "detail": "Appends the acknowledgement line every failure-derived alarm reads past, so a failure you have understood and chosen to leave alone stops bannering. A new failure lands after the watermark and banners again.",
           "summary": "acknowledge every alarm on the ops trail",
+          "surface": "control",
           "usage": "/ack",
           "verb": "ack"
         },
         {
           "detail": "Records what the selected conversation is currently asking about as seen, which is what takes it off the attention queue — the same watermarks the window writes simply by having that conversation open, so a headless answer and a windowed one are the same thing. The answer is the queue that remains. It quiets what the conversation has *said*; undelivered mail is not a watermark and clears only when a driver reads it. New evidence re-raises it. Refuses when the conversation is not one yog can see.",
           "summary": "answer the selected conversation's place in the attention queue",
+          "surface": "control",
           "usage": "/seen",
           "verb": "seen"
         },
         {
           "detail": "Answers the invocation the capability boundary parked before it ran. `pass` lets that one call through, `refuse` declines it in band — the model reads why and carries on — and `hold` keeps it parked even if the policy later would have passed it. The answer is scoped to the exact call that is held, which is read from the conversation's own hold mark, so nothing is typed and nothing can be spent by a different call. Passing or refusing then drives the conversation on (`litany advance`), which is what actually lifts the hold: the control is asked again and now finds your answer. Nothing here stops the agent. Refuses when nothing is held there.",
           "summary": "release, decline or keep parked the tool call held at this conversation",
+          "surface": "control",
           "usage": "/answer pass | hold | refuse",
           "verb": "answer"
         },
         {
           "detail": "Stops letting the selected conversation act on its own: from its next tool call, everything but a read waits for you — the same park a held call already makes, applied to all of them. It keeps running, keeps its branch and keeps reading, so nothing is lost and nothing is killed. It covers the conversation and everything below it, including children it has not spawned yet. Anything the policy already refuses stays refused, and a call you pass with `/answer` still goes through. `/restore` gives the approval back.",
           "summary": "take away this conversation's tool auto-approval, and its descendants'",
+          "surface": "control",
           "usage": "/revoke",
           "verb": "revoke"
         },
         {
           "detail": "Lifts a floor `/revoke` put on the selected conversation: its calls are adjudicated by the ordinary policy again, from its next one. It drives nothing — a conversation parked at a held call is released by answering that call (`/answer pass`), which is the thing you are looking at when it is waiting. If an ancestor is still revoked, the conversation stays floored under it, and the reply says so rather than claiming a restore it did not make.",
           "summary": "give this conversation's tool auto-approval back",
+          "surface": "control",
           "usage": "/restore",
           "verb": "restore"
         },
         {
           "detail": "Starts a fresh `ops.jsonl`. The clear itself is logged as the new trail's first row, so the trail never lies about having been cut.",
           "summary": "truncate the ops trail; the clear is the new trail's first row",
+          "surface": "control",
           "usage": "/clear-trail",
           "verb": "clear-trail"
         },
         {
           "detail": "Issues a leaf under the stated common name on this engine's own CA, registers that client in the focused workspace, and answers the whole of what the device needs: the anchors, its certificate, its private key and the address it dials. The key is shredded here before the answer leaves, so this box keeps none of it; the certificate stays, and its presence is what refuses a second enrollment under the same name — re-issuing distrusts nothing, so both would be live. Bare is operator grade; add `foot` for a tool host that may advertise, take its invocations and complete them and say nothing else. Refuses when this box holds no CA, and when its address names no port a device can dial. The material travels to the device out of channel — a QR on a screen, adb, a hand — never over a connection the new device opened, which it could not open anyway.",
           "summary": "mint a new device's certificate here, register it, and hand back its material",
+          "surface": "control",
           "usage": "/enroll <common-name> [foot]",
           "verb": "enroll"
         },
         {
           "detail": "Every workspace yog can see, classified, with the attention count, the agent count and whether anything in it is running.",
           "summary": "the workspaces with their attention rollups",
+          "surface": "control",
           "usage": "/workspaces",
           "verb": "workspaces"
         },
         {
           "detail": "One row per root conversation of the focused workspace, subtree-aggregated and ordered attention > running > recency — the same rows the window's list paints.",
           "summary": "the focused workspace's conversation rows",
+          "surface": "control",
           "usage": "/conversations",
           "verb": "conversations"
         },
         {
           "detail": "The join rows: which ball is claimed by which workspace, in which state. The same derivation the roster's balls section renders.",
           "summary": "every ball⇄workspace binding fact",
+          "surface": "control",
           "usage": "/balls",
           "verb": "balls"
         },
         {
           "detail": "Every ball bound to the focused workspace: its id, its §3.5 badge, the project its `bl` verbs run in, the workspace name they stamp `--as`, and the tokens and money its conversations have spent on it. `/balls` answers the whole world's binding table; this answers one workspace, which is what the window's balls section paints.",
           "summary": "the balls the focused workspace holds, with what each has cost",
+          "surface": "control",
           "usage": "/workspace-balls",
           "verb": "workspace-balls"
         },
         {
           "detail": "The project-side answer to \"what did this agent do?\": for every ball the focused workspace holds, the changes on that ball's work branch that are not yet on the branch it delivers into — one row per changed file, with lines added and removed. Name a ball and a path to read that one file's patch instead. It is a plain git read of the project repository and changes nothing; a repository it cannot read, and a branch that is not there yet, are each said outright rather than shown as an empty list.",
           "summary": "what this workspace's agents changed in their project",
+          "surface": "control",
           "usage": "/work-diff [<ball> <path>]",
           "verb": "work-diff"
         },
         {
           "detail": "One row per attempt — the ordinary claim and each fan candidate alike: the goal it was fired with, the instruction documents frozen onto its dispatch commit, the config commit it is governed by (which is where its model and skills are named), the two refs of its project diff with both commits, the commit those two ends departed from, the delivery commit when its target's history records one, its tokens and wall seconds, what it last said, every message delivered into it, and its outcome: accepted when the target records its own delivery, rejected when a sibling's landed instead or it was discarded, reworked when it has since incorporated the target and could deliver again, pending when none of that has happened. Everything is derived when you ask — nothing here is stored, so the same row a minute later is a statement about the world a minute later.",
           "summary": "every delivery attempt of this workspace, with what it cost and how it ended",
+          "surface": "control",
           "usage": "/science",
           "verb": "science"
         },
         {
           "detail": "The balls section as columns: ready, gated, claimed, blocked. The three familiar rungs are derived exactly as `bl list` derives them; gated is the fourth, and it is balls' own close-blocker rule — a ball you could claim but could not deliver, shown with the ball whose close mints its gate. Each claimed row names the conversations working it, and carries its spend plus, for an epic, the rollup over its live subtree across every workspace.",
           "summary": "the fleet board — every live ball in its column",
+          "surface": "control",
           "usage": "/board",
           "verb": "board"
         },
         {
           "detail": "brazen's provider rows (`bz --list-providers`) paired with the credential presence read: which rows are signed in, which need no credential, which have a key stored. The same rows the login pane's `↻` and the brazen config pane's read-only rows render — one derivation, every seat. Scoped to the seat's workspace (`--ws`, or the focused one): providers and their sign-ins belong to a workspace, so the same row can read signed-in in one and not in another.",
           "summary": "one workspace's provider table, with each row's credential fact",
+          "surface": "control",
           "usage": "/providers",
           "verb": "providers"
         },
         {
           "detail": "One row per role this workspace's config declares: the provider row and model id bound to it, the effort level it asks for, and whether it asks for the priority lane. This is what `/model`, `/effort` and `/priority` have set — read back from the same place they write it, so a control can open showing what is in force instead of blank. It is the other half of `/providers`, and the two do not overlap: that one is per provider row and says what a row is capable of, this one is per role and says what has been chosen. Under follow-the-tip these are the settings every conversation here resolves at its next step, not just the next one started. A workspace whose config declares no role answers an empty list rather than refusing — nothing set is a state a fresh workspace is really in. Scoped to the seat's workspace (`--ws`, or the focused one), exactly as `/providers` is.",
           "summary": "what this workspace's roles are actually set to, and how they are tuned",
+          "surface": "control",
           "usage": "/roles",
           "verb": "roles"
         },
         {
           "detail": "One row per client registered in the seat's workspace: its name, whether it holds a live connection right now, and the tools it has advertised. Presence is read at the moment you ask and is true only then — a client that answers here may be gone a second later, which is why nothing durable records it. What each client advertises, by contrast, was written when it last presented its set and stands whether or not it is connected. A machine is registered by an operator's own act on the server, never over the wire.",
           "summary": "the machines registered in this workspace, who is connected, and what they offer",
+          "surface": "control",
           "usage": "/clients",
           "verb": "clients"
         },
         {
           "detail": "The policy branches of the seat's workspace — the lineages a conversation is born on — each with its tip commit and every file that commit holds. It is the listing `/config branch <lineage> <path>` then reads a file out of, and the same two dropdowns the config pane fills: pick a lineage, pick a path, read the bytes, then send an edit back with text after those same words. A workspace whose repository cannot be read is said outright rather than shown as no lineages at all.",
           "summary": "this workspace's config lineages, and the files each one holds",
+          "surface": "control",
           "usage": "/lineages",
           "verb": "lineages"
         },
         {
           "detail": "Asks the provider row what models it serves (`bz --list-models`) and answers the ids it listed, in its order — the same roster the model picker fills when you open it. Nothing is cached: the list belongs to the provider and can change without yog. Name the row, as `/providers` lists it; the sign-in it is listed against is the seat's workspace, so a row signed in elsewhere refuses here. Its answer is what `/model <role> <provider> <model-id>` then assigns — this says what exists, that says what a role uses. A provider that offers nothing, or cannot be asked, refuses with its own words rather than an empty list.",
           "summary": "the model ids one provider is offering right now",
+          "surface": "control",
           "usage": "/models <provider>",
           "verb": "models"
         },
         {
           "detail": "The chat itself: every committed message of the selected conversation — what was delivered to it, what the model said back (its reasoning, its answer and every tool it called), and what each tool returned — in order, each row carrying the file's own bytes beside the parse of them. A model call in flight right now is folded on as a live trailing row, so this says what the window says about the same moment. It is aimed at the seat's workspace and selected conversation; the whole thing is a read of files on disk and changes nothing.",
           "summary": "the selected conversation, message by message",
+          "surface": "control",
           "usage": "/transcript",
           "verb": "transcript"
         },
         {
           "detail": "One row per model call: how it ended (complete, failed, killed), how many attempts it took, what it spent, the branch tip it was assembled against, and when it started and ended. A step whose driver produced nothing at all is marked as such, with the adapter's own reason when it left one, and a step that failed on credentials names the provider row to log in to. Read one step's actual records with `/step <seq>`.",
           "summary": "every step this conversation has taken",
+          "surface": "control",
           "usage": "/steps",
           "verb": "steps"
         },
         {
           "detail": "The drill-in for a single step of the selected conversation, named by the sequence the list shows (`001`). Answers that step's `meta`, the wire request that was sent, the staged transcript entry, every event of the response stream, and every tool call's input and output — each as parsed data with the bytes it parsed from beside it. Records that are missing say so, and records that are not JSON come back verbatim and framed as unparseable rather than dropped.",
           "summary": "one step's records — request, response, staging, tools",
+          "surface": "control",
           "usage": "/step <seq>",
           "verb": "step"
         },
         {
           "detail": "The agent's own worktree read-only: goal, soul, summaries, skills and any work product written there, as a sorted listing with each entry's size. Name a path exactly as the listing gives it to read that file's contents instead; only a file this same listing just named can be opened, and a large one comes back truncated with its true size. The listing is bounded, and says when it hit the bound. A conversation whose worktree has been torn down is said outright rather than shown as an empty directory. A conversation bound to a work target — a path or ball start — runs every tool step there instead, so its deliverable is not in this listing at all: the answer then carries `working_dir`, the directory it is in, and its absence means this listing is where the work lands. `--at` reads a commit's tree instead of the worktree — the same agent-context-files-as-of the window's notch pin shows — and a commit this conversation never recorded simply holds no files.",
           "summary": "the conversation's working files, and one file's contents",
+          "surface": "control",
           "usage": "/files [<path>] [--at <commit>]",
           "verb": "files"
         },
         {
           "detail": "A conversation forks off a commit of a `config/*` lineage, and the fork settles which lineage governs it — not which commit. Control then resolves that lineage's current head at every step boundary, so an edit you make now reaches this conversation at its next step, with nothing to press. This answers which commit it resolves — short and full — which lineage it follows, and every path that commit's tree holds: the souls, the workflow, the manifest, the provider table and the descriptions it is actually running under. When two or more lineages have diverged over its fork point there is no one head to follow, so it is held on that fork commit and the answer says how many reached it; `/retarget` is what settles that. `--at` starts the walk from a different commit and bare it is the conversation's own branch tip, so a seat need not know one to ask — but it names a rev, not a moment: policy as of an earlier step is no longer derivable from ancestry, and what records it is each step's own request. A workspace that cannot be read, and a commit that forks off no config lineage at all, are each said outright: a conversation with no policy is not a reading.",
           "summary": "the config commit this conversation resolves its policy from, and what it holds",
+          "surface": "control",
           "usage": "/governing [--at <commit>]",
           "verb": "governing"
         },
         {
           "detail": "One notch per step, each carrying the commit that step read against, its spend, and where in the chat its rule sits — the points a conversation can be forked or replayed from. Beside them, the children dispatched from this conversation: who each is, where it forked from, what it is doing, what it has spent and the last thing it said. A conversation nobody forked from answers notches and no children, which is the honest empty case rather than an error.",
           "summary": "the conversation's spine: every operable commit and what hangs off it",
+          "surface": "control",
           "usage": "/rail",
           "verb": "rail"
         },
         {
           "detail": "Every message sitting in the selected conversation's inbox: who sent it, when it was deposited, the body, and — on a subagent's result message — how that agent ended and the commit it ended at. A half-written or hand-edited deposit is rendered rather than refused, with whatever fields it actually stated. Delivered mail is not here; it has moved into the transcript.",
           "summary": "the mail deposited for this conversation but not yet delivered",
+          "surface": "control",
           "usage": "/inbox",
           "verb": "inbox"
         },
         {
           "detail": "One conversation's own facts, as any seat paints them: the id and the conversation it belongs to, the name it goes by — and whether that name is one peers can actually address it with — the commit its policy resolves from, whether it is running right now, the marks it wears (notified, over budget, in conflict, holding a tool call, abandoned), what kind of work is in flight anywhere beneath it, and whether Stop and its children cascade are offered. A conversation this workspace does not carry answers as its own root, stopped and unmarked, rather than refusing.",
           "summary": "the selected conversation itself: what it is called, what it is doing, what may be done to it",
+          "surface": "control",
           "usage": "/agent",
           "verb": "agent"
         },
         {
           "detail": "The decision queue: one row per conversation asking for you, anywhere yog can see — why it is asking (it notified you, it came to rest, it hit its budget, a transfer was declined, its mail is undelivered), what it last said, how long it has waited, and the workspace and conversation to aim an answer at. The order is the one the down arrow walks at the window; the count is the strip's. Answer a row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else about it.",
           "summary": "everything waiting on you, across every workspace",
+          "surface": "control",
           "usage": "/attention",
           "verb": "attention"
         },
         {
           "detail": "The tail of `ops.jsonl` — one line per action anything attempted, with its outcome. Actions only: a query reads the world and changes nothing, so it leaves no row, and what was read before an action was chosen cannot be recovered here. Defaults to the last 50 rows.",
           "summary": "the last n ops rows, newest last",
+          "surface": "control",
           "usage": "/ops [n]",
           "verb": "ops"
         },
         {
           "detail": "One query across the whole world — ball ids, titles and bodies (closed ones too), workspace and conversation names, conversation goals, and every committed transcript entry. The text is the whole tail; matching is case-insensitive over ASCII. Nothing is indexed: the files are read as they are now, so a hit is a statement about the bytes on disk. One result per thing you can open — a transcript that matches forty times is one row — ranked by what matched (an id before a title before a body), and capped. Sources it could not read are named in the answer rather than silently dropped. At the window it is Ctrl+F, and results are clickable; a search with no text clears the last one.",
           "summary": "find the text anywhere: balls, workspaces, conversations, transcripts",
+          "surface": "control",
           "usage": "/search [text…]",
           "verb": "search"
         },
         {
           "detail": "The asking side's poll, and the other half of `/invoke`. It never waits: `capture` is absent while the machine is still running the tool, present once it has answered — and the answer is read exactly once, so the second ask reads as absent. How long to keep asking is yours to decide, and that deadline is what makes an offline machine a refusal you can see rather than a wait with no end. A handle you did not invoke reads as absent too.",
           "summary": "what one routed invocation captured, if the far machine has answered yet",
+          "surface": "machine",
           "usage": "/capture <invocation>",
           "verb": "capture"
         },
         {
           "detail": "Help is itself a gesture, and a higher-order one: it is asked about a command. With no verb it is this roster; with one it is that command's page. The same answer comes from `<verb> --help`, from a bare `/`, and from `yog gesture --help` at a terminal — one question, one answer, every seat.",
           "summary": "what any command does — this list, or one command's page",
+          "surface": "control",
           "usage": "/help [verb]",
           "verb": "help"
         },
         {
           "detail": "The routing leg's follow-class read. It does not answer until this machine has an invocation or the engine's hold expires — thirty seconds — so a tool host waits here rather than polling, and asks again the moment it is answered. It names nothing: the queue it drains is the one addressed to the certificate this connection presented, which is why a caller inside the world (`yog gesture`, the deposit inbox, the window) is refused rather than handed somebody's work. An empty answer is the ordinary answer of a hold that ended quietly, not a failure. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run it and post the result with `/complete`.",
           "summary": "a tool host's next work: wait for what this machine has been asked to run",
+          "surface": "machine",
           "usage": "/invocations",
           "verb": "invocations"
         },
         {
           "detail": "The streaming tail of the model call in flight, delivered at the rate the answer is written rather than at the rate a seat asks. Over a connection that can be held it is one frame per growth of the open response, and the stream ends when the step commits — at which point the text is committed and `/transcript` carries it. At a seat that cannot hold one it is the tail as of now, in a single frame, which is the same fold answered once. Either way it is `/transcript`'s own tail and never a second reading of it, so two seats watching one conversation cannot describe one moment differently. Takes the workspace and the conversation from the seat; a conversation with nothing in flight has an empty tail rather than a refusal.",
           "summary": "the selected conversation's live answer, as it is written",
+          "surface": "control",
           "usage": "/follow",
           "verb": "follow"
         }
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 7,
   "shape": "help"
 }

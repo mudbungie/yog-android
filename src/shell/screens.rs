@@ -11,6 +11,7 @@ use eframe::egui;
 
 use super::app::Shell;
 use super::boot::Running;
+use super::mark::Back;
 use crate::host::Health;
 use crate::seat::Snapshot;
 
@@ -33,7 +34,7 @@ impl Shell {
         }
         if matches!(self.running, Running::Foot { .. }) {
             self.note_screen("foot");
-            self.bar(ui, &crate::bootstrap::Component::Foot.brand(), false);
+            self.bar(ui, &crate::bootstrap::Component::Foot.brand(), &Back::None);
             self.foot(ui);
             return;
         }
@@ -50,7 +51,7 @@ impl Shell {
         match snap.focus.workspace.clone() {
             None => {
                 self.note_screen("roster");
-                self.bar(ui, &crate::bootstrap::Component::Seat.brand(), false);
+                self.bar(ui, &crate::bootstrap::Component::Seat.brand(), &Back::None);
                 banner(ui, &snap);
                 self.roster(ui, &snap);
             }
@@ -101,7 +102,9 @@ impl Shell {
             for row in &snap.workspaces {
                 let mark = if row.attention > 0 { " ●" } else { "" };
                 let label = format!("{}{mark} · {} agents", row.workspace, row.agents);
-                if tap(ui, label.into()) {
+                // Tapping a workspace focuses it, and the focus is what the
+                // worker asks `conversations` at.
+                if tap(ui, label.into(), "conversations") {
                     self.focus_workspace(Some(row.workspace.clone()));
                 }
             }
@@ -125,7 +128,7 @@ impl Shell {
             self.starter(ui);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                if self.bar(ui, workspace, true) {
+                if self.bar(ui, workspace, &Back::To("workspaces")) {
                     self.focus_workspace(None);
                 }
                 banner(ui, snap);
@@ -169,7 +172,7 @@ impl Shell {
                                 // vocabulary and it is the desktop's.
                                 let ink = super::chat::tone_hue(ui, row.tone);
                                 let label = egui::RichText::new(label).color(ink);
-                                if tap(ui, label)
+                                if tap(ui, label, "transcript")
                                     && let Some(model) = self.model()
                                 {
                                     model.focus_conversation(
@@ -189,9 +192,12 @@ impl Shell {
     /// two is ever on screen, they are the same gesture at two depths, and
     /// the IME bridge addresses exactly one field by that id (bl-014e).
     fn starter(&mut self, ui: &mut egui::Ui) {
-        if let Some(goal) =
-            super::composer::composer(ui, &mut self.composer, "start a conversation")
-            && let Some(model) = self.model()
+        if let Some(goal) = super::composer::composer(
+            ui,
+            &mut self.composer,
+            "start a conversation",
+            &["prepare", "prompt"],
+        ) && let Some(model) = self.model()
         {
             model.start_conversation(goal);
         }
@@ -245,9 +251,14 @@ pub(super) fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
 
 /// One full-width list row at the §13.2 touch floor. Every navigation list
 /// paints its rows through this, so the floor is a fact of the helper rather
-/// than a discipline at each site.
-fn tap(ui: &mut egui::Ui, label: egui::RichText) -> bool {
+/// than a discipline at each site — and so is the parity tag: `op` is the read
+/// this row's tap reaches (PARITY §2, *"the owed interactable for a read is
+/// the affordance that reaches the view it populates"*), which is the one
+/// thing that differs between the two lists.
+fn tap(ui: &mut egui::Ui, label: egui::RichText, op: &str) -> bool {
     let control =
         egui::Button::new(label).min_size(egui::vec2(ui.available_width(), super::mark::TOUCH));
-    ui.add(control).clicked()
+    let response = ui.add(control);
+    super::act::act(ui, &response, op);
+    response.clicked()
 }

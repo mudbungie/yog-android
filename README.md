@@ -56,6 +56,7 @@ make lint           # line-cap + leak-scan + clippy + ast-grep + cargo-deny
 make apk            # cargo-ndk (arm64-v8a + x86_64) + gradle assembleDebug
 make screens-avd    # create the emulator the loop below boots, once
 make screens        # headless emulator: walk the screens, capture each one
+make parity         # judge a walk's dumps against the engine's control roster
 make install-hooks  # seat the pre-commit / commit-msg hooks, once
 ```
 
@@ -87,11 +88,37 @@ is the whole design; three things are worth knowing before running it:
 - **No engine is dialled.** A leaf is minted per run and the paint-first cache
   is seeded from the vendored wire `corpus/`, so every screen is reachable with
   no server anywhere.
-- **Only structure gates.** The app says which screen it painted
-  (`src/shell/app/probe.rs`) and the walk judges that. Nothing compares
-  pictures. The accessibility dump captured beside each PNG is *empty* — egui
-  paints into one opaque view — and that is a finding recorded in evidence,
-  not a gap in the harness.
+- **Structure and reachability gate; pictures never do.** The app says which
+  screen it painted (`src/shell/app/probe.rs`) and the walk judges that.
+  Nothing compares images. The accessibility dump captured beside each PNG is
+  still *empty* — egui paints into one opaque view, and the platform export
+  that would fill it aborts this app (DESIGN §15.1) — so the reachability gate
+  below reads a file the app writes instead.
+
+## Interface parity: what this seat can reach
+
+The desktop seat and this client must have **interaction parity** — not
+identical placement, but if something is interactable in one it must exist in
+the other, caught mechanically. yog's `docs/PARITY.md` is the contract; this
+repo runs its client half.
+
+Each seat is judged against **one roster**, never against the other client: the
+engine's own help table, whose rows carry a `surface` class (`control` — every
+seat owes this op a discoverable interactable; `machine` — spoken only by
+programs), published inside the corpus this repo already vendors. Every
+verb-firing control here carries an `act:<op>` tag, the app writes the tags it
+painted to a debug-gated file in its own storage (the platform accessibility
+export was tried first and aborts the process — DESIGN §15.1, exit ball
+bl-a6f3), and the last beat of `make screens` reads them back out of the walk's
+own output and judges four things: every `control` op is reached or exempted,
+every tag names a real op, and no exemption has rotted or gone stale.
+
+A deliberate absence is one line in **`parity.toml`** with a citation — a ball
+that will build it, or the ruling that says it should not exist here. Deleting
+the line re-reddens the gate and changes no code, and the roster prints on
+every run, passing or failing. The half that needs no device — that every
+exemption parses, cites, and still names a `control` op — gates on every `make
+check`.
 
 `make screens-avd` creates the virtual device, once. It may need an SDK licence
 accepted, which is an operator's act and no target here performs it.

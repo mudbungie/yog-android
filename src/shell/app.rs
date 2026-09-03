@@ -39,7 +39,7 @@ pub(crate) const ENVELOPE: Field = Field {
 };
 
 pub(crate) struct Shell {
-    android: AndroidApp,
+    pub(super) android: AndroidApp,
     bridge: Bridge,
     pub(crate) running: Running,
     /// Which first-run screen is open, when nothing is provisioned. It is
@@ -71,6 +71,10 @@ pub(crate) struct Shell {
     /// membership FLIPS a row's auto-state, so an empty set is "everything as
     /// configured" and the knobs above keep meaning what they say.
     pub(crate) folds: std::collections::BTreeSet<String>,
+    /// How many `act:` tags the parity inventory has been written with
+    /// (`shell/act.rs`). A count and not a copy of the set: the set only
+    /// grows, so a length is the whole of "has it changed".
+    pub(super) acted: usize,
     t0: std::time::Instant,
     /// The inset pads and when they were last probed — the JNI walk is
     /// throttled to 200ms for numbers that change only when the keyboard
@@ -138,6 +142,7 @@ impl Shell {
             envelope_said: None,
             auto: AutoExpand::default(),
             folds: std::collections::BTreeSet::new(),
+            acted: 0,
             t0: std::time::Instant::now(),
             inset: InsetPx::default(),
             inset_at: 0,

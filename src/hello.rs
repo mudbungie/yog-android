@@ -45,8 +45,8 @@ use crate::frame;
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
-/// **6 since the re-vendor of bl-dfbb.** Five moves stand behind it and the
-/// last four are why an old build must not be left running: 2 was the
+/// **7 since the re-vendor of bl-fe4c.** Six moves stand behind it and the
+/// last five are why an old build must not be left running: 2 was the
 /// tool-host pair (`subject_cwd` on an advertised element, `cwd` on an
 /// invocation — REMOTE §5.1, §5.3); **3** put `failure` on the conversation
 /// row, the agent answer and the queue row (§9.10); **4** put `flag` on the
@@ -56,8 +56,18 @@ use crate::frame;
 /// litany's follow-the-tip ruling reaching the wire); and **6** minted the
 /// §9.4 tuning pair — `effort` and `priority`, two request shapes that are
 /// new at 6 — and widened `reply/providers`, whose rows now state per
-/// provider whether either can be asked for at all. `last_active_unix` rode
-/// in at 2 with §9.9.
+/// provider whether either can be asked for at all; and **7** put `surface`
+/// on every `reply/help` row — the interface-parity classification (yog
+/// `docs/PARITY.md` §2), two values, `control` for an op every seat owes a
+/// discoverable interactable and `machine` for one spoken only by programs.
+/// `last_active_unix` rode in at 2 with §9.9.
+///
+/// **7 is the bump this client consumes without decoding a byte of it.** The
+/// `help` reply is a recorded refusal here, so the field reaches this repo as
+/// a fixture rather than as a codec change — and it is load-bearing anyway:
+/// `crate::parity` reads the classification straight out of the vendored
+/// corpus, which is why the roster of ops this seat owes a control is the
+/// engine's own list rather than one kept here.
 ///
 /// **A move in a shape this codec does not spell still moves this number,
 /// and that is the point.** `governing` is a recorded refusal here (it is
@@ -79,7 +89,7 @@ use crate::frame;
 /// that lane must read the section and not only re-vendor the fixtures
 /// (DESIGN §7 — this seat reads the lane one shot at a time, where the fold
 /// is assignment).
-pub const PROTOCOL: u32 = 6;
+pub const PROTOCOL: u32 = 7;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

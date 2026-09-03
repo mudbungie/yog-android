@@ -54,7 +54,17 @@ const SIDE_PAD: f32 = 8.0;
 /// bottom-aligned button anchors to the floor. On device that is a field
 /// under the header and a send button a screen below it. The band fixes the
 /// rect before either child sees it.
-pub(super) fn composer(ui: &mut egui::Ui, text: &mut String, hint: &str) -> Option<String> {
+/// `acts` is what the send control fires, and it is the caller's because the
+/// two depths differ there and nowhere else: the transcript's composer posts
+/// `message`, while the starter stages and fires as one gesture (`prepare`
+/// then `prompt`, `seat::acts::started`) and so carries both tags on the one
+/// button an operator can see (PARITY §4).
+pub(super) fn composer(
+    ui: &mut egui::Ui,
+    text: &mut String,
+    hint: &str,
+    acts: &[&str],
+) -> Option<String> {
     // The band is the field's own last-painted height, floored at a touch
     // target and capped at the growth limit. Last frame's measurement,
     // because a widget's height is not knowable before it is laid out — and
@@ -77,7 +87,9 @@ pub(super) fn composer(ui: &mut egui::Ui, text: &mut String, hint: &str) -> Opti
             // bottom-aligned so the button sits on the band's floor beside a
             // field that fills the band.
             let control = egui::Button::new("send").min_size(egui::vec2(0.0, super::mark::TOUCH));
-            let pressed = ui.add(control).clicked();
+            let send = ui.add(control);
+            super::act::acts(ui, &send, acts);
+            let pressed = send.clicked();
             // Multiline (bl-56d6): the IME's enter is a newline on this stack
             // (DESIGN §3 residual) and that is also simply what a phone chat
             // composer does with enter — so the field grows with its text to a

@@ -13,6 +13,8 @@
 pub mod span;
 
 #[cfg(target_os = "android")]
+mod act;
+#[cfg(target_os = "android")]
 mod app;
 #[cfg(target_os = "android")]
 mod back;

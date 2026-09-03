@@ -1,7 +1,7 @@
 //! **The controls row** (DESIGN §13.2, bl-0267): one row under the composer
 //! carrying the acts that are about the CONVERSATION rather than about the
-//! message being typed — which model answers it, and (as later balls land)
-//! what to do with a turn already running.
+//! message being typed — which model answers it, what to do with a turn
+//! already running, and how hard the model is asked to think.
 //!
 //! **Under the composer, inside the same floor.** It is the last thing added
 //! to the bottom-up layout before the composer, so it sits between the
@@ -13,20 +13,21 @@
 //! **Tap is the act; there is no apply.** Picking a model IS the assignment
 //! (§13.2), so nothing here holds a draft the operator could leave unsent,
 //! and an engine that refuses one says so in the banner the model already
-//! publishes. What the selectors show is what this device SET — never a
-//! guess at what is set: no shape on the wire states a workspace's current
-//! assignment, and DESIGN §8's rule is that a client which re-derived world
-//! state would be inventing it.
+//! publishes. What the selectors show is what the workspace ACTUALLY has,
+//! overtaking an optimistic pick as soon as the roles read lands (bl-e9f9).
+//!
+//! This file is the row itself and the acts that are only offered while
+//! something is running; the two selectors are `controls/pick.rs` and the
+//! §9.4 tuning pair is `controls/tune.rs`. The seam is the one the row already
+//! paints — a band of selectors, a band of knobs — rather than a line count.
 
 use eframe::egui;
 
 use super::app::Shell;
-use crate::codec::RoleRow;
 use crate::seat::Snapshot;
 
-/// The effort selector's width class. Narrower than a provider or a model
-/// selector because its whole vocabulary is four short words.
-const EFFORT: f32 = 76.0;
+mod pick;
+mod tune;
 
 /// One row of controls, given its own height for the reason every row in this
 /// app is (bl-193c): a `left_to_right(Center)` layout handed the rest of the
@@ -51,10 +52,7 @@ impl Shell {
         // focus does.
         if self.picked_in.as_deref() != Some(workspace.as_str()) {
             self.picked_in = Some(workspace);
-            self.provider = None;
-            self.model = None;
-            self.effort = None;
-            self.priority = None;
+            self.forget_picks();
         }
         // **Truth overtakes the guess** (bl-e9f9): every act on this row is
         // optimistic — the control shows the pick the moment it is tapped,
@@ -66,16 +64,15 @@ impl Shell {
         // and the banner says why.
         if self.tuned_at != snap.roles_read {
             self.tuned_at = snap.roles_read;
-            self.provider = None;
-            self.model = None;
-            self.effort = None;
-            self.priority = None;
+            self.forget_picks();
         }
         let set = crate::codec::pick::worker(&snap.roles);
         // **What the picked provider will take** (bl-dfbb), read off its own
         // row in covered code: the paint asks, it never derives.
-        let (effort, priority) =
-            crate::codec::pick::tunable(&snap.providers, provider(self, set.as_ref()).as_deref());
+        let (effort, priority) = crate::codec::pick::tunable(
+            &snap.providers,
+            pick::provider(self, set.as_ref()).as_deref(),
+        );
         ui.scope(|ui| {
             ui.spacing_mut().interact_size.y = super::mark::TOUCH;
             band(ui, |ui| {
@@ -110,54 +107,13 @@ impl Shell {
         });
     }
 
-    /// **The effort selector** (REMOTE §9.4): how much reasoning the worker's
-    /// model calls request. The vocabulary is closed and no wire read backs
-    /// it, so the options are the codec's own constant; `off` is one of them
-    /// and rides as the real null the engine reads.
-    fn effort(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>) {
-        // The read carries the FILE's own word, which may be one the gesture
-        // vocabulary does not spell (bl-e9f9). It is shown as itself — an
-        // operator seeing `extreme` is being told the truth, and the four
-        // words below are what they may change it TO.
-        let shown = self
-            .effort
-            .clone()
-            .or_else(|| set.and_then(|row| row.effort.clone()))
-            .unwrap_or_else(|| "effort".to_owned());
-        let mut picked = None;
-        egui::ComboBox::from_id_salt("effort")
-            .selected_text(shown)
-            .width(EFFORT)
-            .show_ui(ui, |ui| {
-                for level in crate::codec::pick::LEVELS {
-                    let label = crate::codec::Effort::label(level);
-                    if ui.selectable_label(false, &label).clicked() {
-                        picked = Some((level, label));
-                    }
-                }
-            });
-        if let Some((level, label)) = picked {
-            self.effort = Some(label);
-            if let Some(model) = self.model() {
-                model.set_effort(level);
-            }
-        }
-    }
-
-    /// **The priority toggle**: ask the provider's priority lane for this
-    /// role's calls, or stop asking. A toggle and not a tri-state — `off`
-    /// removes the line, and asking for the *standard* lane is a different
-    /// intent no config key expresses (REMOTE §9.4).
-    fn priority(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>) {
-        let mut on = self
-            .priority
-            .unwrap_or_else(|| set.is_some_and(|row| row.priority));
-        if ui.toggle_value(&mut on, "priority").clicked() {
-            self.priority = Some(on);
-            if let Some(model) = self.model() {
-                model.set_priority(on);
-            }
-        }
+    /// Drop every optimistic pick. One helper because the two reasons to drop
+    /// them — the focus moved, the truth arrived — drop exactly the same four.
+    fn forget_picks(&mut self) {
+        self.provider = None;
+        self.model = None;
+        self.effort = None;
+        self.priority = None;
     }
 
     /// **The stop controls** (REMOTE §3.1, bl-48fa): shown by the gates the
@@ -172,16 +128,30 @@ impl Shell {
     /// **The gesture is the op.** A deposited `/stop` line is content, and
     /// content wakes the very driver it meant to kill; the seat model sends
     /// the wire's own act.
+    ///
+    /// All three carry `act:` tags naming what they post. They are also the
+    /// controls a walk can only see under their gate, which is why the
+    /// `make screens` walk seeds a conversation in each state (DESIGN §15.4):
+    /// a control that only exists on an unvisited screen is unproven, and
+    /// unproven is red (PARITY §5).
     fn stops(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         let Some(row) = focused_row(snap) else {
             return;
         };
         let (stoppable, children) = (row.stoppable, row.stop_children);
-        if stoppable && ui.button("stop").clicked() {
-            self.stop_turn(false);
+        if stoppable {
+            let control = ui.button("stop");
+            super::act::act(ui, &control, "stop");
+            if control.clicked() {
+                self.stop_turn(false);
+            }
         }
-        if children && ui.button("stop all").clicked() {
-            self.stop_turn(true);
+        if children {
+            let control = ui.button("stop all");
+            super::act::act(ui, &control, "stop");
+            if control.clicked() {
+                self.stop_turn(true);
+            }
         }
         // **Nudge is the other half of the same question** (bl-d09e): stop is
         // for a turn that is running, nudge for a branch that stopped
@@ -190,11 +160,14 @@ impl Shell {
         // engine's own `nudgeable` gate rides the agent view this codec does
         // not spell; if the row's reading proves too coarse, the fix is that
         // gate on the row rather than a second derivation here.
-        if row.flight.is_none()
-            && ui.button("nudge").clicked()
-            && let Some(model) = self.model()
-        {
-            model.nudge();
+        if row.flight.is_none() {
+            let control = ui.button("nudge");
+            super::act::act(ui, &control, "nudge");
+            if control.clicked()
+                && let Some(model) = self.model()
+            {
+                model.nudge();
+            }
         }
     }
 
@@ -202,76 +175,6 @@ impl Shell {
     fn stop_turn(&self, children: bool) {
         if let Some(model) = self.model() {
             model.stop_turn(children);
-        }
-    }
-
-    /// The provider selector. Its list is the engine's own rows, and a row
-    /// that is blocked is greyed **by the fact it states about itself** —
-    /// still tappable, because the operator may be about to sign it in and a
-    /// control that vanishes teaches nothing.
-    fn providers(&mut self, ui: &mut egui::Ui, snap: &Snapshot, set: Option<&RoleRow>, wide: f32) {
-        let shown = provider(self, set).unwrap_or_else(|| "provider".to_owned());
-        let opened = egui::ComboBox::from_id_salt("provider")
-            .selected_text(shown)
-            .width(wide)
-            .show_ui(ui, |ui| {
-                for row in &snap.providers {
-                    let label = format!("{} · {}", row.name, row.fact);
-                    let label = if row.blocked.is_some() {
-                        egui::RichText::new(label).color(ui.visuals().weak_text_color())
-                    } else {
-                        egui::RichText::new(label)
-                    };
-                    if ui.selectable_label(false, label).clicked() {
-                        self.provider = Some(row.name.clone());
-                        self.model = None;
-                    }
-                }
-            });
-        // The read is asked for by the tap that opened the list, not by the
-        // frame: a read per frame while a popup is open would be a gesture
-        // per frame. What was already known paints meanwhile (§14).
-        if opened.response.clicked()
-            && let Some(model) = self.model()
-        {
-            model.list_providers();
-        }
-    }
-
-    /// The model selector: this provider's models, and the tap that assigns
-    /// one. Disabled until a provider is chosen — a model without its
-    /// provider is not an assignment the wire can state.
-    fn models(&mut self, ui: &mut egui::Ui, snap: &Snapshot, set: Option<&RoleRow>, wide: f32) {
-        let Some(provider) = provider(self, set) else {
-            ui.add_enabled(
-                false,
-                egui::Button::new("model").min_size(egui::vec2(wide, 0.0)),
-            );
-            return;
-        };
-        let shown = self.model.clone().unwrap_or_else(|| "model".to_owned());
-        let mut picked = None;
-        let opened = egui::ComboBox::from_id_salt("model")
-            .selected_text(shown)
-            .width(wide)
-            .show_ui(ui, |ui| {
-                for name in snap.models.get(&provider).into_iter().flatten() {
-                    if ui.selectable_label(false, name).clicked() {
-                        picked = Some(name.clone());
-                    }
-                }
-            });
-        if let Some(name) = picked {
-            self.model = Some(name.clone());
-            if let Some(model) = self.model() {
-                model.pick_model(provider.clone(), name);
-            }
-            return;
-        }
-        if opened.response.clicked()
-            && let Some(model) = self.model()
-        {
-            model.list_models(provider);
         }
     }
 }
@@ -286,13 +189,4 @@ fn focused_row(snap: &Snapshot) -> Option<crate::codec::ConvRow> {
         .iter()
         .find(|row| row.root_id == agent)
         .cloned()
-}
-
-/// **The provider these controls are pointed at**: the optimistic pick if one
-/// is standing, else what the workspace is actually set to (bl-e9f9).
-fn provider(shell: &Shell, set: Option<&RoleRow>) -> Option<String> {
-    shell
-        .provider
-        .clone()
-        .or_else(|| set.map(|row| row.provider.clone()))
 }

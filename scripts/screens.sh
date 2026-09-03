@@ -11,11 +11,18 @@
 # pair — the configuration surface is reachable from the roster and the mark
 # toggles back out of it — which is the defect class this loop exists to catch.
 #
-# THE ACCESSIBILITY DUMP IS EMPTY AND THAT IS THE FINDING. This app paints with
-# egui into one opaque view, so `uiautomator dump` returns a single
-# `android.view.View` carrying no text, no button and no row. The dump is
-# captured beside every screenshot anyway: the emptiness then lives in the run's
-# own evidence rather than in a sentence somebody has to believe.
+# THE ACCESSIBILITY DUMP IS STILL EMPTY, AND THE SECOND GATE READS A FILE
+# INSTEAD (bl-fe4c). This app paints with egui into one opaque view, so
+# `uiautomator dump` returns a single `android.view.View` carrying no text, no
+# button and no row. Exporting egui's tree to the platform is one eframe
+# feature and one dependency away, and it ABORTS the process the moment any
+# accessibility client attaches — this walk's own dump killed the app on the
+# second screen (DESIGN §15.1). So the app writes the `act:<op>` tags it
+# painted to a file in its own private storage, armed by a directory this
+# script creates, and the last beat judges THAT against the engine's roster
+# (yog docs/PARITY.md §5, §6's named fallback). The dump is still captured
+# beside every screenshot: the emptiness lives in the run's own evidence, and
+# the day upstream stops unwrapping (bl-a6f3) the same files say so.
 #
 # THE ENGINE IS NOT DIALLED AND DOES NOT NEED TO BE. Two seeds put the app on
 # any screen without a server anywhere:
@@ -112,6 +119,7 @@ echo "screens: installing $APK" >&2
 # file DOES with it. Sourced rather than executed, because they speak to the
 # same emulator through the same `ADB` and the same `$OUT`.
 . scripts/screens-seed.sh
+arm_parity
 
 relaunch() {
   "${ADB[@]}" shell am force-stop "$PKG"
@@ -167,6 +175,7 @@ capture() {            # capture <name> <expected-screen>
   settle
   "${ADB[@]}" exec-out screencap -p > "$OUT/$n.png"
   "${ADB[@]}" exec-out uiautomator dump /dev/tty 2>/dev/null | sed 's/UI hierchary dumped to.*//' > "$OUT/$n.ui.xml"
+  pull_parity "$OUT/$n.tags"
   echo "$SETTLED" > "$OUT/$n.probe"
   local said="${SETTLED#yog.screen }"
   case "$said" in
@@ -213,6 +222,29 @@ seed_cache conversations; relaunch
 capture conversations conversations
 seed_cache transcript; relaunch
 capture transcript transcript
+
+# 5. The same screen with the engine's stop gates ON. Not a sixth screen — the
+#    app says `transcript` for both — but the controls row is a different set
+#    of controls under it, and the parity gate below can only see a control a
+#    walked screen actually painted.
+seed_cache running; relaunch
+capture running transcript
+
+# 6. THE PARITY GATE (yog docs/PARITY.md §5, bl-fe4c). Everything above judges
+#    where the walk went; this judges what it could REACH. The dumps captured
+#    beside each screenshot are the inventory — the `act:<op>` tags egui's
+#    accessibility tree carried into the platform layer — and `src/parity`
+#    judges them against the corpus roster and the committed exemptions. The
+#    report prints whether it passes or fails, because an absence recorded in
+#    `parity.toml` is a ledger only if somebody reads it.
+echo "screens: judging interface parity" >&2
+if PARITY_DUMPS="$OUT" cargo test --test parity -- --ignored --nocapture >"$OUT/parity.txt" 2>&1; then
+  sed -n '/^parity:/,$p' "$OUT/parity.txt"
+  verdict pass "parity: every control op is reachable or cited"
+else
+  sed -n '/^parity:/,$p' "$OUT/parity.txt"
+  verdict fail "parity: the roster and this walk disagree (see $OUT/parity.txt)"
+fi
 
 echo "screens: $OUT" >&2
 [ "$FAILED" = 0 ] || die "the walk did not go where it said it would (see $OUT/verdict.txt)"

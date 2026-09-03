@@ -19,6 +19,22 @@ push_app() {           # push_app <local-dir> <files-relative-dest>
 }
 wipe_app() { "${ADB[@]}" shell "run-as $PKG sh -c 'rm -rf files/wire files/cache'"; }
 
+# **Arm the parity inventory** (DESIGN §15.5, bl-fe4c). The app writes the
+# `act:` tags it painted only where this directory exists, so creating it is
+# the whole of the debug gate — a device nobody armed writes no file and a
+# shipped app carries no flag. It is created once, after install, and survives
+# `wipe_app`: the inventory is about which controls painted, never about what
+# this device is provisioned with.
+arm_parity() { "${ADB[@]}" shell "run-as $PKG sh -c 'mkdir -p files/parity && rm -f files/parity/acts.txt'"; }
+
+# What this launch has painted so far, pulled out of app-private storage. Empty
+# until the app has painted a tagged control, and `|| true` because a screen
+# that carries no control at all is an ordinary state of this walk, not its
+# failure.
+pull_parity() {       # pull_parity <destination>
+  "${ADB[@]}" shell "run-as $PKG cat files/parity/acts.txt 2>/dev/null" > "$1" || true
+}
+
 # A CA and one leaf under it. Nothing here is ever a secret: it is minted per
 # run, into the build directory, and the engine it would authenticate does not
 # exist. It is written where nothing tracked can reach it for the same reason
@@ -68,12 +84,41 @@ body = {"yog-seat-cache": version, "protocol": protocol,
 # The pairing law `cache::read` enforces on the FILE: rows deeper than the
 # focus they were asked at are unpaintable, and a file carrying them is
 # discarded whole. So each depth carries exactly its own envelopes.
-if depth in ("conversations", "transcript"):
+if depth in ("conversations", "transcript", "running"):
     conversations = frame("conversations")
-    body["focus"]["workspace"] = workspaces["rows"][0]["workspace"]
+    workspace = workspaces["rows"][0]["workspace"]
+    body["focus"]["workspace"] = workspace
     body["conversations"] = conversations
-    if depth == "transcript":
-        body["focus"]["agent"] = conversations["rows"][0]["root_id"]
+    # **The options the controls row is made of** (DESIGN §14 stores them
+    # beside the rows): the providers reply, what the workspace's roles are
+    # actually set to, and one provider's models. Without them the row has no
+    # provider, so the model selector is disabled and the §9.4 tuning band —
+    # which paints only where the picked provider's own row says it takes
+    # effort or priority — does not paint at all. They are the engine's own
+    # envelopes like everything else here; the worker role's provider in the
+    # roles fixture is the one the models map is keyed by.
+    roles = frame("roles")
+    worker = next(r for r in roles["rows"] if r["role"] == "worker")
+    body["options"] = {"workspace": workspace, "providers": frame("providers"),
+                       "roles": roles, "models": {worker["provider"]: frame("models")}}
+    if depth in ("transcript", "running"):
+        rows = conversations["rows"]
+        # **Two transcript seeds, because three controls are gated by the
+        # engine's own reading of the conversation** (REMOTE §3.1, §9.4): the
+        # nudge is offered exactly while nothing is in flight, and the two
+        # stop controls exactly while something is. A walk that only ever
+        # sees one state cannot observe the other's controls, and unproven is
+        # red (yog PARITY §5) — so the walk states which gate it wants and
+        # visits both. The `running` seed sets the two booleans the engine
+        # puts ON the row to their other lawful value; it invents no field
+        # and reads no spelling this codec does not already decode.
+        if depth == "running":
+            row = rows[0]
+            row["stoppable"] = True
+            row["stop_children"] = True
+        else:
+            row = next(r for r in rows if r.get("flight") is None)
+        body["focus"]["agent"] = row["root_id"]
         body["transcript"] = frame("transcript")
 with open(out, "w") as fh:
     json.dump(body, fh)

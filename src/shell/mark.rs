@@ -28,6 +28,25 @@ use crate::icon::Shape;
 /// control stands at least this tall. The mark's own tap target too.
 pub(crate) const TOUCH: f32 = 44.0;
 
+/// What a screen's back control is, if it has one — and, where the depth it
+/// walks to is a screen the engine populates, which read that is.
+///
+/// The third case exists for the parity gate (yog `docs/PARITY.md` §2): *"the
+/// owed interactable for a read is the affordance that reaches the view it
+/// populates"*. Walking back out of a conversation list is what reaches the
+/// workspace roster, so that control is where `act:workspaces` belongs — and
+/// the bar cannot know which read that is, because the bar has no idea what a
+/// depth means and must not grow one.
+pub(super) enum Back {
+    /// A screen with no parent: the roster, the foot, a cold device.
+    None,
+    /// A back control that walks somewhere the wire did not fill — out of the
+    /// configuration surface, or out of an offer inside it.
+    Plain,
+    /// A back control that reaches a view this read populates.
+    To(&'static str),
+}
+
 impl Shell {
     /// The standing bar (§13.2): the mark, the screen's back control when it
     /// has a parent, and its title — one row, painted before every screen's
@@ -42,13 +61,17 @@ impl Shell {
     /// rather than a second walk somewhere else. A bar with no back control
     /// takes nothing: there is no depth, and the press goes on to mean
     /// leaving the app.
-    pub(super) fn bar(&mut self, ui: &mut egui::Ui, title: &str, backable: bool) -> bool {
+    pub(super) fn bar(&mut self, ui: &mut egui::Ui, title: &str, backable: &Back) -> bool {
         let mut back = false;
         ui.horizontal(|ui| {
             self.mark(ui);
-            if backable {
+            if let Back::Plain | Back::To(_) = backable {
                 let control = egui::Button::new("<").min_size(egui::vec2(TOUCH, TOUCH));
-                back = ui.add(control).clicked() || std::mem::take(&mut self.back);
+                let response = ui.add(control);
+                if let Back::To(op) = backable {
+                    super::act::act(ui, &response, op);
+                }
+                back = response.clicked() || std::mem::take(&mut self.back);
             }
             ui.heading(title);
         });

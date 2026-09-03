@@ -37,6 +37,7 @@
 [default]
 exclude-files = [
     "rules/fixtures/*",
+    "src/shell/act.rs",
     "src/shell/app.rs",
     "src/shell/back.rs",
     "src/shell/app/pass.rs",
@@ -47,6 +48,8 @@ exclude-files = [
     "src/shell/chat.rs",
     "src/shell/composer.rs",
     "src/shell/controls.rs",
+    "src/shell/controls/pick.rs",
+    "src/shell/controls/tune.rs",
     "src/shell/enroll.rs",
     "src/shell/mark.rs",
     "src/shell/enroll/material.rs",

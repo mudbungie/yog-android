@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk screens screens-avd
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk screens screens-avd parity
 
 all: check
 
@@ -75,6 +75,18 @@ screens-avd:
 	printf 'no\n' | "$${ANDROID_HOME:-$$HOME/Android/Sdk}/cmdline-tools/latest/bin/avdmanager" \
 	  create avd -n "$(SCREENS_AVD)" -k "$(SCREENS_IMAGE)" -d pixel_6
 	@echo "screens-avd: $(SCREENS_AVD) ready; run make screens"
+
+# The interface-parity assertion alone, over a walk's output (DESIGN §15.5,
+# yog docs/PARITY.md §5). `make screens` runs it as its last beat, which is
+# where it belongs — the inventory is that walk's dumps. This target is the
+# hand-run for the loop where only the verdict matters: after editing
+# `parity.toml`, or after a re-vendor moved the roster under a walk that has
+# already happened. It judges whatever dumps are there and does not boot
+# anything, so a stale `target/screens` answers a stale question — re-walk
+# when the APK moved.
+PARITY_DUMPS ?= target/screens
+parity:
+	PARITY_DUMPS=$(PARITY_DUMPS) cargo test --test parity -- --ignored --nocapture
 
 test:
 	cargo test

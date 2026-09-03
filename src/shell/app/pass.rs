@@ -107,6 +107,10 @@ impl eframe::App for Shell {
         // the platform's accessibility tree carries nothing about an egui
         // surface. After the screens, because that is when they have said it.
         self.probe();
+        // And what it could REACH, when a harness has armed the file
+        // (`shell/act.rs`): the parity gate's inventory, self-reported only
+        // because the platform route aborts the process (DESIGN §15.1).
+        self.note_acts(&ctx);
 
         // The input-wake ruling (DESIGN §3, decided under bl-c761): no
         // vendored winit, so the commit wake winit drops (bl-2958) is

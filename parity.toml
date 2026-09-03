@@ -1,0 +1,81 @@
+# **The parity exemption file** (yog docs/PARITY.md §7, bl-fe4c) — every op the
+# engine classes `control` that this client does not surface, one line each,
+# with the citation that makes the absence a decision rather than an oversight.
+#
+# The roster is not here: it is `corpus/reply/help.json`, vendored from yog,
+# whose rows carry `surface` since protocol 7. This file is only the delta, and
+# `src/parity` judges the two against the `act:` tags a `make screens` walk
+# actually observed. Four assertions, and two of them keep THIS file honest —
+# a line for an op that is now surfaced fails (stale), and a line naming an op
+# the roster no longer classes `control` fails (rotted). Deleting a line
+# re-reddens the gate and changes no code.
+#
+# **This file is where DESIGN §13.4's hand-kept ledger went.** That ledger was
+# prose, and prose cannot rot loudly: it filed conversation search under
+# "upstream asks — the wire does not carry the fact" while the engine's roster
+# carried `search` all along (bl-6cf3, found by this fold).
+#
+# The two group reasons are the conformance decision table's own words
+# (`tests/conformance/expect.rs`), because they are the same decision seen from
+# the other side: that table says what this codec may not misread, this file
+# says what a thumb cannot reach. A shape absent from both is one decision, and
+# it keeps one wording.
+
+# --- Reads outside the chat-loop slice (DESIGN §2) --------------------------
+# "One rung, and the other two are not omissions" — a phone is not where a work
+# directory is chosen or a ball is bound, so the world these reads answer is not
+# a world this seat paints.
+agent = "a world read outside the chat-loop slice (DESIGN §2)"
+attention = "a world read outside the chat-loop slice (DESIGN §2); the queue is painted per row as a mark, never read whole"
+balls = "a world read outside the chat-loop slice (DESIGN §2)"
+board = "a world read outside the chat-loop slice (DESIGN §2)"
+clients = "a world read outside the chat-loop slice (DESIGN §2)"
+files = "a world read outside the chat-loop slice (DESIGN §2)"
+governing = "a world read outside the chat-loop slice (DESIGN §2)"
+help = "a world read outside the chat-loop slice (DESIGN §2); the table is vendored as a fixture here, never asked for over the wire"
+inbox = "a world read outside the chat-loop slice (DESIGN §2)"
+lineages = "a world read outside the chat-loop slice (DESIGN §2)"
+ops = "a world read outside the chat-loop slice (DESIGN §2)"
+rail = "a world read outside the chat-loop slice (DESIGN §2)"
+science = "a world read outside the chat-loop slice (DESIGN §2)"
+step = "a world read outside the chat-loop slice (DESIGN §2)"
+steps = "a world read outside the chat-loop slice (DESIGN §2)"
+work-diff = "a world read outside the chat-loop slice (DESIGN §2)"
+workspace-balls = "a world read outside the chat-loop slice (DESIGN §2)"
+
+# --- Acts outside the chat-loop slice (DESIGN §2) ---------------------------
+ack = "a world act outside the chat-loop slice (DESIGN §2)"
+answer = "a world act outside the chat-loop slice (DESIGN §2)"
+arm = "a world act outside the chat-loop slice (DESIGN §2)"
+assign = "a world act outside the chat-loop slice (DESIGN §2)"
+clear-trail = "a world act outside the chat-loop slice (DESIGN §2)"
+close = "a world act outside the chat-loop slice (DESIGN §2)"
+config = "a world act outside the chat-loop slice (DESIGN §2)"
+create = "a world act outside the chat-loop slice (DESIGN §2)"
+delete-agent = "a world act outside the chat-loop slice (DESIGN §2)"
+delete-workspace = "a world act outside the chat-loop slice (DESIGN §2)"
+deliver = "a world act outside the chat-loop slice (DESIGN §2)"
+disarm = "a world act outside the chat-loop slice (DESIGN §2)"
+disband = "a world act outside the chat-loop slice (DESIGN §2)"
+fan = "a world act outside the chat-loop slice (DESIGN §2)"
+flag = "a world act outside the chat-loop slice (DESIGN §2)"
+fleet = "a world act outside the chat-loop slice (DESIGN §2)"
+fork = "a world act outside the chat-loop slice (DESIGN §2)"
+interrupt = "a world act outside the chat-loop slice (DESIGN §2)"
+marks = "a world act outside the chat-loop slice (DESIGN §2)"
+release = "a world act outside the chat-loop slice (DESIGN §2)"
+restore = "a world act outside the chat-loop slice (DESIGN §2)"
+retarget = "a world act outside the chat-loop slice (DESIGN §2)"
+retire = "a world act outside the chat-loop slice (DESIGN §2)"
+revoke = "a world act outside the chat-loop slice (DESIGN §2)"
+scan = "a world act outside the chat-loop slice (DESIGN §2); the app's own scan is a camera reading an envelope, not this op"
+update = "a world act outside the chat-loop slice (DESIGN §2)"
+
+# --- Named absences, each with its own reason -------------------------------
+# The four that are not a group. Each is a decision this repo made once, and
+# the citation is where the decision was made.
+enroll = "§8.4's minting side — this device is enrolled out of channel and enrolls nobody (DESIGN §11)"
+follow = "read one shot at a time while a turn is in flight, never fired by a tap; the view it populates is the transcript, which act:transcript reaches (DESIGN §7)"
+roles = "read at cadence to settle the controls row; what it populates is the selectors' own text, and no gesture asks for it (bl-e9f9)"
+search = "in-wire and unsurfaced — DESIGN §13.4 blamed upstream and was wrong; a seat surface is unbuilt (bl-6cf3)"
+seen = "unbuilt: this seat paints the attention mark on two screens and offers no gesture that answers it (bl-2889)"

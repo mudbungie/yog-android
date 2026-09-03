@@ -23,6 +23,7 @@ pub mod leaf;
 pub mod live;
 pub mod material;
 pub mod outbox;
+pub mod parity;
 pub mod roster;
 pub mod rows;
 pub mod scan;

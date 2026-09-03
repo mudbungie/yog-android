@@ -27,6 +27,7 @@ use eframe::egui;
 
 use super::app::Shell;
 use super::boot::Running;
+use super::mark::Back;
 use crate::bootstrap::{Component, Offer};
 
 mod material;
@@ -99,8 +100,12 @@ impl Shell {
             // The bar's back is the way out, where a way out exists
             // (bl-e192): a cold device has nothing behind this surface to
             // return to, so it gets no back control at all.
-            let out = !matches!(self.running, Running::Cold { .. });
-            if self.bar(ui, "configuration", out) {
+            let out = if matches!(self.running, Running::Cold { .. }) {
+                Back::None
+            } else {
+                Back::Plain
+            };
+            if self.bar(ui, "configuration", &out) {
                 self.forget_envelope();
                 self.settings = false;
                 return;
@@ -135,7 +140,7 @@ impl Shell {
             if std::mem::take(&mut self.back) {
                 self.scanner.shut();
             }
-        } else if self.bar(ui, &offer.brand.clone(), true) {
+        } else if self.bar(ui, &offer.brand.clone(), &Back::Plain) {
             self.forget_envelope();
             return;
         }

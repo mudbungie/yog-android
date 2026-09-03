@@ -1,5 +1,5 @@
 {
-  "protocol": 6,
+  "protocol": 7,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -405,13 +405,14 @@
         "/ok:bool",
         "/rows/[]/detail:string",
         "/rows/[]/summary:string",
+        "/rows/[]/surface:string",
         "/rows/[]/usage:string",
         "/rows/[]/verb:string",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 7
     },
     "reply/inbox": {
       "signature": [
