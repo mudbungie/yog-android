@@ -54,6 +54,7 @@ make test           # cargo test
 make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
 make lint           # line-cap + leak-scan + clippy + ast-grep + cargo-deny
 make apk            # cargo-ndk (arm64-v8a + x86_64) + gradle assembleDebug
+make deploy-phone ADDR=<ip:port>   # that APK, arm64 only, onto a phone
 make screens-avd    # create the emulator the loop below boots, once
 make screens        # headless emulator: walk the screens, capture each one
 make parity         # judge a walk's dumps against the engine's control roster
@@ -73,6 +74,29 @@ emulator the enrollment stories run on. Gradle packs a `jniLibs/<abi>/`
 directory per ABI and the installer picks one, so there is no
 emulator-only artifact to confuse a test verdict. Override with
 `make apk ABIS=arm64-v8a` on a box that only ever flashes a phone.
+
+## Onto a phone
+
+`make deploy-phone ADDR=<ip:port>` builds the arm64 APK at the current tree and
+installs it on a phone reachable over **wireless debugging** — `adb connect`,
+then `install -r`, and the exit code carries the truth: it is non-zero unless
+the device answered `Success`. Nothing is launched and no screen is walked;
+install is the whole act.
+
+The address is an argument, never a setting. It appears in no file here — a
+routable address is a disclosure the leak gate refuses — and the wireless-debug
+port rotates on every re-pair and reboot, so a stored one would be wrong by the
+next boot anyway. That is also the honest limit: this is push-on-demand, not
+unattended CD, because the address is something a human reads off the phone.
+
+Two things it resolves so you do not have to. `ANDROID_HOME` defaults to the
+conventional SDK location and is **exported**, since the Gradle Android plugin
+reads it from the environment and a developer SDK exports nothing. And gradle
+is looked for in the two places one is actually found: `PATH` first, then the
+newest bin distribution under the gradle wrapper's own dists cache — a box that
+has ever run a wrapper has a whole distribution there and no `gradle` command.
+`make deploy-phone ADDR=... GRADLE=/path/to/gradle` still wins over both, the
+same override `make apk` takes.
 
 ## Looking at it without a phone
 

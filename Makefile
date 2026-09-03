@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk screens screens-avd parity
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk deploy-phone screens screens-avd parity
 
 all: check
 
@@ -48,6 +48,22 @@ apk:
 	cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
 	cd android && $(GRADLE) assembleDebug
 	@echo "apk: android/app/build/outputs/apk/debug/app-debug.apk"
+
+# Push this tree's APK to a phone over wireless debugging (bl-128f):
+#
+#   make deploy-phone ADDR=<ip:port>
+#
+# ADDR is an argument and is committed nowhere — the wireless-debug port
+# rotates on every re-pair and reboot, so the address is per-run operator input
+# by nature. That also states the honest limit: this is push-on-demand, not
+# unattended CD; no scheduler can supply an address a human has to read off the
+# phone. `scripts/deploy-phone.sh` carries the rest of the reasoning — the
+# ANDROID_HOME default and export, the two places a gradle is found, and why
+# the exit code rather than a print is what says the install happened. The
+# script builds through `apk` above rather than restating it, and installs;
+# it launches nothing (`screens` is the harness's own door).
+deploy-phone:
+	@MAKE='$(MAKE)' GRADLE='$(GRADLE)' scripts/deploy-phone.sh $(ADDR)
 
 # The render-and-see loop (bl-243b, DESIGN §15): boot a headless emulator,
 # install the APK, walk the named screens, capture a PNG and an accessibility
