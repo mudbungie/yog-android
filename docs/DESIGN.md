@@ -2234,8 +2234,9 @@ failure it exists to catch is silent everywhere else: an undeclared permission
 is not refused at install, it is simply never granted, and the tool then
 refuses forever on a device where the operator did everything right. It does
 not invoke a tool — an invocation through the host channel needs an engine, a
-foot leaf and something to fire `/invoke`, which is bl-05b6's ball — so the
-refusal halves stay host tests, where they belong.
+foot leaf and something to fire `/invoke`, which is §15.8's own loop and not
+this walk's (bl-05b6) — so the refusal halves stay host tests, where they
+belong.
 
 **Three more are not about a screen either, and they are the only proof a
 platform SERVICE can have here** (bl-5cbd, §16.1 rung 2). A notification
@@ -2253,8 +2254,8 @@ this is what catches a missing `<service>`, a missing
 `BIND_NOTIFICATION_LISTENER_SERVICE`, a missing listener intent-filter action,
 or a class the dex does not carry. The third beat posts a notification and
 asserts it stands in the shade while the listener is bound — the material and
-the reader in place at once, which is what bl-05b6 will join with an
-invocation. **What none of them proves is that this app READ it**, and no
+the reader in place at once, which is what §15.8's `notify` beat joins with an
+invocation (bl-05b6). **What none of them proves is that this app READ it**, and no
 other evidence exists to look for: the retention ruling means a shade read
 leaves no trace anywhere, and one that did would be the defect rather than the
 proof.
@@ -2340,6 +2341,127 @@ the parity gate asks — and what the answer paints is asserted off-device.
 Extending it to every control is the point at which this stops being a probe
 and starts being an accessibility tree written by hand; if a walk needs those
 screens, the honest next step is a ball that decides which of the two this is.
+
+### 15.7 The names the dex has to carry (bl-05b6)
+
+`scripts/apk-bridges.py`, a step of `make apk`.
+
+Every call this crate makes into its own Java shell is resolved **by name at
+runtime**: a class through the app's class loader, then a static method by
+name and descriptor (`src/tools/bridged/door.rs`, `src/shell/jvm.rs`). Nothing
+in the build checked any of it. Rename `Paper.notify` in the Java and the Rust
+still compiles, the APK still assembles, the app still launches — and the
+first invocation of that tool answers a `NoSuchMethodError` on a device, which
+is exactly where this repo cannot look. bl-f34f read the four paper
+descriptors out of a dex by hand once, and reading them by hand is a thing
+that happens once.
+
+**So `make apk` asks the artifact it just built, both directions**, because
+the two failures are different: a name the crate resolves and the dex does not
+carry is a tool that refuses forever, and a public static of a bridged class
+that no Rust site names is a door nobody comes in by — usually half of a
+rename somebody stopped in the middle.
+
+**It reads every `classes*.dex` in the APK**, and that is not thoroughness for
+its own sake: the shell's own classes are not in `classes.dex` at all today —
+the multidex split put them in `classes4.dex`, and which dex a class lands in
+is R8's business and moves between builds. A scan of the first dex would have
+found nothing and passed, so an empty enumeration is a failure here, the rule
+`make line-cap` already keeps.
+
+**The extraction reads the source, not a list somebody maintains.** A pin
+table written beside the call sites would be a second spelling of the names,
+drifting the first time one moved — so the pins come from the call sites
+themselves, in the two doors this crate has (`Door::new`, `Bridge::open`) and
+the shapes a name reaches them by: the door's own argument count, a literal
+signature, and a helper carrying one for its callers. **What guards the
+extractor is the reverse direction**: a method shape it cannot read is a
+public static nothing resolves, and it says so by name. Two more guards sit
+beside that — no pin at all is a broken scan rather than a clean tree, and a
+second door naming no class is the shape a bridge the extractor cannot read
+would arrive in. `scripts/bridge-selftest.py` drives all six arms over
+fixtures, in `leak-scan --self-test`'s shape and for its reason.
+
+**It proves the seam and nothing about the platform**, which is why it is a
+complement to §15.8 rather than an answer to it. A method that exists and
+throws is a green pin.
+
+### 15.8 The invocation loop: what only a device can answer (bl-05b6)
+
+`scripts/invoke.sh`, `scripts/invoke-judge.sh`, `tests/invoke.rs`; `make
+invoke`.
+
+Every tool this client advertises is host-tested and is advertised on the
+strength of that. What no test here had ever done is put an invocation through
+the tool-host channel **to a device** and read the capture back — and the half
+that gap covers is exactly the half a host test cannot reach: an activity
+launch the platform refuses for being in the background, a notification that
+really is in the shade, a battery figure that is this device's.
+
+**It is a second loop, not a beat of the walk.** `make screens` dials nothing
+and looks at screens; this dials and opens none. The seeds differ (a
+**foot**-grade leaf, and an address that answers), the run needs a `yog`
+binary, and the two answer different questions — so it is its own script beside
+`screens.sh`, its own emulator, and its own target. Neither can be part of
+`make check`, and this one doubly: an emulator AND an engine.
+
+**`yog gesture` will not do, and that is the ball's own finding.** The
+invocation mailbox is per-process in-memory state, so an `/invoke` run in a
+second process addresses a different mailbox from the one the phone's parked
+`invocations` read is waiting on. The gesture has to cross the listener, which
+means a seat — `tests/invoke.rs`, `#[ignore]`d for `tests/parity.rs`'s reason
+exactly, and the only piece of this that is not shell. **Its envelopes are
+written by hand on purpose**: this crate's codec refuses `invoke` and `capture`
+by name (REMOTE §4.2 — *a foot is invoked; it never invokes*), so the asking
+side has no spelling here to borrow, and `Seat::ask` hands back reply frames as
+JSON without the product's vocabulary growing a verb it must not have.
+
+**The world is `yog fixture`'s**, which exists for exactly this: it lays a
+state, states the address it minted material for, and hands back an
+operator-grade leaf. Two acts are the harness's own and both are the operator's
+elsewhere — the foot leaf, minted by the engine's own recipe (`WIRE_FOOT=1`
+puts `OU=foot` on the certificate, REMOTE §4.2), and the registration, which is
+an empty file whose existence is the fact (REMOTE §1.5: no gesture manages one).
+
+**The device reaches the engine over `adb reverse`, and that is a disclosure
+decision as much as a plumbing one.** The emulator's host alias is what a human
+reaches for and this repo's leak gate refuses that literal — rightly, since no
+rule can tell one routable quad from another by looking. `adb reverse tcp:P
+tcp:P` makes the device's own `127.0.0.1:P` the host's, which is a literal this
+tree may hold and, better, is the address the engine's server certificate is
+already minted for.
+
+**Every invocation is answered with the app in the BACKGROUND**, which is the
+state a teleoperated phone is actually in. That order is load-bearing twice
+over: the foreground service that keeps a foot's read open is armed by the
+activity's own resume (§18.1), so the advertisement is proved while the app is
+in front and the pocketing comes after — and `open`'s refusal exists only in
+this state.
+
+**The four, and why each one:**
+
+| beat | what it proves that a host test cannot |
+| --- | --- |
+| `shell` | the whole route, with a value this run minted: engine → device → tool → capture |
+| `device` | a figure that is THIS device's — the platform is asked for the battery level a second way and the two must agree |
+| `notify` | a row on the platform's own shade, read back out of `dumpsys notification` on the tools channel |
+| `open` | a refusal **Android** makes, not this app: nothing of yog's is on the screen, and the capture says so in band naming the act that fixes it |
+
+Two beats stand before them and are not invocations at all: the device
+**advertised** its set over the wire (which is what the driver waits on rather
+than a clock), and the platform holds the foreground service that makes the
+rest of the run a pocketed foot's.
+
+**One defect the loop found on its first run, and it is the app's rather than
+the harness's** (bl-be13). Installing a package makes the platform re-apply its
+overlays; that lands as a configuration change and destroys the activity that
+is already up, and a destroy which catches this app mid-dial **hangs** in
+`GameActivity`'s native teardown — `NativeCode::~NativeCode` waiting on an app
+thread that is inside a wire read — until the platform ANRs and kills the
+process. The walk never meets it because minutes of seeds and taps sit between
+its install and its first relaunch. The harness relaunches onto the settled
+package so this is not what it discovers every run; the hang is filed where it
+belongs.
 
 ## 16. The full seat and the teleoperation corpus (bl-eac2)
 

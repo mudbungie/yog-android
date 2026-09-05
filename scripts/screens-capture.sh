@@ -47,12 +47,10 @@ settle() {
 }
 
 STEP=0
-FAILED=0
-verdict() {            # verdict <pass|fail> <label>
-  echo "  $1  $2" | tee -a "$OUT/verdict.txt"
-  [ "$1" = fail ] && FAILED=1
-  return 0
-}
+# The verdict itself moved out when the invocation beat became this harness's
+# second loop (bl-05b6): what a failure IS has to be one fact, not one per
+# loop.
+. scripts/verdict.sh
 
 # One screen: settle, capture the picture, capture the (empty) accessibility
 # dump beside it as evidence, record what the app said, and judge it.

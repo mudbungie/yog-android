@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk deploy-phone screens screens-avd parity
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk deploy-phone screens screens-avd invoke parity
 
 all: check
 
@@ -44,10 +44,14 @@ GRADLE ?= gradle
 # get by typing nothing.
 ABIS ?= arm64-v8a x86_64
 
+APK_OUT := android/app/build/outputs/apk/debug/app-debug.apk
+
 apk:
 	cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
 	cd android && $(GRADLE) assembleDebug
-	@echo "apk: android/app/build/outputs/apk/debug/app-debug.apk"
+	@python3 scripts/apk-bridges.py --self-test
+	@python3 scripts/apk-bridges.py $(APK_OUT)
+	@echo "apk: $(APK_OUT)"
 
 # Push this tree's APK to a phone over wireless debugging (bl-128f):
 #
@@ -77,6 +81,20 @@ deploy-phone:
 # read them; `--keep` leaves the emulator up for a hand-driven look.
 screens:
 	scripts/screens.sh $(SCREENS_ARGS)
+
+# The invocation loop (bl-05b6, DESIGN §15.8): an engine, a foot leaf, a
+# device, and four captures read back over the wire. Beside `screens` rather
+# than inside it — it needs a yog binary and dials a listener, where the walk
+# needs neither and looks at screens this one never opens. Not part of `check`
+# for `screens`' reason, doubled: an emulator AND an engine.
+#
+#   make invoke                     # a yog on PATH
+#   make invoke YOG=/path/to/yog    # or one named outright
+#
+# It builds no APK, for the reason `screens` does not: a target that quietly
+# rebuilt would hide which tree the invocations were answered by.
+invoke:
+	scripts/invoke.sh $(INVOKE_ARGS)
 
 # The one-time half of the loop: the AVD `screens` boots. Separate from
 # `screens` because creating a virtual device is a change to the BOX, not a

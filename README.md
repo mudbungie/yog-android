@@ -122,6 +122,26 @@ is the whole design; three things are worth knowing before running it:
   that would fill it aborts this app (DESIGN §15.1) — so the reachability gate
   below reads a file the app writes instead.
 
+## Invoking a tool for real: `make invoke`
+
+`make screens` walks screens and dials nothing. The second loop does the
+opposite: it boots a bounded engine (`yog fixture`), mints this device a
+**foot**-grade leaf, seeds it, and then — from a seat that dials the listener —
+fires four invocations and reads the captures back. It needs a `yog` on PATH
+(`make invoke YOG=/path/to/yog` names one outright) and it is not part of `make
+check`, for `screens`' reason doubled: an emulator *and* an engine.
+
+Each of the four answers something a host test cannot produce: `shell` carries
+back a value the run minted, `device` states a battery level the platform is
+asked for a second way, `notify` leaves a row in the shade that `dumpsys`
+reads, and `open` is refused **by Android** because the app is in the
+background — every invocation is answered from the pocket, which is where a
+teleoperated phone actually is. DESIGN §15.8 is the whole design.
+
+Beside it, `make apk` now pins **every JNI name this crate resolves** against
+the dex it just built, both directions — a renamed Java method is a build
+failure instead of a `NoSuchMethodError` on somebody's phone (DESIGN §15.7).
+
 ## Interface parity: what this seat can reach
 
 The desktop seat and this client must have **interaction parity** — not

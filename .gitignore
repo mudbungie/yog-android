@@ -7,3 +7,7 @@
 /android/app/build
 /android/app/src/main/jniLibs
 /android/local.properties
+
+# Python bytecode: the harness scripts are run, never imported by anything
+# shipped, and a .pyc is a binary the disclosure gate refuses on sight.
+__pycache__/
