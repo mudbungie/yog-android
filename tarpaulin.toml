@@ -52,6 +52,14 @@
 # and the bridge vocabulary it spends live in `src/scan.rs`, which is pure and
 # stays UNDER the floor — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
+# `src/shell/screens/search.rs` is the search field and the screen its answer
+# opens (bl-4c2b), the same class again: a `TextEdit`, a `Button` and a list of
+# taps, `cfg(target_os = "android")` to the last line. Everything it decides is
+# somewhere else and under the floor — WHAT a hit is and how it reads back is
+# `codec::search`, and WHEN an answer stands (the empty needle that crosses no
+# wire, the engine's own empty-needle answer) is `seat::asks::search`, both
+# asserted by host tests. What is left here is which widget shows which of them.
+#
 # `src/shell/screens/rows.rs` is the conversation list split out of
 # `screens.rs` (bl-f97c) and inherits its class exactly: egui `Popup` and
 # `Button` calls, `cfg(target_os = "android")` to the last line. The seam it
@@ -86,6 +94,7 @@ exclude-files = [
     "src/shell/jvm.rs",
     "src/shell/screens.rs",
     "src/shell/screens/rows.rs",
+    "src/shell/screens/search.rs",
     "src/shell/transcript.rs",
     "src/shell/sys.rs",
     "src/tools/bridged/door.rs",

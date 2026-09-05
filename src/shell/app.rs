@@ -37,6 +37,15 @@ pub(crate) const ENVELOPE: Field = Field {
     kind: FieldKind::Envelope,
 };
 
+/// **The search field** (§13.6, bl-4c2b). Its own id and its own kind: a
+/// needle is one line and must not be autocorrected — a corrected needle
+/// searches for a word the operator did not type — while the composer is
+/// prose and wants both.
+pub(crate) const NEEDLE: Field = Field {
+    id: "needle",
+    kind: FieldKind::Needle,
+};
+
 pub(crate) struct Shell {
     pub(super) android: AndroidApp,
     bridge: Bridge,
@@ -53,6 +62,10 @@ pub(crate) struct Shell {
     /// what runs is stored here.
     pub(crate) settings: bool,
     pub(crate) composer: String,
+    /// What the search field holds. A question, not an answer — the hits are
+    /// the model's and ride the snapshot — and it is emptied when the search
+    /// screen is left, because leaving a search leaves it.
+    pub(crate) needle: String,
     /// The pasted enroll envelope, and the last thing reading it said. It
     /// holds a PRIVATE KEY while it is full, so it is emptied the moment it
     /// has been landed and on the way back out of the screen
@@ -146,6 +159,7 @@ impl Shell {
             android,
             bridge: Bridge::default(),
             composer: String::new(),
+            needle: String::new(),
             envelope: String::new(),
             envelope_said: None,
             auto: AutoExpand::default(),

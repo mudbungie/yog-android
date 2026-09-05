@@ -52,6 +52,15 @@ pub(crate) enum FieldKind {
     /// key promised to do something that cannot happen is worse than a key
     /// that plainly breaks the line. The send button is THE send (§13.2).
     Composer,
+    /// **The search field** (§13.6): one line, and neither autocorrected nor
+    /// capitalized. A needle is as often an id or a fragment as it is a word
+    /// — the engine folds case itself and never spelling — so a correction
+    /// here would search for something the operator did not type, and the
+    /// only way to find out would be reading the answer's own echoed needle.
+    /// No action key, for the composer's reason: `GameActivity` writes one
+    /// where the enter key does not read it (DESIGN §3), and the button
+    /// beside the field is the gesture.
+    Needle,
     /// The enrollment screen's envelope: a long machine-written blob carried
     /// here by paste. Autocorrect and sentence capitals would corrupt it, and
     /// there is no action key — the button beside it is the gesture.
@@ -158,6 +167,10 @@ fn editor_info(kind: FieldKind) -> (aa::input::InputType, aa::input::TextInputAc
     match kind {
         FieldKind::Composer => (
             base | T::TYPE_TEXT_VARIATION_SHORT_MESSAGE | T::TYPE_TEXT_FLAG_MULTI_LINE,
+            A::None,
+        ),
+        FieldKind::Needle => (
+            T::TYPE_CLASS_TEXT | T::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
             A::None,
         ),
         FieldKind::Envelope => (

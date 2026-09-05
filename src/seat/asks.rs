@@ -15,8 +15,8 @@ use serde_json::Value;
 
 use super::Focus;
 use super::pass::{answer, kind_err};
-use crate::codec::Ask;
 use crate::codec::reply::Reply;
+use crate::codec::{Ask, Found};
 use crate::transport::Seat;
 
 /// **What the focused workspace's roles are set to** (bl-e9f9), handed back
@@ -60,6 +60,29 @@ pub(super) fn models(
     match answer(seat, &ask)? {
         (Reply::Models(_), envelope) => Ok((workspace, envelope)),
         (other, _) => Err(kind_err("models", &other)),
+    }
+}
+
+/// **What the needle found** (yog DESIGN §8.5, bl-4c2b) — the one read this
+/// seat makes that names no place, so it takes no focus.
+///
+/// **An empty needle is no search, on both sides of the wire.** Before it: a
+/// cleared field is answered here, because the answer being dropped is this
+/// seat's own copy and an operator must be able to leave a search with the
+/// engine unreachable. After it: the engine's own spelling of *no search* is
+/// an answer whose needle is empty, and it means the same thing. One rule,
+/// stated once, and nothing downstream has to tell a cleared search from a
+/// search that was never made.
+pub(super) fn search(seat: &Seat, text: &str) -> Result<Option<Found>, String> {
+    if text.trim().is_empty() {
+        return Ok(None);
+    }
+    let ask = Ask::Search {
+        text: text.to_owned(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Search(found), _) => Ok((!found.needle.is_empty()).then_some(found)),
+        (other, _) => Err(kind_err("search", &other)),
     }
 }
 

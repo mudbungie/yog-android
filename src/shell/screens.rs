@@ -16,6 +16,7 @@ use crate::host::Health;
 use crate::seat::Snapshot;
 
 mod rows;
+mod search;
 
 impl Shell {
     /// Everything below the top inset: the yog mark, then the component this
@@ -51,12 +52,12 @@ impl Shell {
         // depth's own body. Back walks exactly one focus depth — the bar
         // returns the tap and this match is the one place a depth is spelled.
         match snap.focus.workspace.clone() {
-            None => {
-                self.note_screen("roster");
-                self.bar(ui, &crate::bootstrap::Component::Seat.brand(), &Back::None);
-                banner(ui, &snap);
-                self.roster(ui, &snap);
-            }
+            // **Two screens at this depth, and the search's own file chooses
+            // between them** (§13.6, bl-4c2b): the roster, and the hits when
+            // an answer is standing over it. The choice is one arm there
+            // rather than a third arm here, because both paint the same
+            // depth's chrome and only the body differs.
+            None => self.top(ui, &snap),
             // **The two screens that anchor controls to the floor paint their
             // own bar** (bl-192c). Everywhere else the bar goes first because
             // nothing below it can be pushed anywhere; here the floor's order
@@ -95,7 +96,7 @@ impl Shell {
         );
     }
 
-    fn roster(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
+    pub(super) fn roster(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         ui.weak("workspaces");
         ui.weak(self.identity());
         Self::hosting(ui);

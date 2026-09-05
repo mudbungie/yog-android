@@ -40,6 +40,10 @@ pub(super) enum Cmd {
     Effort(Option<crate::codec::Effort>),
     /// Ask the worker's provider for its priority lane, or stop asking.
     Priority(bool),
+    /// **Search the world, or drop the answer being shown** (bl-4c2b). The
+    /// empty needle is the second: it crosses no wire, so a search can be
+    /// left with the engine unreachable.
+    Search(String),
     /// Stop the focused conversation's turn, optionally its subtree with it.
     StopTurn(bool),
     /// Re-prompt the focused conversation from where it stands.
@@ -175,6 +179,13 @@ impl Model {
     /// it (`seat::acts::row`).
     pub fn row_act(&self, agent: String, act: crate::codec::RowAct) {
         let _ = self.cmds.send(Cmd::Row(agent, act));
+    }
+
+    /// **Search everything this seat can see** (yog DESIGN §8.5) for `text`,
+    /// or — with an empty needle — drop the answer that is standing. The hits
+    /// arrive in the next snapshot like every other read's rows.
+    pub fn search(&self, text: String) {
+        let _ = self.cmds.send(Cmd::Search(text));
     }
 
     /// Start a new conversation in the focused workspace with `goal` as its

@@ -76,6 +76,13 @@ pub(super) fn run(
                 let listed = super::asks::models(seat, &focus, &provider);
                 note = learned(listed, Some(provider), &mut standing);
             }
+            // **A search needs no read after it either**, and no read before
+            // it: it names no place, so nothing about the focus decides what
+            // it means. The answer is held by `Standing` and painted onto
+            // every snapshot after it, exactly as the deposit counters are.
+            Ok(Cmd::Search(text)) => {
+                note = searched(super::asks::search(seat, &text), &mut standing);
+            }
             Ok(Cmd::StopTurn(children)) => {
                 note = super::acts::stop(seat, &focus, children).note();
             }
@@ -140,6 +147,26 @@ fn learned(
             standing
                 .options
                 .learned(&workspace, provider.as_deref(), envelope);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
+/// **One search, held** (bl-4c2b) — `learned`'s shape for the other read a
+/// gesture makes, and here for the same reason: what the fold does with an
+/// answer is the worker's business, and what a PASS means is `seat::pass`'s.
+///
+/// The answer replaces whatever was held. A failure does NOT: the operator is
+/// still looking at the hits they have, and dropping an answer the engine gave
+/// because of one it did not is the defect §13.2's grace exists to prevent.
+fn searched(
+    read: Result<Option<crate::codec::Found>, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(found) => {
+            standing.found = found;
             None
         }
         Err(why) => Some(why),

@@ -53,7 +53,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("roles", Reads),
     ("routed", Reads),
     ("science", Refuses(UNSENT)),
-    ("search", Refuses(UNSENT)),
+    ("search", Reads),
     ("started", Reads),
     ("step", Refuses(UNSENT)),
     ("steps", Refuses(UNSENT)),

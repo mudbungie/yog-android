@@ -98,5 +98,6 @@ follow = "read one shot at a time while a turn is in flight, never fired by a ta
 roles = "read at cadence to settle the controls row; what it populates is the selectors' own text, and no gesture asks for it (bl-e9f9)"
 
 # --- Unbuilt before the re-scope, standing ----------------------------------
-search = "in-wire and unsurfaced — DESIGN §13.4 blamed upstream and was wrong; a seat surface is unbuilt (bl-4c2b)"
+# `search` was here, and is gone: the field paints on the roster and the hits
+# have a screen of their own (DESIGN §13.6, bl-4c2b).
 seen = "unbuilt: this seat paints the attention mark on two screens and offers no gesture that answers it (bl-2889)"

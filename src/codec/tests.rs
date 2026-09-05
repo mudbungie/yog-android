@@ -35,6 +35,18 @@ fn conversations_spelling() {
     );
 }
 
+/// The one read that names no place (yog DESIGN §8.5): a needle and nothing
+/// else, so the envelope is two keys.
+#[test]
+fn search_spelling() {
+    assert_eq!(
+        encode(&Gesture::Ask(Ask::Search {
+            text: "tekeli-li".into()
+        })),
+        json!({ "op": "search", "text": "tekeli-li" })
+    );
+}
+
 #[test]
 fn transcript_spelling() {
     assert_eq!(

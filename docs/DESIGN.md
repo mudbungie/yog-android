@@ -1599,6 +1599,75 @@ rather than naming a read that would not show it: a recovery this app has not
 got must not be claimed, and §19's contract is satisfied by an honest *no read
 here says which* — the gap is bl-146b's, and it is cited.
 
+### 13.6 Search: one field at the top depth, and the screen its answer opens (bl-4c2b)
+
+`src/codec/search.rs`, `src/seat/asks.rs`, `src/shell/screens/search.rs`.
+
+The wire has answered `search` all along — §13.4's own rot lesson is about
+this very op, filed as an upstream ask while the engine's help table classed
+it `control`. Upstream's bl-764a is what made it usable from off the box: a
+hit's address now crosses as **wire names** (the §5.1 project name, the §3.1
+workspace leaf, the agent id) rather than engine-local paths, so a hit is an
+address this seat already focuses instead of a path it would have to derive a
+name from — which §8 forbids it to do.
+
+**The field's depth states the query's scope.** `search` names no workspace
+and no conversation; it is the one read this seat makes that asks the engine
+*where to look*. So the field sits at the top depth, where the whole world is
+already what is on the glass. A field on the conversation list would have
+implied a search scoped to that workspace — a promise the wire does not carry,
+and the same class of claim §8 rules out everywhere else.
+
+**The answer is a screen, and gets one for free.** It paints its own bar
+(§13.2) and therefore inherits the back rule unchanged: the platform's back
+gesture walks out of a search exactly as it walks out of a conversation, with
+no screen enumerated anywhere and no second mechanism. The probe names it
+`search`, which is what lets a walk say it went there.
+
+**An empty needle is no search, on both sides of the wire, and that is one
+rule rather than two special cases.** Before the wire: a cleared field is
+answered in `seat::asks::search` and crosses nothing, because the answer being
+dropped is this seat's own copy and an operator must be able to leave a search
+with the engine unreachable — a clear that needed a round trip would be a
+screen a broken channel could trap someone on. After it: the engine's own
+spelling of *no search* is an answer whose needle is empty (upstream's `/search`
+clear), and it means the same thing. Nothing downstream tells a cleared search
+from a search that was never made.
+
+**The answer carries its own question, so "nothing matched" is a sentence.**
+Upstream's bl-648a put the needle on the reply for exactly this: without it,
+*was a search asked?* and *did anything match?* are the same value precisely
+when a search found nothing. `Snapshot::search` is therefore `Option<Found>`
+where `None` is *no search was made* and an empty `hits` under a needle is
+*this question came back empty* — two different screens, and the wire already
+tells them apart.
+
+**It rides the snapshot and never the §14 cache.** The cache is the world the
+engine wrote down; a search is a question this operator asked a moment ago, and
+reviving one on the next boot would open the app on a search nobody just made.
+The answer is held by `Standing` like the deposit counters — a gesture's
+answer, not a pass's — so a pass that re-reads the world does not drop the hits
+the operator is reading, and a failed search does not drop them either: losing
+an answer the engine gave over one it did not is the same defect the §13.2
+grace exists to prevent.
+
+**A ball hit paints and does not tap.** There is no ball surface on this device
+yet (bl-d587), and a row that navigates nowhere is worse than a row that
+plainly does not. The hit is still shown, because *the engine found it* is part
+of the answer, and hiding a third of a reply to keep the list uniformly
+tappable would be this app editing what came back. The matched field's own word
+(`name`/`summary`/`text`) rides beside every excerpt for a related reason: a
+name matching a name would otherwise read as the same string twice with nothing
+saying why the row is there.
+
+**What the walk can reach, and what it cannot** (§15.6). The field paints on
+the roster, which the walk visits, so `act:search` is observed and the
+`parity.toml` line is deleted. The hits screen is NOT walked: reaching it means
+typing a needle and an engine answering it, and this walk dials nothing by
+design. That is the honest state — the gate proves the affordance is reachable,
+and what the answer looks like is asserted in host tests over the codec and the
+seat instead.
+
 ## 14. The paint-first cache (bl-de96)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -1912,6 +1981,10 @@ answer to a coverage failure.
 The screens behind a text button — the two enrollment screens and the server
 bootstrap — are named by the probe but not walked, because reaching them means
 tapping a labelled control and the probe states only the mark's rectangle.
+**The hits screen (§13.6) is unwalked for a second reason**: reaching it means
+typing a needle AND an engine answering it, and this walk dials nothing. Its
+affordance is reached — `act:search` is observed on the roster, which is what
+the parity gate asks — and what the answer paints is asserted off-device.
 Extending it to every control is the point at which this stops being a probe
 and starts being an accessibility tree written by hand; if a walk needs those
 screens, the honest next step is a ball that decides which of the two this is.
@@ -2167,7 +2240,8 @@ they want are things this app's composer and rows already do, and nothing
 about a phone refuses any of them. The reasons that DO survive are structural,
 and were never §2 citations: `follow` and `roles` are ops no gesture fires
 (their views are reached through other controls), and they stand unchanged;
-`search` (bl-4c2b) and `seen` (bl-2889) were already unbuilt-with-ball.
+`search` (bl-4c2b, **landed** — §13.6) and `seen` (bl-2889) were already
+unbuilt-with-ball.
 `enroll` is the one re-classification: §11's "enrolls nobody" was the
 chat-first framing speaking, and under the mesh ruling (§5) a full phone seat
 mints and *displays* the QR the next device scans — bl-2ee8, which amends

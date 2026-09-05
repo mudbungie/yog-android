@@ -50,6 +50,9 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             agent: str_of(o, "agent")?,
         }),
         "invocations" => Gesture::Ask(Ask::Invocations),
+        "search" => Gesture::Ask(Ask::Search {
+            text: str_of(o, "text")?,
+        }),
         "stop" => Gesture::Act(Act::Stop {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,

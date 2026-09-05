@@ -11,7 +11,7 @@ use std::time::Duration;
 use eframe::egui;
 use winit::platform::android::activity::AndroidApp;
 
-use super::{COMPOSER, ENVELOPE, Shell};
+use super::{COMPOSER, ENVELOPE, NEEDLE, Shell};
 
 /// The least clearance the bottom of the glass gets when the platform reports
 /// no inset at all — a display with no gesture bar and no keyboard up still
@@ -63,6 +63,7 @@ impl eframe::App for Shell {
         {
             let mut fields = [
                 (COMPOSER, &mut self.composer),
+                (NEEDLE, &mut self.needle),
                 (ENVELOPE, &mut self.envelope),
             ];
             self.bridge.run(&ctx, &self.android, &mut fields, now);

@@ -24,6 +24,7 @@ pub mod pick;
 pub mod reply;
 pub mod request;
 mod row;
+pub mod search;
 pub mod start;
 pub mod tools;
 mod transcript;
@@ -34,6 +35,7 @@ pub use follow::Stream;
 pub use pick::{Effort, ProviderRow, RoleRow};
 pub use request::decode;
 pub use row::RowAct;
+pub use search::{Address, Found, Hit, HitField};
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
 pub use transcript::{Block, Entry, EntryKind};
@@ -139,6 +141,13 @@ pub enum Ask {
     Providers { workspace: String },
     /// One provider's models, in the engine's listing order.
     Models { workspace: String, provider: String },
+    /// **Search the world this seat can see** (yog DESIGN §8.5): one needle,
+    /// no scope. It is the only read here that names no place — every other
+    /// one asks about a workspace or a conversation the operator is already
+    /// looking at, and this one asks the engine where to look. The answer's
+    /// addresses are the focuses this seat already takes, so a hit is fed
+    /// straight back as one rather than resolved through anything.
+    Search { text: String },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here
@@ -171,6 +180,7 @@ pub fn encode(gesture: &Gesture) -> Value {
             json!({ "op": "transcript", "workspace": workspace, "agent": agent })
         }
         Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
+        Gesture::Ask(Ask::Search { text }) => json!({ "op": "search", "text": text }),
         Gesture::Ask(Ask::Follow { workspace, agent }) => {
             json!({ "op": "follow", "workspace": workspace, "agent": agent })
         }

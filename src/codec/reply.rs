@@ -15,6 +15,7 @@ use serde_json::{Map, Value};
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
 use super::follow::{Stream, stream_of};
 use super::pick::{self, ProviderRow, RoleRow};
+use super::search::{self, Found};
 use super::start::{self, Prepared};
 use super::tools::{Capture, Invocation, capture_of, invocation_of};
 use super::{ConvRow, Entry, WsRow, conv, transcript, ws};
@@ -94,6 +95,10 @@ pub enum Reply {
     /// The other two row acts answer `outcome`, which this codec already
     /// reads; only the flag has a receipt of its own.
     Flagged,
+    /// **What the needle found** (yog DESIGN §8.5). The answer carries its
+    /// own question, so a search that matched nothing is told apart from no
+    /// search at all — see `codec::search`.
+    Search(Found),
     /// One invocation's standing after a call (REMOTE §5.3). `capture` is
     /// **absent** rather than empty while the far side still runs it, so a
     /// reader never has to tell "not finished" from "finished saying
@@ -127,6 +132,7 @@ impl Reply {
             Self::Nudged => "nudged",
             Self::Flagged => "flagged",
             Self::Follow(_) => "follow",
+            Self::Search(_) => "search",
         }
         .to_owned()
     }
@@ -168,6 +174,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "nudged" => Reply::Nudged,
         "flagged" => Reply::Flagged,
         "follow" => Reply::Follow(stream_of(o)?),
+        "search" => Reply::Search(search::found_of(o)?),
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,
             capture: opt_val(o, "capture", capture_of)?,

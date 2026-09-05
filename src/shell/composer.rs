@@ -25,7 +25,13 @@ const FIELD_CAP: f32 = 132.0;
 /// The text is already the transcript's size and nothing here sets it: a
 /// `TextEdit`'s default font selection resolves to `TextStyle::Body`, which
 /// is what `chat::row` labels a body with.
-fn padding(ui: &egui::Ui) -> egui::Margin {
+///
+/// **Shared with the search field** (§13.6, bl-4c2b), which is the second
+/// field on this glass and has the same problem: a `TextEdit` at rest is a
+/// thin box that a thumb aimed at its row misses. One home for *a field at
+/// rest is the touch floor*, rather than a second derivation that would drift
+/// the first time the floor moves.
+pub(super) fn padding(ui: &egui::Ui) -> egui::Margin {
     let line = ui.text_style_height(&egui::TextStyle::Body);
     let pad = ((super::mark::TOUCH - line) / 2.0).max(SIDE_PAD).round() as i8;
     egui::Margin::symmetric(SIDE_PAD as i8, pad)

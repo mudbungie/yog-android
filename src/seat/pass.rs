@@ -45,6 +45,12 @@ pub(super) struct Standing {
     /// gesture, not a pass — and painted into every published snapshot for the
     /// same reason the options are.
     posted: (usize, usize, usize),
+    /// **The last needle's answer** (bl-4c2b), carried between passes for the
+    /// reason the counters above are: it is a gesture's answer, not a pass's,
+    /// and a pass that re-reads the world must not drop the search the
+    /// operator is looking at. Folded in by `worker::searched`, where the
+    /// other gesture-made read is folded too.
+    pub(super) found: Option<crate::codec::Found>,
     last: Snapshot,
     failed: u32,
     /// What was last WRITTEN to the cache, so a pass that changed nothing
@@ -64,6 +70,7 @@ impl Standing {
             live: None,
             reads: 0,
             posted: (0, 0, 0),
+            found: None,
             last: snap.clone(),
             failed: 0,
             stored: snap,
@@ -143,6 +150,7 @@ impl Standing {
         let mut out = self.last.clone();
         (out.landed, out.refused, out.doubted) = self.posted;
         out.roles_read = self.reads;
+        out.search.clone_from(&self.found);
         // One tail on the glass, and none at rest (bl-e3d1). The gate is the
         // row's own flight, so the transcript's tail obeys exactly what the
         // lane obeys.
@@ -262,6 +270,7 @@ impl Standing {
         let mut out = self.last.clone();
         (out.landed, out.refused, out.doubted) = self.posted;
         out.roles_read = self.reads;
+        out.search.clone_from(&self.found);
         match read {
             Ok(stream) => self.live = Some(stream),
             Err(why) => out.error = Some(why),

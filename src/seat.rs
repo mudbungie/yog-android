@@ -10,7 +10,7 @@
 //! happens on the model's one worker thread, and the two sides talk over
 //! channels — no locks, so rule 7 stays vacuous here.
 
-use crate::codec::{ConvRow, Entry, ProviderRow, RoleRow, WsRow};
+use crate::codec::{ConvRow, Entry, Found, ProviderRow, RoleRow, WsRow};
 
 /// What the frame paints: the standing set as of the last completed
 /// refresh, with the focus it was asked under — one value, published
@@ -59,6 +59,16 @@ pub struct Snapshot {
     /// said again. The echo watches this move exactly as it watches the other
     /// two, and stands where it is when it does.
     pub doubted: usize,
+    /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
+    /// *no search was made* — never *nothing matched*, which is a `Some`
+    /// carrying its own needle and no hits. The two are the same value to
+    /// anything that reads only the hit count, and they are opposite screens.
+    ///
+    /// It rides the snapshot and never the §14 cache: the cache is the world
+    /// the engine wrote down, and a search is a question this operator asked
+    /// a moment ago — reviving one on the next boot would be the app opening
+    /// on a search nobody just made.
+    pub search: Option<Found>,
     /// The last refresh's failure or a refused deposit, one sentence for
     /// the banner. `None` is "the engine answered".
     pub error: Option<String>,
