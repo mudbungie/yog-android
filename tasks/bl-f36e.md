@@ -1,7 +1,8 @@
 +++
 title = "the ball pane reads and cannot act: close, assign, release, create, update"
 created = 1788584656
-updated = 1788584662
+updated = 1788586267
+claimant = "Animations-Z"
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
