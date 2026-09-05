@@ -193,6 +193,7 @@ mod balls;
 mod candidates;
 mod deposit;
 mod doubt;
+mod fleet;
 mod grace;
 mod held;
 mod live;

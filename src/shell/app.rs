@@ -94,6 +94,10 @@ pub(crate) struct Shell {
     /// the control that moves it, because one and zero are a start and this
     /// app already has one.
     pub(crate) spread: usize,
+    /// **How many drones a fleet would run at once** (§13.13). Floored at one
+    /// by the control that moves it: a cap of zero is a loop that spawns
+    /// nothing and still reaps, which upstream refuses to spell as a cap.
+    pub(crate) cap: usize,
     /// **Which step the records screen's one act addresses** (§13.11) — the
     /// sequence off the census row that was tapped. `ball`'s twin, and
     /// navigation for its reason exactly.
@@ -194,6 +198,7 @@ impl Shell {
             step: None,
             candidate: None,
             spread: crate::shell::screens::FLOOR,
+            cap: crate::shell::screens::CAP,
             scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),

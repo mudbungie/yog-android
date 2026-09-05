@@ -231,6 +231,15 @@ impl Model {
         });
     }
 
+    /// **Raise or lower one of the workspace's two armings** (§13.13) — the
+    /// drone loop, or the alignment monitor. Not idempotent in any sense worth
+    /// relying on and never re-sent: a repeated `fleet` re-arms a loop that
+    /// may already have claimed balls, and the read that settles a lost one is
+    /// the board.
+    pub fn fleet_act(&self, act: crate::codec::FleetAct) {
+        let _ = self.cmds.send(Cmd::Fleet(act));
+    }
+
     /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in
     /// any sense worth relying on and never re-sent: the watermark lands on
     /// the trail as it stood, and the trail read after it is what says so.

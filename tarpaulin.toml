@@ -117,6 +117,15 @@
 # widget shows which of them, and the count — a number the control floors and
 # the codec does not.
 #
+# `src/shell/screens/world/fleet.rs` is the fleet screen (bl-477e), the same
+# class again: four buttons, a stepper and a field, `cfg(target_os =
+# "android")` to the last line. Everything it decides is somewhere else and
+# under the floor — WHAT each of the four spells, which word it takes, and what
+# the one shared receipt MEANS when read against the op that earned it are all
+# `codec::fleet`, and the sentence a receipt earns is `seat::acts::fleet`, both
+# asserted by host tests. What is left here is which widget shows which of
+# them, and the cap — a number the control floors.
+#
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
 [default]
 exclude-files = [
@@ -151,6 +160,7 @@ exclude-files = [
     "src/shell/screens/world/balls.rs",
     "src/shell/screens/world/candidates.rs",
     "src/shell/screens/world/candidates/acts.rs",
+    "src/shell/screens/world/fleet.rs",
     "src/shell/screens/world/trail.rs",
     "src/shell/screens/world/waiting.rs",
     "src/shell/transcript.rs",

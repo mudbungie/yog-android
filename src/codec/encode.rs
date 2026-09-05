@@ -7,7 +7,7 @@
 
 use serde_json::{Value, json};
 
-use super::{Act, Ask, Gesture, balls, candidates, hold, pick, row, start, tools};
+use super::{Act, Ask, Gesture, balls, candidates, fleet, hold, pick, row, start, tools};
 
 /// Encode a gesture to its deposit envelope — the request frame's whole body.
 /// Total over the slice; the spellings are the server codec's, byte for byte.
@@ -105,6 +105,7 @@ fn acted(act: &Act) -> Value {
             json!({ "op": "nudge", "workspace": workspace, "agent": agent })
         }
         Act::Ball { project, name, act } => balls::act::encode(project, name, act),
+        Act::Fleet { workspace, act } => fleet::encode(workspace, act),
         Act::Candidate { project, ball, act } => candidates::act::encode(project, ball, act),
         Act::Fan {
             project,

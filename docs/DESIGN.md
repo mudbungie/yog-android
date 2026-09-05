@@ -335,6 +335,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
+| `src/codec/fleet.rs` | the two armings (§13.13): the four spellings, the word each takes, and what the one shared receipt MEANS read against the op that earned it | landed (bl-477e) |
+| `src/seat/acts/fleet.rs` | the arming posted, and the one place in this crate where a SUCCESS earns a sentence because no read here would show it | landed (bl-477e) |
+| `src/shell/screens/world/fleet.rs` | android-only: the fleet screen (§13.13) — four controls in two bands, a cap stepper, and no read at all | landed (bl-477e) |
 | `src/codec/candidates.rs` + `candidates/act.rs` | the n-candidate path (§13.12): the science row whose `handle` says which act it earns, the two handle acts, and the fan that carries a prepared body | landed (bl-2f17) |
 | `src/seat/acts/candidate.rs` | the two handle gestures and the fan's three-leg chain — stage, spread, fire each — with the two receipts worth a sentence on success | landed (bl-2f17) |
 | `src/seat/worker/spend.rs` | what one command does, split from the loop that spends it | landed (bl-2f17, out of `worker.rs`) |
@@ -393,7 +396,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, the banner and the one list-row helper every navigation list paints through | landed (bl-5a98) |
 | `src/shell/screens/rows.rs` | android-only: the conversation list and the acts its rows carry (§13.5) — the long-press menu, its three items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-f97c, out of `screens.rs`) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where each control the harness must reach was painted, one named rectangle apiece, said to logcat once per change | landed (bl-243b, named controls bl-35bd) |
-| `scripts/screens.sh` + `scripts/screens-seed.sh` + `scripts/screens-capture.sh` | the headless emulator loop (§15): boot and install, then the WALK — where to go and what each beat proves — beside the INSTRUMENTS that read the app and write a row about it, and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0, the instruments split bl-35bd on bl-46e6's seam) |
+| `scripts/screens.sh` + `screens-walk.sh` + `screens-seed.sh` + `screens-capture.sh` | the headless emulator loop (§15): boot, install and the two gates that judge a run, beside the WALK — where to go and what each beat proves — the INSTRUMENTS that read the app and write a row about it, and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0, the instruments split bl-35bd on bl-46e6's seam, the walk split bl-477e) |
 | `scripts/screens-platform.sh` + `scripts/screens-background.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the two background lanes: the scheduled fetch (§17) and the pocketed foot (§18) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0) |
 | `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
@@ -2317,6 +2320,78 @@ that opened and said nothing was read — and the four controls, three of them
 disabled with the reason beside them, which is what the parity gate asks of
 them either way.
 
+### 13.13 The fleet screen: two armings, one receipt, and no read at all (bl-477e)
+
+`src/codec/fleet.rs`, `src/seat/acts/fleet.rs`,
+`src/shell/screens/world/fleet.rs`. The phone's twin of lernie's §4.33: the
+drone loop that runs a workspace's ready balls, and the alignment monitor that
+reads what they commit.
+
+**The naming trap is the first fact about this family, and it costs an
+afternoon to rediscover** (lernie DESIGN §4.33, whose ruling transfers whole).
+`fleet` and `disband` are the **loop** — claim this project's top ready ball
+and start a drone on it, up to a cap. `arm` and `disarm` are the **alignment
+monitor** — a cheap model reads each commit against its goal and records a
+verdict on the trail. Two families, two settings, two carriers, and **one
+shared reply kind**: all four answer `{"kind": "armed", "armed": BOOL}`, so no
+reader can tell which family an answer belongs to by looking at it. **Every
+reader here reads the OP back instead** — `FleetAct::said` composes the
+sentence from the answer and the gesture together, and a seat that classified
+off the reply would be guessing between two settings.
+
+**There is no `fleet` READ and the screen reads nothing at all.** Whether a
+loop is armed, how full it is and what it holds are on the `board` answer,
+which the ball pane already paints (§13.9) — one fact, one home. So opening
+this screen asks the engine nothing, and the screen says where the answer
+lives (*"what a loop is doing is on the board"*) rather than asking for a
+second copy of it. It is the first surface in this app that is acts and
+nothing else, and that is the ledger being honest rather than a gap.
+
+**A success says something here, and that is `acts::held`'s exception earning
+its keep.** Everywhere else in this crate a success is silent because a read
+straight after shows what it did (§13.10's rule); this screen has no read, and
+the state it changed is on a screen reached from another depth — so silence
+would leave an operator with no confirmation at all. The sentence is the
+engine's boolean read against the op that earned it, which is the same
+composition the naming trap forces.
+
+**It holds the workspace it was opened on**, which is what this app does with
+every aimed screen: these acts start drones and spend money in ONE workspace,
+so a gesture composed against whatever the focus happened to be at the moment
+of the tap would be a control that moved under the operator.
+
+**Neither stopping act is armed, and that is an argument rather than an
+omission** — the one lernie's ball asked for by name. §13.8's arming is for the
+**unmaking**: an act whose product is that its subject is gone. Neither of
+these is that. `disband` stops nothing that is running — everything already
+started is untouched and keeps its ball — and `disarm` leaves every verdict
+already recorded on the trail. Each is undone by doing the other thing, and an
+arming on an act a tap reverses teaches an operator to tap through armings,
+which is the one thing that would make the unmaking's arming worthless. What
+they get instead is the unmaking's ORDER: the two that start something in the
+first band, the two that stop them in the second.
+
+**Two controls want DIFFERENT words out of one field, and the LABEL is what
+says which.** This app types text in one place (§13.2). On the candidates
+screen the picked row disambiguates two text-taking acts (§13.12); here a
+project and a monitor's model are both wanted at once and there is no row. So
+each control that needs a word states it in its own label while it is dark —
+*"fleet — name the project to run"*, *"arm — name the monitor's model"* — which
+is §13.10's enablement rule doing the disambiguating for free, and the field's
+hint names both because both controls above say which of them they take.
+
+**The cap is a stepper floored at one**, for the candidates screen's reason
+one number along: a cap of zero is a loop that spawns nothing and still reaps,
+which upstream refuses to spell as a cap at all, so it is not a value this
+control can send. The floor is the control's and not the codec's — §13.12's
+split, at a second site.
+
+**What the walk reaches.** One new step: `fleet`, tapped from the workspace's
+conversation list beside the other two aimed entries. What it captures is a
+screen with no answer to show and four controls, two of them dark and saying
+which word would light them — which is what the parity gate asks of them
+either way.
+
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -3170,7 +3245,7 @@ The groups mirror the seat's own, one ball each:
 | conversation machinery reads | agent, steps, step, rail, governing, inbox — **landed** (§13.11) | bl-146b |
 | the ball pane | balls, workspace-balls, board — **landed** (§13.9); close, assign, release, create, update | bl-d587, then bl-f36e |
 | candidates | fan, retire, deliver, science — **landed** (§13.12) | bl-2f17 |
-| fleet and watch | fleet, disband, arm, disarm | bl-477e |
+| fleet and watch | fleet, disband, arm, disarm — **landed** (§13.13) | bl-477e |
 | trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8); seen — **landed** (§13.8) | bl-35bd, bl-2889 |
 | admin and armed deletions | config, marks, scan, delete-agent, delete-workspace | bl-f645 |
 | roster and discovery | clients, lineages, help | bl-3685 |

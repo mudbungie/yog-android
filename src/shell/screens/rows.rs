@@ -117,6 +117,9 @@ impl Shell {
                 // workspace's obligations cost, offered where that workspace
                 // is what the operator is standing in.
                 self.candidates_entry(ui);
+                // And the workspace's two armings (§13.13) — the loop that
+                // runs its ready balls, and the monitor over what they commit.
+                self.fleet_entry(ui);
                 ui.separator();
                 egui::ScrollArea::vertical()
                     .min_scrolled_height(0.0)

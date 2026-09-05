@@ -141,6 +141,12 @@ pub enum Reply {
     /// **What a delivery landed** — two of its four identities optional, and
     /// each absence a fact rather than a blank.
     Delivered(candidates::Delivered),
+    /// **The one receipt both armings answer with** (DESIGN §13.13): whether
+    /// the setting the gesture named now stands. It says which STATE and never
+    /// which SETTING — all four of `fleet`, `disband`, `arm` and `disarm`
+    /// answer in this shape — so every reader here reads the op back instead
+    /// (`FleetAct::said`).
+    Armed { armed: bool },
     /// **The receipt a retirement earns**, carrying whether the source ref
     /// went with the worktree. That is this project's own declared retention
     /// answering, so the seat paints what the engine said rather than
@@ -223,6 +229,7 @@ impl Reply {
             Self::Fanned(_) => "fanned",
             Self::Delivered(_) => "delivered",
             Self::Retired { .. } => "retired",
+            Self::Armed { .. } => "armed",
             Self::Balls(_) => "balls",
             Self::WorkspaceBalls(_) => "workspace-balls",
             Self::Board(_) => "board",

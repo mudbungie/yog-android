@@ -51,6 +51,9 @@ pub(crate) enum World {
     /// **What each attempt on this workspace's obligations cost** (§13.12) —
     /// the candidates listing, and the three acts over it.
     Candidates,
+    /// **The two armings this workspace carries** (§13.13) — the drone loop,
+    /// and the alignment monitor over what it commits.
+    Fleet,
     /// **The ball pane at one of its three views** (§13.9). The view rides on
     /// the navigation rather than on the answer, so a screen names itself from
     /// what was opened and paints only the answer that belongs under it.
@@ -59,8 +62,10 @@ pub(crate) enum World {
 
 mod balls;
 mod candidates;
+mod fleet;
 
 pub(in crate::shell) use candidates::FLOOR;
+pub(in crate::shell) use fleet::FLOOR as CAP;
 mod trail;
 mod waiting;
 
@@ -85,7 +90,11 @@ impl Shell {
             World::Trail => model.list_trail(),
             World::Balls(view) => model.list_balls(view),
             World::Candidates => model.list_candidates(),
-            World::Queue => (),
+            // **The two that ask nothing.** The queue is the held lane's, so
+            // opening it is a look at what is already held (§14.1); the fleet
+            // screen reads nothing at all, because what its acts DID is on the
+            // board and one fact has one home (§13.13).
+            World::Fleet | World::Queue => (),
         }
     }
 
@@ -116,6 +125,19 @@ impl Shell {
         }
     }
 
+    /// **The one control that reaches the fleet screen** (§13.13), on the
+    /// workspace's own conversation list beside the other two aimed entries:
+    /// these acts run and watch ONE workspace, so the screen that names it is
+    /// where they belong.
+    pub(in crate::shell) fn fleet_entry(&mut self, ui: &mut egui::Ui) {
+        let name = fleet::SCREEN;
+        let control = super::tap(ui, name.into(), name);
+        self.note_control(name, ui, control.rect);
+        if control.clicked() {
+            self.open_world(World::Fleet);
+        }
+    }
+
     /// Paint whichever is open. One arm each, and each names its own screen
     /// (`app/probe.rs` — the name lives at the branch, never derived a second
     /// time from the same state).
@@ -125,6 +147,7 @@ impl Shell {
             World::Trail => self.trail(ui, snap),
             World::Balls(view) => self.balls(ui, snap, view),
             World::Candidates => self.candidates(ui, snap),
+            World::Fleet => self.fleet(ui, snap),
         }
     }
 

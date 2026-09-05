@@ -23,6 +23,7 @@ pub mod candidates;
 mod conv;
 pub mod encode;
 pub(crate) mod fields;
+pub mod fleet;
 pub mod follow;
 pub mod hold;
 pub mod pick;
@@ -45,6 +46,7 @@ pub use candidates::act::CandidateAct;
 pub use candidates::{Attempt, Delivered, Judgement, Spread};
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use encode::encode;
+pub use fleet::FleetAct;
 pub use follow::Stream;
 pub use hold::{Answered, Verdict};
 pub use pick::{Effort, ProviderRow, RoleRow};
@@ -191,6 +193,12 @@ pub enum Act {
         prepared: Prepared,
         n: usize,
     },
+    /// **One of the two armings a workspace carries** (DESIGN §13.13): the
+    /// drone loop, or the alignment monitor watching what it commits. The
+    /// address is the workspace, stated once, and the choice is [`FleetAct`];
+    /// `codec::fleet` is where the four spellings, the naming trap and the one
+    /// shared receipt live.
+    Fleet { workspace: String, act: FleetAct },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather

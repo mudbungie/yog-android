@@ -59,11 +59,11 @@ work-diff = "unbuilt: work review from the glass (bl-5a56; DESIGN §16.2)"
 # acts on its foot, each live exactly where the picked row is its subject
 # (DESIGN §13.12).
 
-# --- Unbuilt: fleet and watch (bl-477e) -------------------------------------
-fleet = "unbuilt: fleet and watch (bl-477e; DESIGN §16.2)"
-disband = "unbuilt: fleet and watch (bl-477e; DESIGN §16.2)"
-arm = "unbuilt: fleet and watch (bl-477e; DESIGN §16.2)"
-disarm = "unbuilt: fleet and watch (bl-477e; DESIGN §16.2)"
+# --- Fleet and watch are whole (bl-477e) ------------------------------------
+# Nothing of them is on this ledger. The fleet screen carries all four — the
+# two that start something over the two that stop it — and it reads nothing at
+# all, because what a loop is DOING is on the board and one fact has one home
+# (DESIGN §13.13).
 
 # The trail and the queue were here — `ops`, `ack`, `clear-trail` and
 # `attention` — and are gone: the roster's two world entries reach both

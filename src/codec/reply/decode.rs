@@ -65,6 +65,9 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "science" => Reply::Science(candidates::science(o)?),
         "fanned" => Reply::Fanned(candidates::fanned(o)?),
         "delivered" => Reply::Delivered(candidates::delivered(o)?),
+        "armed" => Reply::Armed {
+            armed: bool_of(o, "armed")?,
+        },
         "retired" => Reply::Retired {
             discarded: bool_of(o, "discarded")?,
         },

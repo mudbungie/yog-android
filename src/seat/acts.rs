@@ -25,6 +25,7 @@ use super::posted::{Posted, faulted};
 
 mod ball;
 mod candidate;
+mod fleet;
 mod held;
 mod row;
 mod seen;
@@ -32,6 +33,7 @@ mod trail;
 
 pub(super) use ball::ball;
 pub(super) use candidate::{candidate, spread};
+pub(super) use fleet::fleet;
 pub(super) use held::answer;
 pub(super) use row::row;
 pub(super) use seen::seen;

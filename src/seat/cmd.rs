@@ -75,6 +75,10 @@ pub(super) enum Cmd {
         n: usize,
         goal: String,
     },
+    /// **One of the two armings a workspace carries** (§13.13). One command
+    /// for both families because they are one gesture with four spellings,
+    /// and the roster has one home — `codec::FleetAct`.
+    Fleet(crate::codec::FleetAct),
     /// Truncate the trail — the armed act (§13.8).
     ClearTrail,
     /// Stop the focused conversation's turn, optionally its subtree with it.

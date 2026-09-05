@@ -166,6 +166,11 @@ fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         // `CandidateAct`. A frame naming no ball refuses inside — the reason
         // is in that file's header.
         "fan" | "deliver" | "retire" => super::candidates::act::decode(op, o)?,
+        // The four the fleet screen fires (DESIGN §13.13). One arm for two
+        // FAMILIES, which is the trap that file's header names: they share a
+        // receipt, so the op is the only thing that says which setting an
+        // answer belongs to.
+        "fleet" | "disband" | "arm" | "disarm" => super::fleet::decode(op, o)?,
         "effort" => Act::Effort {
             workspace: str_of(o, "workspace")?,
             role: str_of(o, "role")?,

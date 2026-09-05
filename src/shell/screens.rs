@@ -30,8 +30,8 @@ mod rows;
 mod search;
 mod world;
 
-pub(in crate::shell) use world::FLOOR;
 pub(crate) use world::World;
+pub(in crate::shell) use world::{CAP, FLOOR};
 
 impl Shell {
     /// Everything below the top inset: the yog mark, then the component this

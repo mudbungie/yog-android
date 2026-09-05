@@ -92,6 +92,10 @@ pub(super) fn spend(
         // doing** (§14.1): the acknowledgement's effect arrives as the next
         // frame, from the one writer, without this seat asking twice.
         Cmd::Seen(workspace, agent) => acts::seen(seat, workspace, agent).note(),
+        // **An arming needs no read after it** (§13.13): what it did is on the
+        // board, which is a different screen, and its receipt is a sentence
+        // rather than a silence for exactly that reason.
+        Cmd::Fleet(act) => acts::fleet(seat, focus, act).note(),
         Cmd::StopTurn(children) => acts::stop(seat, focus, children).note(),
         Cmd::Nudge => acts::nudge(seat, focus).note(),
         // **An answer, a row act and a start need no read after them**: what

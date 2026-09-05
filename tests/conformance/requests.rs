@@ -27,7 +27,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("advertise", Reads),
     ("agent", Reads),
     ("answer", Reads),
-    ("arm", Refuses(ACT)),
+    ("arm", Reads),
     ("assign", Reads),
     ("attention", Reads),
     ("balls", Reads),
@@ -55,8 +55,8 @@ pub const REQUESTS: &[(&str, Expect)] = &[
             reason: ALWAYS_A_BALL,
         },
     ),
-    ("disarm", Refuses(ACT)),
-    ("disband", Refuses(ACT)),
+    ("disarm", Reads),
+    ("disband", Reads),
     ("effort", Reads),
     ("enroll", Refuses(NOT_THE_MINTER)),
     (
@@ -68,7 +68,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ),
     ("files", Refuses(READ)),
     ("flag", Reads),
-    ("fleet", Refuses(ACT)),
+    ("fleet", Reads),
     ("follow", Reads),
     ("fork", Refuses(NO_FORK_POINT)),
     (

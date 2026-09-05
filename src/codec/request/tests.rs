@@ -27,11 +27,18 @@ fn an_envelope_with_no_op_refuses_naming_the_field() {
 /// the boundary correcting itself rather than two protocols meeting."* Naming
 /// it is the whole of the contract — a shape this codec skips must still be
 /// locatable in the sentence that skipped it.
+///
+/// **The word is fabricated on purpose** (bl-477e). This test named a real op
+/// the slice had not reached yet, and it went red the day that op landed —
+/// which is a test rotting rather than a contract breaking. Every real
+/// unspelled op is already judged BY NAME in `tests/conformance/requests.rs`,
+/// so what is left for this one to say is the generic refusal, and a verb no
+/// engine will ever mint is the only subject that cannot rot.
 #[test]
 fn an_op_outside_this_slice_refuses_naming_itself() {
     assert_eq!(
-        decode(&json!({ "op": "fleet" })).unwrap_err(),
-        "unknown op \"fleet\""
+        decode(&json!({ "op": "somersault" })).unwrap_err(),
+        "unknown op \"somersault\""
     );
 }
 
