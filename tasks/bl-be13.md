@@ -1,7 +1,8 @@
 +++
 title = "a destroy that catches the app mid-dial hangs GameActivity's native teardown, and the platform kills the process"
 created = 1788584440
-updated = 1788584440
+updated = 1788585027
+claimant = "Animations-Z"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
