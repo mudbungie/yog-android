@@ -17,9 +17,12 @@ use super::super::app::Shell;
 use crate::codec::RoleRow;
 use crate::shell::place::Band;
 
-/// The effort selector's width class. Narrower than a provider or a model
-/// selector because its whole vocabulary is four short words.
-const EFFORT: f32 = 76.0;
+/// The effort selector's width class. Still narrower than a provider or a
+/// model selector, and now sized for the longest thing the face can say —
+/// `effort: medium`, plus the room the caret is drawn into — so the control
+/// keeps its width when the level changes under it. A face that resized on
+/// every pick would move the priority toggle beside it.
+const EFFORT: f32 = 132.0;
 
 impl Shell {
     /// **The effort selector**: the vocabulary is closed and no wire read
@@ -30,11 +33,21 @@ impl Shell {
         // vocabulary does not spell (bl-e9f9). It is shown as itself — an
         // operator seeing `extreme` is being told the truth, and the four
         // words below are what they may change it TO.
+        //
+        // **The face carries the control's NAME as well as its value**
+        // (bl-b191). The two selectors beside it are named by their content —
+        // a provider row reads `anthropic`, a model row reads a model — and
+        // the toggle after it paints the word `priority` whatever it is set
+        // to. A magnitude does not name anything: `medium` alone is a level
+        // of something the operator has to guess, and the guess recorded in
+        // bl-78c2 was *context size*. So the empty state's word stays on the
+        // face once a level is standing, and the level is what follows it.
+        // REMOTE §9.4's own word, spelled the same here as on the wire.
         let shown = self
             .effort
             .clone()
             .or_else(|| set.and_then(|row| row.effort.clone()))
-            .unwrap_or_else(|| "effort".to_owned());
+            .map_or_else(|| "effort".to_owned(), |level| format!("effort: {level}"));
         let mut picked = None;
         let opened = super::drop::drop_down(ui, area, "effort", shown, EFFORT, |ui| {
             for level in crate::codec::pick::LEVELS {

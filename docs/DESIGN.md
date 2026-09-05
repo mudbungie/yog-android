@@ -1318,6 +1318,14 @@ here is a defect.
   (§8). The gate is answered in covered code (`codec::pick::tunable`), not in
   the paint.
 
+  **The effort face carries its own name** (bl-b191). Every other control in
+  the block is named where it is read: a provider selector shows a provider,
+  a model selector a model, the priority toggle the word *priority*. A
+  magnitude names nothing — `medium` alone is a level of something the
+  operator must guess, and the guess on record guessed *context size* — so
+  the face reads `effort: <level>` once one is standing, keeping the empty
+  state's word instead of replacing it.
+
   They are a **second band** under the first rather than more controls in it,
   for a measured reason: three selectors and a toggle beside the conversation
   acts leave a model selector too narrow to read a model name in at a
