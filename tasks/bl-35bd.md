@@ -1,7 +1,8 @@
 +++
 title = "the trail and the attention queue: ops, ack, clear-trail, attention"
 created = 1788399005
-updated = 1788399005
+updated = 1788582167
+claimant = "Animations-Q"
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
