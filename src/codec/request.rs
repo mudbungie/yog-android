@@ -72,6 +72,12 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
         "science" => Ask::Science {
             workspace: str_of(o, "workspace")?,
         },
+        "clients" => Ask::Clients {
+            workspace: str_of(o, "workspace")?,
+        },
+        "lineages" => Ask::Lineages {
+            workspace: str_of(o, "workspace")?,
+        },
         // The records screen's six (DESIGN §13.11). Five read alike and one
         // names the row it is about; `governing` refuses its anchored form
         // below, which is why it is not in the aimed list.

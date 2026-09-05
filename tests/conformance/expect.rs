@@ -90,6 +90,17 @@ pub const NO_ANCHOR: &str =
 pub const ALWAYS_A_BALL: &str =
     "the bare project-repo obligation is a subject no row here names (DESIGN §13.12)";
 
+/// **`help` is answered from the table this repository already vendors**
+/// (DESIGN §13.14). §2 rules that the corpus and the spoken version move
+/// together — *"a protocol bump upstream is a re-vendor and a rebuild here"* —
+/// and a peer of another version is refused fail-closed at the §3 preface, so
+/// for any engine this build can talk to the vendored table IS that engine's
+/// table. Asking for it would be a radio spend for an answer already compiled
+/// in. The surface exists (`crate::help`, and a control carries `act:help`);
+/// what does not exist is the gesture.
+pub const ALREADY_HELD: &str =
+    "the op table is vendored and compiled in — this seat never asks for it (DESIGN §13.14)";
+
 /// REMOTE §4.2, on the foot's gesture set: *"Note which of §5.3's four verbs
 /// is absent — `invoke`, the asking side's. A foot is invoked; it never
 /// invokes."* `capture` is that verb's read half and goes with it.

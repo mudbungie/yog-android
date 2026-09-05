@@ -110,16 +110,13 @@ impl Shell {
                     self.focus_workspace(None);
                 }
                 super::banner(ui, snap);
-                // The one ball read that names a place (§13.9), offered where
-                // that place is what the operator is standing in.
-                self.balls_entry(ui, crate::codec::View::Here);
-                // The other aimed read (§13.12): what each attempt on this
-                // workspace's obligations cost, offered where that workspace
-                // is what the operator is standing in.
-                self.candidates_entry(ui);
-                // And the workspace's two armings (§13.13) — the loop that
-                // runs its ready balls, and the monitor over what they commit.
-                self.fleet_entry(ui);
+                // **The four surfaces that name THIS workspace** (§13.14):
+                // the balls it holds, what its attempts cost, its two armings,
+                // and the machines that may execute for it. All four are
+                // offered where that workspace is what the operator is
+                // standing in, and they share two bands rather than taking
+                // four full-width rows off the list below them.
+                self.aimed_entries(ui);
                 ui.separator();
                 egui::ScrollArea::vertical()
                     .min_scrolled_height(0.0)

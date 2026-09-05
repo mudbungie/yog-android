@@ -78,10 +78,13 @@ scan = "unbuilt: admin surface — the engine's inbox flush; the app's own camer
 delete-agent = "unbuilt: a typed-name-armed deletion (bl-f645; DESIGN §16.2)"
 delete-workspace = "unbuilt: a typed-name-armed deletion (bl-f645; DESIGN §16.2)"
 
-# --- Unbuilt: roster and discovery (bl-3685) --------------------------------
-clients = "unbuilt: the roster surface — what this workspace's machines offer (bl-3685; DESIGN §16.2)"
-lineages = "unbuilt: the lineage read (bl-3685; DESIGN §16.2)"
-help = "unbuilt: the op-detail affordance over the vendored table, never a wire read (bl-3685; DESIGN §16.2)"
+# --- Roster and discovery are whole (bl-3685) -------------------------------
+# Nothing of them is on this ledger. `clients` has a screen of its own on the
+# workspace's aimed band, `lineages` rides the records screen's read because
+# what it names is what `governing`'s `follows` is one of, and `help` is a
+# screen over the table this repository already vendors — surfaced here and
+# never asked for on the wire, which `tests/conformance/requests.rs` records
+# (DESIGN §13.14).
 
 # --- Unbuilt: the minting seat (bl-2ee8) ------------------------------------
 enroll = "unbuilt: the minting side — this seat fires the mint and displays the QR; re-classed from never by the full-seat ruling (bl-2ee8; DESIGN §16.2, amending §11)"

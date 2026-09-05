@@ -131,7 +131,7 @@ fn seats(o: &Map<String, Value>) -> Result<Vec<SeatRow>, String> {
 
 /// An optional array of bare strings — absent is none of them, which is what
 /// the engine writes for a conversation carrying no marks at all.
-pub(super) fn words(o: &Map<String, Value>, key: &str) -> Result<Vec<String>, String> {
+pub(in crate::codec) fn words(o: &Map<String, Value>, key: &str) -> Result<Vec<String>, String> {
     let Some(_) = o.get(key) else {
         return Ok(Vec::new());
     };

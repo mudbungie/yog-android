@@ -335,6 +335,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
+| `src/help.rs` | the op table, vendored and compiled in (§13.14): one reader, two consumers — the parity roster folds over it and the help screen paints it | landed (bl-3685) |
+| `src/codec/clients.rs` + `src/codec/lineages.rs` | which machines may execute for a workspace, with the two lifetimes one row carries, and the config lineages its `governing` half names | landed (bl-3685) |
+| `src/shell/screens/world/clients.rs` + `world/help.rs` | android-only: the machines roster (§13.14), the one surface with no control at all, and the op table beside it | landed (bl-3685) |
 | `src/codec/fleet.rs` | the two armings (§13.13): the four spellings, the word each takes, and what the one shared receipt MEANS read against the op that earned it | landed (bl-477e) |
 | `src/seat/acts/fleet.rs` | the arming posted, and the one place in this crate where a SUCCESS earns a sentence because no read here would show it | landed (bl-477e) |
 | `src/shell/screens/world/fleet.rs` | android-only: the fleet screen (§13.13) — four controls in two bands, a cap stepper, and no read at all | landed (bl-477e) |
@@ -2139,7 +2142,8 @@ over the transcript, backs out into it, and the focus underneath never moves
 **Opening is the ask, and nothing standing carries it** — the trail's rule
 and the ball pane's (§13.8, §13.9): a screen nobody has opened costs this
 device no radio, which is §14.1's argument for the held lane applied at the
-seat. Five questions per opening and none between. A failure keeps what the
+seat. Six questions per opening and none between (the sixth, `lineages`,
+arrived with §13.14). A failure keeps what the
 screen already had, which is `searched`'s rule at a sixth site.
 
 **They answer as one value or as one sentence.** The first read that fails is
@@ -2217,8 +2221,8 @@ buys a strictness no control here spends and costs an unreachable fallback.
 
 **What the walk reaches.** One new step: `records`, tapped from the transcript
 screen's knob row — the row that already says how much of this conversation is
-on the glass — where the entry control carries the five `act:` tags of the
-reads opening it asks (PARITY §2, *"the owed interactable for a read is the
+on the glass — where the entry control carries the `act:` tags of every read
+opening it asks (six since §13.14) (PARITY §2, *"the owed interactable for a read is the
 affordance that reaches the view it populates"*) and its own rectangle, which
 is the only way a harness reaches a control this app paints (§15.2). The
 engine is not dialled there, so what it captures is a screen that opened and
@@ -2391,6 +2395,77 @@ conversation list beside the other two aimed entries. What it captures is a
 screen with no answer to show and four controls, two of them dark and saying
 which word would light them — which is what the parity gate asks of them
 either way.
+
+### 13.14 Roster and discovery: which machines, which lineages, and what every op does (bl-3685)
+
+`src/codec/clients.rs`, `src/codec/lineages.rs`, `src/help.rs`,
+`src/shell/screens/world/clients.rs`, `world/help.rs`. The phone's twin of
+lernie's §4.28 and half of its §4.30, plus the surface neither seat had: the
+op table itself.
+
+**`clients` gets a screen, and the screen carries no control** (lernie DESIGN
+§4.28, whose rulings transfer whole). **Two lifetimes on one row and it says
+both**: `present` is an OBSERVATION — true at the instant the engine answered,
+recorded nowhere on either end — and the advertised set is a STATEMENT the
+machine last made, which stands whether or not it is connected. A tool host
+holds its connection only while it is waiting for work, so a busy machine and
+an absent one are indistinguishable from here, and the row says so rather than
+leaving an operator to read *absent* as *broken*. **The consent is stated on
+every tool, present or absent**: `subject_cwd` is what yog's worktree lane
+routes on, and a line that appeared only when true would make its absence
+ambiguous. And there is nothing here to fire, because every other op in REMOTE
+§5 is a MACHINE's — `invocations` above all, which a seat must never ask
+because asking it DRAINS the foot's queue. What an operator *does* about a
+tool call happens on the conversation making it (§13.7).
+
+**An advertised element has one reader wherever it is said.** A client row's
+tools are the same facts this device presents in its own `advertise`, so
+`codec::tools::tool_of` reads both — including the `input_schema`, which rides
+through as the `Value` it always has and is painted by nobody. lernie declined
+to DECODE it; here the decision is one layer along, at the paint, because one
+shape with two readers is the drift this codec exists to prevent.
+
+**`lineages` rides the records screen's read rather than taking a surface**
+(§13.11 grows from five reads to six). It is the one of that set that names a
+WORKSPACE rather than the conversation, and it is there because what it lists
+is what the spine half's `governing.follows` is one of — a list with no home of
+its own would be a screen about a word. Everything §13.11 says about the group
+holds: they answer as one value or as one sentence, and the first failure is
+the whole gesture's answer.
+
+**`help` is answered from the table this repository already vendors, and that
+is a reading rather than a shortcut.** §2 rules that the corpus and the spoken
+version move together — *"a protocol bump upstream is a re-vendor and a
+rebuild here"* — and a peer of another version is refused fail-closed at the
+§3 preface. So for any engine this build can talk to, the vendored table IS
+that engine's table, and asking for it would be a radio spend for an answer
+already compiled in, on the device §14.1 exists to keep asleep. The screen
+therefore works with nothing dialled, which is the right shape for the surface
+an operator opens when they do not know what a control does.
+`tests/conformance/requests.rs` records the wire shape as one this codec never
+sends, and the `act:help` tag rides the entry that opens the screen — PARITY
+§2's *"the owed interactable for a read is the affordance that reaches the
+view it populates"*.
+
+**One reader, two consumers.** `crate::parity` judges this app against the
+table's `surface` column and the help screen paints the other three, so
+`parity::roster::read` is now a fold over `help::rows` rather than a second
+parse of the same file. Two readers of one file drift within a week.
+
+**The aimed entries move into bands, and that is the growth this ball
+forced.** A workspace's conversation list now reaches four surfaces of its own
+— its balls (§13.9), what its attempts cost (§13.12), its two armings (§13.13)
+and its machines — and four full-width rows over a list is most of a phone
+screen, with the list itself being what gives way for them. So they share two
+bands of two. TWO bands rather than one, because `workspace-balls` is the
+longest screen name this app paints and a row of four would put the last of
+them off the glass, which is bl-f36e's finding: a control off the glass is one
+the parity inventory cannot record and a thumb cannot reach.
+
+**What the walk reaches.** Two new steps: `clients`, tapped from the aimed
+band, and `help`, tapped from the roster beside the queue and the trail. The
+help screen is the only one in this app that needs neither an engine nor a
+seed — the table is compiled in — so its picture is the vocabulary itself.
 
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
@@ -3248,7 +3323,7 @@ The groups mirror the seat's own, one ball each:
 | fleet and watch | fleet, disband, arm, disarm — **landed** (§13.13) | bl-477e |
 | trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8); seen — **landed** (§13.8) | bl-35bd, bl-2889 |
 | admin and armed deletions | config, marks, scan, delete-agent, delete-workspace | bl-f645 |
-| roster and discovery | clients, lineages, help | bl-3685 |
+| roster and discovery | clients, lineages, help — **landed** (§13.14) | bl-3685 |
 | the minting seat | enroll | bl-2ee8 |
 
 **Ordering.** The teleoperation corpus is the operator's stated want and goes

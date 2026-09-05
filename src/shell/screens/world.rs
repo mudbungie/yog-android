@@ -54,6 +54,12 @@ pub(crate) enum World {
     /// **The two armings this workspace carries** (§13.13) — the drone loop,
     /// and the alignment monitor over what it commits.
     Fleet,
+    /// **Which machines may execute for this workspace** (§13.14), and what
+    /// each one says it offers.
+    Clients,
+    /// **The op table** (§13.14) — every gesture the engine speaks, read out
+    /// of the vendored table and costing no wire read at all.
+    Help,
     /// **The ball pane at one of its three views** (§13.9). The view rides on
     /// the navigation rather than on the answer, so a screen names itself from
     /// what was opened and paints only the answer that belongs under it.
@@ -62,7 +68,9 @@ pub(crate) enum World {
 
 mod balls;
 mod candidates;
+mod clients;
 mod fleet;
+mod help;
 
 pub(in crate::shell) use candidates::FLOOR;
 pub(in crate::shell) use fleet::FLOOR as CAP;
@@ -90,11 +98,13 @@ impl Shell {
             World::Trail => model.list_trail(),
             World::Balls(view) => model.list_balls(view),
             World::Candidates => model.list_candidates(),
-            // **The two that ask nothing.** The queue is the held lane's, so
-            // opening it is a look at what is already held (§14.1); the fleet
-            // screen reads nothing at all, because what its acts DID is on the
-            // board and one fact has one home (§13.13).
-            World::Fleet | World::Queue => (),
+            World::Clients => model.list_clients(),
+            // **The three that ask nothing.** The queue is the held lane's,
+            // so opening it is a look at what is already held (§14.1); the
+            // fleet screen reads nothing at all, because what its acts DID is
+            // on the board and one fact has one home (§13.13); and the op
+            // table is compiled into this binary (§13.14).
+            World::Fleet | World::Help | World::Queue => (),
         }
     }
 
@@ -111,30 +121,62 @@ impl Shell {
         }
     }
 
-    /// **The one control that reaches the candidates listing** (§13.12),
-    /// painted where its subject is: `science` names a workspace, so it is
-    /// offered on that workspace's own conversation list, beside the aimed
-    /// ball read. The name the harness taps it by is the op's own (§15.2),
-    /// which is also the screen it opens.
-    pub(in crate::shell) fn candidates_entry(&mut self, ui: &mut egui::Ui) {
-        let name = candidates::SCREEN;
-        let control = super::tap(ui, name.into(), name);
-        self.note_control(name, ui, control.rect);
-        if control.clicked() {
-            self.open_world(World::Candidates);
+    /// **The aimed entries, in bands of two** (§13.14). Four full-width rows
+    /// over a conversation list is most of a phone screen, and the list is
+    /// what has to give way for them; two bands of two is half that. TWO
+    /// bands rather than one, because `workspace-balls` is the longest screen
+    /// name this app paints and a row of four would put the last of them off
+    /// the glass — bl-f36e's finding, which is that a control off the glass is
+    /// one the parity inventory cannot record and a thumb cannot reach.
+    pub(in crate::shell) fn aimed_entries(&mut self, ui: &mut egui::Ui) {
+        for pair in [
+            [
+                (
+                    crate::codec::View::Here.screen(),
+                    World::Balls(crate::codec::View::Here),
+                ),
+                (candidates::SCREEN, World::Candidates),
+            ],
+            [
+                (fleet::SCREEN, World::Fleet),
+                (clients::SCREEN, World::Clients),
+            ],
+        ] {
+            self.entry_band(ui, pair);
         }
     }
 
-    /// **The one control that reaches the fleet screen** (§13.13), on the
-    /// workspace's own conversation list beside the other two aimed entries:
-    /// these acts run and watch ONE workspace, so the screen that names it is
-    /// where they belong.
-    pub(in crate::shell) fn fleet_entry(&mut self, ui: &mut egui::Ui) {
-        let name = fleet::SCREEN;
+    /// One band of entries, each stating its own name for the harness and the
+    /// op it reaches for the parity gate.
+    fn entry_band(&mut self, ui: &mut egui::Ui, pair: [(&'static str, World); 2]) {
+        let band = egui::vec2(ui.available_width(), crate::shell::mark::TOUCH);
+        ui.allocate_ui_with_layout(
+            band,
+            egui::Layout::left_to_right(egui::Align::Center),
+            |ui| {
+                for (name, world) in pair {
+                    let control = ui.add(
+                        egui::Button::new(name)
+                            .min_size(egui::vec2(0.0, crate::shell::mark::TOUCH)),
+                    );
+                    crate::shell::act::act(ui, &control, name);
+                    self.note_control(name, ui, control.rect);
+                    if control.clicked() {
+                        self.open_world(world);
+                    }
+                }
+            },
+        );
+    }
+
+    /// **The op table's entry** (§13.14), on the roster beside the queue and
+    /// the trail: what it is about is not a workspace and not a conversation.
+    pub(in crate::shell) fn help_entry(&mut self, ui: &mut egui::Ui) {
+        let name = help::SCREEN;
         let control = super::tap(ui, name.into(), name);
         self.note_control(name, ui, control.rect);
         if control.clicked() {
-            self.open_world(World::Fleet);
+            self.open_world(World::Help);
         }
     }
 
@@ -148,6 +190,8 @@ impl Shell {
             World::Balls(view) => self.balls(ui, snap, view),
             World::Candidates => self.candidates(ui, snap),
             World::Fleet => self.fleet(ui, snap),
+            World::Clients => self.clients(ui, snap),
+            World::Help => self.help(ui, snap),
         }
     }
 

@@ -226,6 +226,9 @@ impl Shell {
         // already what is on the glass.
         self.balls_entry(ui, crate::codec::View::Everywhere);
         self.balls_entry(ui, crate::codec::View::Board);
+        // The op table (§13.14). It names no place either — what it is about
+        // is the vocabulary — and it costs no wire read at all.
+        self.help_entry(ui);
     }
 
     pub(super) fn focus_workspace(&self, workspace: Option<String>) {

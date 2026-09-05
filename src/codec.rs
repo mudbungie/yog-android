@@ -20,12 +20,14 @@
 mod ask;
 pub mod balls;
 pub mod candidates;
+pub mod clients;
 mod conv;
 pub mod encode;
 pub(crate) mod fields;
 pub mod fleet;
 pub mod follow;
 pub mod hold;
+pub mod lineages;
 pub mod pick;
 pub mod queue;
 pub mod records;
@@ -44,11 +46,13 @@ pub use balls::act::BallAct;
 pub use balls::{BallRow, Board, BoardRow, Pane, View, WsBallRow};
 pub use candidates::act::CandidateAct;
 pub use candidates::{Attempt, Delivered, Judgement, Spread};
+pub use clients::{ClientRow, Machines};
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use encode::encode;
 pub use fleet::FleetAct;
 pub use follow::Stream;
 pub use hold::{Answered, Verdict};
+pub use lineages::Lineage;
 pub use pick::{Effort, ProviderRow, RoleRow};
 pub use queue::{Held, QueueRow};
 pub use records::{

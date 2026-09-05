@@ -1,4 +1,4 @@
-//! **The conversation's machinery** (yog §8.5, DESIGN §13.11): the six reads
+//! **The conversation's machinery** (yog §8.5, DESIGN §13.11): the reads
 //! behind the transcript — what the conversation IS and may be done to
 //! (`agent`), what its steps were and what one step recorded (`steps`,
 //! `step`), the operable spine and the config governing it (`rail`,
@@ -51,6 +51,7 @@ pub use step::{Log, Record, Step, ToolRecord};
 pub use steps::{Orphan, StepRow, Steps};
 
 pub(super) use agent::agent_of;
+pub(in crate::codec) use agent::words;
 pub(super) use inbox::mail;
 pub(super) use spine::{governing_of, rail_of};
 pub(super) use step::step_of;
@@ -72,6 +73,12 @@ pub struct Records {
     pub rail: Rail,
     pub governing: Governing,
     pub inbox: Vec<Mail>,
+    /// **The config lineages this conversation's workspace holds** (DESIGN
+    /// §13.14). The one read of the set that is about the WORKSPACE rather
+    /// than the conversation, and it is here because what it names is what
+    /// `governing`'s `follows` is one of — a list with no home of its own
+    /// would be a screen about a word.
+    pub lineages: Vec<super::Lineage>,
     /// **The one step an operator drilled into**, or none. It is not asked
     /// with the five above: `step` is about ONE step and the five are about
     /// the conversation, so a standing read of it would have to invent a

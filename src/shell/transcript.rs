@@ -162,7 +162,7 @@ impl Shell {
 }
 
 impl Shell {
-    /// The records entry: one control, five reads, one rectangle the walk can
+    /// The records entry: one control, six reads, one rectangle the walk can
     /// reach. `step` is not among its tags — that read is posted off a row on
     /// the screen this control opens, and the control that fires it carries
     /// its own tag there.
@@ -172,7 +172,7 @@ impl Shell {
         super::act::acts(
             ui,
             &control,
-            &["agent", "steps", "rail", "governing", "inbox"],
+            &["agent", "steps", "rail", "governing", "inbox", "lineages"],
         );
         self.note_control("records", ui, control.rect);
         if control.clicked() {

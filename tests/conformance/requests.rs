@@ -18,8 +18,8 @@
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
-    ACT, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_ANCHOR, NO_FORK_POINT, NO_SCHEDULING, NO_SEED,
-    NOT_THE_MINTER, READ,
+    ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_ANCHOR, NO_FORK_POINT,
+    NO_SCHEDULING, NO_SEED, NOT_THE_MINTER, READ,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
@@ -34,7 +34,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("board", Reads),
     ("capture", Refuses(ASKING_SIDE)),
     ("clear-trail", Reads),
-    ("clients", Refuses(READ)),
+    ("clients", Reads),
     ("close", Reads),
     ("complete", Reads),
     ("config", Refuses(ACT)),
@@ -78,12 +78,12 @@ pub const REQUESTS: &[(&str, Expect)] = &[
             reason: NO_ANCHOR,
         },
     ),
-    ("help", Refuses(READ)),
+    ("help", Refuses(ALREADY_HELD)),
     ("inbox", Reads),
     ("interrupt", Reads),
     ("invocations", Reads),
     ("invoke", Refuses(ASKING_SIDE)),
-    ("lineages", Refuses(READ)),
+    ("lineages", Reads),
     ("login", Refuses(ACT)),
     ("login-tail", Refuses(READ)),
     ("marks", Refuses(ACT)),

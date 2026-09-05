@@ -1,13 +1,13 @@
-//! **The records screen's reads** (DESIGN §13.11): the five asked when the
-//! screen opens, and the one posted off a row inside it.
+//! **The records screen's reads** (DESIGN §13.11, §13.14): the six asked when
+//! the screen opens, and the one posted off a row inside it.
 //!
 //! **Opening is the ask**, which is the trail's rule and the ball pane's
 //! (§13.8, §13.9): a screen nobody has opened costs this device no radio,
-//! which is §14.1's argument for the held lane applied at the seat. Five
+//! which is §14.1's argument for the held lane applied at the seat. Six
 //! questions per opening and none between.
 //!
-//! **They answer as one value or as one sentence.** The six shapes are six
-//! questions about ONE conversation, and [`crate::codec::Records`] retires
+//! **They answer as one value or as one sentence.** The shapes are questions
+//! about ONE conversation and the workspace holding it, and [`crate::codec::Records`] retires
 //! them together the moment that conversation moves; a partial fold would put
 //! one conversation's spine under another's steps the first time a read
 //! failed on its own. So the first failure is the whole gesture's answer, and
@@ -19,7 +19,7 @@ use crate::seat::Focus;
 use crate::seat::pass::{answer, kind_err};
 use crate::transport::Seat;
 
-/// The five, in the order the screen paints them.
+/// The six, in the order the screen paints them.
 pub(in crate::seat) fn opened(seat: &Seat, focus: &Focus) -> Result<Records, String> {
     let (workspace, agent) = aimed(focus)?;
     let (ws, id) = (workspace.clone(), agent.clone());
@@ -77,6 +77,16 @@ pub(in crate::seat) fn opened(seat: &Seat, focus: &Focus) -> Result<Records, Str
         (Reply::Inbox(rows), _) => rows,
         (other, _) => return Err(kind_err("inbox", &other)),
     };
+    // **The sixth names the WORKSPACE rather than the conversation** (§13.14),
+    // and it is asked here because what it lists is what the spine half's
+    // `follows` is one of.
+    let ask = Ask::Lineages {
+        workspace: workspace.clone(),
+    };
+    let lineages = match answer(seat, &ask)? {
+        (Reply::Lineages(rows), _) => rows,
+        (other, _) => return Err(kind_err("lineages", &other)),
+    };
     Ok(Records {
         workspace,
         agent,
@@ -85,6 +95,7 @@ pub(in crate::seat) fn opened(seat: &Seat, focus: &Focus) -> Result<Records, Str
         rail,
         governing,
         inbox,
+        lineages,
         drilled: None,
     })
 }

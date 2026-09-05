@@ -108,6 +108,11 @@ pub struct Snapshot {
     /// It rides the snapshot and never the §14 cache, for the pane's reason:
     /// a pass asks the standing set, and this is a gesture's answer.
     pub candidates: Option<crate::codec::Spread>,
+    /// **Which machines may execute for the focused workspace** (DESIGN
+    /// §13.14), carrying the workspace it was read for. `None` is *nobody has
+    /// opened it*; a roster under another workspace is unpaintable, which is
+    /// the candidates screen's pairing law at a fourth site.
+    pub clients: Option<crate::codec::Machines>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

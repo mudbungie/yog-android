@@ -45,6 +45,14 @@ fn inbox() -> Vec<u8> {
         .into_bytes()
 }
 
+fn lineages() -> Vec<u8> {
+    json!({ "ok": true, "kind": "lineages",
+            "rows": [{ "name": "main", "oid": "abcdef1234", "short_oid": "abcdef1",
+                       "committed": 1_700_000_000_i64, "files": [] }] })
+    .to_string()
+    .into_bytes()
+}
+
 fn step() -> Vec<u8> {
     json!({ "ok": true, "kind": "step", "seq": "001",
             "meta": { "kind": "absent" }, "request": { "kind": "absent" },
@@ -67,6 +75,7 @@ fn opened() -> Vec<Vec<Vec<u8>>> {
         vec![rail()],
         vec![governing()],
         vec![inbox()],
+        vec![lineages()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
@@ -82,11 +91,11 @@ fn focused(model: &mut super::Model) {
     });
 }
 
-/// **Five asks per opening**, each addressed at the conversation the operator
+/// **Six asks per opening**, each addressed at the conversation the operator
 /// is standing in, and the answers reach the snapshot as one value that says
 /// which conversation it is about.
 #[test]
-fn opening_the_records_asks_the_five_and_they_land_as_one_value() {
+fn opening_the_records_asks_the_six_and_they_land_as_one_value() {
     let (mut model, served) = super::model_against(opened());
     focused(&mut model);
     model.open_records();
@@ -96,12 +105,18 @@ fn opening_the_records_asks_the_five_and_they_land_as_one_value() {
     assert_eq!(records.head.display, "Pennant");
     assert_eq!(records.steps.rows.first().map(|row| row.tokens), Some(99));
     assert_eq!(records.governing.follows.as_deref(), Some("default"));
+    // **The sixth read names the workspace**, and what it lists is what the
+    // governing half's `follows` is one of (§13.14).
+    assert_eq!(
+        records.lineages.first().map(|row| row.name.clone()),
+        Some("main".to_owned())
+    );
     assert!(records.drilled.is_none());
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        ops(&requests)[5..10],
-        ["agent", "steps", "rail", "governing", "inbox"]
+        ops(&requests)[5..11],
+        ["agent", "steps", "rail", "governing", "inbox", "lineages"]
     );
     assert_eq!(
         serde_json::from_slice::<Value>(&requests[5]).unwrap(),
@@ -137,12 +152,12 @@ fn one_steps_drill_in_lands_under_the_sequence_it_names() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        serde_json::from_slice::<Value>(&requests[13]).unwrap(),
+        serde_json::from_slice::<Value>(&requests[14]).unwrap(),
         json!({ "op": "step", "workspace": "home", "agent": "a1", "seq": "001" })
     );
 }
 
-/// **A drill-in whose five were never asked is dropped**: a step's records
+/// **A drill-in whose reads were never made is dropped**: a step's records
 /// under no conversation's records are rows with no subject.
 #[test]
 fn a_drill_in_with_no_records_under_it_is_dropped_rather_than_held() {
@@ -190,21 +205,22 @@ fn the_records_with_no_conversation_focused_cross_nothing() {
 
 /// **The first read that fails is the whole gesture's answer, and the
 /// sentence names the read that was ASKED** — never the one that answered.
-/// Each of the five is walked, because a group that reported the wrong one of
+/// Each of the six is walked, because a group that reported the wrong one of
 /// itself would send an operator looking at the wrong op.
 ///
 /// What the screen already had is not dropped for it either: `searched`'s
 /// rule, which every gesture-driven read here keeps.
 #[test]
-fn a_wrong_kind_at_any_of_the_five_names_that_read_and_keeps_what_was_there() {
+fn a_wrong_kind_at_any_of_the_six_names_that_read_and_keeps_what_was_there() {
     for (at, named) in [
         (0, "agent"),
         (1, "steps"),
         (2, "rail"),
         (3, "governing"),
         (4, "inbox"),
+        (5, "lineages"),
     ] {
-        let answers = [agent(), steps(), rail(), governing(), inbox()];
+        let answers = [agent(), steps(), rail(), governing(), inbox(), lineages()];
         let mut scripts = opened();
         scripts.extend(answers.into_iter().take(at).map(|body| vec![body]));
         scripts.extend([

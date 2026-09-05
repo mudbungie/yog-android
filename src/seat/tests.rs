@@ -191,6 +191,7 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 mod ball_acts;
 mod balls;
 mod candidates;
+mod clients;
 mod deposit;
 mod doubt;
 mod fleet;

@@ -20,7 +20,7 @@ use super::search::Found;
 use super::start::Prepared;
 use super::tools::{Capture, Invocation};
 use super::trail::OpRow;
-use super::{ConvRow, Entry, WsRow, balls, candidates, records};
+use super::{ConvRow, Entry, WsRow, balls, candidates, clients, lineages, records};
 
 mod decode;
 
@@ -132,6 +132,12 @@ pub enum Reply {
     Governing(records::Governing),
     /// **The mail nothing has delivered yet**, one row per deposit.
     Inbox(Vec<records::Mail>),
+    /// **Which machines may execute for this workspace** (DESIGN §13.14),
+    /// one row apiece — each carrying an observation and a statement with two
+    /// different lifetimes.
+    Clients(Vec<clients::ClientRow>),
+    /// **The config lineages it holds**, one row apiece.
+    Lineages(Vec<lineages::Lineage>),
     /// **What each attempt cost** (DESIGN §13.12), one row apiece.
     Science(Vec<candidates::Attempt>),
     /// **The candidates a fan materialized**: one prepared body each, already
@@ -225,6 +231,8 @@ impl Reply {
             Self::Rail(_) => "rail",
             Self::Governing(_) => "governing",
             Self::Inbox(_) => "inbox",
+            Self::Clients(_) => "clients",
+            Self::Lineages(_) => "lineages",
             Self::Science(_) => "science",
             Self::Fanned(_) => "fanned",
             Self::Delivered(_) => "delivered",

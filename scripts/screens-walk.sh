@@ -59,6 +59,14 @@ relaunch
 tap_control board
 capture board board
 
+# 3d. THE OP TABLE (DESIGN §13.14). The fifth roster entry, and the only screen
+#     in this app that works with nothing dialled and nothing seeded — the
+#     table is compiled in. So this beat is what proves `act:help` is on the
+#     glass, and the picture is the vocabulary itself.
+relaunch
+tap_control help
+capture help help
+
 # 4. The two deeper screens, each selected by the focus stored beside its rows.
 seed_cache conversations; relaunch
 capture conversations conversations
@@ -89,11 +97,19 @@ relaunch
 tap_control fleet
 capture fleet fleet
 
+# 4d. THE MACHINES ROSTER (DESIGN §13.14). The fourth entry on the aimed band,
+#     and the one surface in this app with no control inside it at all — every
+#     other op in REMOTE §5 is a machine's. The engine is not dialled, so this
+#     captures a screen that opened and said nothing was read.
+relaunch
+tap_control clients
+capture clients clients
+
 # Back to the list the menu opens from: the seed has not changed, so this is a
 # relaunch and not a re-seed.
 relaunch
 
-# 4d. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
+# 4e. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
 #     `conversations` with a menu up, exactly as it says `transcript` with the
 #     stop gates on — but the three conversation acts exist nowhere else, and
 #     the parity gate below can only see a control a walked screen painted.
@@ -106,7 +122,7 @@ capture row-menu conversations
 seed_cache transcript; relaunch
 capture transcript transcript
 
-# 4e. THE RECORDS SCREEN (DESIGN §13.11). One drill-down depth behind the
+# 4f. THE RECORDS SCREEN (DESIGN §13.11). One drill-down depth behind the
 #     transcript, reached by the one control that opens it — which is also the
 #     affordance for the five reads it asks (PARITY §2). The engine is not
 #     dialled, so what this captures is a screen that opened and said nothing

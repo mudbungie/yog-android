@@ -75,6 +75,10 @@ pub(super) enum Cmd {
         n: usize,
         goal: String,
     },
+    /// **Read which machines may execute for this workspace** (§13.14) —
+    /// what the roster screen opens with, and what it re-asks while it is
+    /// open, because presence is true only at the instant it was answered.
+    Clients,
     /// **One of the two armings a workspace carries** (§13.13). One command
     /// for both families because they are one gesture with four spellings,
     /// and the roster has one home — `codec::FleetAct`.

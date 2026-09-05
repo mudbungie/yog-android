@@ -21,7 +21,7 @@ pub(super) use records::{drill, opened};
 use super::Focus;
 use super::pass::{answer, kind_err};
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, Found, OpRow, Pane, Spread, View};
+use crate::codec::{Ask, Found, Machines, OpRow, Pane, Spread, View};
 use crate::transport::Seat;
 
 /// **How much trail a phone asks for** (DESIGN §13.8). The engine's own tail
@@ -148,5 +148,25 @@ pub(super) fn science(seat: &Seat, focus: &Focus) -> Result<Spread, String> {
     match answer(seat, &ask)? {
         (Reply::Science(rows), _) => Ok(Spread { workspace, rows }),
         (other, _) => Err(kind_err("science", &other)),
+    }
+}
+
+/// **Which machines may execute for this workspace** (REMOTE §5, §5.1; DESIGN
+/// §13.14) — aimed like the ball pane's own aimed view, and for its reason: a
+/// registration is per workspace, so a roster under another workspace's name
+/// would be the wrong claim.
+///
+/// **It is re-asked while the screen is open** rather than posted once, which
+/// is the one read here that MUST be: `present` is true only at the instant it
+/// was answered, so a row saying a machine is connected is worth nothing
+/// unless it is asked again (lernie DESIGN §4.28).
+pub(super) fn clients(seat: &Seat, focus: &Focus) -> Result<Machines, String> {
+    let workspace = super::acts::focused(focus)?;
+    let ask = Ask::Clients {
+        workspace: workspace.clone(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Clients(rows), _) => Ok(Machines { workspace, rows }),
+        (other, _) => Err(kind_err("clients", &other)),
     }
 }

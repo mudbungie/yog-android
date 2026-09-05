@@ -109,6 +109,8 @@ fn the_machinery_answers_name_the_kind_they_were_read_from() {
         json!({ "ok": true, "kind": "delivered", "base": "a", "target": "main" }),
         json!({ "ok": true, "kind": "retired", "discarded": false }),
         json!({ "ok": true, "kind": "armed", "armed": true }),
+        json!({ "ok": true, "kind": "clients", "rows": [] }),
+        json!({ "ok": true, "kind": "lineages", "rows": [] }),
     ] {
         let named = body["kind"].as_str().unwrap_or_default().to_owned();
         let read = super::super::decode(&body).unwrap().unwrap();

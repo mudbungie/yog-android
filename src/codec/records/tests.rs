@@ -178,6 +178,7 @@ fn records_are_paintable_only_under_the_conversation_they_were_asked_at() {
                                                         "diverged_lineages": 0, "files": [] })))
         .unwrap(),
         inbox: Vec::new(),
+        lineages: Vec::new(),
         drilled: None,
     };
     assert!(records.about("ws", "c-1"));

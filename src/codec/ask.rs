@@ -88,6 +88,15 @@ pub enum Ask {
     /// which is what says whether a row is a candidate or the claim it was
     /// spread from. Derived when asked, so opening the surface is the ask.
     Science { workspace: String },
+    /// **Which machines may execute for this workspace** (REMOTE §5, §5.1;
+    /// DESIGN §13.14): the tool hosts registered against it, and what each
+    /// one says it offers. Per workspace, because a registration is.
+    Clients { workspace: String },
+    /// **The config lineages this workspace holds** (REMOTE §9): the named
+    /// branches its policy is written on. It is asked with the records
+    /// screen's five, because what it names is what `governing`'s `follows`
+    /// is one of (DESIGN §13.14).
+    Lineages { workspace: String },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here

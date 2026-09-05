@@ -47,6 +47,8 @@ fn asked(ask: &Ask) -> Value {
         Ask::Science { workspace } => {
             json!({ "op": "science", "workspace": workspace })
         }
+        Ask::Clients { workspace } => json!({ "op": "clients", "workspace": workspace }),
+        Ask::Lineages { workspace } => json!({ "op": "lineages", "workspace": workspace }),
         // **The records screen's six** (DESIGN §13.11). Five name a
         // conversation and nothing else; `step` names the row inside it.
         Ask::Agent { workspace, agent } => aimed("agent", workspace, agent),

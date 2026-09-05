@@ -218,3 +218,18 @@ pub(super) fn listed(
     }
     note
 }
+
+/// **The machines roster, folded** — `paned`'s terms again: the answer
+/// replaces what was held and a failure keeps what was there.
+pub(super) fn machined(
+    read: Result<crate::codec::Machines, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(machines) => {
+            standing.clients = Some(machines);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}

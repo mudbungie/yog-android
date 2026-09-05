@@ -240,6 +240,13 @@ impl Model {
         let _ = self.cmds.send(Cmd::Fleet(act));
     }
 
+    /// **Read this workspace's machines** (§13.14). The rows arrive in the
+    /// next snapshot like every other read's, and what was already there keeps
+    /// painting meanwhile — under its own workspace, never under this one.
+    pub fn list_clients(&self) {
+        let _ = self.cmds.send(Cmd::Clients);
+    }
+
     /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in
     /// any sense worth relying on and never re-sent: the watermark lands on
     /// the trail as it stood, and the trail read after it is what says so.
