@@ -53,11 +53,11 @@ work-diff = "unbuilt: work review from the glass (bl-5a56; DESIGN §16.2)"
 # foot of the aimed view, where the `--as` stamp the wire wants IS the pane's
 # own workspace (DESIGN §13.9).
 
-# --- Unbuilt: candidates (bl-2f17) ------------------------------------------
-fan = "unbuilt: the candidate surfaces (bl-2f17; DESIGN §16.2)"
-retire = "unbuilt: the candidate surfaces (bl-2f17; DESIGN §16.2)"
-deliver = "unbuilt: the candidate surfaces (bl-2f17; DESIGN §16.2)"
-science = "unbuilt: the candidate surfaces (bl-2f17; DESIGN §16.2)"
+# --- The candidate surfaces are whole (bl-2f17) -----------------------------
+# Nothing of them is on this ledger. The candidates screen carries all four:
+# `science` on the control that opens it — opening IS the ask — and the three
+# acts on its foot, each live exactly where the picked row is its subject
+# (DESIGN §13.12).
 
 # --- Unbuilt: fleet and watch (bl-477e) -------------------------------------
 fleet = "unbuilt: fleet and watch (bl-477e; DESIGN §16.2)"

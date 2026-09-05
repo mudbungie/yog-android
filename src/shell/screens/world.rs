@@ -48,6 +48,9 @@ pub(crate) enum World {
     Queue,
     /// What the engine last did.
     Trail,
+    /// **What each attempt on this workspace's obligations cost** (§13.12) —
+    /// the candidates listing, and the three acts over it.
+    Candidates,
     /// **The ball pane at one of its three views** (§13.9). The view rides on
     /// the navigation rather than on the answer, so a screen names itself from
     /// what was opened and paints only the answer that belongs under it.
@@ -55,6 +58,9 @@ pub(crate) enum World {
 }
 
 mod balls;
+mod candidates;
+
+pub(in crate::shell) use candidates::FLOOR;
 mod trail;
 mod waiting;
 
@@ -65,9 +71,11 @@ impl Shell {
     pub(super) fn open_world(&mut self, world: World) {
         self.opened = Some(world);
         self.armed = false;
-        // A ball picked on one visit is not still picked on the next: the act
-        // controls address a row, and a row nobody can see is not one.
+        // A ball or an attempt picked on one visit is not still picked on the
+        // next: the act controls address a row, and a row nobody can see is
+        // not one.
         self.ball = None;
+        self.candidate = None;
         let Some(model) = self.model() else { return };
         // **Opening IS the ask**, for the trail and for the ball pane alike:
         // both are read by nothing standing, so a surface nobody has opened
@@ -76,6 +84,7 @@ impl Shell {
         match world {
             World::Trail => model.list_trail(),
             World::Balls(view) => model.list_balls(view),
+            World::Candidates => model.list_candidates(),
             World::Queue => (),
         }
     }
@@ -93,6 +102,20 @@ impl Shell {
         }
     }
 
+    /// **The one control that reaches the candidates listing** (§13.12),
+    /// painted where its subject is: `science` names a workspace, so it is
+    /// offered on that workspace's own conversation list, beside the aimed
+    /// ball read. The name the harness taps it by is the op's own (§15.2),
+    /// which is also the screen it opens.
+    pub(in crate::shell) fn candidates_entry(&mut self, ui: &mut egui::Ui) {
+        let name = candidates::SCREEN;
+        let control = super::tap(ui, name.into(), name);
+        self.note_control(name, ui, control.rect);
+        if control.clicked() {
+            self.open_world(World::Candidates);
+        }
+    }
+
     /// Paint whichever is open. One arm each, and each names its own screen
     /// (`app/probe.rs` — the name lives at the branch, never derived a second
     /// time from the same state).
@@ -101,6 +124,7 @@ impl Shell {
             World::Queue => self.waiting(ui, snap),
             World::Trail => self.trail(ui, snap),
             World::Balls(view) => self.balls(ui, snap, view),
+            World::Candidates => self.candidates(ui, snap),
         }
     }
 
@@ -110,5 +134,6 @@ impl Shell {
         self.opened = None;
         self.armed = false;
         self.ball = None;
+        self.candidate = None;
     }
 }

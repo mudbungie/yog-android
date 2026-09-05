@@ -69,6 +69,9 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             workspace: str_of(o, "workspace")?,
         },
         "board" => Ask::Board,
+        "science" => Ask::Science {
+            workspace: str_of(o, "workspace")?,
+        },
         // The records screen's six (DESIGN §13.11). Five read alike and one
         // names the row it is about; `governing` refuses its anchored form
         // below, which is why it is not in the aimed list.
@@ -158,6 +161,11 @@ fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         // The five the ball pane fires (DESIGN §13.9). One arm for the same
         // reason: one family, one address, and the choice is `BallAct`.
         "assign" | "release" | "close" | "create" | "update" => super::balls::act::decode(op, o)?,
+        // The three the candidates screen fires (DESIGN §13.12). One arm
+        // again: one family, one obligation, and the choice is
+        // `CandidateAct`. A frame naming no ball refuses inside — the reason
+        // is in that file's header.
+        "fan" | "deliver" | "retire" => super::candidates::act::decode(op, o)?,
         "effort" => Act::Effort {
             workspace: str_of(o, "workspace")?,
             role: str_of(o, "role")?,

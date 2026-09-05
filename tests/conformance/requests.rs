@@ -18,8 +18,8 @@
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
-    ACT, ASKING_SIDE, BARE_RUNG, NO_ANCHOR, NO_FORK_POINT, NO_SCHEDULING, NO_SEED, NOT_THE_MINTER,
-    READ,
+    ACT, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_ANCHOR, NO_FORK_POINT, NO_SCHEDULING, NO_SEED,
+    NOT_THE_MINTER, READ,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
@@ -48,12 +48,24 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ),
     ("delete-agent", Refuses(ACT)),
     ("delete-workspace", Refuses(ACT)),
-    ("deliver", Refuses(ACT)),
+    (
+        "deliver",
+        Partial {
+            reads: 1,
+            reason: ALWAYS_A_BALL,
+        },
+    ),
     ("disarm", Refuses(ACT)),
     ("disband", Refuses(ACT)),
     ("effort", Reads),
     ("enroll", Refuses(NOT_THE_MINTER)),
-    ("fan", Refuses(ACT)),
+    (
+        "fan",
+        Partial {
+            reads: 3,
+            reason: ALWAYS_A_BALL,
+        },
+    ),
     ("files", Refuses(READ)),
     ("flag", Reads),
     ("fleet", Refuses(ACT)),
@@ -101,11 +113,17 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("release", Reads),
     ("restore", Reads),
     ("retarget", Reads),
-    ("retire", Refuses(ACT)),
+    (
+        "retire",
+        Partial {
+            reads: 1,
+            reason: ALWAYS_A_BALL,
+        },
+    ),
     ("roles", Reads),
     ("revoke", Reads),
     ("scan", Refuses(ACT)),
-    ("science", Refuses(READ)),
+    ("science", Reads),
     ("search", Reads),
     ("seen", Reads),
     ("step", Reads),

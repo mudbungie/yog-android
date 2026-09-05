@@ -83,6 +83,11 @@ pub enum Ask {
     Governing { workspace: String, agent: String },
     /// **The mail nothing has delivered yet**, one row per deposit.
     Inbox { workspace: String, agent: String },
+    /// **What each attempt cost** (DESIGN §13.12): one row per attempt in
+    /// this workspace, carrying the same diff object a `work-diff` row is —
+    /// which is what says whether a row is a candidate or the claim it was
+    /// spread from. Derived when asked, so opening the surface is the ask.
+    Science { workspace: String },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here

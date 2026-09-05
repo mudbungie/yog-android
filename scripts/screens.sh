@@ -223,11 +223,20 @@ capture conversations conversations
 tap_control workspace-balls
 capture workspace-balls workspace-balls
 
+# 4b. THE CANDIDATES SCREEN (DESIGN §13.12). The other read that names a
+#     workspace, so the other entry on this same list. The engine is not
+#     dialled, so what this captures is a screen that opened and said nothing
+#     was read; what the parity gate wants from it is the four controls, and
+#     all four paint — three of them disabled, saying which row to tap first.
+relaunch
+tap_control science
+capture candidates science
+
 # Back to the list the menu opens from: the seed has not changed, so this is a
 # relaunch and not a re-seed.
 relaunch
 
-# 4b. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
+# 4c. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
 #     `conversations` with a menu up, exactly as it says `transcript` with the
 #     stop gates on — but the three conversation acts exist nowhere else, and
 #     the parity gate below can only see a control a walked screen painted.
@@ -240,7 +249,7 @@ capture row-menu conversations
 seed_cache transcript; relaunch
 capture transcript transcript
 
-# 4c. THE RECORDS SCREEN (DESIGN §13.11). One drill-down depth behind the
+# 4d. THE RECORDS SCREEN (DESIGN §13.11). One drill-down depth behind the
 #     transcript, reached by the one control that opens it — which is also the
 #     affordance for the five reads it asks (PARITY §2). The engine is not
 #     dialled, so what this captures is a screen that opened and said nothing

@@ -19,6 +19,7 @@
 
 mod ask;
 pub mod balls;
+pub mod candidates;
 mod conv;
 pub mod encode;
 pub(crate) mod fields;
@@ -40,6 +41,8 @@ mod ws;
 pub use ask::Ask;
 pub use balls::act::BallAct;
 pub use balls::{BallRow, Board, BoardRow, Pane, View, WsBallRow};
+pub use candidates::act::CandidateAct;
+pub use candidates::{Attempt, Delivered, Judgement, Spread};
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use encode::encode;
 pub use follow::Stream;
@@ -164,6 +167,29 @@ pub enum Act {
         project: String,
         name: String,
         act: BallAct,
+    },
+    /// **An act on one candidate, or on the claim they spread from** (DESIGN
+    /// §13.12): fan the obligation over n attempts, accept one, release one.
+    /// The address is stated once — the project and the ball the science row
+    /// named — and the choice is [`CandidateAct`]; `codec::candidates::act` is
+    /// where the three spellings and the reason for the grouping live.
+    Candidate {
+        project: String,
+        ball: String,
+        act: CandidateAct,
+    },
+    /// **Spread one obligation over n candidates** (DESIGN §13.12) — *"the
+    /// start with n in the middle, not a second start path"* (lernie DESIGN
+    /// §4.36), which is why it sits beside [`Act::Prepare`] and
+    /// [`Act::Prompt`] rather than beside the two handle acts above. The
+    /// prepared body is the engine's own and rides through whole; what comes
+    /// back is one body per candidate, and each is fired by the ordinary
+    /// firing gesture.
+    Fan {
+        project: String,
+        ball: String,
+        prepared: Prepared,
+        n: usize,
     },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field

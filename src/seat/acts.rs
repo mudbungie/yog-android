@@ -24,12 +24,14 @@ use super::pass::kind_err;
 use super::posted::{Posted, faulted};
 
 mod ball;
+mod candidate;
 mod held;
 mod row;
 mod seen;
 mod trail;
 
 pub(super) use ball::ball;
+pub(super) use candidate::{candidate, spread};
 pub(super) use held::answer;
 pub(super) use row::row;
 pub(super) use seen::seen;

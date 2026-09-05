@@ -14,7 +14,7 @@ use super::super::search;
 use super::super::start;
 use super::super::tools::{capture_of, invocation_of};
 use super::super::trail;
-use super::super::{balls, conv, hold, records, transcript, ws};
+use super::super::{balls, candidates, conv, hold, records, transcript, ws};
 use super::Reply;
 
 /// Read one reply body off the wire.
@@ -62,6 +62,12 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "rail" => Reply::Rail(records::rail_of(o)?),
         "governing" => Reply::Governing(records::governing_of(o)?),
         "inbox" => Reply::Inbox(records::mail(o)?),
+        "science" => Reply::Science(candidates::science(o)?),
+        "fanned" => Reply::Fanned(candidates::fanned(o)?),
+        "delivered" => Reply::Delivered(candidates::delivered(o)?),
+        "retired" => Reply::Retired {
+            discarded: bool_of(o, "discarded")?,
+        },
         "balls" => Reply::Balls(rows(o, balls::row)?),
         "workspace-balls" => Reply::WorkspaceBalls(rows(o, balls::bound)?),
         "board" => Reply::Board(balls::board(o)?),

@@ -56,7 +56,7 @@ pub(crate) fn encode_prompt(prepared: &Prepared, goal: &str) -> Value {
 /// The prepared body's one spelling, spent by the firing gesture. It is the
 /// same shape the reply carries, because a body written twice would drift
 /// from the body read.
-fn body(p: &Prepared) -> Value {
+pub(super) fn body(p: &Prepared) -> Value {
     json!({ "workspace": p.workspace, "binding": p.binding,
             "lineage": p.lineage, "goal": p.goal, "origin": p.origin })
 }

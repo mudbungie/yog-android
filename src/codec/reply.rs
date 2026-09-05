@@ -20,7 +20,7 @@ use super::search::Found;
 use super::start::Prepared;
 use super::tools::{Capture, Invocation};
 use super::trail::OpRow;
-use super::{ConvRow, Entry, WsRow, balls, records};
+use super::{ConvRow, Entry, WsRow, balls, candidates, records};
 
 mod decode;
 
@@ -132,6 +132,20 @@ pub enum Reply {
     Governing(records::Governing),
     /// **The mail nothing has delivered yet**, one row per deposit.
     Inbox(Vec<records::Mail>),
+    /// **What each attempt cost** (DESIGN §13.12), one row apiece.
+    Science(Vec<candidates::Attempt>),
+    /// **The candidates a fan materialized**: one prepared body each, already
+    /// rebound to its own attempt, and each fired by the ordinary firing
+    /// gesture.
+    Fanned(Vec<Prepared>),
+    /// **What a delivery landed** — two of its four identities optional, and
+    /// each absence a fact rather than a blank.
+    Delivered(candidates::Delivered),
+    /// **The receipt a retirement earns**, carrying whether the source ref
+    /// went with the worktree. That is this project's own declared retention
+    /// answering, so the seat paints what the engine said rather than
+    /// predicting a policy it has not read.
+    Retired { discarded: bool },
     /// The receipt an acknowledgement earns. It carries nothing, and the read
     /// that says what it did is the trail itself.
     Acked,
@@ -205,6 +219,10 @@ impl Reply {
             Self::Rail(_) => "rail",
             Self::Governing(_) => "governing",
             Self::Inbox(_) => "inbox",
+            Self::Science(_) => "science",
+            Self::Fanned(_) => "fanned",
+            Self::Delivered(_) => "delivered",
+            Self::Retired { .. } => "retired",
             Self::Balls(_) => "balls",
             Self::WorkspaceBalls(_) => "workspace-balls",
             Self::Board(_) => "board",

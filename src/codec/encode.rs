@@ -7,111 +7,142 @@
 
 use serde_json::{Value, json};
 
-use super::{Act, Ask, Gesture, balls, hold, pick, row, start, tools};
+use super::{Act, Ask, Gesture, balls, candidates, hold, pick, row, start, tools};
 
 /// Encode a gesture to its deposit envelope — the request frame's whole body.
 /// Total over the slice; the spellings are the server codec's, byte for byte.
+/// Encode a gesture to its deposit envelope — the request frame's whole body.
+/// Total over the slice; the spellings are the server codec's, byte for byte.
+///
+/// **Two tables, on the boundary's own seam** — `codec::request`'s decode side
+/// is split the same way and says why: *"the grammar is asks and acts, and the
+/// reader is split the same way — a table that reads a place and a table that
+/// names a change."* One table, one direction, and the two never share an arm.
 pub fn encode(gesture: &Gesture) -> Value {
     match gesture {
-        Gesture::Act(Act::Message {
-            workspace,
-            agent,
-            content,
-        }) => json!({ "op": "message", "workspace": workspace,
-                      "agent": agent, "content": content }),
-        Gesture::Ask(Ask::Workspaces) => json!({ "op": "workspaces" }),
-        Gesture::Ask(Ask::Conversations { workspace }) => {
+        Gesture::Ask(ask) => asked(ask),
+        Gesture::Act(act) => acted(act),
+    }
+}
+
+/// The reads.
+fn asked(ask: &Ask) -> Value {
+    match ask {
+        Ask::Workspaces => json!({ "op": "workspaces" }),
+        Ask::Conversations { workspace } => {
             json!({ "op": "conversations", "workspace": workspace })
         }
-        Gesture::Ask(Ask::Transcript { workspace, agent }) => {
+        Ask::Transcript { workspace, agent } => {
             json!({ "op": "transcript", "workspace": workspace, "agent": agent })
         }
-        Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
-        Gesture::Ask(Ask::Search { text }) => json!({ "op": "search", "text": text }),
-        Gesture::Ask(Ask::Attention) => json!({ "op": "attention" }),
-        Gesture::Ask(Ask::Ops { max }) => json!({ "op": "ops", "max": max }),
-        Gesture::Ask(Ask::Balls) => json!({ "op": "balls" }),
-        Gesture::Ask(Ask::WorkspaceBalls { workspace }) => {
+        Ask::Invocations => json!({ "op": "invocations" }),
+        Ask::Search { text } => json!({ "op": "search", "text": text }),
+        Ask::Attention => json!({ "op": "attention" }),
+        Ask::Ops { max } => json!({ "op": "ops", "max": max }),
+        Ask::Balls => json!({ "op": "balls" }),
+        Ask::WorkspaceBalls { workspace } => {
             json!({ "op": "workspace-balls", "workspace": workspace })
         }
-        Gesture::Ask(Ask::Board) => json!({ "op": "board" }),
+        Ask::Board => json!({ "op": "board" }),
+        Ask::Science { workspace } => {
+            json!({ "op": "science", "workspace": workspace })
+        }
         // **The records screen's six** (DESIGN §13.11). Five name a
         // conversation and nothing else; `step` names the row inside it.
-        Gesture::Ask(Ask::Agent { workspace, agent }) => aimed("agent", workspace, agent),
-        Gesture::Ask(Ask::Steps { workspace, agent }) => aimed("steps", workspace, agent),
-        Gesture::Ask(Ask::Rail { workspace, agent }) => aimed("rail", workspace, agent),
-        Gesture::Ask(Ask::Governing { workspace, agent }) => aimed("governing", workspace, agent),
-        Gesture::Ask(Ask::Inbox { workspace, agent }) => aimed("inbox", workspace, agent),
-        Gesture::Ask(Ask::Step {
+        Ask::Agent { workspace, agent } => aimed("agent", workspace, agent),
+        Ask::Steps { workspace, agent } => aimed("steps", workspace, agent),
+        Ask::Rail { workspace, agent } => aimed("rail", workspace, agent),
+        Ask::Governing { workspace, agent } => aimed("governing", workspace, agent),
+        Ask::Inbox { workspace, agent } => aimed("inbox", workspace, agent),
+        Ask::Step {
             workspace,
             agent,
             seq,
-        }) => json!({ "op": "step", "workspace": workspace,
+        } => json!({ "op": "step", "workspace": workspace,
                       "agent": agent, "seq": seq }),
-        Gesture::Act(Act::Ack) => json!({ "op": "ack" }),
-        Gesture::Act(Act::ClearTrail) => json!({ "op": "clear-trail" }),
-        Gesture::Act(Act::Seen { workspace, agent }) => {
+        Ask::Follow { workspace, agent } => {
+            json!({ "op": "follow", "workspace": workspace, "agent": agent })
+        }
+        Ask::Roles { workspace } => {
+            json!({ "op": "roles", "workspace": workspace })
+        }
+        Ask::Providers { workspace } => {
+            json!({ "op": "providers", "workspace": workspace })
+        }
+        Ask::Models {
+            workspace,
+            provider,
+        } => json!({ "op": "models", "workspace": workspace, "provider": provider }),
+    }
+}
+
+/// The writes.
+fn acted(act: &Act) -> Value {
+    match act {
+        Act::Message {
+            workspace,
+            agent,
+            content,
+        } => json!({ "op": "message", "workspace": workspace,
+                      "agent": agent, "content": content }),
+        Act::Ack => json!({ "op": "ack" }),
+        Act::ClearTrail => json!({ "op": "clear-trail" }),
+        Act::Seen { workspace, agent } => {
             json!({ "op": "seen", "workspace": workspace, "agent": agent })
         }
-        Gesture::Act(Act::Answer {
+        Act::Answer {
             workspace,
             agent,
             verdict,
-        }) => hold::encode(workspace, agent, *verdict),
-        Gesture::Ask(Ask::Follow { workspace, agent }) => {
-            json!({ "op": "follow", "workspace": workspace, "agent": agent })
-        }
-        Gesture::Ask(Ask::Roles { workspace }) => {
-            json!({ "op": "roles", "workspace": workspace })
-        }
-        Gesture::Ask(Ask::Providers { workspace }) => {
-            json!({ "op": "providers", "workspace": workspace })
-        }
-        Gesture::Ask(Ask::Models {
-            workspace,
-            provider,
-        }) => json!({ "op": "models", "workspace": workspace, "provider": provider }),
-        Gesture::Act(Act::Stop {
+        } => hold::encode(workspace, agent, *verdict),
+        Act::Stop {
             workspace,
             agent,
             children,
-        }) => json!({ "op": "stop", "workspace": workspace,
+        } => json!({ "op": "stop", "workspace": workspace,
                       "agent": agent, "children": children }),
-        Gesture::Act(Act::Nudge { workspace, agent }) => {
+        Act::Nudge { workspace, agent } => {
             json!({ "op": "nudge", "workspace": workspace, "agent": agent })
         }
-        Gesture::Act(Act::Ball { project, name, act }) => balls::act::encode(project, name, act),
-        Gesture::Act(Act::Row {
+        Act::Ball { project, name, act } => balls::act::encode(project, name, act),
+        Act::Candidate { project, ball, act } => candidates::act::encode(project, ball, act),
+        Act::Fan {
+            project,
+            ball,
+            prepared,
+            n,
+        } => candidates::act::encode_fan(project, ball, prepared, *n),
+        Act::Row {
             workspace,
             agent,
             act,
-        }) => row::encode(workspace, agent, act),
-        Gesture::Act(Act::Effort {
+        } => row::encode(workspace, agent, act),
+        Act::Effort {
             workspace,
             role,
             level,
-        }) => pick::encode_effort(workspace, role, *level),
-        Gesture::Act(Act::Priority {
+        } => pick::encode_effort(workspace, role, *level),
+        Act::Priority {
             workspace,
             role,
             on,
-        }) => pick::encode_priority(workspace, role, *on),
-        Gesture::Act(Act::PickModel {
+        } => pick::encode_priority(workspace, role, *on),
+        Act::PickModel {
             workspace,
             role,
             provider,
             model,
-        }) => pick::encode_pick(workspace, role, provider, model),
-        Gesture::Act(Act::Advertise { tools }) => {
+        } => pick::encode_pick(workspace, role, provider, model),
+        Act::Advertise { tools } => {
             json!({ "op": "advertise", "tools": tools::encode_tools(tools) })
         }
-        Gesture::Act(Act::Complete {
+        Act::Complete {
             invocation,
             capture,
-        }) => json!({ "op": "complete", "invocation": invocation,
+        } => json!({ "op": "complete", "invocation": invocation,
                       "capture": tools::capture_value(capture) }),
-        Gesture::Act(Act::Prepare { workspace }) => start::encode_prepare(workspace),
-        Gesture::Act(Act::Prompt { prepared, goal }) => start::encode_prompt(prepared, goal),
+        Act::Prepare { workspace } => start::encode_prepare(workspace),
+        Act::Prompt { prepared, goal } => start::encode_prompt(prepared, goal),
     }
 }
 

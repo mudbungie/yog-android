@@ -80,6 +80,16 @@ pub const NO_SCHEDULING: &str =
 pub const NO_ANCHOR: &str =
     "the config governing a COMMIT wants a fork point no read here names (bl-99fd)";
 
+/// **A candidate gesture always names its ball** (DESIGN §13.12). All three
+/// take an optional `ball` upstream, and omitting it is the bare
+/// project-repo gesture aimed at the integration branch — a subject this seat
+/// has no row for. Every gesture here is composed off a science row that
+/// names one, so a ball-less frame is refused by name rather than read as the
+/// frame with a ball. The desktop recorded the same three by count and reason
+/// (lernie DESIGN §4.36).
+pub const ALWAYS_A_BALL: &str =
+    "the bare project-repo obligation is a subject no row here names (DESIGN §13.12)";
+
 /// REMOTE §4.2, on the foot's gesture set: *"Note which of §5.3's four verbs
 /// is absent — `invoke`, the asking side's. A foot is invoked; it never
 /// invokes."* `capture` is that verb's read half and goes with it.

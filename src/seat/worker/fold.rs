@@ -185,3 +185,36 @@ pub(super) fn drilled(
         Err(why) => Some(why),
     }
 }
+
+/// **The candidates listing, folded** — `paned`'s terms again: the answer
+/// replaces what was held and a failure keeps what was there.
+pub(super) fn spread(
+    read: Result<crate::codec::Spread, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(spread) => {
+            standing.candidates = Some(spread);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
+/// **The read that shows what a candidate act did** (§13.12). The listing is
+/// derived when asked and nothing stands over it, so a fan, a delivery or a
+/// retirement is invisible until it is asked again — `balled`'s rule, on the
+/// other aimed screen. One fold for both commands, because what follows an act
+/// here is the same read whichever act it was.
+pub(super) fn listed(
+    seat: &Seat,
+    focus: &Focus,
+    standing: &mut Standing,
+    posted: crate::seat::posted::Posted,
+) -> Option<String> {
+    let note = posted.note();
+    if let Ok(spread) = asks::science(seat, focus) {
+        standing.candidates = Some(spread);
+    }
+    note
+}

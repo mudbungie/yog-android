@@ -113,6 +113,10 @@ impl Shell {
                 // The one ball read that names a place (§13.9), offered where
                 // that place is what the operator is standing in.
                 self.balls_entry(ui, crate::codec::View::Here);
+                // The other aimed read (§13.12): what each attempt on this
+                // workspace's obligations cost, offered where that workspace
+                // is what the operator is standing in.
+                self.candidates_entry(ui);
                 ui.separator();
                 egui::ScrollArea::vertical()
                     .min_scrolled_height(0.0)

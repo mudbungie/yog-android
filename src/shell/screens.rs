@@ -30,6 +30,7 @@ mod rows;
 mod search;
 mod world;
 
+pub(in crate::shell) use world::FLOOR;
 pub(crate) use world::World;
 
 impl Shell {

@@ -85,6 +85,15 @@ pub(crate) struct Shell {
     /// position: the focus underneath it is untouched, which is what makes
     /// backing out of it land where the operator was.
     pub(crate) records: bool,
+    /// **Which attempt the candidates screen's acts address** (§13.12): the
+    /// project, the ball and the handle off the row that was tapped — the
+    /// handle empty for the claim, which is what decides which controls are
+    /// live. `ball`'s twin, and navigation for its reason exactly.
+    pub(crate) candidate: Option<(String, String, String)>,
+    /// **How many candidates a fan would spread** (§13.12). Floored at two by
+    /// the control that moves it, because one and zero are a start and this
+    /// app already has one.
+    pub(crate) spread: usize,
     /// **Which step the records screen's one act addresses** (§13.11) — the
     /// sequence off the census row that was tapped. `ball`'s twin, and
     /// navigation for its reason exactly.
@@ -183,6 +192,8 @@ impl Shell {
             ball: None,
             records: false,
             step: None,
+            candidate: None,
+            spread: crate::shell::screens::FLOOR,
             scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),

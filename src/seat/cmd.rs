@@ -59,6 +59,22 @@ pub(super) enum Cmd {
     /// own command because it is the one read of the six that is about a ROW
     /// rather than about the conversation.
     Step(String),
+    /// **Read this workspace's attempts** (§13.12) — what the candidates
+    /// screen opens with.
+    Science,
+    /// **One handle act on one obligation** (§13.12): the project and the
+    /// ball the science row named, and which of the two it fired.
+    Candidate(String, String, crate::codec::CandidateAct),
+    /// **The fan** — its own command, because it is a CHAIN rather than a
+    /// gesture: stage, spread, then fire each candidate. What the glass knows
+    /// is the count and the goal; the prepared body is the engine's and never
+    /// crosses this channel.
+    Fan {
+        project: String,
+        ball: String,
+        n: usize,
+        goal: String,
+    },
     /// Truncate the trail — the armed act (§13.8).
     ClearTrail,
     /// Stop the focused conversation's turn, optionally its subtree with it.

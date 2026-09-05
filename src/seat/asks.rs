@@ -21,7 +21,7 @@ pub(super) use records::{drill, opened};
 use super::Focus;
 use super::pass::{answer, kind_err};
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, Found, OpRow, Pane, View};
+use crate::codec::{Ask, Found, OpRow, Pane, Spread, View};
 use crate::transport::Seat;
 
 /// **How much trail a phone asks for** (DESIGN §13.8). The engine's own tail
@@ -129,5 +129,24 @@ pub(super) fn balls(seat: &Seat, focus: &Focus, view: View) -> Result<Pane, Stri
         (Reply::WorkspaceBalls(rows), _) => Ok(Pane::Here(rows)),
         (Reply::Board(board), _) => Ok(Pane::Board(board)),
         (other, _) => Err(kind_err(view.screen(), &other)),
+    }
+}
+
+/// **What each attempt cost** (DESIGN §13.12) — the aimed read the candidates
+/// screen opens with, focused the way the ball pane's own aimed view is: a
+/// workspace's attempts under another workspace's name would be the wrong
+/// claim, so there is nothing to ask with no workspace focused.
+///
+/// It is derived when asked — nothing behind it is stored — so the same row a
+/// minute later is a statement about the world a minute later, and opening the
+/// surface is what asks for it.
+pub(super) fn science(seat: &Seat, focus: &Focus) -> Result<Spread, String> {
+    let workspace = super::acts::focused(focus)?;
+    let ask = Ask::Science {
+        workspace: workspace.clone(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Science(rows), _) => Ok(Spread { workspace, rows }),
+        (other, _) => Err(kind_err("science", &other)),
     }
 }

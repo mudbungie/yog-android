@@ -87,8 +87,8 @@ fn every_answer_names_its_own_kind() {
     }
 }
 
-/// **The conversation's machinery names itself out of what it decoded from**
-/// (§13.11). Built by the decoder rather than by hand: six literal values
+/// **The machinery and the candidates name themselves out of what they decoded
+/// from** (§13.11, §13.12). Built by the decoder rather than by hand: six literal values
 /// here would be a second spelling of the shapes `codec::records` already
 /// reads, and two spellings of one thing is what this file exists to prevent.
 #[test]
@@ -104,6 +104,10 @@ fn the_machinery_answers_name_the_kind_they_were_read_from() {
         json!({ "ok": true, "kind": "governing", "oid": "b", "short_oid": "b",
                 "follows": "default", "diverged_lineages": 0, "files": [] }),
         json!({ "ok": true, "kind": "inbox", "rows": [] }),
+        json!({ "ok": true, "kind": "science", "rows": [] }),
+        json!({ "ok": true, "kind": "fanned", "rows": [] }),
+        json!({ "ok": true, "kind": "delivered", "base": "a", "target": "main" }),
+        json!({ "ok": true, "kind": "retired", "discarded": false }),
     ] {
         let named = body["kind"].as_str().unwrap_or_default().to_owned();
         let read = super::super::decode(&body).unwrap().unwrap();

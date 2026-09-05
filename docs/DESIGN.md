@@ -335,6 +335,10 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
+| `src/codec/candidates.rs` + `candidates/act.rs` | the n-candidate path (§13.12): the science row whose `handle` says which act it earns, the two handle acts, and the fan that carries a prepared body | landed (bl-2f17) |
+| `src/seat/acts/candidate.rs` | the two handle gestures and the fan's three-leg chain — stage, spread, fire each — with the two receipts worth a sentence on success | landed (bl-2f17) |
+| `src/seat/worker/spend.rs` | what one command does, split from the loop that spends it | landed (bl-2f17, out of `worker.rs`) |
+| `src/shell/screens/world/candidates.rs` + `candidates/acts.rs` | android-only: the candidates listing (§13.12) — the pick, the three acts on its foot, and the stepper the fan takes | landed (bl-2f17) |
 | `src/codec/records.rs` + `records/{agent,steps,step,spine,inbox}.rs` | the conversation's machinery (§13.11): six shapes read as ONE value carrying the conversation it is about, and the four fields that ride through unread with a reason apiece | landed (bl-146b) |
 | `src/codec/ask.rs` | the ask half of the boundary's grammar, on the seam `codec::request` already reads the wire by | landed (bl-146b, out of `codec.rs`) |
 | `src/codec/reply/decode.rs` | how one reply body is READ, split from the vocabulary it builds | landed (bl-146b, out of `reply.rs`) |
@@ -2218,6 +2222,101 @@ engine is not dialled there, so what it captures is a screen that opened and
 said nothing was read — and `step`, disabled, saying which row to tap first,
 which is what the parity gate asks of it either way.
 
+### 13.12 The candidates screen: one obligation spread, one accepted, the rest released (bl-2f17)
+
+`src/codec/candidates.rs` + `candidates/act.rs`, `src/seat/acts/candidate.rs`,
+`src/shell/screens/world/candidates.rs` + `candidates/acts.rs`. The phone's
+twin of lernie's §4.36, over yog VISION §4.10's n-candidate path: spread one
+ball's delivery obligation over n attempts, watch what each cost, accept one
+and release the rest.
+
+**The row says which acts it earns, and upstream's encoder is what decides**
+(lernie DESIGN §4.36, whose ruling transfers whole). A science row's `diff` is
+a work-diff row, and a work-diff row carries a `handle` or it does not: with
+one it is a **candidate** on `attempt/<handle>` waiting to be accepted or
+released, without one it is the ball's **own claim**, whose delivery
+obligation is the thing a fan spreads. So the three controls are not a mode
+this screen holds; they are what the row IS, and every value the acts take —
+the project, the ball, the handle — is already on it. A typed handle box would
+have been a chance to name a candidate that is not on the glass.
+
+**`science` is where the candidate rows come from, and `work-diff` is not
+consumed.** Upstream encodes both with one encoder *"so an attempt's identity
+has one spelling anywhere"*, so this seat reads that object where it arrives —
+inside a science row — and the work-review surface (bl-5a56) still owns the
+`work-diff` read itself. One shape, one reader, and no op is spelled before a
+consumer wants it.
+
+**It is the ball pane's aimed view one noun along** (§13.9's placement rule at
+a second site): `science` names a workspace and nothing else, so its control
+sits on that workspace's own conversation list, beside `workspace-balls`.
+Opening it is the ask — and here that is sharper than the trail's version of
+the same rule, because `science` is **derived when it is asked** and nothing
+behind it is stored: the same row a minute later is a statement about the
+world a minute later, so a posted-once read would paint a moment that had
+passed.
+
+**A fan is the start with n in the middle, not a second start path** — which
+is why it is `Act::Fan` beside `Act::Prepare` and `Act::Prompt` rather than a
+third arm of the handle-act enum: it carries a prepared body the other two
+have no use for. And it is a **chain rather than a gesture**: stage, spread,
+then one ordinary firing per candidate. **The seat fires them**, because a
+candidate prepared and never fired is a worktree balls made for nothing, so
+firing is the completion of the act rather than a convenience offered
+afterwards.
+
+**What that forfeits is stated rather than hidden.** Upstream's terminal fires
+each candidate itself *"with whatever variation you want between them"*, and
+this seat fires n with one goal. Per-candidate variation is a surface — n
+fields, or one edited n times — and it arrives with the ball that builds it;
+what it is not is a reason to leave n worktrees empty. The first failure in
+the chain is the whole gesture's sentence, and the listing is what says what
+actually exists.
+
+**The ball is always named.** All three take an optional `ball` upstream, and
+omitting it is the bare project-repo gesture aimed at the integration branch —
+a subject no row here names. Every gesture is composed off a science row that
+names one, so a ball-less frame is refused **by name**:
+`tests/conformance/requests.rs` records `fan` as `Partial { reads: 3 }` and
+`deliver` and `retire` as `Partial { reads: 1 }`, each with that reason.
+
+**The count is a stepper floored at two, and the floor is the CONTROL's.**
+Upstream reads 1 and 0 as *materialize nothing and hand back the ordinary
+claim binding*, which is a start and this app already has one (§13.2's
+starter). So two is the smallest thing the control can mean — and the codec
+still reads a frame stating either, because an encoder's inverse that refused
+a number it can spell would be refusing a shape it understands. That is the
+same split §13.8 draws for an arming: a floor is a property of the glass.
+
+**Nothing here is armed** (lernie §4.36, transferring §13.8's test): an arming
+is for an act whose product is that its subject is gone. `deliver` advances a
+ref by the ordinary recursive delivery — git holds what it moved, the ball is
+not closed. `retire` releases a worktree and changes no delivery target. What
+they get instead is the unmaking's ORDER: accept above release.
+
+**Two receipts are worth a sentence on success**, which is `acts::held`'s rule
+at a second site — the banner says the one thing an operator cannot see by
+looking at the screen they are on. Whether a retirement's source ref went with
+its worktree is this project's own declared retention acting, invisible on
+this listing, and the engine states it; the seat PAINTS that answer rather
+than predicting a policy it has not read. And a delivery that landed **no
+commit** moved nothing — a silent success there would report a delivery that
+did not happen.
+
+**Four columns ride through unread and each is a decision** (`codec::candidates`
+carries them): `usage`'s four counters, which is the ledger `codec::balls`
+already declines to hold and which states no total to carry instead; `pins`
+and `base`/`governing`, what an attempt was frozen against, which is the config
+surface's question and unbuilt here; the diff's `files` list and its
+`source`/`target` refs, which are the work-review surface's (bl-5a56); and
+`conversation`, an address this screen offers no way to open.
+
+**What the walk reaches.** One new step: `science`, tapped from the workspace's
+conversation list. The engine is not dialled, so what it captures is a screen
+that opened and said nothing was read — and the four controls, three of them
+disabled with the reason beside them, which is what the parity gate asks of
+them either way.
+
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -3070,7 +3169,7 @@ The groups mirror the seat's own, one ball each:
 | work review | files, work-diff | bl-5a56 |
 | conversation machinery reads | agent, steps, step, rail, governing, inbox — **landed** (§13.11) | bl-146b |
 | the ball pane | balls, workspace-balls, board — **landed** (§13.9); close, assign, release, create, update | bl-d587, then bl-f36e |
-| candidates | fan, retire, deliver, science | bl-2f17 |
+| candidates | fan, retire, deliver, science — **landed** (§13.12) | bl-2f17 |
 | fleet and watch | fleet, disband, arm, disarm | bl-477e |
 | trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8); seen — **landed** (§13.8) | bl-35bd, bl-2889 |
 | admin and armed deletions | config, marks, scan, delete-agent, delete-workspace | bl-f645 |

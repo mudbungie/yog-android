@@ -85,6 +85,9 @@ pub(super) struct Standing {
     /// terms exactly: written only by that screen's own gesture, because
     /// nothing paints it unless somebody opened it.
     pub(super) records: Option<crate::codec::Records>,
+    /// **What the candidates screen last read** (DESIGN §13.12), on the same
+    /// terms: written only by that screen's own gesture.
+    pub(super) candidates: Option<crate::codec::Spread>,
     /// **The last needle's answer** (bl-4c2b), carried between passes for the
     /// reason the counters above are: it is a gesture's answer, not a pass's,
     /// and a pass that re-reads the world must not drop the search the
@@ -121,6 +124,7 @@ impl Standing {
             trail: Vec::new(),
             pane: None,
             records: None,
+            candidates: None,
             found: None,
             last: snap.clone(),
             failed: 0,

@@ -106,6 +106,17 @@
 # records unpaintable under another is `Records::about`, all asserted by host
 # tests. What is left here is which widget shows which of them.
 #
+# `src/shell/screens/world/candidates.rs` and `candidates/acts.rs` are the
+# candidates screen (bl-2f17), the same class again: a `ScrollArea` of labels,
+# five buttons and a stepper, `cfg(target_os = "android")` to the last line.
+# Everything they decide is somewhere else and under the floor — WHAT an
+# attempt row says and which act its handle earns is `codec::candidates`, WHAT
+# a fan actually does (stage, spread, fire each) is `seat::acts::candidate`,
+# and the pairing that makes one workspace's listing unpaintable under another
+# is `Spread::about`, all asserted by host tests. What is left here is which
+# widget shows which of them, and the count — a number the control floors and
+# the codec does not.
+#
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
 [default]
 exclude-files = [
@@ -138,6 +149,8 @@ exclude-files = [
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",
     "src/shell/screens/world/balls.rs",
+    "src/shell/screens/world/candidates.rs",
+    "src/shell/screens/world/candidates/acts.rs",
     "src/shell/screens/world/trail.rs",
     "src/shell/screens/world/waiting.rs",
     "src/shell/transcript.rs",

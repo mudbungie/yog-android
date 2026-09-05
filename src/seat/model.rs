@@ -203,6 +203,34 @@ impl Model {
         let _ = self.cmds.send(Cmd::Step(seq));
     }
 
+    /// **Read the focused workspace's attempts** (§13.12). The rows arrive in
+    /// the next snapshot like every other read's, and what was already there
+    /// keeps painting meanwhile — under its own workspace, never under this
+    /// one.
+    pub fn list_candidates(&self) {
+        let _ = self.cmds.send(Cmd::Science);
+    }
+
+    /// **Fire one of the candidates screen's acts** (§13.12) at the obligation
+    /// the row named. Not idempotent, any of the three — a repeated fan is n
+    /// more worktrees — so nothing here is ever sent twice: a lost reply
+    /// becomes the banner's sentence and the listing is what settles it.
+    pub fn candidate_act(&self, project: String, ball: String, act: crate::codec::CandidateAct) {
+        let _ = self.cmds.send(Cmd::Candidate(project, ball, act));
+    }
+
+    /// **Spread one obligation over `n` candidates and fire each with
+    /// `goal`** (§13.12). One handle rather than three: a fan is a chain, and
+    /// what the frame knows about it is the count and the instruction.
+    pub fn fan(&self, project: String, ball: String, n: usize, goal: String) {
+        let _ = self.cmds.send(Cmd::Fan {
+            project,
+            ball,
+            n,
+            goal,
+        });
+    }
+
     /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in
     /// any sense worth relying on and never re-sent: the watermark lands on
     /// the trail as it stood, and the trail read after it is what says so.
