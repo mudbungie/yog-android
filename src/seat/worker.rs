@@ -94,6 +94,13 @@ pub(super) fn run(
             // standing set this loop is already re-asking for: the transcript,
             // the row's flight, the row's attention mark. So the gesture wakes
             // the pass and the pass is the recovery.
+            // **An answer needs no read after it either**: what it did lands
+            // in the standing set this loop already re-asks — the transcript,
+            // the row's flight, and the queue row that stops carrying the
+            // parked call the moment it is answered.
+            Ok(Cmd::Answer(verdict)) => {
+                note = super::acts::answer(seat, &focus, verdict).note();
+            }
             Ok(Cmd::Row(agent, act)) => {
                 note = super::acts::row(seat, &focus, agent, act).note();
             }

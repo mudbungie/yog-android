@@ -48,6 +48,9 @@ pub(super) enum Cmd {
     StopTurn(bool),
     /// Re-prompt the focused conversation from where it stands.
     Nudge,
+    /// **Answer the tool call parked at the focused conversation** (§13.7):
+    /// release it, decline it, or keep it parked.
+    Answer(crate::codec::Verdict),
     /// **One act on a NAMED conversation** (§13.5): the agent the row's menu
     /// was opened on, and which of the three it fired. One command for the
     /// group because they are one gesture — the roster has one home, and it
@@ -167,6 +170,17 @@ impl Model {
     /// conversation is at rest.
     pub fn nudge(&self) {
         let _ = self.cmds.send(Cmd::Nudge);
+    }
+
+    /// **Answer the parked tool call** in the focused conversation (§13.7,
+    /// bl-b39d). The subject is the focus and not a row: answering is what an
+    /// operator does after reading what the call is about to do, which is a
+    /// thing only the transcript screen shows.
+    ///
+    /// Not idempotent and never re-sent: the queue read that no longer carries
+    /// the call is what settles a lost one (`seat::acts::held`).
+    pub fn answer(&self, verdict: crate::codec::Verdict) {
+        let _ = self.cmds.send(Cmd::Answer(verdict));
     }
 
     /// **Fire one of the conversation row's acts** (§13.5, bl-f97c) at the

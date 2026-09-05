@@ -42,7 +42,7 @@ use crate::seat::{Focus, Snapshot};
 /// `crate::envelope` gives the enroll payload, for its reason: a version
 /// with no name is read out of whatever JSON happens to be there.
 const TAG: &str = "yog-seat-cache";
-const VERSION: u64 = 3;
+const VERSION: u64 = 4;
 
 /// **What one answered pass carried, in the engine's own words.** Present
 /// exactly as deep as the focus went: a pass under no workspace asks one
@@ -66,6 +66,17 @@ pub struct Envelopes {
     /// with the options because it is the same per-workspace fact, so a
     /// resumed seat's controls are seeded before the wire answers.
     pub roles: Option<Value>,
+    /// **The decision queue** (§13.7, bl-b39d): the parked tool call the
+    /// capability band answers, kept so a resumed seat paints one it already
+    /// knew about instead of an empty band.
+    ///
+    /// **It rides beside the depths rather than inside them, and pairs with
+    /// nothing.** Every other envelope here is paintable only under the focus
+    /// it was asked at, which is why the pairing law below refuses a file
+    /// carrying one deeper than its focus. A queue row addresses ITSELF —
+    /// workspace and agent, in the words the gestures take — so there is no
+    /// focus it could be mispainted under, and its absence is ordinary.
+    pub attention: Option<Value>,
 }
 
 /// Store one pass. The `Err` is for the caller's log and nothing else — a
@@ -78,6 +89,7 @@ pub fn write(path: &Path, focus: &Focus, kept: &Envelopes) -> Result<(), String>
         "workspaces": kept.workspaces,
         "conversations": kept.conversations,
         "transcript": kept.transcript,
+        "attention": kept.attention,
         "options": { "workspace": kept.options_workspace,
                      "providers": kept.providers,
                      "models": kept.models,
@@ -120,7 +132,7 @@ pub fn read(path: &Path) -> Option<(Focus, Snapshot, Envelopes)> {
         focus: focus.clone(),
         ..Snapshot::default()
     };
-    let kept = options(&value, &focus)?;
+    let mut kept = options(&value, &focus)?;
     match decoded(&value, "workspaces")? {
         Reply::Workspaces { rows, .. } => snap.workspaces = rows,
         _ => return None,
@@ -136,6 +148,13 @@ pub fn read(path: &Path) -> Option<(Focus, Snapshot, Envelopes)> {
             Reply::Transcript(rows) => snap.transcript = rows,
             _ => return None,
         }
+    }
+    if let Some(queue) = held(&value, "attention") {
+        match reply::decode(&queue).ok()?.ok()? {
+            Reply::Attention(rows) => snap.queue = rows,
+            _ => return None,
+        }
+        kept.attention = Some(queue);
     }
     Some((focus, snap, kept))
 }

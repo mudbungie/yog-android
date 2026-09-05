@@ -16,6 +16,9 @@ use crate::cache::Envelopes;
 use crate::codec::reply::Reply;
 use crate::codec::{Ask, Gesture, encode};
 use crate::transport::Seat;
+use fill::fill;
+
+mod fill;
 
 /// **How many consecutive failed passes an error waits for.** The cadence is
 /// the clock (bl-3202): passes are one rest apart, so a second consecutive
@@ -165,44 +168,6 @@ impl Standing {
         };
         out
     }
-}
-
-/// The standing questions, as deep as the focus goes. The first failure
-/// stops the walk: an unreachable engine is one sentence, not three.
-fn fill(
-    seat: &Seat,
-    focus: &Focus,
-    snap: &mut Snapshot,
-    kept: &mut Envelopes,
-) -> Result<(), String> {
-    let (reply, envelope) = answer(seat, &Ask::Workspaces)?;
-    snap.workspaces = match reply {
-        Reply::Workspaces { rows, .. } => rows,
-        other => return Err(kind_err("workspaces", &other)),
-    };
-    kept.workspaces = Some(envelope);
-    let Some(workspace) = focus.workspace.clone() else {
-        return Ok(());
-    };
-    let ask = Ask::Conversations {
-        workspace: workspace.clone(),
-    };
-    let (reply, envelope) = answer(seat, &ask)?;
-    snap.conversations = match reply {
-        Reply::Conversations(rows) => rows,
-        other => return Err(kind_err("conversations", &other)),
-    };
-    kept.conversations = Some(envelope);
-    let Some(agent) = focus.agent.clone() else {
-        return Ok(());
-    };
-    let (reply, envelope) = answer(seat, &Ask::Transcript { workspace, agent })?;
-    snap.transcript = match reply {
-        Reply::Transcript(rows) => rows,
-        other => return Err(kind_err("transcript", &other)),
-    };
-    kept.transcript = Some(envelope);
-    Ok(())
 }
 
 /// One standing question, and **the engine's own envelope beside the rows it

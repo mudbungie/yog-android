@@ -19,14 +19,17 @@ fn stopping_sends_the_op_and_carries_litanys_verdict() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
+        vec![super::queue_quiet()],
         vec![super::outcome(true, "")], // the stop
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
+        vec![super::queue_quiet()],
         vec![super::outcome(false, "nothing was running")], // stop all
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
+        vec![super::queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -43,12 +46,12 @@ fn stopping_sends_the_op_and_carries_litanys_verdict() {
     );
     drop(model);
     let requests = served.join().unwrap();
-    let stopped: Value = serde_json::from_slice(&requests[5]).unwrap();
+    let stopped: Value = serde_json::from_slice(&requests[6]).unwrap();
     assert_eq!(
         stopped,
         json!({ "op": "stop", "workspace": "home", "agent": "a1", "children": false })
     );
-    let all: Value = serde_json::from_slice(&requests[9]).unwrap();
+    let all: Value = serde_json::from_slice(&requests[11]).unwrap();
     assert_eq!(all["children"], json!(true));
     // Nothing was deposited: a `/stop` line is content, and content wakes the
     // driver it meant to kill.
@@ -75,6 +78,7 @@ fn a_stop_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
+        vec![super::queue_quiet()],
         vec![ws_reply()], // the stop, answered with a roster
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
@@ -103,10 +107,12 @@ fn nudging_re_prompts_without_depositing_anything() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
+        vec![super::queue_quiet()],
         vec![nudged],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
+        vec![super::queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -117,7 +123,7 @@ fn nudging_re_prompts_without_depositing_anything() {
     });
     drop(model);
     let requests = served.join().unwrap();
-    let asked: Value = serde_json::from_slice(&requests[5]).unwrap();
+    let asked: Value = serde_json::from_slice(&requests[6]).unwrap();
     assert_eq!(
         asked,
         json!({ "op": "nudge", "workspace": "home", "agent": "a1" })
@@ -144,6 +150,7 @@ fn a_nudge_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![super::tr_reply()],
+        vec![super::queue_quiet()],
         vec![ws_reply()], // the nudge, answered with a roster
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());

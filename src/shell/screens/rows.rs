@@ -55,10 +55,16 @@ const GAP: f32 = 0.0;
 /// decide. The empty forms are the roster; the composer's text is put into
 /// whichever field each takes at the moment it fires (`RowAct::with`).
 ///
-/// `fork` is the fourth act of this group's roster and is absent: its fork
-/// point is a ref no read this seat makes can name, so it would be an item
-/// that cannot fire (`codec::row`, bl-99fd).
-fn roster() -> [RowAct; 3] {
+/// `fork` is absent from this roster: its fork point is a ref no read this
+/// seat makes can name, so it would be an item that cannot fire (`codec::row`,
+/// bl-99fd).
+///
+/// **The floor pair is here and the answer is not** (§13.7, bl-b39d). Revoking
+/// a conversation's tool auto-approval needs nothing typed and nothing read —
+/// it is standing policy on a conversation, this menu's exact class — while
+/// answering a parked call means READING the call first, so it lives on the
+/// transcript screen where the call is (`controls/held.rs`).
+fn roster() -> [RowAct; 5] {
     [
         RowAct::Interrupt {
             content: String::new(),
@@ -67,6 +73,8 @@ fn roster() -> [RowAct; 3] {
         RowAct::Flag {
             reason: String::new(),
         },
+        RowAct::Revoke,
+        RowAct::Restore,
     ]
 }
 

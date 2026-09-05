@@ -33,10 +33,9 @@
 # §8 forbids it to derive.
 fork = "unbuilt: its fork point is a ref no read here names — the picking surface is bl-99fd (DESIGN §13.5)"
 
-# --- Unbuilt: the held tool call (bl-b39d) ----------------------------------
-answer = "unbuilt: the held-call surface — release, decline, keep parked (bl-b39d; DESIGN §16.2)"
-revoke = "unbuilt: the auto-approval pair beside the held-call surface (bl-b39d; DESIGN §16.2)"
-restore = "unbuilt: the auto-approval pair beside the held-call surface (bl-b39d; DESIGN §16.2)"
+# The held tool call's three — answer, revoke, restore — were here, and are
+# gone: the capability band answers the parked call on the transcript screen
+# and the floor pair rides the row menu (DESIGN §13.7, bl-b39d).
 
 # --- Unbuilt: work review (bl-5a56) -----------------------------------------
 files = "unbuilt: work review from the glass (bl-5a56; DESIGN §16.2)"
@@ -76,7 +75,7 @@ disarm = "unbuilt: fleet and watch (bl-477e; DESIGN §16.2)"
 ops = "unbuilt: the trail surface (bl-35bd; DESIGN §16.2)"
 ack = "unbuilt: the trail surface (bl-35bd; DESIGN §16.2)"
 clear-trail = "unbuilt: the trail surface (bl-35bd; DESIGN §16.2)"
-attention = "unbuilt: the whole-queue attention surface behind the per-row marks (bl-35bd; DESIGN §16.2)"
+attention = "read at cadence under an open conversation to say which call is parked (DESIGN §13.7); no gesture asks for it, and the whole-queue surface — the rows, their signals, the acks — is still unbuilt (bl-35bd)"
 
 # --- Unbuilt: admin and armed deletions (bl-f645) ---------------------------
 config = "unbuilt: admin surface (bl-f645; DESIGN §16.2)"

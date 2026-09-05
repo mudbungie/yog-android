@@ -84,6 +84,82 @@ fn the_three_row_acts_address_the_row_and_not_the_focus() {
     );
 }
 
+/// **The floor pair** (§13.7, bl-b39d): both envelopes, and the receipt read
+/// as the floor that stands AFTERWARDS rather than as an echo of what was
+/// asked. Agreement is silence; a disagreement is the one sentence an
+/// operator cannot get any other way, because no read this seat makes says
+/// which floor is standing.
+#[test]
+fn the_floor_pair_reads_what_stands_rather_than_what_was_asked() {
+    let floored = |standing: bool| {
+        json!({ "ok": true, "kind": "floored", "standing": standing })
+            .to_string()
+            .into_bytes()
+    };
+    let (mut model, served) = super::model_against(vec![
+        vec![ws_reply()],
+        vec![nothing_set()],
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![floored(true)], // revoke: what was asked for
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![floored(true)], // restore: an ancestor is still revoked
+        vec![ws_reply()],
+        vec![conv_reply()],
+    ]);
+    settle(&mut model, &|s| !s.workspaces.is_empty());
+    model.focus_workspace(Some("home".into()));
+    settle(&mut model, &|s| !s.conversations.is_empty());
+    model.row_act("a1".into(), RowAct::Revoke);
+    settle(&mut model, &|s| {
+        s.error.is_none() && !s.conversations.is_empty()
+    });
+    model.row_act("a1".into(), RowAct::Restore);
+    let snap = settle(&mut model, &|s| s.error.is_some());
+    assert_eq!(
+        snap.error.as_deref(),
+        Some("restore: the conversation stays floored — an ancestor of it is still revoked")
+    );
+    drop(model);
+    let requests = served.join().unwrap();
+    let sent = |at: usize| serde_json::from_slice::<Value>(&requests[at]).unwrap();
+    assert_eq!(
+        sent(4),
+        json!({ "op": "revoke", "workspace": "home", "agent": "a1" })
+    );
+    assert_eq!(
+        sent(7),
+        json!({ "op": "restore", "workspace": "home", "agent": "a1" })
+    );
+}
+
+/// The other half of the same reading, which should never happen and is said
+/// anyway: a revoke the engine took that left no floor standing.
+#[test]
+fn a_revoke_that_left_no_floor_standing_says_so() {
+    let (mut model, _s) = super::model_against(vec![
+        vec![ws_reply()],
+        vec![nothing_set()],
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![
+            json!({ "ok": true, "kind": "floored", "standing": false })
+                .to_string()
+                .into_bytes(),
+        ],
+    ]);
+    settle(&mut model, &|s| !s.workspaces.is_empty());
+    model.focus_workspace(Some("home".into()));
+    settle(&mut model, &|s| !s.conversations.is_empty());
+    model.row_act("a1".into(), RowAct::Revoke);
+    let snap = settle(&mut model, &|s| s.error.is_some());
+    assert_eq!(
+        snap.error.as_deref(),
+        Some("revoke: the engine took it and says no floor stands over the conversation")
+    );
+}
+
 /// A refusal is the engine's own sentence, named by the op that earned it —
 /// the same shape `stop` has had since bl-48fa.
 #[test]

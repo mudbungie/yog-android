@@ -27,13 +27,14 @@ use super::app::Shell;
 use crate::seat::Snapshot;
 
 mod drop;
+mod held;
 mod pick;
 mod tune;
 
 /// One row of controls, given its own height for the reason every row in this
 /// app is (bl-193c): a `left_to_right(Center)` layout handed the rest of the
 /// screen centres its widgets in it.
-fn band(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
+pub(super) fn band(ui: &mut egui::Ui, add: impl FnOnce(&mut egui::Ui)) {
     ui.allocate_ui_with_layout(
         egui::vec2(ui.available_width(), super::mark::TOUCH),
         egui::Layout::left_to_right(egui::Align::Center),
@@ -119,6 +120,13 @@ impl Shell {
                     }
                 });
             }
+            // **A third band, and only where a call is parked** (§13.7,
+            // bl-b39d). It is added last, so in this bottom-up block it stands
+            // highest — directly under the composer, where what it says is
+            // read before what it offers is tapped. A held call is a sentence
+            // and its three answers, which is why it does not squeeze into the
+            // row above: nothing else here has anything to read.
+            self.capability(ui, snap);
         });
     }
 

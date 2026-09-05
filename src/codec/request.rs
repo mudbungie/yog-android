@@ -53,6 +53,15 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         "search" => Gesture::Ask(Ask::Search {
             text: str_of(o, "text")?,
         }),
+        "attention" => Gesture::Ask(Ask::Attention),
+        "answer" => {
+            let (workspace, agent, verdict) = super::hold::decode(o)?;
+            Gesture::Act(Act::Answer {
+                workspace,
+                agent,
+                verdict,
+            })
+        }
         "stop" => Gesture::Act(Act::Stop {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
@@ -70,7 +79,13 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
         // gesture: `codec::row` states the subject once and the choice is its
         // own enum. `fork` is deliberately not among them and refuses below
         // by name — the reason is in that file's header, not a `_` here.
-        "interrupt" | "retarget" | "flag" => Gesture::Act(super::row::decode(op.as_str(), o)?),
+        // The five the row menu fires (DESIGN §13.5, §13.7). One arm,
+        // because one gesture: `codec::row` states the subject once and the
+        // choice is its own enum. `fork` is deliberately not among them and
+        // refuses below by name — the reason is in that file's header.
+        "interrupt" | "retarget" | "flag" | "revoke" | "restore" => {
+            Gesture::Act(super::row::decode(op.as_str(), o)?)
+        }
         "roles" => Gesture::Ask(Ask::Roles {
             workspace: str_of(o, "workspace")?,
         }),

@@ -38,11 +38,22 @@ pub(super) fn deep() -> Focus {
     }
 }
 
+pub(super) fn queue() -> Value {
+    json!({ "ok": true, "kind": "attention",
+            "rows": [{ "workspace": "home", "agent": "a1", "display": "d",
+                       "state": "stopped", "uncertain": false, "signals": ["held"],
+                       "preview": "", "age_secs": 3, "pending": 0,
+                       "held": { "tool": "Bash", "tool_use": "toolu_1",
+                                 "reason": "writes" },
+                       "failure": null, "flag": null }] })
+}
+
 pub(super) fn all() -> Envelopes {
     Envelopes {
         workspaces: Some(ws()),
         conversations: Some(convs()),
         transcript: Some(transcript()),
+        attention: Some(queue()),
         ..Envelopes::default()
     }
 }
@@ -64,6 +75,37 @@ fn a_stored_pass_reads_back_as_the_snapshot_it_was() {
     assert_eq!(snap.conversations[0].root_id, "a1");
     assert_eq!(snap.transcript[0].name, "001");
     assert_eq!(snap.error, None);
+    // **The queue rides back too** (§13.7): a resumed seat paints a parked
+    // call it already knew about instead of an empty band.
+    assert_eq!(
+        crate::codec::queue::held_at(&snap.queue, "home", "a1")
+            .unwrap()
+            .tool,
+        "Bash"
+    );
+}
+
+/// **The queue pairs with nothing, and that is the point** (§13.7). Every
+/// other envelope here is paintable only under the focus it was asked at; a
+/// queue row addresses ITSELF, so a file carrying one under a shallower focus
+/// is read rather than discarded — and one of the wrong kind still discards,
+/// because a misread is a misread at any depth.
+#[test]
+fn the_queue_rides_the_file_under_any_focus_and_still_must_be_readable() {
+    let at = path();
+    let kept = Envelopes {
+        workspaces: Some(ws()),
+        attention: Some(queue()),
+        ..Envelopes::default()
+    };
+    write(&at, &Focus::default(), &kept).unwrap();
+    let (_, snap, back) = read(&at).unwrap();
+    assert_eq!(snap.queue.len(), 1);
+    assert_eq!(back.attention, Some(queue()));
+    let mut wrong = kept;
+    wrong.attention = Some(transcript());
+    write(&at, &Focus::default(), &wrong).unwrap();
+    assert!(read(&at).is_none());
 }
 
 /// A shallow focus stores one envelope and reads back with the two deeper

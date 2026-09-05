@@ -8,8 +8,8 @@
 //! frame reads it, which is the one place it exists.
 
 use super::{
-    Model, cache_in, conv_flying, conv_reply, material, nothing_set, pki, serve_many, settle,
-    tr_reply, ws_reply,
+    Model, cache_in, conv_flying, conv_reply, material, nothing_set, pki, queue_quiet, serve_many,
+    settle, tr_reply, ws_reply,
 };
 use crate::codec::EntryKind;
 use crate::transport::Seat;
@@ -52,14 +52,17 @@ fn a_writing_conversation_streams_its_tail_between_passes() {
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
+        vec![queue_quiet()],
         vec![follow_reply("first I", "then this")],
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
+        vec![queue_quiet()],
         vec![follow_reply("first I", "then this, and more")],
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
+        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -96,14 +99,17 @@ fn a_finished_turn_drops_the_fold_it_was_writing() {
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
+        vec![queue_quiet()],
         vec![follow_reply("", "half an answer")],
         // The next pass finds it at rest: no flight, no lane, no fold.
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![queue_quiet()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -126,14 +132,17 @@ fn a_live_read_that_fails_reaches_the_banner_and_the_lane_goes_on() {
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
+        vec![queue_quiet()],
         vec![ws_reply()], // the follow read, answered with a roster
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
+        vec![queue_quiet()],
         vec![follow_reply("", "recovered")],
         vec![ws_reply()],
         vec![conv_flying()],
         vec![tr_reply()],
+        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());

@@ -20,7 +20,9 @@ use serde_json::{Value, json};
 mod conv;
 pub(crate) mod fields;
 pub mod follow;
+pub mod hold;
 pub mod pick;
+pub mod queue;
 pub mod reply;
 pub mod request;
 mod row;
@@ -32,7 +34,9 @@ mod ws;
 
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use follow::Stream;
+pub use hold::{Answered, Verdict};
 pub use pick::{Effort, ProviderRow, RoleRow};
+pub use queue::{Held, QueueRow};
 pub use request::decode;
 pub use row::RowAct;
 pub use search::{Address, Found, Hit, HitField};
@@ -91,6 +95,15 @@ pub enum Act {
         agent: String,
         act: RowAct,
     },
+    /// **Answer the tool call parked at a conversation** (yog §8.6, DESIGN
+    /// §13.7). The subject is the conversation and never the call: the engine
+    /// reads the held mark itself at fire time, so this gesture cannot be
+    /// spent on a call that is no longer the one held.
+    Answer {
+        workspace: String,
+        agent: String,
+        verdict: Verdict,
+    },
     /// **Set a role's reasoning level** (REMOTE §9.4, bl-dfbb) — how much
     /// reasoning its model calls request. `None` is `off`: the absence of a
     /// level rather than a fourth level, which is what the engine reads.
@@ -148,6 +161,11 @@ pub enum Ask {
     /// addresses are the focuses this seat already takes, so a hit is fed
     /// straight back as one rather than resolved through anything.
     Search { text: String },
+    /// **The decision queue** (yog §8.5): every conversation waiting on the
+    /// operator. This seat reads it for the parked tool call each row may
+    /// carry — the one thing on the wire that must be *answered* rather than
+    /// noticed — and paints that where the answer is given (DESIGN §13.7).
+    Attention,
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here
@@ -181,6 +199,12 @@ pub fn encode(gesture: &Gesture) -> Value {
         }
         Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
         Gesture::Ask(Ask::Search { text }) => json!({ "op": "search", "text": text }),
+        Gesture::Ask(Ask::Attention) => json!({ "op": "attention" }),
+        Gesture::Act(Act::Answer {
+            workspace,
+            agent,
+            verdict,
+        }) => hold::encode(workspace, agent, *verdict),
         Gesture::Ask(Ask::Follow { workspace, agent }) => {
             json!({ "op": "follow", "workspace": workspace, "agent": agent })
         }

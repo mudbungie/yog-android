@@ -123,6 +123,17 @@ pub(super) fn tr_reply() -> Vec<u8> {
     .into_bytes()
 }
 
+/// **The decision queue with nothing parked in it** — the fourth question a
+/// pass asks once a conversation is open (§13.7, bl-b39d), and the answer
+/// almost every script gives it. Named rather than written inline because a
+/// script is read as a sequence, and an anonymous empty frame in one teaches
+/// nobody which read it answers.
+pub(super) fn queue_quiet() -> Vec<u8> {
+    json!({ "ok": true, "kind": "attention", "rows": [] })
+        .to_string()
+        .into_bytes()
+}
+
 pub(super) fn prepared() -> Vec<u8> {
     json!({ "ok": true, "kind": "prepared",
             "prepared": { "workspace": "home", "binding": null, "lineage": null,
@@ -160,6 +171,7 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
 mod deposit;
 mod doubt;
 mod grace;
+mod held;
 mod live;
 mod loaded;
 mod pick;

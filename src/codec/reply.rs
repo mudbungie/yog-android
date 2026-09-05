@@ -14,7 +14,9 @@ use serde_json::{Map, Value};
 
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
 use super::follow::{Stream, stream_of};
+use super::hold::{self, Answered};
 use super::pick::{self, ProviderRow, RoleRow};
+use super::queue::{self, QueueRow};
 use super::search::{self, Found};
 use super::start::{self, Prepared};
 use super::tools::{Capture, Invocation, capture_of, invocation_of};
@@ -95,6 +97,17 @@ pub enum Reply {
     /// The other two row acts answer `outcome`, which this codec already
     /// reads; only the flag has a receipt of its own.
     Flagged,
+    /// **The decision queue** (yog §8.5): every conversation waiting on the
+    /// operator, each carrying the parked call this seat answers (§13.7).
+    Attention(Vec<QueueRow>),
+    /// **What an answer landed on** (§8.6): the call, the verdict, and whether
+    /// the branch was driven on after it.
+    Answered(Answered),
+    /// **The floor that stands over the conversation now** (§8.6) — re-derived
+    /// by the engine after the write, never an echo of what was asked: a
+    /// restore under a still-revoked ancestor leaves the conversation floored,
+    /// and this is the field that says so.
+    Floored { standing: bool },
     /// **What the needle found** (yog DESIGN §8.5). The answer carries its
     /// own question, so a search that matched nothing is told apart from no
     /// search at all — see `codec::search`.
@@ -133,6 +146,9 @@ impl Reply {
             Self::Flagged => "flagged",
             Self::Follow(_) => "follow",
             Self::Search(_) => "search",
+            Self::Attention(_) => "attention",
+            Self::Answered(_) => "answered",
+            Self::Floored { .. } => "floored",
         }
         .to_owned()
     }
@@ -175,6 +191,11 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "flagged" => Reply::Flagged,
         "follow" => Reply::Follow(stream_of(o)?),
         "search" => Reply::Search(search::found_of(o)?),
+        "attention" => Reply::Attention(rows(o, queue::row)?),
+        "answered" => Reply::Answered(hold::answered_of(o)?),
+        "floored" => Reply::Floored {
+            standing: bool_of(o, "standing")?,
+        },
         "routed" => Reply::Routed {
             invocation: str_of(o, "invocation")?,
             capture: opt_val(o, "capture", capture_of)?,

@@ -86,7 +86,7 @@ pub enum Tone {
     InFlight,
 }
 
-const STATES: [(&str, AgentState); 4] = [
+pub(super) const STATES: [(&str, AgentState); 4] = [
     ("live", AgentState::Live),
     ("in-flight", AgentState::InFlight),
     ("quiescent", AgentState::Quiescent),

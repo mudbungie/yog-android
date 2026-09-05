@@ -1668,6 +1668,78 @@ design. That is the honest state — the gate proves the affordance is reachable
 and what the answer looks like is asserted in host tests over the codec and the
 seat instead.
 
+### 13.7 The parked tool call, and the two ways to answer one (bl-b39d)
+
+`src/codec/queue.rs`, `src/codec/hold.rs`, `src/seat/acts/held.rs`,
+`src/shell/controls/held.rs`.
+
+The capability boundary parks a tool call before it runs and waits for a
+person. That is the one thing on this wire an operator must **answer** rather
+than notice, and answering it from a pocket is the workflow §17's notification
+exists to start.
+
+**Whether a call is parked is the engine's statement, never a reading taken
+here.** The transcript already shows a tool call with no result and this seat
+already labels one *running* — but *unresolved* is not *held*: a driver that
+died leaves exactly the same tail. Guessing would put an approval in front of
+an operator on a coincidence, which is §8's rule at the one site where getting
+it wrong means authorizing an action. So the fact comes from the decision
+queue (`attention`), whose row carries the tool, the call's id and **the
+control's own sentence about it** — REMOTE §8.1 says that sentence must cross
+unrewritten, because rewriting it *"would put a different call in front of the
+operator"*.
+
+**The queue is asked at the depth that spends it.** It names no workspace and
+no conversation — it is the whole world's queue — but it joins the standing
+set only under an open conversation, which is the only screen that paints it. A
+phone's radio is not free, and a read nothing shows is a cost with no
+answer. Its rows address themselves (workspace and agent, in the words the
+gestures take), so nothing about being read under one focus binds it to that
+focus: it rides the §14 cache beside the depths rather than inside them, and
+pairs with nothing.
+
+**The band paints only where a call is parked**, as a third band in the
+controls block (§13.2) — the engine's sentence with the three verdicts under
+it, directly beneath the composer where what it says is read before what it
+offers is tapped. `pass` releases the call, `refuse` declines it in band and
+`hold` keeps it parked; none is armed, because the destructive thing is the
+call itself and the operator is reading it as they decide. Nothing here stops
+an agent: yog's own note is that a stop mid-tool-window wedges the branch
+permanently, so declining is in-band and parking is a park.
+
+**The one success that still owes a sentence.** A releasing verdict that did
+not advance the branch left the answer recorded and the conversation exactly
+where it was — nothing moves until something advances it — and that is the one
+outcome the screen cannot show. Everything else is silent, because the queue
+read is the answer: a call that was answered is a call the next read no longer
+carries, which is also the recovery for a lost reply and the reason none of
+this is ever re-sent (§19).
+
+**The floor pair rides the row menu, not the band** (§13.5). Revoking a
+conversation's tool auto-approval is standing policy on a conversation — it
+needs nothing typed and nothing read, it kills nothing and discards nothing —
+which is that menu's exact class, and it must be reachable when NOTHING is
+parked, which is when an operator decides that this conversation should stop
+acting alone. Answering is the opposite: it is about one call, and the call has
+to be read first, so it lives where the transcript is.
+
+**Their receipt is what STANDS, not what was asked for.** The engine
+re-derives the floor after the write, and the case it refuses to lie about is
+restoring a conversation whose ancestor is still revoked: the floor stays, and
+the receipt says so. So this seat reads the receipt against what the act asked
+for — agreement is silence, disagreement is the sentence — because no read
+here shows the standing floor at all (it rides the `agent` machinery read,
+bl-146b). Silence on a disagreement would be this app telling an operator they
+got their auto-approval back when they did not.
+
+**What the walk reaches.** The `make screens` cache seed carries the engine's
+own queue answer with its one held row re-addressed at the conversation the
+seed opens, so the band paints on the transcript screens and `act:answer` is
+observed; `act:revoke` and `act:restore` ride the row menu the walk already
+long-presses. All three `parity.toml` lines are deleted. The `attention` line
+stays, re-cited: no gesture asks for that read, and the whole-queue surface —
+the rows, their signals, the acknowledgements — is still bl-35bd's.
+
 ## 14. The paint-first cache (bl-de96)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -2252,7 +2324,7 @@ The groups mirror the seat's own, one ball each:
 | group | ops | ball |
 |---|---|---|
 | conversation acts | interrupt, retarget, flag — **landed** (§13.5); `fork` held back on a read it needs | bl-f97c, then bl-99fd |
-| the held tool call | answer, revoke, restore | bl-b39d |
+| the held tool call | answer, revoke, restore — **landed** (§13.7) | bl-b39d |
 | work review | files, work-diff | bl-5a56 |
 | conversation machinery reads | agent, steps, step, rail, governing, inbox | bl-146b |
 | the ball pane | balls, workspace-balls, board, close, assign, release, create, update | bl-d587 |

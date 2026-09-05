@@ -6,7 +6,9 @@
 //! the read that settles it, and the deposit's fate is counted apart from a
 //! refusal so the composer does not hand its draft back.
 
-use super::{Turn, conv_reply, model_turns, nothing_set, ops, settle, tr_reply, ws_reply};
+use super::{
+    Turn, conv_reply, model_turns, nothing_set, ops, queue_quiet, settle, tr_reply, ws_reply,
+};
 
 /// The five turns every case here shares: the first pass, the assignments
 /// preload a focus change makes, and the pass that follows it. What comes
@@ -18,6 +20,7 @@ fn focused() -> Vec<Turn> {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![queue_quiet()]),
     ]
 }
 
@@ -27,6 +30,7 @@ fn refresh() -> Vec<Turn> {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![queue_quiet()]),
     ]
 }
 
@@ -170,6 +174,25 @@ fn every_act_in_doubt_names_itself_and_the_read_that_settles_it() {
                     },
                 );
             }),
+        ),
+        // The capability boundary's three (§13.7, bl-b39d). The answer is the
+        // one act here whose settling read is the QUEUE — a call that was
+        // answered is a call the next queue read no longer carries — and the
+        // floor pair is the second group that must say no read here shows it.
+        Case(
+            "answer",
+            "The conversation's queue row says whether the call is still parked",
+            Box::new(|m: &super::Model| m.answer(crate::codec::Verdict::Pass)),
+        ),
+        Case(
+            "revoke",
+            "No read this seat makes says which floor stands",
+            Box::new(|m: &super::Model| m.row_act("a1".into(), crate::codec::RowAct::Revoke)),
+        ),
+        Case(
+            "restore",
+            "No read this seat makes says which floor stands",
+            Box::new(|m: &super::Model| m.row_act("a1".into(), crate::codec::RowAct::Restore)),
         ),
     ];
     for Case(act, read, fire) in cases {

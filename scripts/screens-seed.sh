@@ -89,6 +89,7 @@ workspaces = frame("workspaces")
 body = {"yog-seat-cache": version, "protocol": protocol,
         "focus": {"workspace": None, "agent": None},
         "workspaces": workspaces, "conversations": None, "transcript": None,
+        "attention": None,
         "options": {"workspace": None, "providers": None, "models": {}}}
 # The pairing law `cache::read` enforces on the FILE: rows deeper than the
 # focus they were asked at are unpaintable, and a file carrying them is
@@ -129,6 +130,18 @@ if depth in ("conversations", "transcript", "running"):
             row = next(r for r in rows if r.get("flight") is None)
         body["focus"]["agent"] = row["root_id"]
         body["transcript"] = frame("transcript")
+        # **The parked tool call** (DESIGN §13.7): the capability band paints
+        # only where the engine says a call is held, so the walk seeds the
+        # engine's own queue answer with its one held row addressed at the
+        # conversation this seed opened. Re-addressed and not re-written: the
+        # row is the corpus's, and only the two keys that name a conversation
+        # are moved onto the ones this cache is focused at — the same thing
+        # the running seed does to the two stop gates.
+        queue = frame("attention")
+        held = dict(queue["rows"][0], workspace=workspace,
+                    agent=body["focus"]["agent"])
+        queue["rows"] = [held]
+        body["attention"] = queue
 with open(out, "w") as fh:
     json.dump(body, fh)
 PY

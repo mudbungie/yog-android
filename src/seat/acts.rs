@@ -23,8 +23,10 @@ use crate::transport::Seat;
 use super::pass::kind_err;
 use super::posted::{Posted, faulted};
 
+mod held;
 mod row;
 
+pub(super) use held::answer;
 pub(super) use row::row;
 
 /// Post one message. The receipt is an `outcome` whose `ok` is the server's

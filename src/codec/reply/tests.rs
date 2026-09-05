@@ -1,5 +1,6 @@
 //! The reply envelope: every kind in the slice decodes, the kind-less shape
 //! is a refusal and only a refusal, and malformed bytes earn the outer error.
+mod kinds;
 
 use super::{Reply, decode};
 use serde_json::json;
@@ -108,69 +109,6 @@ fn malformed_envelopes_earn_the_outer_error() {
         decode(&no_rows).unwrap_err(),
         "missing or non-array field \"rows\""
     );
-}
-
-#[test]
-fn every_answer_names_its_own_kind() {
-    use super::super::{Capture, Invocation};
-    let named = [
-        (
-            Reply::Outcome {
-                ok: true,
-                exit: 0,
-                stdout: String::new(),
-                stderr: String::new(),
-            },
-            "outcome",
-        ),
-        (
-            Reply::Workspaces {
-                rows: vec![],
-                stale: None,
-                growth: None,
-            },
-            "workspaces",
-        ),
-        (Reply::Conversations(vec![]), "conversations"),
-        (Reply::Transcript(vec![]), "transcript"),
-        (Reply::Advertised { wrote: false }, "advertised"),
-        (
-            Reply::Invocations(vec![Invocation {
-                id: "i".into(),
-                tool: "t".into(),
-                input: json!({}),
-                cwd: None,
-            }]),
-            "invocations",
-        ),
-        (
-            Reply::Routed {
-                invocation: "i".into(),
-                capture: Some(Capture::default()),
-            },
-            "routed",
-        ),
-        (
-            Reply::Prepared(crate::codec::Prepared {
-                workspace: "home".into(),
-                binding: None,
-                lineage: None,
-                goal: "g".into(),
-                origin: "world".into(),
-            }),
-            "prepared",
-        ),
-        (Reply::Providers(Vec::new()), "providers"),
-        (Reply::Models(Vec::new()), "models"),
-        (Reply::Applied, "applied"),
-        (Reply::Nudged, "nudged"),
-        (Reply::Follow(crate::codec::Stream::default()), "follow"),
-        (Reply::Roles(Vec::new()), "roles"),
-        (Reply::Search(crate::codec::Found::default()), "search"),
-    ];
-    for (reply, kind) in named {
-        assert_eq!(reply.kind(), kind);
-    }
 }
 
 #[test]

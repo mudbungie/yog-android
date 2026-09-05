@@ -52,6 +52,14 @@
 # and the bridge vocabulary it spends live in `src/scan.rs`, which is pure and
 # stays UNDER the floor — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
+# `src/shell/controls/held.rs` is the capability band (bl-b39d), the same class
+# again: three `ui.button` calls under a weak label, `cfg(target_os =
+# "android")` to the last line. Everything it decides is elsewhere and under
+# the floor — WHETHER a call is parked and WHICH one is `codec::queue::held_at`,
+# the three verdicts and their words are `codec::hold`, and what an answer's
+# receipt means is `seat::acts::held` — all asserted by host tests. What is left
+# here is which widget shows which of them.
+#
 # `src/shell/screens/search.rs` is the search field and the screen its answer
 # opens (bl-4c2b), the same class again: a `TextEdit`, a `Button` and a list of
 # taps, `cfg(target_os = "android")` to the last line. Everything it decides is
@@ -84,6 +92,7 @@ exclude-files = [
     "src/shell/composer.rs",
     "src/shell/controls.rs",
     "src/shell/controls/drop.rs",
+    "src/shell/controls/held.rs",
     "src/shell/controls/pick.rs",
     "src/shell/controls/tune.rs",
     "src/shell/enroll.rs",

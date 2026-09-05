@@ -60,6 +60,18 @@ pub enum RowAct {
     /// row on the ops trail and a mark on this conversation's own row, which
     /// is the read that settles it here.
     Flag { reason: String },
+    /// **Take away this conversation's tool auto-approval** (yog §8.6, DESIGN
+    /// §13.7), and its descendants' — including children it has not spawned
+    /// yet. From its next call, everything but a read waits for an answer. It
+    /// keeps running, keeps its branch and keeps reading: standing policy, not
+    /// a kill, which is what puts it in this menu rather than behind an arming.
+    Revoke,
+    /// **Give it back.** The ordinary policy adjudicates again from the next
+    /// call. It drives nothing — a conversation parked at a held call is
+    /// released by answering that call — and where an ancestor is still
+    /// revoked the conversation stays floored under it, which the receipt says
+    /// rather than claiming a restore it did not make.
+    Restore,
 }
 
 impl RowAct {
@@ -74,6 +86,8 @@ impl RowAct {
             Self::Interrupt { .. } => "interrupt",
             Self::Retarget => "retarget",
             Self::Flag { .. } => "flag",
+            Self::Revoke => "revoke",
+            Self::Restore => "restore",
         }
     }
 
@@ -92,7 +106,7 @@ impl RowAct {
         match self {
             Self::Interrupt { .. } => Some("type the text first"),
             Self::Flag { .. } => Some("type the reason first"),
-            Self::Retarget => None,
+            Self::Retarget | Self::Revoke | Self::Restore => None,
         }
     }
 
@@ -104,7 +118,9 @@ impl RowAct {
         match self {
             Self::Interrupt { .. } => Self::Interrupt { content: text },
             Self::Flag { .. } => Self::Flag { reason: text },
-            Self::Retarget => Self::Retarget,
+            // The three that take no parameter are themselves, whatever is in
+            // the composer — one arm, because "unchanged" is one answer.
+            Self::Retarget | Self::Revoke | Self::Restore => self.clone(),
         }
     }
 }
@@ -119,7 +135,9 @@ pub(crate) fn encode(workspace: &str, agent: &str, act: &RowAct) -> Value {
         RowAct::Interrupt { content } => {
             json!({ "op": op, "workspace": workspace, "agent": agent, "content": content })
         }
-        RowAct::Retarget => json!({ "op": op, "workspace": workspace, "agent": agent }),
+        RowAct::Retarget | RowAct::Revoke | RowAct::Restore => {
+            json!({ "op": op, "workspace": workspace, "agent": agent })
+        }
         RowAct::Flag { reason } => {
             json!({ "op": op, "workspace": workspace, "agent": agent, "reason": reason })
         }
@@ -137,6 +155,8 @@ pub(crate) fn decode(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
             content: str_of(o, "content")?,
         },
         "retarget" => RowAct::Retarget,
+        "revoke" => RowAct::Revoke,
+        "restore" => RowAct::Restore,
         "flag" => RowAct::Flag {
             reason: str_of(o, "reason")?,
         },
