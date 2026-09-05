@@ -96,6 +96,16 @@
 # here is which widget shows which of them, and the arm — one bool the walk
 # observes as a painted label.
 #
+# `src/shell/screens/records.rs` and `records/parts.rs` are the records screen
+# (bl-146b), the same class again: a `ScrollArea` of labels, one enabled-or-not
+# button and the taps around them, `cfg(target_os = "android")` to the last
+# line. Everything they decide is somewhere else and under the floor — WHAT
+# each of the six shapes says and what it declines to decode is
+# `codec::records`, WHICH reads an opening asks and what a focus-less one earns
+# is `seat::asks::records`, and the pairing that makes one conversation's
+# records unpaintable under another is `Records::about`, all asserted by host
+# tests. What is left here is which widget shows which of them.
+#
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
 [default]
 exclude-files = [
@@ -122,6 +132,8 @@ exclude-files = [
     "src/shell/inset.rs",
     "src/shell/jvm.rs",
     "src/shell/screens.rs",
+    "src/shell/screens/records.rs",
+    "src/shell/screens/records/parts.rs",
     "src/shell/screens/rows.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",

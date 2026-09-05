@@ -35,6 +35,19 @@ pub fn encode(gesture: &Gesture) -> Value {
             json!({ "op": "workspace-balls", "workspace": workspace })
         }
         Gesture::Ask(Ask::Board) => json!({ "op": "board" }),
+        // **The records screen's six** (DESIGN §13.11). Five name a
+        // conversation and nothing else; `step` names the row inside it.
+        Gesture::Ask(Ask::Agent { workspace, agent }) => aimed("agent", workspace, agent),
+        Gesture::Ask(Ask::Steps { workspace, agent }) => aimed("steps", workspace, agent),
+        Gesture::Ask(Ask::Rail { workspace, agent }) => aimed("rail", workspace, agent),
+        Gesture::Ask(Ask::Governing { workspace, agent }) => aimed("governing", workspace, agent),
+        Gesture::Ask(Ask::Inbox { workspace, agent }) => aimed("inbox", workspace, agent),
+        Gesture::Ask(Ask::Step {
+            workspace,
+            agent,
+            seq,
+        }) => json!({ "op": "step", "workspace": workspace,
+                      "agent": agent, "seq": seq }),
         Gesture::Act(Act::Ack) => json!({ "op": "ack" }),
         Gesture::Act(Act::ClearTrail) => json!({ "op": "clear-trail" }),
         Gesture::Act(Act::Seen { workspace, agent }) => {
@@ -100,4 +113,11 @@ pub fn encode(gesture: &Gesture) -> Value {
         Gesture::Act(Act::Prepare { workspace }) => start::encode_prepare(workspace),
         Gesture::Act(Act::Prompt { prepared, goal }) => start::encode_prompt(prepared, goal),
     }
+}
+
+/// **A read addressed at one conversation and carrying nothing else** — five
+/// of the records screen's six (DESIGN §13.11), and one spelling rather than
+/// five, because the op token is the only thing that differs between them.
+fn aimed(op: &str, workspace: &str, agent: &str) -> Value {
+    json!({ "op": op, "workspace": workspace, "agent": agent })
 }

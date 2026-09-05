@@ -199,6 +199,7 @@ mod loaded;
 mod pick;
 mod queue;
 mod reads;
+mod records;
 mod resume;
 mod row;
 mod search;

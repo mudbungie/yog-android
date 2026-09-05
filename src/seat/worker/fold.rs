@@ -148,3 +148,40 @@ pub(super) fn paned(
         Err(why) => Some(why),
     }
 }
+
+/// **The records screen's five reads, folded** — `paned`'s terms exactly, and
+/// here for its reason: the answer replaces what was held and a failure keeps
+/// what was there, because losing an answer the engine gave over one it did
+/// not is the defect §13.2's grace exists to prevent.
+pub(super) fn recorded(
+    read: Result<crate::codec::Records, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(records) => {
+            standing.records = Some(records);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
+/// **One step's drill-in, folded into the records it belongs to.** It is not
+/// a value of its own: a step's records under no conversation's are rows with
+/// no subject, so a drill-in that lands after the five were retired is
+/// dropped rather than held. The answer carries its own `seq`, so the paint
+/// asks it which row it is under and nothing here remembers a second name.
+pub(super) fn drilled(
+    read: Result<crate::codec::Step, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(step) => {
+            if let Some(records) = standing.records.as_mut() {
+                records.drilled = Some(step);
+            }
+            None
+        }
+        Err(why) => Some(why),
+    }
+}

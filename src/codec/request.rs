@@ -69,6 +69,34 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             workspace: str_of(o, "workspace")?,
         },
         "board" => Ask::Board,
+        // The records screen's six (DESIGN §13.11). Five read alike and one
+        // names the row it is about; `governing` refuses its anchored form
+        // below, which is why it is not in the aimed list.
+        "agent" => Ask::Agent {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+        },
+        "steps" => Ask::Steps {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+        },
+        "rail" => Ask::Rail {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+        },
+        "inbox" => Ask::Inbox {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+        },
+        "step" => Ask::Step {
+            workspace: str_of(o, "workspace")?,
+            agent: str_of(o, "agent")?,
+            seq: str_of(o, "seq")?,
+        },
+        "governing" => Ask::Governing {
+            workspace: unanchored(o.get("at"), str_of(o, "workspace")?)?,
+            agent: str_of(o, "agent")?,
+        },
         "ops" => Ask::Ops {
             max: super::fields::usize_of(o, "max")?,
         },
@@ -185,6 +213,20 @@ fn bare_rung(payload: Option<&Value>, workspace: String) -> Result<String, Strin
     match str_of(o, "rung")?.as_str() {
         "bare" => Ok(workspace),
         rung => Err(format!("prepare: unimplemented rung {rung:?}")),
+    }
+}
+
+/// **`governing` asked ABOUT a commit is a different question**, and this
+/// codec has no field to put the anchor in. `at` names a fork point — a
+/// commit of the conversation's own history — and the surface that picks one
+/// is bl-99fd's, cited in `parity.toml` for `fork` in the same words. So the
+/// anchored frame is refused **by name** rather than answered as the standing
+/// read, which is the silent misread REMOTE §3's third rule forbids; the
+/// workspace rides through so the caller reads one expression.
+fn unanchored(at: Option<&Value>, workspace: String) -> Result<String, String> {
+    match at {
+        None => Ok(workspace),
+        Some(at) => Err(format!("governing: unimplemented anchor {at}")),
     }
 }
 

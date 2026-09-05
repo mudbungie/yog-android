@@ -335,6 +335,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
+| `src/codec/records.rs` + `records/{agent,steps,step,spine,inbox}.rs` | the conversation's machinery (§13.11): six shapes read as ONE value carrying the conversation it is about, and the four fields that ride through unread with a reason apiece | landed (bl-146b) |
+| `src/codec/ask.rs` | the ask half of the boundary's grammar, on the seam `codec::request` already reads the wire by | landed (bl-146b, out of `codec.rs`) |
+| `src/codec/reply/decode.rs` | how one reply body is READ, split from the vocabulary it builds | landed (bl-146b, out of `reply.rs`) |
+| `src/seat/asks/records.rs` | the records screen's reads: the five an opening asks, the one a picked row posts, and the first failure standing for all of them | landed (bl-146b) |
+| `src/shell/screens/records.rs` + `records/parts.rs` | android-only: the records screen (§13.11) — the pick, the one act on its foot, and what each of the six halves says | landed (bl-146b) |
 | `src/codec/row.rs` | the row acts' three spellings and the `flagged` receipt (§13.5), plus the three readings the menu is built from — one roster, one home, shared by the codec, the seat and the paint | landed (bl-f97c) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
@@ -2096,6 +2101,123 @@ PARITY §4). The engine is not dialled there, so what an operator would see is a
 pane that could not read and five controls saying which ball to tap first —
 which is what the gate asks of them.
 
+### 13.11 The records screen: the conversation's machinery, one depth behind the transcript (bl-146b)
+
+`src/codec/records.rs` + `records/{agent,steps,step,spine,inbox}.rs`,
+`src/seat/asks/records.rs`, `src/shell/screens/records.rs` +
+`records/parts.rs`. The phone's twin of lernie's §4.29 and §4.32, and the
+group `parity.toml` cited for six ops at once: what the conversation IS and
+may be done to (`agent`), its step census and one step's records (`steps`,
+`step`), the spine it is anchored to and the config commit governing it
+(`rail`, `governing`), and the mail nothing has taken (`inbox`).
+
+**One screen and not six, because the subject is one noun.** Six covering
+surfaces over one conversation would be six places to look for one thing. The
+same argument one layer down makes the answers **one value and not six
+fields** (`codec::Records`, lernie DESIGN §4.32's ruling transferred whole):
+they are six questions about one conversation, retired together the moment
+that conversation moves, and six fields would be six places to remember —
+forgetting one paints one conversation's records under another's name. So
+`Records` carries the workspace and the agent it was asked at, and
+`Records::about` is the one reading of that pair: §14's pairing law over rows
+and their focus, one surface along, exactly as `Pane::view` is.
+
+**It is a depth of the transcript, not a surface over the roster.** The two
+world screens (§13.8) and the ball pane's two unaimed views (§13.9) sit over
+the depths because their reads name no place; these five name a
+CONVERSATION, which is the deepest focus this app has. So the screen opens
+over the transcript, backs out into it, and the focus underneath never moves
+— which is the same predicate §13.8 sorts by, answered the other way.
+
+**Opening is the ask, and nothing standing carries it** — the trail's rule
+and the ball pane's (§13.8, §13.9): a screen nobody has opened costs this
+device no radio, which is §14.1's argument for the held lane applied at the
+seat. Five questions per opening and none between. A failure keeps what the
+screen already had, which is `searched`'s rule at a sixth site.
+
+**They answer as one value or as one sentence.** The first read that fails is
+the whole gesture's answer, because a partial fold would put one
+conversation's spine under another's steps the first time one read failed on
+its own. The cost is stated rather than hidden: an engine that answers four
+of the five and refuses the fifth by name gives this screen nothing. That is
+the same trade `Records` was chosen for, and the remedy if it ever bites is a
+protocol bump, not five fields.
+
+**`step` is posted off a row, and the row is a control.** It is the one read
+of the six that is about ONE STEP rather than about the conversation, and a
+standing read of it would have to invent a selection and then hold it — a
+second authority for a row somebody tapped (lernie §4.32). The desktop puts
+its control ON each steps row; here a census row is already a full-width
+control that PICKS, and the single act hangs on the foot addressed at what is
+picked. That is §13.10's arrangement, and the reason it differs from the
+desktop's is width: a phone row has no room for a second rectangle beside the
+text it exists to show. The control is DISABLED with the reason stated beside
+it while nothing is picked, which is §13.10's rule verbatim.
+
+**The answer says which row it belongs to, so nothing here remembers one.**
+`reply/step` echoes back the `seq` it was asked by, and the paint puts the
+drill-in under exactly that census row. Two things follow and both are the
+point: a drill-in that lands after the operator tapped another row cannot
+paint under the wrong one, and there is no second name for *which step is
+open* to drift from the answer. `worker::fold::drilled` folds it INTO the
+records it belongs to, so a drill-in whose five were retired is dropped rather
+than held.
+
+**Nothing here recomputes a figure the engine rendered** (§13.9's rule at a
+second site). The flight strip's characteristics are prose one derivation
+assembles with per-segment omission rules; the money is the engine's spelling
+of the integer beside it; the context percent is its own rounding,
+deliberately **unclamped**, so a context that has outgrown its window reads as
+`140%`. A seat that divided the two figures itself would be re-taking a
+decision upstream took on purpose.
+
+**Four things ride through unread and each is a decision, not an oversight**
+(`codec::records`' own doc is where they are written; this is the summary).
+The `agent` answer's `held` object is the parked call, whose one home is
+§13.7's band off the attention queue; its `nudgeable`/`stoppable`/
+`stop_children` are the same gates the conversation ROW carries, which is
+where `shell::controls` reads them; a `step` record's `value` is its `raw`
+read again by a parser, and this seat paints the bytes; and a step row's
+`auth_row` is the §8.3 sign-in affordance, whose act is unbuilt and cited in
+`parity.toml`. Each is one fact with one home.
+
+**`governing`'s `oid` is the first field this seat reads whose MEANING moved
+under an unchanged spelling** (REMOTE §9.12, lernie §4.29). It named the fork
+commit at PROTOCOL 4 and names the followed lineage's HEAD at 5, and no
+mechanical check this repository owns can see the difference — §2 says so out
+loud: *"a signature ledger records field paths and types, so it cannot see a
+change of meaning under an unchanged signature."* So the trap is restated at
+the decoder (`codec::records::spine`), where whoever paints the number is
+reading.
+
+**`governing` asked ABOUT a commit is refused by name.** The engine also
+answers *which config governed this conversation at commit X*; `at` is a fork
+point, and the surface that picks one is bl-99fd's — the same missing read
+`fork` is cited to in `parity.toml`. Answering the anchored frame as the
+standing read is the silent misread REMOTE §3's third rule forbids, so
+`tests/conformance/requests.rs` records `governing` as `Partial { reads: 1 }`
+with that reason.
+
+**The engine's tokens are carried whole here, and picked on the conversation
+row.** `agent` states the §5.1 state and the §11 flight class, which
+`codec::conv` reads against tables because the row's controls BRANCH on them.
+Nothing on this screen branches on either — it paints them — so they cross as
+the engine's own words, exactly as a step's `framing`, its `wound` and a child
+card's `state` do. That is the difference between the two readings rather than
+an inconsistency between them, and it is recorded as `codec.rs`'s third
+narrowing. The alternative was a reverse lookup over the same table, which
+buys a strictness no control here spends and costs an unreachable fallback.
+
+**What the walk reaches.** One new step: `records`, tapped from the transcript
+screen's knob row — the row that already says how much of this conversation is
+on the glass — where the entry control carries the five `act:` tags of the
+reads opening it asks (PARITY §2, *"the owed interactable for a read is the
+affordance that reaches the view it populates"*) and its own rectangle, which
+is the only way a harness reaches a control this app paints (§15.2). The
+engine is not dialled there, so what it captures is a screen that opened and
+said nothing was read — and `step`, disabled, saying which row to tap first,
+which is what the parity gate asks of it either way.
+
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -2946,7 +3068,7 @@ The groups mirror the seat's own, one ball each:
 | conversation acts | interrupt, retarget, flag — **landed** (§13.5); `fork` held back on a read it needs | bl-f97c, then bl-99fd |
 | the held tool call | answer, revoke, restore — **landed** (§13.7) | bl-b39d |
 | work review | files, work-diff | bl-5a56 |
-| conversation machinery reads | agent, steps, step, rail, governing, inbox | bl-146b |
+| conversation machinery reads | agent, steps, step, rail, governing, inbox — **landed** (§13.11) | bl-146b |
 | the ball pane | balls, workspace-balls, board — **landed** (§13.9); close, assign, release, create, update | bl-d587, then bl-f36e |
 | candidates | fan, retire, deliver, science | bl-2f17 |
 | fleet and watch | fleet, disband, arm, disarm | bl-477e |

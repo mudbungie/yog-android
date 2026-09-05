@@ -70,6 +70,16 @@ pub const NO_FORK_POINT: &str =
 pub const NO_SCHEDULING: &str =
     "the scheduling fields are pickers this pane does not have (DESIGN §13.9)";
 
+/// **`governing` asked ABOUT a commit is a different question** (DESIGN
+/// §13.11). The read this screen makes is the standing one — *which config
+/// governs this conversation now* — and the anchored form names a fork point,
+/// a commit of the conversation's own history. The surface that picks one is
+/// bl-99fd's, which is the same missing read `fork` is cited to in
+/// `parity.toml`. So the bare frame reads and round-trips, and the anchored
+/// one is refused by name rather than answered as the standing read.
+pub const NO_ANCHOR: &str =
+    "the config governing a COMMIT wants a fork point no read here names (bl-99fd)";
+
 /// REMOTE §4.2, on the foot's gesture set: *"Note which of §5.3's four verbs
 /// is absent — `invoke`, the asking side's. A foot is invoked; it never
 /// invokes."* `capture` is that verb's read half and goes with it.

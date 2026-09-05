@@ -1,5 +1,7 @@
-//! The reply codec's decode side — the mirror of the server's
-//! `boundary/reply/decode.rs`, over this seat's slice.
+//! **The reply vocabulary** — the typed answer this seat's gestures earn, and
+//! the mirror of the server's `boundary/reply/decode.rs` over this seat's
+//! slice. How one is READ off the wire is `reply::decode`, split out (bl-146b)
+//! on the seam `codec.rs` and `codec::encode` already draw one layer up.
 //!
 //! **The refusal is the envelope with no `kind`.** `ok` cannot be the
 //! discriminant, because an `outcome` reply spells a captured run's own
@@ -10,19 +12,19 @@
 //! The outer `Err` is a malformed envelope or body — bytes this codec cannot
 //! read — and the inner `Err` is the refusal the envelope faithfully carried.
 
-use serde_json::{Map, Value};
+use super::follow::Stream;
+use super::hold::Answered;
+use super::pick::{ProviderRow, RoleRow};
+use super::queue::QueueRow;
+use super::search::Found;
+use super::start::Prepared;
+use super::tools::{Capture, Invocation};
+use super::trail::OpRow;
+use super::{ConvRow, Entry, WsRow, balls, records};
 
-use super::balls;
-use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
-use super::follow::{Stream, stream_of};
-use super::hold::{self, Answered};
-use super::pick::{self, ProviderRow, RoleRow};
-use super::queue::{self, QueueRow};
-use super::search::{self, Found};
-use super::start::{self, Prepared};
-use super::tools::{Capture, Invocation, capture_of, invocation_of};
-use super::trail::{self, OpRow};
-use super::{ConvRow, Entry, WsRow, conv, transcript, ws};
+mod decode;
+
+pub use decode::decode;
 
 /// The typed answer this seat's gestures earn.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -111,6 +113,25 @@ pub enum Reply {
     /// **The ops trail's tail** (yog §4.2): what this engine last did, newest
     /// last, as many rows as the ask allowed.
     Ops(Vec<OpRow>),
+    /// **The conversation's own row** (DESIGN §13.11) — the records screen's
+    /// header, and the largest shape on this surface. What it declines to
+    /// decode and why is `codec::records`' own doc.
+    Agent(records::Agent),
+    /// **Its step census**, with the orphaned-tail state above the rows.
+    Steps(records::Steps),
+    /// **One step's records**, carrying back the `seq` it was asked by — so a
+    /// drill-in that lands after the operator tapped another row cannot paint
+    /// under the wrong one.
+    Step(records::Step),
+    /// **The operable spine**: the notches, and the children forked at them.
+    Rail(records::Rail),
+    /// **Which config commit governs the conversation.** Its `oid` names the
+    /// followed lineage's head since PROTOCOL 5, which is a meaning that
+    /// moved under an unchanged spelling — `codec::records::spine` carries
+    /// the trap where the number is read.
+    Governing(records::Governing),
+    /// **The mail nothing has delivered yet**, one row per deposit.
+    Inbox(Vec<records::Mail>),
     /// The receipt an acknowledgement earns. It carries nothing, and the read
     /// that says what it did is the trail itself.
     Acked,
@@ -178,6 +199,12 @@ impl Reply {
             Self::Search(_) => "search",
             Self::Attention(_) => "attention",
             Self::Ops(_) => "ops",
+            Self::Agent(_) => "agent",
+            Self::Steps(_) => "steps",
+            Self::Step(_) => "step",
+            Self::Rail(_) => "rail",
+            Self::Governing(_) => "governing",
+            Self::Inbox(_) => "inbox",
             Self::Balls(_) => "balls",
             Self::WorkspaceBalls(_) => "workspace-balls",
             Self::Board(_) => "board",
@@ -189,80 +216,6 @@ impl Reply {
         }
         .to_owned()
     }
-}
-
-/// Read one reply body off the wire.
-pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
-    let o = v.as_object().ok_or("reply: not a JSON object")?;
-    let Some(kind) = o.get("kind") else {
-        return refusal_of(o).map(Err);
-    };
-    let kind = kind.as_str().ok_or("reply: non-string field \"kind\"")?;
-    let reply = match kind {
-        "outcome" => Reply::Outcome {
-            ok: bool_of(o, "ok")?,
-            exit: i64_of(o, "exit")?,
-            stdout: str_of(o, "stdout")?,
-            stderr: str_of(o, "stderr")?,
-        },
-        "workspaces" => Reply::Workspaces {
-            rows: rows(o, ws::row)?,
-            stale: opt(o, "stale", str_of)?,
-            growth: opt(o, "growth", str_of)?,
-        },
-        "conversations" => Reply::Conversations(rows(o, conv::row)?),
-        "transcript" => Reply::Transcript(rows(o, transcript::entry)?),
-        "advertised" => Reply::Advertised {
-            wrote: bool_of(o, "wrote")?,
-        },
-        "prepared" => Reply::Prepared(start::reply_of(o)?),
-        "started" => Reply::Started {
-            conversation: str_of(o, "conversation")?,
-        },
-        "invocations" => Reply::Invocations(rows(o, invocation_of)?),
-        "providers" => Reply::Providers(rows(o, pick::row)?),
-        "models" => Reply::Models(pick::names(o)?),
-        "roles" => Reply::Roles(rows(o, pick::role)?),
-        "applied" => Reply::Applied,
-        "nudged" => Reply::Nudged,
-        "flagged" => Reply::Flagged,
-        "follow" => Reply::Follow(stream_of(o)?),
-        "search" => Reply::Search(search::found_of(o)?),
-        "attention" => Reply::Attention(rows(o, queue::row)?),
-        "ops" => Reply::Ops(rows(o, trail::row)?),
-        "balls" => Reply::Balls(rows(o, balls::row)?),
-        "workspace-balls" => Reply::WorkspaceBalls(rows(o, balls::bound)?),
-        "board" => Reply::Board(balls::board(o)?),
-        "acked" => Reply::Acked,
-        "acknowledged" => Reply::Acknowledged(rows(o, queue::row)?),
-        "trail-cleared" => Reply::TrailCleared,
-        "answered" => Reply::Answered(hold::answered_of(o)?),
-        "floored" => Reply::Floored {
-            standing: bool_of(o, "standing")?,
-        },
-        "routed" => Reply::Routed {
-            invocation: str_of(o, "invocation")?,
-            capture: opt_val(o, "capture", capture_of)?,
-        },
-        other => return Err(format!("unknown reply kind {other:?}")),
-    };
-    Ok(Ok(reply))
-}
-
-/// The kind-less envelope: a refusal, and nothing else may wear that shape.
-fn refusal_of(o: &Map<String, Value>) -> Result<String, String> {
-    if bool_of(o, "ok")? {
-        return Err("reply: ok with no kind — not a spelling either end writes".to_owned());
-    }
-    str_of(o, "error")
-}
-
-/// The `rows` array read by one row reader — the shape every listing shares.
-fn rows<T>(
-    o: &Map<String, Value>,
-    read: fn(&Value) -> Result<T, String>,
-) -> Result<Vec<T>, String> {
-    arr_of(o, "rows")?.iter().map(read).collect()
 }
 
 #[cfg(test)]

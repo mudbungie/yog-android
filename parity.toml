@@ -41,13 +41,11 @@ fork = "unbuilt: its fork point is a ref no read here names — the picking surf
 files = "unbuilt: work review from the glass (bl-5a56; DESIGN §16.2)"
 work-diff = "unbuilt: work review from the glass (bl-5a56; DESIGN §16.2)"
 
-# --- Unbuilt: conversation machinery reads (bl-146b) ------------------------
-agent = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
-steps = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
-step = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
-rail = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
-governing = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
-inbox = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
+# --- The conversation's machinery is whole (bl-146b) ------------------------
+# Nothing of it is on this ledger. The records screen carries all six: five on
+# the control that opens it — opening IS the ask — and `step` on the foot of
+# the screen it opens, addressed at the census row under the thumb (DESIGN
+# §13.11).
 
 # --- The ball pane is whole (bl-d587 read, bl-f36e act) ---------------------
 # Nothing of it is on this ledger. bl-d587 landed the three reads — one control

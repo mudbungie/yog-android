@@ -11,10 +11,13 @@
 //! deposit a message — and grows per consumer, never speculatively. Decode is
 //! strict the way the parent is strict (an unknown `kind`, a missing field, a
 //! mistyped value, an unknown token each refuse naming the offender), with
-//! two recorded narrowings: a conversation row's `alignment` verdict and a
+//! three recorded narrowings: a conversation row's `alignment` verdict and a
 //! ball chip's `state` token ride through untyped (`Value` / `String`) until
-//! a surface here paints them.
+//! a surface here paints them, and the records screen carries the engine's
+//! state and flight WORDS rather than picking them, because nothing there
+//! branches on either (`codec::records`).
 
+mod ask;
 pub mod balls;
 mod conv;
 pub mod encode;
@@ -23,6 +26,7 @@ pub mod follow;
 pub mod hold;
 pub mod pick;
 pub mod queue;
+pub mod records;
 pub mod reply;
 pub mod request;
 mod row;
@@ -33,6 +37,7 @@ pub mod trail;
 mod transcript;
 mod ws;
 
+pub use ask::Ask;
 pub use balls::act::BallAct;
 pub use balls::{BallRow, Board, BoardRow, Pane, View, WsBallRow};
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
@@ -41,6 +46,10 @@ pub use follow::Stream;
 pub use hold::{Answered, Verdict};
 pub use pick::{Effort, ProviderRow, RoleRow};
 pub use queue::{Held, QueueRow};
+pub use records::{
+    Agent, Card, Context, Governing, Log, Mail, Notch, Orphan, Rail, Record, Records, SeatRow,
+    Step, StepRow, Steps, ToolRecord,
+};
 pub use request::decode;
 pub use row::RowAct;
 pub use search::{Address, Found, Hit, HitField};
@@ -166,64 +175,6 @@ pub enum Act {
         provider: String,
         model: String,
     },
-}
-
-/// The populating reads this seat spends.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Ask {
-    /// The enumerated workspaces with their attention rollups.
-    Workspaces,
-    /// One workspace's conversation list, one row per subtree member.
-    Conversations { workspace: String },
-    /// One conversation's transcript, in message order.
-    Transcript { workspace: String, agent: String },
-    /// **The answer in flight** (REMOTE §5.5, bl-4822), held open (DESIGN
-    /// §14.1): every read starts holding nothing, so the first frame is the
-    /// whole tail so far and each later one is what landed since.
-    Follow { workspace: String, agent: String },
-    /// **What each role is set to** (bl-e9f9): the assignments the
-    /// workspace's lineage tip holds, read from where the tuning gestures
-    /// write. Per workspace, like the two reads beside it.
-    Roles { workspace: String },
-    /// One workspace's providers, with the credential fact each states about
-    /// itself. Per workspace, because sign-ins are (bl-0267).
-    Providers { workspace: String },
-    /// One provider's models, in the engine's listing order.
-    Models { workspace: String, provider: String },
-    /// **Search the world this seat can see** (yog DESIGN §8.5): one needle,
-    /// no scope. It is the only read here that names no place — every other
-    /// one asks about a workspace or a conversation the operator is already
-    /// looking at, and this one asks the engine where to look. The answer's
-    /// addresses are the focuses this seat already takes, so a hit is fed
-    /// straight back as one rather than resolved through anything.
-    Search { text: String },
-    /// **The decision queue** (yog §8.5): every conversation waiting on the
-    /// operator. This seat reads it for the parked tool call each row may
-    /// carry — the one thing on the wire that must be *answered* rather than
-    /// noticed — and paints that where the answer is given (DESIGN §13.7).
-    Attention,
-    /// **Every ball this seat can see** (yog §8.5, DESIGN §13.9), with the
-    /// workspace holding each. It names no workspace, which is the fact that
-    /// puts it at the top depth beside the trail and the queue.
-    Balls,
-    /// **What one workspace holds** — the same table at the other width, and
-    /// the only one of the three that names a place. Its rows are unpaintable
-    /// under another focus, which is §14's pairing law and not a second rule.
-    WorkspaceBalls { workspace: String },
-    /// **The board**: the same balls folded into the engine's own columns,
-    /// with a line per armed loop riding beside them.
-    Board,
-    /// **The ops trail's tail** (yog §4.2, REMOTE §9.17): the last `max`
-    /// actions the engine took, newest last. `max` is the client's, not the
-    /// engine's — a phone asks for a screenful — and it is carried rather
-    /// than defaulted so the frame this codec writes is the frame the engine
-    /// reads back.
-    Ops { max: usize },
-    /// **The follow-class read**: this machine's next work, answered when
-    /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
-    /// only into a stream this device asked for — so a tool host waits here
-    /// rather than listening on a socket it would have to open.
-    Invocations,
 }
 
 /// A gesture: act or ask, the boundary's whole grammar.

@@ -240,6 +240,15 @@ capture row-menu conversations
 seed_cache transcript; relaunch
 capture transcript transcript
 
+# 4c. THE RECORDS SCREEN (DESIGN §13.11). One drill-down depth behind the
+#     transcript, reached by the one control that opens it — which is also the
+#     affordance for the five reads it asks (PARITY §2). The engine is not
+#     dialled, so what this captures is a screen that opened and said nothing
+#     was read; what the parity gate wants from it is the sixth control, and
+#     `step` paints on this screen disabled with its reason beside it.
+tap_control records
+capture records records
+
 # 5. The same screen with the engine's stop gates ON. Not a sixth screen — the
 #    app says `transcript` for both — but the controls row is a different set
 #    of controls under it, and the parity gate below can only see a control a

@@ -18,13 +18,14 @@
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
-    ACT, ASKING_SIDE, BARE_RUNG, NO_FORK_POINT, NO_SCHEDULING, NO_SEED, NOT_THE_MINTER, READ,
+    ACT, ASKING_SIDE, BARE_RUNG, NO_ANCHOR, NO_FORK_POINT, NO_SCHEDULING, NO_SEED, NOT_THE_MINTER,
+    READ,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
     ("ack", Reads),
     ("advertise", Reads),
-    ("agent", Refuses(READ)),
+    ("agent", Reads),
     ("answer", Reads),
     ("arm", Refuses(ACT)),
     ("assign", Reads),
@@ -58,9 +59,15 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("fleet", Refuses(ACT)),
     ("follow", Reads),
     ("fork", Refuses(NO_FORK_POINT)),
-    ("governing", Refuses(READ)),
+    (
+        "governing",
+        Partial {
+            reads: 1,
+            reason: NO_ANCHOR,
+        },
+    ),
     ("help", Refuses(READ)),
-    ("inbox", Refuses(READ)),
+    ("inbox", Reads),
     ("interrupt", Reads),
     ("invocations", Reads),
     ("invoke", Refuses(ASKING_SIDE)),
@@ -90,7 +97,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
         },
     ),
     ("providers", Reads),
-    ("rail", Refuses(READ)),
+    ("rail", Reads),
     ("release", Reads),
     ("restore", Reads),
     ("retarget", Reads),
@@ -101,8 +108,8 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("science", Refuses(READ)),
     ("search", Reads),
     ("seen", Reads),
-    ("step", Refuses(READ)),
-    ("steps", Refuses(READ)),
+    ("step", Reads),
+    ("steps", Reads),
     ("stop", Reads),
     ("transcript", Reads),
     ("unpin", Refuses(ACT)),

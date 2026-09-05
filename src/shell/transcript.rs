@@ -58,6 +58,17 @@ impl Shell {
                     self.focus_workspace(Some(workspace.to_owned()));
                 }
                 super::screens::banner(ui, snap);
+                // **The way into the records screen** (§13.11), a row of
+                // its own for a width reason rather than a taste one: the two
+                // knobs below carry ~23-character labels apiece and a phone's
+                // row holds both and nothing else, so a third control in that
+                // band would be pushed off the glass — which is bl-f36e's
+                // finding at a new site, and a control off the glass is one
+                // the parity inventory cannot record and a thumb cannot
+                // reach. It is the roster's world-entry shape (§13.8) at this
+                // depth: one full-width control, the reads it opens named on
+                // it, and its rectangle said for the harness (§15.2).
+                self.records_entry(ui);
                 // The two auto knobs, the desktop's own pair: which KINDS
                 // open by default. They are policy; a hand-flipped row is the
                 // override set below and dies with the screen.
@@ -146,6 +157,26 @@ impl Shell {
             crate::outbox::Settled::Standing(echo) => self.echo = Some(echo),
             crate::outbox::Settled::Gone => {}
             crate::outbox::Settled::Draft(text) => self.composer = text,
+        }
+    }
+}
+
+impl Shell {
+    /// The records entry: one control, five reads, one rectangle the walk can
+    /// reach. `step` is not among its tags — that read is posted off a row on
+    /// the screen this control opens, and the control that fires it carries
+    /// its own tag there.
+    fn records_entry(&mut self, ui: &mut egui::Ui) {
+        let wide = egui::vec2(ui.available_width(), super::mark::TOUCH);
+        let control = ui.add(egui::Button::new("records").min_size(wide));
+        super::act::acts(
+            ui,
+            &control,
+            &["agent", "steps", "rail", "governing", "inbox"],
+        );
+        self.note_control("records", ui, control.rect);
+        if control.clicked() {
+            self.open_records();
         }
     }
 }

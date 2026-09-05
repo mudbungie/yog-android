@@ -80,6 +80,15 @@ pub(crate) struct Shell {
     /// and no more durable than a scroll position — the acts are addressed at
     /// a row, and this is which row.
     pub(crate) ball: Option<(String, String)>,
+    /// **Whether the records screen is open over the transcript** (§13.11).
+    /// Navigation like `opened` above and no more durable than a scroll
+    /// position: the focus underneath it is untouched, which is what makes
+    /// backing out of it land where the operator was.
+    pub(crate) records: bool,
+    /// **Which step the records screen's one act addresses** (§13.11) — the
+    /// sequence off the census row that was tapped. `ball`'s twin, and
+    /// navigation for its reason exactly.
+    pub(crate) step: Option<String>,
     pub(crate) composer: String,
     /// What the search field holds. A question, not an answer — the hits are
     /// the model's and ride the snapshot — and it is emptied when the search
@@ -172,6 +181,8 @@ impl Shell {
             opened: None,
             armed: false,
             ball: None,
+            records: false,
+            step: None,
             scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),

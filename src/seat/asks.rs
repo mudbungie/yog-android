@@ -14,6 +14,10 @@
 
 use serde_json::Value;
 
+mod records;
+
+pub(super) use records::{drill, opened};
+
 use super::Focus;
 use super::pass::{answer, kind_err};
 use crate::codec::reply::Reply;

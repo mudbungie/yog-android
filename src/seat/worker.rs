@@ -105,6 +105,17 @@ pub(super) fn run(
             Ok(Cmd::Balls(view)) => {
                 note = fold::paned(super::asks::balls(seat, &focus, view), &mut standing);
             }
+            // **The records screen's reads** (§13.11), on the trail's terms
+            // again: opening is the ask, the answer replaces what was held,
+            // and a failure keeps what was there. The drill-in folds into the
+            // value the five already answered, because it is about one row of
+            // it and is nothing at all without them.
+            Ok(Cmd::Records) => {
+                note = fold::recorded(super::asks::opened(seat, &focus), &mut standing);
+            }
+            Ok(Cmd::Step(seq)) => {
+                note = fold::drilled(super::asks::drill(seat, &focus, seq), &mut standing);
+            }
             // **Both trail acts are followed by the read that says what they
             // did**, which is also the read that settles a lost one: the
             // watermark and the truncation are both invisible until the trail

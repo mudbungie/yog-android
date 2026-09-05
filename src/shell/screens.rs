@@ -25,6 +25,7 @@ use super::mark::Back;
 use crate::host::Health;
 use crate::seat::Snapshot;
 
+mod records;
 mod rows;
 mod search;
 mod world;
@@ -92,6 +93,13 @@ impl Shell {
                 None => {
                     self.note_screen("conversations");
                     self.conversations(ui, &snap, &workspace);
+                }
+                // **The records screen is a depth of this one** (§13.11):
+                // its six reads are about the conversation the transcript is
+                // showing, so it opens OVER it and backs out into it, and
+                // the focus underneath never moves.
+                Some(agent) if self.records => {
+                    self.records(ui, &snap, &workspace, &agent);
                 }
                 Some(agent) => {
                     self.note_screen("transcript");

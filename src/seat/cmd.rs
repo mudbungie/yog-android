@@ -51,6 +51,14 @@ pub(super) enum Cmd {
     /// `codec::BallAct`. The `--as` stamp is not carried: it is the focused
     /// workspace and the worker is where the focus lives.
     Ball(String, crate::codec::BallAct),
+    /// **Read the conversation's machinery** (§13.11) — the five reads the
+    /// records screen opens with. One command because they are one value: six
+    /// questions about one conversation, retired together when it moves.
+    Records,
+    /// **Drill into one step** of it, by the sequence the census stated. Its
+    /// own command because it is the one read of the six that is about a ROW
+    /// rather than about the conversation.
+    Step(String),
     /// Truncate the trail — the armed act (§13.8).
     ClearTrail,
     /// Stop the focused conversation's turn, optionally its subtree with it.

@@ -92,6 +92,14 @@ pub struct Snapshot {
     /// It rides the snapshot and never the cache, for the trail's reason: a
     /// pass asks the standing set, and this is a gesture's answer.
     pub pane: Option<crate::codec::Pane>,
+    /// **What the records screen last read** (DESIGN §13.11), carrying the
+    /// conversation it is about. `None` is *nobody has opened it*; records
+    /// about another conversation are unpaintable under this focus, which is
+    /// the pane's own pairing law one surface along (`Records::about`).
+    ///
+    /// It rides the snapshot and never the §14 cache, for the pane's reason:
+    /// a pass asks the standing set, and this is a gesture's answer.
+    pub records: Option<crate::codec::Records>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

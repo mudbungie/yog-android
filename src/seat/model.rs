@@ -188,6 +188,21 @@ impl Model {
         let _ = self.cmds.send(Cmd::Balls(view));
     }
 
+    /// **Read the conversation's machinery** (§13.11) — what the records
+    /// screen opens with. The answers arrive in the next snapshot like every
+    /// other read's, and what was already there keeps painting meanwhile:
+    /// under its own conversation, never under this one.
+    pub fn open_records(&self) {
+        let _ = self.cmds.send(Cmd::Records);
+    }
+
+    /// **Read one step's records** (§13.11), by the sequence the census
+    /// stated. The answer carries that sequence back, so nothing here has to
+    /// remember which row was tapped.
+    pub fn drill_step(&self, seq: String) {
+        let _ = self.cmds.send(Cmd::Step(seq));
+    }
+
     /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in
     /// any sense worth relying on and never re-sent: the watermark lands on
     /// the trail as it stood, and the trail read after it is what says so.
