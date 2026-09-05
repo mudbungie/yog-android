@@ -1,13 +1,20 @@
 //! **The worker's loop**: one pass, one wait, and the gestures that wake it.
 //! Split from the handle in `model.rs` (bl-dfbb) on the seam the model has
-//! always had — what the frame HOLDS, and what the thread DOES.
+//! always had — what the frame HOLDS, and what the thread DOES. What one
+//! ANSWER does to the standing is `worker::fold`, split out on the seam this
+//! file already read as (bl-f36e): the loop and its clock here, the folds
+//! there.
 
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 use serde_json::Value;
 
-use super::model::Cmd;
+mod fold;
+
+use fold::{learned, preload, reread, searched};
+
+use super::cmd::Cmd;
 use super::pass::Standing;
 use super::{Focus, Snapshot};
 use crate::transport::Seat;
@@ -92,28 +99,11 @@ pub(super) fn run(
             // which is `searched`'s rule and is here for its reason: losing
             // an answer the engine gave over one it did not is the defect
             // §13.2's grace exists to prevent.
-            Ok(Cmd::Ops) => {
-                note = match super::asks::ops(seat) {
-                    Ok(rows) => {
-                        standing.trail = rows;
-                        None
-                    }
-                    Err(why) => Some(why),
-                };
-            }
-            // **The ball pane's read** (§13.9), on the trail's terms exactly:
-            // opening the surface is the ask, the answer replaces what was
-            // held, and a failure keeps what was there — losing an answer the
-            // engine gave over one it did not is the defect §13.2's grace
-            // exists to prevent.
+            // **The ball pane's read** (§13.9) is on the trail's terms
+            // exactly, and both folds are `fold`'s.
+            Ok(Cmd::Ops) => note = fold::opened(super::asks::ops(seat), &mut standing),
             Ok(Cmd::Balls(view)) => {
-                note = match super::asks::balls(seat, &focus, view) {
-                    Ok(pane) => {
-                        standing.pane = Some(pane);
-                        None
-                    }
-                    Err(why) => Some(why),
-                };
+                note = fold::paned(super::asks::balls(seat, &focus, view), &mut standing);
             }
             // **Both trail acts are followed by the read that says what they
             // did**, which is also the read that settles a lost one: the
@@ -156,6 +146,9 @@ pub(super) fn run(
             Ok(Cmd::Answer(verdict)) => {
                 note = super::acts::answer(seat, &focus, verdict).note();
             }
+            Ok(Cmd::Ball(project, act)) => {
+                note = fold::balled(seat, &focus, &mut standing, project, act);
+            }
             Ok(Cmd::Row(agent, act)) => {
                 note = super::acts::row(seat, &focus, agent, act).note();
             }
@@ -180,70 +173,6 @@ pub(super) fn run(
             // there, inside the same deadline — so it is the tick's arm.
             Ok(Cmd::Lane(_)) | Err(mpsc::RecvTimeoutError::Timeout) => {}
         }
-    }
-}
-
-/// **Read what the workspace is set to, and say nothing if it cannot be
-/// read** (bl-e9f9). This is a preload, not an answer to a gesture the
-/// operator made: its absence means the controls seed from nothing, which is
-/// exactly where they stood before this read existed. So every way it can
-/// fail is swallowed — including the one that will be common for a while, an
-/// engine that predates the read and refuses the op in band by name. A
-/// banner for that would be this app telling an operator off for running the
-/// engine they have.
-fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
-    if let Ok((workspace, envelope)) = super::asks::roles(seat, focus) {
-        standing.options.assigned(&workspace, envelope);
-        standing.reads += 1;
-    }
-}
-
-/// **Re-read the trail after an act on it**, swallowing the failure: this is
-/// not the operator's gesture, it is what makes the gesture's effect visible,
-/// and its absence leaves the rows exactly as they were — which is where they
-/// stood before the act was fired. `preload`'s rule, on the other pair.
-fn reread(seat: &Seat, standing: &mut Standing) {
-    if let Ok(rows) = super::asks::ops(seat) {
-        standing.trail = rows;
-    }
-}
-
-/// Fold one selector read into the standing options, or hand back the
-/// sentence it failed with. One body for both reads, because the only
-/// difference between them is which slot the envelope lands in.
-fn learned(
-    read: Result<(String, serde_json::Value), String>,
-    provider: Option<String>,
-    standing: &mut Standing,
-) -> Option<String> {
-    match read {
-        Ok((workspace, envelope)) => {
-            standing
-                .options
-                .learned(&workspace, provider.as_deref(), envelope);
-            None
-        }
-        Err(why) => Some(why),
-    }
-}
-
-/// **One search, held** (bl-4c2b) — `learned`'s shape for the other read a
-/// gesture makes, and here for the same reason: what the fold does with an
-/// answer is the worker's business, and what a PASS means is `seat::pass`'s.
-///
-/// The answer replaces whatever was held. A failure does NOT: the operator is
-/// still looking at the hits they have, and dropping an answer the engine gave
-/// because of one it did not is the defect §13.2's grace exists to prevent.
-fn searched(
-    read: Result<Option<crate::codec::Found>, String>,
-    standing: &mut Standing,
-) -> Option<String> {
-    match read {
-        Ok(found) => {
-            standing.found = found;
-            None
-        }
-        Err(why) => Some(why),
     }
 }
 

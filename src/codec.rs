@@ -33,6 +33,7 @@ pub mod trail;
 mod transcript;
 mod ws;
 
+pub use balls::act::BallAct;
 pub use balls::{BallRow, Board, BoardRow, Pane, View, WsBallRow};
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use encode::encode;
@@ -144,6 +145,17 @@ pub enum Act {
     /// an arm is a property of the glass, and the gesture is the same one a
     /// slash line spells.
     ClearTrail,
+    /// **An act on one BALL** (DESIGN §13.9, bl-f36e): claim it, give it
+    /// back, close it, file a new one beside it, or amend it. The address is
+    /// stated once — the project the row named, and the `--as` stamp, which is
+    /// the ball's bound WORKSPACE name and never an operator's — and the
+    /// choice is [`BallAct`]; `codec::balls::act` is where the five spellings
+    /// and the reason for the grouping live.
+    Ball {
+        project: String,
+        name: String,
+        act: BallAct,
+    },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather

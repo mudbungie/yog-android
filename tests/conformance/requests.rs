@@ -17,7 +17,9 @@
 //! frame must still be refused by name.
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
-use super::expect::{ACT, ASKING_SIDE, BARE_RUNG, NO_FORK_POINT, NO_SEED, NOT_THE_MINTER, READ};
+use super::expect::{
+    ACT, ASKING_SIDE, BARE_RUNG, NO_FORK_POINT, NO_SCHEDULING, NO_SEED, NOT_THE_MINTER, READ,
+};
 
 pub const REQUESTS: &[(&str, Expect)] = &[
     ("ack", Reads),
@@ -25,18 +27,24 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("agent", Refuses(READ)),
     ("answer", Reads),
     ("arm", Refuses(ACT)),
-    ("assign", Refuses(ACT)),
+    ("assign", Reads),
     ("attention", Reads),
     ("balls", Reads),
     ("board", Reads),
     ("capture", Refuses(ASKING_SIDE)),
     ("clear-trail", Reads),
     ("clients", Refuses(READ)),
-    ("close", Refuses(ACT)),
+    ("close", Reads),
     ("complete", Reads),
     ("config", Refuses(ACT)),
     ("conversations", Reads),
-    ("create", Refuses(ACT)),
+    (
+        "create",
+        Partial {
+            reads: 2,
+            reason: NO_SCHEDULING,
+        },
+    ),
     ("delete-agent", Refuses(ACT)),
     ("delete-workspace", Refuses(ACT)),
     ("deliver", Refuses(ACT)),
@@ -83,7 +91,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ),
     ("providers", Reads),
     ("rail", Refuses(READ)),
-    ("release", Refuses(ACT)),
+    ("release", Reads),
     ("restore", Reads),
     ("retarget", Reads),
     ("retire", Refuses(ACT)),
@@ -98,7 +106,13 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("stop", Reads),
     ("transcript", Reads),
     ("unpin", Refuses(ACT)),
-    ("update", Refuses(ACT)),
+    (
+        "update",
+        Partial {
+            reads: 2,
+            reason: NO_SCHEDULING,
+        },
+    ),
     ("work-diff", Refuses(READ)),
     ("workspace-balls", Reads),
     ("workspaces", Reads),

@@ -118,6 +118,7 @@ pub struct Focus {
 
 pub(crate) mod acts;
 mod asks;
+mod cmd;
 mod lane;
 mod model;
 mod options;

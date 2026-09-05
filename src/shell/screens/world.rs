@@ -65,6 +65,9 @@ impl Shell {
     pub(super) fn open_world(&mut self, world: World) {
         self.opened = Some(world);
         self.armed = false;
+        // A ball picked on one visit is not still picked on the next: the act
+        // controls address a row, and a row nobody can see is not one.
+        self.ball = None;
         let Some(model) = self.model() else { return };
         // **Opening IS the ask**, for the trail and for the ball pane alike:
         // both are read by nothing standing, so a surface nobody has opened
@@ -106,5 +109,6 @@ impl Shell {
     fn close_world(&mut self) {
         self.opened = None;
         self.armed = false;
+        self.ball = None;
     }
 }

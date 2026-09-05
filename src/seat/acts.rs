@@ -23,11 +23,13 @@ use crate::transport::Seat;
 use super::pass::kind_err;
 use super::posted::{Posted, faulted};
 
+mod ball;
 mod held;
 mod row;
 mod seen;
 mod trail;
 
+pub(super) use ball::ball;
 pub(super) use held::answer;
 pub(super) use row::row;
 pub(super) use seen::seen;

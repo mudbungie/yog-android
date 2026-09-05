@@ -1991,11 +1991,11 @@ the same answers and are decoded by nobody here: a phone that read them would
 be holding a ledger it has no width to show, which is the codec's standing
 grow-per-consumer rule saying no.
 
-**The five acts are NOT this ball** (bl-f36e, the twin of lernie bl-f7ae, whose
-two rulings are recorded there for whoever takes it): the `--as` stamp is the
-workspace's own name and not an operator's, and `close` is armed because
-nothing reverses it. Their `parity.toml` lines stand and cite that ball; the
-three reads' lines are deleted.
+**The five acts landed in bl-f36e** and §13.10 is what they are. Both of
+lernie bl-f7ae's rulings transferred: the `--as` stamp is the workspace's own
+name and not an operator's, and `close` is armed because nothing reverses it.
+The pane's whole vocabulary is off the ledger now — `parity.toml` carries none
+of the eight.
 
 **What the walk reaches.** Three new steps: `balls` and `board` from the
 roster's own entries, each from a fresh launch, and `workspace-balls` from a
@@ -2003,6 +2003,98 @@ workspace's conversation list, walked before the row menu because a menu left
 open would be over the entry. The engine is not dialled, so what the pane
 paints there is a read that failed and said so — which is what the parity gate
 asks of these three anyway, the control being on the roster either way.
+
+### 13.10 The ball pane's five acts (bl-f36e)
+
+`src/codec/balls/act.rs`, `src/seat/acts/ball.rs`, `src/seat/worker/fold.rs`,
+`src/shell/screens/world/balls/acts.rs`. The act half of §13.9: `assign`,
+`release`, `close`, `create` and `update` are what CHANGE the store, and until
+they landed an operator could watch a board from a phone and could not touch
+it.
+
+**The `--as` stamp is the WORKSPACE's, so this seat needs no identity**
+(lernie DESIGN §4.35, whose ruling transfers whole). yog spells the field as
+*"the ball's bound workspace name, never the operator `$USER`"*, and binding a
+ball to a workspace IS that equality — so a seat that invented an operator
+name would break the binding it was making. There is no box, no setting and no
+derivation: the stamp is the focused workspace's name, read where the focus
+lives (the worker), and the frame never sees it.
+
+**They hang on the AIMED view and nowhere else, which is a departure from the
+ball's own sketch and is argued rather than assumed.** `workspace-balls` is the
+one of the three reads that names a workspace, so on that screen the stamp is
+the pane's own subject. bl-f36e proposed offering `assign` on a board row too,
+with the stamp being *the row's own claimant-to-be*; that is the desktop's
+placement, and the reason it works there is stated in its own section — *"the
+wall it would be claimed for is the aim"*. On this seat the board is opened
+from the ROSTER, where nothing is aimed, so there is no claimant-to-be to read
+and the stamp would be a name this app invented. One rule with no holes beats
+two placements with one.
+
+**Every act is addressed at the row it hangs on, `create` included.** The
+project is the one fact these five need that only a ROW carries — a workspace
+row states no project (`codec::ws`; the wire's `workspaces` answer has no such
+field) and this seat reads nothing else that does. So filing a new ball is
+filing one *in the project of the ball under the thumb*. That is the ball's own
+transferable rule — *an act is addressed at the row it hangs on, never at an
+aim taken separately* — rather than an exception to it, and it is why there is
+no project box: a picker for a project this seat cannot enumerate would be this
+app asking the operator to be a read it does not have.
+
+**A row is a control now, and a pick is navigation.** Tapping a `workspace-
+balls` row makes it the pane's subject and tapping it again puts it down; the
+mark is a glyph rather than a tint, because a tint is the one distinction a
+monochrome screen and a colour-blind reader both lose. The pick carries no
+`act:` tag, because it fires no op, and it is no more durable than a scroll
+position.
+
+**The title is the composer's** (§13.2's one shared row, and §13.5's rule at a
+second site). Two of the five need text, this app types text in one place, and
+a control that needs it is DISABLED with the reason stated beside it when there
+is none — a greyed control says a thing is not live and nothing about what
+would make it live. Nothing else is composed: a ball's body and an update's
+note are prose, and a phone types a title.
+
+**`close` is armed and the other four are not.** The test is lernie §4.20's and
+it transfers: *undone by doing the other thing*. A filing is undone by
+releasing or closing it, an amendment by writing the old words back, a release
+by an assign. A close folds the trunk into the worktree, squashes the work onto
+it and removes the worktree, and no verb reverses it — so it takes the arming
+this app already has exactly one of (§13.8's truncation): two taps on one
+control, spelled in the label, cleared by leaving the screen, by picking
+another row and by the acts beside it. `Shell::armed` is still one bool rather
+than a mechanism, because the two armed controls are never on screen together
+— what an arm IS here is *this screen's irreversible control has been tapped
+once*.
+
+**Nothing new is decoded and no receipt is invented.** All five answer with a
+captured run, which the deposit already reads the same way: a refusal arrives
+in the engine's own words on the banner, and a success says nothing. The
+silence is paid for by a re-read — the pane is not a standing read, so a
+filing, a claim or a close would be invisible until the view it happened in is
+asked again, and `worker::fold::balled` asks it. That is `reread`'s rule on the
+trail, at a second site.
+
+**And never a resend**, like every act in this crate: a repeated `close` is a
+second close, a repeated `create` is a second ball. The read that settles a
+doubted one is the pane's own, and the sentence says so.
+
+**The scheduling fields are NOT spelled, and that is recorded rather than
+half-built.** A `create` or an `update` may carry `fields`: an ordered array of
+priority, tag, parent and needs applications, each of which is a picker this
+pane does not have. The desktop refused the same. Here the frame carrying one
+is **refused by name** rather than read as the frame without it, because
+answering a reprioritisation with a bare amendment is exactly the silent
+misread REMOTE §3's third rule forbids —
+`tests/conformance/requests.rs` records both by count and reason
+(`create` and `update` are `Partial { reads: 2 }`).
+
+**What the walk reaches.** No new step: the five controls paint on the
+`workspace-balls` screen the walk already visits, and a disabled control's
+rectangle is on the glass, which is what the parity inventory records (§15.5,
+PARITY §4). The engine is not dialled there, so what an operator would see is a
+pane that could not read and five controls saying which ball to tap first —
+which is what the gate asks of them.
 
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 

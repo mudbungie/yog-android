@@ -127,6 +127,9 @@ fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         // choice is its own enum. `fork` is deliberately not among them and
         // refuses below by name — the reason is in that file's header.
         "interrupt" | "retarget" | "flag" | "revoke" | "restore" => super::row::decode(op, o)?,
+        // The five the ball pane fires (DESIGN §13.9). One arm for the same
+        // reason: one family, one address, and the choice is `BallAct`.
+        "assign" | "release" | "close" | "create" | "update" => super::balls::act::decode(op, o)?,
         "effort" => Act::Effort {
             workspace: str_of(o, "workspace")?,
             role: str_of(o, "role")?,

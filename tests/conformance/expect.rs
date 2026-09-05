@@ -58,6 +58,18 @@ pub const ACT: &str = "a world act outside the chat-loop slice (DESIGN §2)";
 pub const NO_FORK_POINT: &str =
     "the row act whose fork point no read here names — bl-99fd builds the picking surface";
 
+/// **The ball pane spells the envelope and not the scheduling inside it**
+/// (DESIGN §13.9, bl-f36e). `create` and `update` may carry `fields`: an
+/// ordered array of priority, tag, parent and needs applications, each of
+/// which is a picker this pane does not have. The desktop refused the same
+/// and recorded it by count and reason (lernie DESIGN §4.35). So the two
+/// frames without it read and round-trip, and the frame with it is refused by
+/// name — reading it as the edit without its fields would answer a
+/// reprioritisation with a bare amendment, which is the silent misread §3's
+/// third rule forbids.
+pub const NO_SCHEDULING: &str =
+    "the scheduling fields are pickers this pane does not have (DESIGN §13.9)";
+
 /// REMOTE §4.2, on the foot's gesture set: *"Note which of §5.3's four verbs
 /// is absent — `invoke`, the asking side's. A foot is invoked; it never
 /// invokes."* `capture` is that verb's read half and goes with it.

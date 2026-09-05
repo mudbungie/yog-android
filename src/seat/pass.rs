@@ -10,8 +10,8 @@ use std::sync::mpsc;
 
 use serde_json::Value;
 
+use super::cmd::Cmd;
 use super::lane::Lanes;
-use super::model::Cmd;
 use super::options::Options;
 use super::{Focus, Snapshot};
 use crate::cache::Envelopes;

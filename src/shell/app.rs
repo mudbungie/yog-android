@@ -66,11 +66,20 @@ pub(crate) struct Shell {
     /// durable than a scroll position: the focus underneath it is untouched,
     /// which is what makes backing out of one land where the operator was.
     pub(crate) opened: Option<super::screens::World>,
-    /// **Whether the trail's truncation is armed** (§13.8). The one armed
-    /// control this app has, so the arm is one bool rather than a mechanism —
-    /// and it is cleared by leaving the screen, by the act beside it, and by
-    /// firing, because an arm nobody is looking at must not survive.
+    /// **Whether the armed control on the open screen is armed** (§13.8,
+    /// §13.9). Two controls take an arming now — the trail's truncation and
+    /// the ball pane's `close` — and it is still one bool rather than a
+    /// mechanism, because the two are never on screen together: what an arm
+    /// IS here is *this screen's irreversible control has been tapped once*.
+    /// It is cleared by leaving the screen, by the acts beside it, by picking
+    /// another subject and by firing, because an arm nobody is looking at must
+    /// not survive.
     pub(crate) armed: bool,
+    /// **Which ball the pane's acts address** (§13.9, bl-f36e): the project
+    /// and the id off the row that was tapped. Navigation like `opened` above
+    /// and no more durable than a scroll position — the acts are addressed at
+    /// a row, and this is which row.
+    pub(crate) ball: Option<(String, String)>,
     pub(crate) composer: String,
     /// What the search field holds. A question, not an answer — the hits are
     /// the model's and ride the snapshot — and it is emptied when the search
@@ -162,6 +171,7 @@ impl Shell {
             settings: false,
             opened: None,
             armed: false,
+            ball: None,
             scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),

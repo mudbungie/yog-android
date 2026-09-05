@@ -190,6 +190,19 @@ fn every_act_in_doubt_names_itself_and_the_read_that_settles_it() {
             "No read this seat makes says which floor stands",
             Box::new(|m: &super::Model| m.row_act("a1".into(), crate::codec::RowAct::Restore)),
         ),
+        // The ball pane's own (§13.10, bl-f36e). A repeated close is a second
+        // close and a repeated create is a second ball, so the sentence names
+        // the read the pane makes anyway — the view it was fired on.
+        Case(
+            "close",
+            "The pane is read again",
+            Box::new(|m: &super::Model| {
+                m.ball_act(
+                    "p".into(),
+                    crate::codec::BallAct::Close { id: "bl-1".into() },
+                );
+            }),
+        ),
     ];
     for Case(act, read, fire) in cases {
         let mut turns = focused();

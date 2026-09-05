@@ -34,7 +34,7 @@ use std::sync::mpsc;
 
 use serde_json::Value;
 
-use super::model::Cmd;
+use super::cmd::Cmd;
 use crate::codec::{Ask, Gesture, encode};
 use crate::transport::{Hangup, Seat};
 

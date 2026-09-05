@@ -4,15 +4,18 @@
 //! immediately — so the cadence bounds staleness, never responsiveness.
 //!
 //! The loop that spends them is `seat::worker`, split out when the tuning
-//! pair's two commands took this file to the 300 wall (bl-dfbb); what one
-//! PASS is — the standing questions and what survives a failed one — is
-//! `seat::pass` (bl-3202), and the acts it posts are `seat::acts`.
+//! pair's two commands took this file to the 300 wall (bl-dfbb); the
+//! vocabulary they are sent in is `seat::cmd`, split out when the ball pane's
+//! act took it there again (bl-f36e); what one PASS is — the standing
+//! questions and what survives a failed one — is `seat::pass` (bl-3202), and
+//! the acts it posts are `seat::acts`.
 
 use std::path::PathBuf;
 use std::sync::mpsc;
 use std::time::Duration;
 
 use super::Snapshot;
+use super::cmd::Cmd;
 use crate::transport::Seat;
 
 /// The frame's handle. Dropping it stops the worker and joins it.
@@ -21,63 +24,6 @@ pub struct Model {
     snaps: mpsc::Receiver<Snapshot>,
     last: Snapshot,
     worker: Option<std::thread::JoinHandle<()>>,
-}
-
-pub(super) enum Cmd {
-    Workspace(Option<String>),
-    Conversation(String, String),
-    Deposit(String),
-    Start(String),
-    /// **List the focused workspace's providers** (bl-0267) — a gesture of
-    /// the selectors' own, asked when one is opened rather than on every
-    /// pass: a pass is the standing set, and these are options.
-    Providers,
-    /// List one provider's models.
-    Models(String),
-    /// Assign the worker role's provider and model, stated whole.
-    Pick(String, String),
-    /// Set the worker's reasoning level, or remove it (`None` is off).
-    Effort(Option<crate::codec::Effort>),
-    /// Ask the worker's provider for its priority lane, or stop asking.
-    Priority(bool),
-    /// **Search the world, or drop the answer being shown** (bl-4c2b). The
-    /// empty needle is the second: it crosses no wire, so a search can be
-    /// left with the engine unreachable.
-    Search(String),
-    /// **Read the ops trail** (§13.8) — what the engine last did. A gesture
-    /// read and not a standing one: nothing paints it unless the surface is
-    /// open, and a phone's radio is not free.
-    Ops,
-    /// **A held lane's frame, or its end** (§14.1) — the attention queue's
-    /// or the live tail's. A command like any gesture, because the worker
-    /// adopts it where it adopts everything else and no lock is needed for
-    /// a thread to hand it over.
-    Lane(super::lane::Framed),
-    /// Acknowledge the trail's alarms.
-    Ack,
-    /// **Read the ball pane at one of its three views** (§13.9). One command
-    /// because the pane holds one answer: which view is open is the shell's,
-    /// and which read answered is the pane's own.
-    Balls(crate::codec::View),
-    /// **Answer the attention queue at one conversation** (§13.8): the
-    /// workspace and the agent the row named, both carried, because the queue
-    /// spans workspaces and the focus is nobody's address here.
-    Seen(String, String),
-    /// Truncate the trail — the armed act (§13.8).
-    ClearTrail,
-    /// Stop the focused conversation's turn, optionally its subtree with it.
-    StopTurn(bool),
-    /// Re-prompt the focused conversation from where it stands.
-    Nudge,
-    /// **Answer the tool call parked at the focused conversation** (§13.7):
-    /// release it, decline it, or keep it parked.
-    Answer(crate::codec::Verdict),
-    /// **One act on a NAMED conversation** (§13.5): the agent the row's menu
-    /// was opened on, and which of the three it fired. One command for the
-    /// group because they are one gesture — the roster has one home, and it
-    /// is `codec::RowAct`.
-    Row(String, crate::codec::RowAct),
-    Stop,
 }
 
 impl Model {
@@ -255,6 +201,18 @@ impl Model {
     /// next frame, which arrives on its own the moment the write lands.
     pub fn seen(&self, workspace: String, agent: String) {
         let _ = self.cmds.send(Cmd::Seen(workspace, agent));
+    }
+
+    /// **Fire one of the ball pane's acts** (§13.9) at the ball the control
+    /// hangs on — the project is the row's, because a project is a fact only
+    /// a row carries here, and the `--as` stamp is the focused workspace's and
+    /// is read where the focus lives.
+    ///
+    /// Not idempotent, any of the five, so nothing here is ever sent twice: a
+    /// lost reply becomes the banner's sentence and the pane's own read is
+    /// what settles it (`seat::acts::ball`).
+    pub fn ball_act(&self, project: String, act: crate::codec::BallAct) {
+        let _ = self.cmds.send(Cmd::Ball(project, act));
     }
 
     /// **Truncate the trail.** The arming is the control's, not the model's:

@@ -49,19 +49,11 @@ rail = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
 governing = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
 inbox = "unbuilt: a conversation machinery read (bl-146b; DESIGN §16.2)"
 
-# --- The ball pane: read, and not yet acted on (bl-d587, then bl-f36e) ------
-# bl-d587 landed the READ half (DESIGN §13.9), so `balls`, `workspace-balls`
-# and `board` are gone from this ledger: each has one control and each sits
-# where its subject is — the two that name no workspace on the roster, the one
-# that names a place on that place's own conversation list. The five acts are
-# bl-f36e, which is the phone's twin of lernie bl-f7ae and inherits its two
-# rulings: the `--as` stamp is the WORKSPACE's name and not an operator's, and
-# `close` is armed because nothing reverses it.
-close = "unbuilt: an act of the ball pane (bl-f36e; DESIGN §13.9)"
-assign = "unbuilt: an act of the ball pane (bl-f36e; DESIGN §13.9)"
-release = "unbuilt: an act of the ball pane (bl-f36e; DESIGN §13.9)"
-create = "unbuilt: an act of the ball pane (bl-f36e; DESIGN §13.9)"
-update = "unbuilt: an act of the ball pane (bl-f36e; DESIGN §13.9)"
+# --- The ball pane is whole (bl-d587 read, bl-f36e act) ---------------------
+# Nothing of it is on this ledger. bl-d587 landed the three reads — one control
+# apiece, each where its subject is — and bl-f36e landed the five acts on the
+# foot of the aimed view, where the `--as` stamp the wire wants IS the pane's
+# own workspace (DESIGN §13.9).
 
 # --- Unbuilt: candidates (bl-2f17) ------------------------------------------
 fan = "unbuilt: the candidate surfaces (bl-2f17; DESIGN §16.2)"
