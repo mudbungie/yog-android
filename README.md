@@ -108,7 +108,10 @@ is the whole design; three things are worth knowing before running it:
 
 - **It builds nothing.** Run `make apk ABIS=x86_64` first. A target that
   quietly rebuilt would hide which tree the pictures are of, which is exactly
-  how this loop's first run lied to its author.
+  how this loop's first run lied to its author. It does *warn* when the APK it
+  was given is older than the tracked source under `src/` and `android/` — a
+  warning, never a refusal, because running the walk against a known-good
+  artifact while the tree is mid-edit is a thing people do on purpose.
 - **No engine is dialled.** A leaf is minted per run and the paint-first cache
   is seeded from the vendored wire `corpus/`, so every screen is reachable with
   no server anywhere.

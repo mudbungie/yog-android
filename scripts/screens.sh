@@ -78,6 +78,12 @@ command -v python3 >/dev/null || die "python3 is required to assemble the cache 
 accepted; accepting one is an operator act and no script here will do it.)"
 [ -f "$APK" ] || die "no APK at $APK — build one first:
   make apk ABIS=x86_64 GRADLE=/path/to/gradle"
+# WHICH TREE ARE THESE PICTURES OF (bl-c3fc). The last preflight beat and the
+# only one that warns instead of dying: an APK older than the tracked source
+# under src/ and android/ is announced, and the walk runs anyway. Its own file
+# because it is the one preflight question a host test can drive both
+# directions of — see `scripts/screens-freshness.sh` for why it warns.
+scripts/screens-freshness.sh "$APK"
 
 ADB=("$ADB_BIN" -s "$SERIAL")
 rm -rf "$OUT"; mkdir -p "$OUT"

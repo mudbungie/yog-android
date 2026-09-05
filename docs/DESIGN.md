@@ -2174,6 +2174,25 @@ looking at is a loop that will eventually lie to you — which is why `make
 screens` builds nothing and refuses an APK that is not there, rather than
 quietly rebuilding one.
 
+**And it now says when the APK is older than the tree** (bl-c3fc). Refusing an
+absent artifact left the harder half to a sentence in the README: an APK that
+EXISTS and is three commits behind passes every check the walk has, and the
+pictures are of a build nobody meant to look at. `scripts/screens-freshness.sh`
+is the last preflight beat — the APK's mtime against the newest **tracked** file
+under `src/` and `android/` — and it **warns rather than refuses**, because the
+loop is often run deliberately against a known-good artifact while the tree is
+mid-edit and a refusal there would be wrong. Two scope decisions are the whole
+design. Prose is out: a docs edit does not change what the APK paints, and a
+guard that fires on every commit is one that gets ignored, which is this
+guard's own failure mode wearing the other face. And **tracked only**, which is
+load-bearing rather than tidy: the APK is BUILT under `android/`, so an
+enumeration of the worktree would compare every fresh build against its own
+build tree and call it stale. It is its own file for the seam reason the seeds
+have one — everything else in the walk needs an emulator, and this needs a git
+index and two mtimes, so it is the one preflight question a host test drives
+both directions of (`tests/freshness.rs`, eight arms including the empty-set
+guard `make line-cap` already keeps).
+
 **One beat is not about a screen at all** (bl-b0a9): before the walk, the run
 asserts that every runtime permission the teleoperation corpus asks for is
 **declared, accepted and held** on the installed app, read back out of
