@@ -25,6 +25,25 @@ fn recording() -> (Nap, mpsc::Receiver<Duration>) {
     )
 }
 
+/// [`recording`], and the nap then PARKS until the test lets go of the
+/// returned sender. A recording nap returns at once, so the standing the host
+/// published just before it — the sentence under test — stands for
+/// microseconds before the next dial overwrites it, and a test polling every
+/// couple of milliseconds reads it only most of the time. Holding the worker
+/// inside its own nap is the one place a test can look at what it said.
+fn gated() -> (Nap, mpsc::Receiver<Duration>, mpsc::Sender<()>) {
+    let (tx, rests) = mpsc::channel();
+    let (release, gate) = mpsc::channel::<()>();
+    (
+        Box::new(move |wait| {
+            let _ = tx.send(wait);
+            let _ = gate.recv();
+        }),
+        rests,
+        release,
+    )
+}
+
 /// **A dead engine is redialled, not mourned** (bl-8641). The channel is the
 /// class a phone breaks every time it changes networks, so the host climbs
 /// the ladder with the sentence that broke it standing where the frame can
@@ -101,17 +120,25 @@ fn a_refusal_of_the_follow_read_waits_out_this_devices_own_predecessor() {
     let refusal = json!({ "ok": false, "error": "client \"phone\" already holds a parked read" })
         .to_string()
         .into_bytes();
-    let (address, _served) = serve_many(
+    let (address, _served) = crate::test_support::serve_turns(
         &dir,
         "ca",
         "server",
         // One connection per GESTURE, as every foot gesture is: the
         // advertisement lands, and the refusal is the answer to the follow
-        // read that follows it.
-        vec![vec![advertised()], vec![refusal], vec![advertised()]],
+        // read that follows it. The read after the redial is HELD, as the
+        // engine would hold it: a script that ended there let the host meet
+        // a closed listener and publish a second `Redialling` — a connection
+        // refused — that raced this test's read of the first.
+        vec![
+            Turn::Answer(vec![advertised()]),
+            Turn::Answer(vec![refusal]),
+            Turn::Answer(vec![advertised()]),
+            Turn::Hold(vec![]),
+        ],
     );
     let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
-    let (nap, rests) = recording();
+    let (nap, rests, release) = gated();
     let mut host = Host::start(foot, table(), Box::new(dispatch), nap);
     let standing = settle(&mut host, &|s| matches!(s.health, Health::Redialling(_)));
     let Health::Redialling(why) = standing.health else {
@@ -121,6 +148,10 @@ fn a_refusal_of_the_follow_read_waits_out_this_devices_own_predecessor() {
     // One hold's width and two seconds, not the ladder's first rung: asking
     // sooner earns the same sentence and spends a handshake to hear it.
     assert_eq!(rests.recv().unwrap(), Duration::from_secs(32));
+    drop(release);
+    settle(&mut host, &|s| {
+        matches!(s.health, Health::Serving) && s.advertised
+    });
 }
 
 /// **A channel that ANSWERED A READ starts the ladder over**, and an accepted

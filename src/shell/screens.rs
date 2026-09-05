@@ -11,6 +11,16 @@ use eframe::egui;
 
 use super::app::Shell;
 use super::boot::Running;
+
+/// **The attention mark** (bl-f34b): the one glyph that says *something is
+/// waiting on you*, painted on the roster's queue entry, the workspace rows
+/// and the conversation rows — one constant, because a mark that differs by
+/// screen is three marks. U+2022 BULLET, because the bundled proportional
+/// face (egui's Ubuntu-Light) carries it; U+25CF BLACK CIRCLE, which stood
+/// here before, is in none of the four bundled faces and painted as the
+/// missing-glyph box on the one screen an operator lands on. Checked against
+/// the face's own `cmap`, and by the walk's picture (`02-roster.png`).
+pub(super) const ATTENTION_MARK: &str = " \u{2022}";
 use super::mark::Back;
 use crate::host::Health;
 use crate::seat::Snapshot;
@@ -117,7 +127,11 @@ impl Shell {
         ui.separator();
         egui::ScrollArea::vertical().show(ui, |ui| {
             for row in &snap.workspaces {
-                let mark = if row.attention > 0 { " ●" } else { "" };
+                let mark = if row.attention > 0 {
+                    ATTENTION_MARK
+                } else {
+                    ""
+                };
                 let label = format!("{}{mark} · {} agents", row.workspace, row.agents);
                 // Tapping a workspace focuses it, and the focus is what the
                 // worker asks `conversations` at.
@@ -184,7 +198,7 @@ impl Shell {
     /// second count derived here.
     fn world_entries(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         let waiting = snap.workspaces.iter().any(|row| row.attention > 0);
-        let mark = if waiting { " ●" } else { "" };
+        let mark = if waiting { ATTENTION_MARK } else { "" };
         let control = tap(ui, format!("waiting{mark}").into(), "attention");
         // Where the harness finds them (§15.2): neither carries a node it
         // could be addressed by, and they are the only way to two screens.

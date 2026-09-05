@@ -5,7 +5,7 @@
 //! **What it asks, and why that one.** `Query::Workspaces` — the roster read
 //! this seat already performs at cadence. Its rows carry `attention` (yog's
 //! `ws_row` spelling, mirrored in [`crate::codec::WsRow`]), which is the same
-//! per-workspace count the roster screen paints its `●` from. It is the
+//! per-workspace count the roster screen paints its attention mark from. It is the
 //! cheapest attention-shaped read the vendored corpus answers: one
 //! connection, one frame, rows a handful long, and nothing derived here that
 //! the engine did not already say. REMOTE §14.1's `Query::Attention` lane is

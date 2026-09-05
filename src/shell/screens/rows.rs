@@ -275,7 +275,11 @@ impl Shell {
 /// engine's reading and this is its words. A `Bad` tone with no clause is the
 /// third thing it is, a failure that left none, and says nothing extra.
 fn label(row: &ConvRow, now: i64) -> String {
-    let mark = if row.attention > 0 { " ●" } else { "" };
+    let mark = if row.attention > 0 {
+        super::ATTENTION_MARK
+    } else {
+        ""
+    };
     let when = crate::roster::stamp(row.last_active_unix, now);
     let line = format!("{}{mark} · {when}\n{}", row.display, row.preview);
     match &row.failure {

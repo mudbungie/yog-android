@@ -2601,7 +2601,7 @@ dependency, nothing upstream to wait for.
 
 `Query::Workspaces` — the roster read this seat already performs at cadence.
 Its rows carry `attention`, the per-workspace count the roster screen paints
-its `●` from (`src/shell/screens.rs`), and that is the cheapest
+its attention mark from (`src/shell/screens.rs`), and that is the cheapest
 attention-shaped read the vendored corpus answers: one connection, one frame,
 rows a handful long, and nothing derived on this end that the engine did not
 already say. It is deliberately NOT `Query::Attention`: that read is
