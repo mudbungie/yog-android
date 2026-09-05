@@ -211,6 +211,26 @@ halves — an IME not told a field is multi-line commits no newline into the
 editor buffer the mirror adopts, so before it the key was inert rather than
 merely un-sending.
 
+**The null-buffer abort has no in-app workaround, and the release profile
+stays load-bearing (bl-a71e).** A reviewer on the upstream guard reports one:
+push a single empty `TextInputState` before the first poll, because once
+`setStateInner` has run the buffer pointer is never null again. It cannot
+work in this shape, and the reason is structural rather than a race —
+`GameTextInput::setState` returns early while `inputConnection_` is null,
+which is exactly the pre-IME state the abort lives in, so a push made before
+any editor has ever been connected writes nothing and `setStateInner` never
+runs. Measured on the emulator against a debug APK: **10 of 10 cold launches
+aborted before the push and 12 of 12 after it**, every one at
+android-activity 0.6.1's `slice::from_raw_parts` over that null pointer
+(sound in release, a debug-assertion panic with them on), and an instrumented
+build logged the push 1 ms before the poll that then aborted. Deferring the
+first poll a bounded number of frames is not a second answer: nothing makes
+the buffer non-null until an `InputConnection` exists, so a delay moves the
+abort rather than removing it. The shape the workaround does hold in is one
+that polls only while a dialog with a connected editor is open. The exit is
+still the one-line upstream guard (bl-2958), and until it lands the `apk`
+target's release profile is a requirement, not an optimization.
+
 **The input-wake question is ruled (bl-c761): focus-gated fast repaint, no
 vendored winit.** This repo is registry-only with no exception standing, so
 the wake arm cannot ship here until a winit release carries it. The shell
