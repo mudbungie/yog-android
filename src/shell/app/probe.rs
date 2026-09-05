@@ -86,18 +86,32 @@ impl Shell {
         let Some(screen) = self.screen.take() else {
             return;
         };
-        let mut line = format!("{MARKER} screen={screen}");
-        if let Some(at) = mark {
-            line.push_str(&format!(" mark={}", spell(at)));
-        }
-        if let Some(at) = row {
-            line.push_str(&format!(" row={}", spell(at)));
-        }
+        let line = format!(
+            "{MARKER} screen={screen}{}{}",
+            field("mark", mark),
+            field("row", row)
+        );
         if self.probed == line {
             return;
         }
         log::info!("{line}");
         self.probed = line;
+    }
+}
+
+/// One optional rectangle field of the line, spelled or absent.
+///
+/// The line is assembled by a single `format!` rather than pushed at,
+/// because `push_str(&format!(..))` is the shape `clippy::pedantic` refuses
+/// (`format_push_string`) and the replacement it suggests — `write!` into a
+/// `String` — hands back a `Result` that cannot fail and that this crate may
+/// not `unwrap` (AGENTS rule 4). Dissolving the push seam answers both. One
+/// helper for the same reason `spell` is one: two fields cross this channel
+/// and a second copy of the spelling would be a second answer.
+fn field(key: &str, at: Option<[i32; 4]>) -> String {
+    match at {
+        Some(at) => format!(" {key}={}", spell(at)),
+        None => String::new(),
     }
 }
 
