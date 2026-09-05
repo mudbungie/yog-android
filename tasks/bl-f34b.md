@@ -1,7 +1,8 @@
 +++
 title = "the attention mark paints as tofu: the bundled font set has no glyph for the roster's dot"
 created = 1788582619
-updated = 1788582619
+updated = 1788583313
+claimant = "Animations-S"
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
