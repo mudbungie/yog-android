@@ -5,6 +5,8 @@
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
+use serde_json::Value;
+
 use super::model::Cmd;
 use super::pass::Standing;
 use super::{Focus, Snapshot};
@@ -14,15 +16,16 @@ pub(super) fn run(
     seat: &Seat,
     cadence: Duration,
     cache: &std::path::Path,
-    kept: Option<(Focus, Snapshot, super::options::Options)>,
+    kept: Option<(Focus, Snapshot, super::options::Options, Option<Value>)>,
     cmds: &mpsc::Receiver<Cmd>,
+    lanes: &mpsc::Sender<Cmd>,
     out: &mpsc::Sender<Snapshot>,
 ) {
     let (mut focus, mut standing) = match kept {
         // The selectors' offerings come back with the rows (bl-0267): the
         // file holds them under the workspace they were read for, so a
         // resumed seat opens its selectors instantly and offline.
-        Some((focus, snap, options)) => (focus, Standing::resumed(snap, options)),
+        Some((focus, snap, options, queue)) => (focus, Standing::resumed(snap, options, queue)),
         None => (Focus::default(), Standing::default()),
     };
     let mut note = None;
@@ -30,8 +33,8 @@ pub(super) fn run(
         // An undeliverable snapshot is not a stop signal: `Model::drop` sends
         // `Stop` before the receiver can go away (join precedes field drop),
         // so shutdown always arrives as a command, never as a dead channel.
-        let _ = out.send(standing.pass(seat, cache, &focus, note.take()));
-        match wait(seat, cmds, cadence, &mut standing, &focus, out) {
+        let _ = out.send(standing.pass(seat, cache, &focus, note.take(), lanes));
+        match wait(cmds, cadence, &mut standing, &focus, out) {
             Ok(Cmd::Workspace(workspace)) => {
                 let was = focus.workspace.take();
                 focus = Focus {
@@ -83,24 +86,16 @@ pub(super) fn run(
             Ok(Cmd::Search(text)) => {
                 note = searched(super::asks::search(seat, &text), &mut standing);
             }
-            // **The two world reads a gesture makes** (§13.8), and the two
-            // acts over the trail. Each read replaces what it answers and a
-            // failure keeps what was there, which is `searched`'s rule and is
-            // here for its reason: losing an answer the engine gave over one
-            // it did not is the defect §13.2's grace exists to prevent.
+            // **The one world read a gesture makes** (§13.8; the queue is the
+            // lane's, §14.1), and the two acts over the trail. The read
+            // replaces what it answers and a failure keeps what was there,
+            // which is `searched`'s rule and is here for its reason: losing
+            // an answer the engine gave over one it did not is the defect
+            // §13.2's grace exists to prevent.
             Ok(Cmd::Ops) => {
                 note = match super::asks::ops(seat) {
                     Ok(rows) => {
                         standing.trail = rows;
-                        None
-                    }
-                    Err(why) => Some(why),
-                };
-            }
-            Ok(Cmd::Attention) => {
-                note = match super::asks::attention(seat) {
-                    Ok(rows) => {
-                        standing.queue = rows;
                         None
                     }
                     Err(why) => Some(why),
@@ -157,7 +152,9 @@ pub(super) fn run(
             }
             Ok(Cmd::Start(goal)) => note = super::acts::started(seat, &focus, goal).note(),
             Ok(Cmd::Stop) | Err(mpsc::RecvTimeoutError::Disconnected) => return,
-            Err(mpsc::RecvTimeoutError::Timeout) => {}
+            // A lane's frame never comes back from `wait` — it is adopted
+            // there, inside the same deadline — so it is the tick's arm.
+            Ok(Cmd::Lane(_)) | Err(mpsc::RecvTimeoutError::Timeout) => {}
         }
     }
 }
@@ -226,21 +223,20 @@ fn searched(
     }
 }
 
-/// **How long between passes — and what happens inside that wait** (bl-4822).
+/// **How long between passes — and what arrives inside that wait** (§14.1).
 ///
-/// The world is re-read at the model's own cadence and nothing about that
-/// changed. What changed is that a conversation which is WRITING is asked for
-/// its tail on a quicker rest while the wait runs: `follow` one shot at a
-/// time (REMOTE §5.5), published as it lands, so arriving text appears four
-/// times a rest instead of once a cadence. Each tick costs one small read of
-/// the answer so far rather than a whole transcript, which is the difference
-/// between smoothing the arrival and paying the amplification the lane was
-/// built to remove (upstream measured 20x, quadratic in the answer's length).
+/// The world is re-read at the model's own cadence. What arrives between
+/// passes is the held lanes' frames — the queue as it changes, the tail as it
+/// is written — each adopted onto the standing and published at once, so
+/// arriving text appears at the engine's write cadence rather than once a
+/// pass. A frame is not a gesture: it wakes no pass, and the wait goes on to
+/// the same deadline. (The tail used to be re-asked here one shot at a time
+/// on a 500 ms rest, bl-4822; the intake holds that read, so a one-shot ask
+/// of it waited a hold. The lane is what replaced it.)
 ///
 /// It hands back exactly what `recv_timeout` hands back, so the loop above
 /// reads the same three outcomes it always did.
 fn wait(
-    seat: &Seat,
     cmds: &mpsc::Receiver<Cmd>,
     cadence: Duration,
     standing: &mut Standing,
@@ -250,21 +246,12 @@ fn wait(
     let deadline = Instant::now() + cadence;
     loop {
         let left = deadline.saturating_duration_since(Instant::now());
-        if left.is_zero() || !standing.streaming(focus) {
-            // Not writing, or the cadence is up: the caller's own pass is the
-            // next thing that should happen.
-            return cmds.recv_timeout(left);
-        }
-        match cmds.recv_timeout(LIVE_REST.min(left)) {
-            Err(mpsc::RecvTimeoutError::Timeout) => {
-                let _ = out.send(standing.living(seat, focus));
+        match cmds.recv_timeout(left) {
+            Ok(Cmd::Lane(framed)) => {
+                standing.adopted(framed);
+                let _ = out.send(standing.publish(focus));
             }
             other => return other,
         }
     }
 }
-
-/// How long between reads of an answer being written. Short enough that text
-/// arrives in pieces an eye can follow, long enough that a phone's radio is
-/// not held awake for a paragraph.
-const LIVE_REST: Duration = Duration::from_millis(500);

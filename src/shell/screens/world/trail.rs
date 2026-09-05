@@ -93,9 +93,19 @@ impl Shell {
 
 /// One line of the record: when, where it came from, what it exited, and what
 /// it said.
+/// One row: when, from where, and **the engine's own reading of what it
+/// exited** (REMOTE §9.17) — never a number this seat interprets. A failed
+/// row says so and says where it stands, so an operator can tell the alarm
+/// (`live`) from one a newer clean run retired or an ack covered.
 fn line(ui: &mut egui::Ui, row: &OpRow) {
-    ui.weak(format!("{} · {} · exit {}", row.ts, row.origin, row.exit));
+    ui.weak(format!("{} · {} · {}", row.ts, row.origin, row.exit_label));
     ui.label(&row.argv);
+    if row.failed {
+        ui.colored_label(
+            crate::shell::chat::tone_hue(ui, crate::codec::Tone::Bad),
+            format!("failed · {}", row.standing.word()),
+        );
+    }
     if !row.stderr.is_empty() {
         ui.weak(&row.stderr);
     }

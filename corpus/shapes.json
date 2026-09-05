@@ -1,5 +1,5 @@
 {
-  "protocol": 8,
+  "protocol": 13,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -8,6 +8,40 @@
         ":object"
       ],
       "since": 1
+    },
+    "reply/acknowledged": {
+      "signature": [
+        "/agent:string",
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/age_secs:number",
+        "/rows/[]/agent:string",
+        "/rows/[]/display:string",
+        "/rows/[]/failure:null",
+        "/rows/[]/failure:string",
+        "/rows/[]/flag/at:string",
+        "/rows/[]/flag/reason:string",
+        "/rows/[]/flag:null",
+        "/rows/[]/flag:object",
+        "/rows/[]/held/reason:string",
+        "/rows/[]/held/tool:string",
+        "/rows/[]/held/tool_use:string",
+        "/rows/[]/held:null",
+        "/rows/[]/held:object",
+        "/rows/[]/pending:number",
+        "/rows/[]/preview:string",
+        "/rows/[]/says:string",
+        "/rows/[]/signals/[]:string",
+        "/rows/[]/signals:array",
+        "/rows/[]/state:string",
+        "/rows/[]/uncertain:bool",
+        "/rows/[]/workspace:string",
+        "/rows/[]:object",
+        "/rows:array",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 12
     },
     "reply/advertised": {
       "signature": [
@@ -122,6 +156,7 @@
         "/rows/[]/held:object",
         "/rows/[]/pending:number",
         "/rows/[]/preview:string",
+        "/rows/[]/says:string",
         "/rows/[]/signals/[]:string",
         "/rows/[]/signals:array",
         "/rows/[]/state:string",
@@ -131,7 +166,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 4
+      "since": 12
     },
     "reply/balls": {
       "signature": [
@@ -241,10 +276,21 @@
       "signature": [
         "/kind:string",
         "/ok:bool",
+        "/settings/[]/control/kind:string",
+        "/settings/[]/control/max:number",
+        "/settings/[]/control/min:number",
+        "/settings/[]/control:object",
+        "/settings/[]/entry:string",
+        "/settings/[]/fault:string",
+        "/settings/[]/help:string",
+        "/settings/[]/name:string",
+        "/settings/[]/value:string",
+        "/settings/[]:object",
+        "/settings:array",
         "/text:string",
         ":object"
       ],
-      "since": 1
+      "since": 13
     },
     "reply/conversations": {
       "signature": [
@@ -465,6 +511,20 @@
       ],
       "since": 1
     },
+    "reply/login": {
+      "signature": [
+        "/fallback:string",
+        "/kind:string",
+        "/lines/[]/err:bool",
+        "/lines/[]/text:string",
+        "/lines/[]:object",
+        "/lines:array",
+        "/ok:bool",
+        "/outcome:number",
+        ":object"
+      ],
+      "since": 8
+    },
     "reply/marks": {
       "signature": [
         "/branch:string",
@@ -499,7 +559,10 @@
         "/rows/[]/argv:string",
         "/rows/[]/cwd:string",
         "/rows/[]/exit:number",
+        "/rows/[]/exit_label:string",
+        "/rows/[]/failed:bool",
         "/rows/[]/origin:string",
+        "/rows/[]/standing:string",
         "/rows/[]/stderr:string",
         "/rows/[]/stdout:string",
         "/rows/[]/ts:string",
@@ -507,7 +570,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 11
     },
     "reply/outcome": {
       "signature": [
@@ -747,7 +810,6 @@
         "/orphan:string",
         "/orphan_reason:string",
         "/rows/[]/attempts:number",
-        "/rows/[]/auth_failed:bool",
         "/rows/[]/auth_row:string",
         "/rows/[]/commit:string",
         "/rows/[]/ended_at:string",
@@ -766,7 +828,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 9
     },
     "reply/trail-cleared": {
       "signature": [
@@ -780,6 +842,7 @@
       "signature": [
         "/kind:string",
         "/ok:bool",
+        "/rows/[]/auth_row:string",
         "/rows/[]/blocks/[]/id:string",
         "/rows/[]/blocks/[]/input:string",
         "/rows/[]/blocks/[]/kind:string",
@@ -804,11 +867,13 @@
         "/rows/[]/tool_use_id:string",
         "/rows/[]/usage/input_tokens:number",
         "/rows/[]/usage:object",
+        "/rows/[]/wound:string",
+        "/rows/[]/wound_reason:string",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 9
     },
     "reply/work-diff": {
       "signature": [
@@ -1268,6 +1333,24 @@
       ],
       "since": 1
     },
+    "request/login": {
+      "signature": [
+        "/op:string",
+        "/provider:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 8
+    },
+    "request/login-tail": {
+      "signature": [
+        "/op:string",
+        "/provider:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 8
+    },
     "request/marks": {
       "signature": [
         "/branch:string",
@@ -1323,6 +1406,14 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/pin": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 10
     },
     "request/prepare": {
       "signature": [
@@ -1511,6 +1602,14 @@
         ":object"
       ],
       "since": 1
+    },
+    "request/unpin": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 10
     },
     "request/update": {
       "signature": [

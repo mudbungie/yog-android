@@ -43,7 +43,7 @@ pub use row::RowAct;
 pub use search::{Address, Found, Hit, HitField};
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
-pub use trail::OpRow;
+pub use trail::{OpRow, Standing};
 pub use transcript::{Block, Entry, EntryKind};
 pub use ws::{ConfigTip, WsKind, WsRow};
 
@@ -154,9 +154,9 @@ pub enum Ask {
     Conversations { workspace: String },
     /// One conversation's transcript, in message order.
     Transcript { workspace: String, agent: String },
-    /// **The answer in flight** (REMOTE §5.5, bl-4822), read one shot at a
-    /// time: every read starts holding nothing, so what comes back is the
-    /// whole tail so far and this seat replaces rather than appends.
+    /// **The answer in flight** (REMOTE §5.5, bl-4822), held open (DESIGN
+    /// §14.1): every read starts holding nothing, so the first frame is the
+    /// whole tail so far and each later one is what landed since.
     Follow { workspace: String, agent: String },
     /// **What each role is set to** (bl-e9f9): the assignments the
     /// workspace's lineage tip holds, read from where the tuning gestures

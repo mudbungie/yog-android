@@ -2,7 +2,8 @@
   "direction": "reply",
   "frames": [
     {
-      "kind": "attention",
+      "agent": "c-9",
+      "kind": "acknowledged",
       "ok": true,
       "rows": [
         {
@@ -46,9 +47,17 @@
           "uncertain": true,
           "workspace": "ws"
         }
-      ]
+      ],
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-9",
+      "kind": "acknowledged",
+      "ok": true,
+      "rows": [],
+      "workspace": "ws"
     }
   ],
   "protocol": 12,
-  "shape": "attention"
+  "shape": "acknowledged"
 }

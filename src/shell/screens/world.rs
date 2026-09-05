@@ -8,11 +8,12 @@
 //! workspace's conversation list would say the trail was that workspace's,
 //! which is a scope the wire does not carry and §8 forbids this app to imply.
 //!
-//! **Each is asked for when it is opened, and not on the pass.** The queue is
-//! already read at the conversation depth for the held-call band (§13.7) and
-//! the trail is read by nothing standing, so a surface nobody has opened costs
-//! this device no radio at all — which is the §14.1 lane's own argument
-//! applied at the seat.
+//! **The trail is asked for when it is opened, and the queue is never asked
+//! at all.** The trail is read by nothing standing, so a surface nobody has
+//! opened costs this device no radio — the §14.1 lane's own argument applied
+//! at the seat. The queue is that lane's (DESIGN §14.1): it stands for the
+//! seat's whole life and its frames write the one holder every screen paints
+//! from, so opening this surface is a look at what is already held.
 //!
 //! **The queue's rows navigate; the trail's do not.** A queue row is an
 //! address this seat already focuses (the workspace and the agent, in the
@@ -53,16 +54,16 @@ mod trail;
 mod waiting;
 
 impl Shell {
-    /// Open one of them, and ask for what it paints in the same gesture: an
-    /// operator opening a surface IS the request for its rows.
+    /// Open one of them. For the trail, opening IS the ask — an operator
+    /// opening the surface is the request for its rows; the queue is held
+    /// standing and asks nothing.
     pub(super) fn open_world(&mut self, world: World) {
         self.opened = Some(world);
         self.armed = false;
-        if let Some(model) = self.model() {
-            match world {
-                World::Queue => model.list_queue(),
-                World::Trail => model.list_trail(),
-            }
+        if world == World::Trail
+            && let Some(model) = self.model()
+        {
+            model.list_trail();
         }
     }
 

@@ -12,7 +12,7 @@ fn full() -> Value {
     json!({
         "workspace": "ws", "agent": "c-1", "display": "Cobalt",
         "state": "stopped", "uncertain": false,
-        "signals": ["held", "mail", "flagged"],
+        "signals": ["held", "mail", "flagged"], "says": "parked; has mail; was flagged",
         "preview": "p", "age_secs": 5, "pending": 2,
         "held": { "tool": "Bash", "tool_use": "toolu_1", "reason": "writes" },
         "failure": "Unauthorized",
@@ -25,7 +25,7 @@ fn full() -> Value {
 fn quiet() -> Value {
     json!({
         "workspace": "ws", "agent": "c-2", "display": "Dun",
-        "state": "live", "uncertain": true, "signals": [],
+        "state": "live", "uncertain": true, "signals": [], "says": "",
         "preview": "", "age_secs": 0, "pending": 0,
         "held": null, "failure": null, "flag": null,
     })
@@ -37,6 +37,7 @@ fn the_full_row_reads_back() {
     assert_eq!((r.workspace.as_str(), r.agent.as_str()), ("ws", "c-1"));
     assert_eq!(r.state, AgentState::Stopped);
     assert_eq!(r.signals, ["held", "mail", "flagged"]);
+    assert_eq!(r.says, "parked; has mail; was flagged");
     assert_eq!((r.preview.as_str(), r.age_secs, r.pending), ("p", 5, 2));
     assert_eq!(
         r.held,

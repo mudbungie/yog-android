@@ -69,10 +69,10 @@ pub const ASKING_SIDE: &str = "§5.3's asking side — this device is invoked, i
 /// the bug.
 pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 
-/// **The follow lane is read, one shot at a time** (bl-4822). It was skipped
-/// for two waves and the skip's reasoning is kept here because it is what
-/// makes the consumption lawful: REMOTE §5.5 made the lane's frame an
-/// **append** —
+/// **The follow lane is held, and its frame is an append** (bl-4822, held
+/// since bl-8e3c). It was skipped for two waves and the skip's reasoning is
+/// kept here because it is what makes the consumption lawful: REMOTE §5.5
+/// made the lane's frame an **append** —
 ///
 /// > *"Absorb every frame of a read, in order, onto an empty fold. What you
 /// > hold after the last frame you have received is what you paint."*
@@ -83,16 +83,15 @@ pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 /// green conformance run still says nothing about that, and re-vendoring the
 /// fixtures is still not consuming the section.
 ///
-/// **What this seat does with it, and why the fold is not needed here.** §5.5
-/// also says *"a read starts holding nothing"* and *"Two reads by the same
-/// seat are two reads: the second starts holding nothing, so it replaces
-/// rather than appending."* This seat holds no connection (DESIGN §7): it
-/// asks `follow` one shot at a time while a turn is in flight, so every read
-/// it makes is a first frame — the whole tail so far — and its fold is
-/// assignment. An author who later HOLDS the connection owes the real fold:
-/// absorb every frame onto an empty fold in stream order, newer `delta` kind
-/// winning, and `Seat::answered` is the wrong door for it — it decodes
-/// `stream.last()`, which for an append stream is the final delta alone.
+/// **What this seat does with it.** It holds the connection (DESIGN §14.1)
+/// and owes the real fold, which is `codec::follow::Stream::absorb` — the
+/// engine's own operation copied, so an engine frame and this seat's
+/// accumulation agree by contract. `Seat::answered` is the wrong door for the
+/// lane and is not on it: it decodes `stream.last()`, which for an append
+/// stream is the final delta alone; a lane parks on `Seat::hold` and folds
+/// every frame. The one-shot reading that stood here before was true of the
+/// ask and false of the intake, which holds the read (protocol 10's lesson,
+/// §14.1 there).
 ///
 /// The tool host's `invocations` read is follow-CLASS and is **not** this
 /// lane: its answer is one frame of rows, and §5.5's rule is about a text

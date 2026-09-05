@@ -16,6 +16,7 @@ mod folds;
 mod labels;
 mod split;
 mod turns;
+mod wound;
 
 /// The conversation's display name in every fixture — an agent, never a model.
 const SPEAKER: &str = "yog";
@@ -122,6 +123,17 @@ fn compacted(name: &str, first: usize, last: usize, summary: &str) -> Entry {
             first,
             last,
             summary: summary.to_string(),
+        },
+    )
+}
+
+fn wounded(name: &str, wound: &str, reason: Option<&str>, auth_row: Option<&str>) -> Entry {
+    entry(
+        name,
+        EntryKind::Wounded {
+            wound: wound.to_string(),
+            reason: reason.map(str::to_string),
+            auth_row: auth_row.map(str::to_string),
         },
     )
 }

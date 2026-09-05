@@ -38,6 +38,7 @@ mod build;
 mod compacted;
 mod project;
 mod turns;
+mod wounded;
 
 /// The six-value §11 tone vocabulary, re-exported rather than restated: the
 /// wire already spells it for a conversation row ([`crate::codec::Tone`]) and

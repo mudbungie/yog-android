@@ -9,7 +9,6 @@
       "rows": [
         {
           "attempts": 1,
-          "auth_failed": false,
           "commit": "abc",
           "ended_at": "t1",
           "framing": "complete",
@@ -26,9 +25,7 @@
         },
         {
           "attempts": 1,
-          "auth_failed": true,
-          "auth_row": "anthropic",
-          "framing": "failed",
+          "framing": "killed",
           "seq": "002",
           "tokens": {
             "cache_read": 33,
@@ -42,7 +39,6 @@
         },
         {
           "attempts": 1,
-          "auth_failed": true,
           "commit": "abc",
           "ended_at": "t1",
           "framing": "killed",
@@ -59,7 +55,6 @@
         },
         {
           "attempts": 1,
-          "auth_failed": false,
           "commit": "abc",
           "ended_at": "t1",
           "framing": "complete",
@@ -73,6 +68,39 @@
             "total": 99
           },
           "wound": "output_limit"
+        },
+        {
+          "attempts": 1,
+          "auth_row": "anthropic",
+          "commit": "abc",
+          "ended_at": "t1",
+          "framing": "failed",
+          "seq": "005",
+          "started_at": "t0",
+          "tokens": {
+            "cache_read": 33,
+            "cache_write": 44,
+            "input": 11,
+            "output": 22,
+            "total": 99
+          },
+          "wound": "refused"
+        },
+        {
+          "attempts": 1,
+          "commit": "abc",
+          "ended_at": "t1",
+          "framing": "failed",
+          "seq": "006",
+          "started_at": "t0",
+          "tokens": {
+            "cache_read": 33,
+            "cache_write": 44,
+            "input": 11,
+            "output": 22,
+            "total": 99
+          },
+          "wound": "refused"
         }
       ]
     },
@@ -89,6 +117,6 @@
       "rows": []
     }
   ],
-  "protocol": 1,
+  "protocol": 9,
   "shape": "steps"
 }

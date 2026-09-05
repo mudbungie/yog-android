@@ -1,0 +1,12 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "login",
+      "provider": "acme",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 8,
+  "shape": "login"
+}

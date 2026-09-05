@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "pin",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 10,
+  "shape": "pin"
+}

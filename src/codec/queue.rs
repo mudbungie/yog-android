@@ -40,6 +40,11 @@ pub struct QueueRow {
     pub uncertain: bool,
     /// Why this row fires, in the engine's own tokens (the narrowing above).
     pub signals: Vec<String>,
+    /// **Why this row fires, in words** (REMOTE §9.11 at protocol 12): the
+    /// firing rules' own sentence, kept in one home on the engine so it
+    /// crosses rather than being re-worded per seat. Empty is a row that
+    /// fires for no rule with words — the tokens above still say which.
+    pub says: String,
     pub preview: String,
     pub age_secs: i64,
     pub pending: usize,
@@ -87,6 +92,7 @@ pub(crate) fn row(v: &Value) -> Result<QueueRow, String> {
                     .ok_or_else(|| "attention row: non-string signal".to_owned())
             })
             .collect::<Result<Vec<String>, String>>()?,
+        says: str_of(o, "says")?,
         preview: str_of(o, "preview")?,
         age_secs: i64_of(o, "age_secs")?,
         pending: usize_of(o, "pending")?,

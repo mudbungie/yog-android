@@ -4,10 +4,16 @@
 //! and WHICH questions one asks is here. They change for unrelated reasons —
 //! the grace, the cache write and the published snapshot are the pass's, and
 //! a new read is only ever a new arm in this walk.
+//!
+//! **Three again since bl-8e3c.** The queue read left this walk when
+//! `attention` became follow-class (REMOTE §14.1): the intake this seat
+//! dials holds it, so a pass that asked it would wait a hold. It is the
+//! attention LANE's now (`seat::lane`, DESIGN §14.1), standing beside the
+//! pass and writing the same holder.
 
 use crate::cache::Envelopes;
+use crate::codec::Ask;
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, QueueRow};
 use crate::transport::Seat;
 
 use super::{Focus, Snapshot, answer, kind_err};
@@ -19,7 +25,6 @@ pub(super) fn fill(
     focus: &Focus,
     snap: &mut Snapshot,
     kept: &mut Envelopes,
-    queue: &mut Vec<QueueRow>,
 ) -> Result<(), String> {
     let (reply, envelope) = answer(seat, &Ask::Workspaces)?;
     snap.workspaces = match reply {
@@ -48,19 +53,5 @@ pub(super) fn fill(
         other => return Err(kind_err("transcript", &other)),
     };
     kept.transcript = Some(envelope);
-    // **The decision queue, at the depth that spends it** (§13.7). It names no
-    // workspace and no conversation — it is the whole world's queue — but it
-    // is asked here rather than at every depth because the screen that paints
-    // it as a BAND is the one a conversation is open on, and a phone's radio
-    // is not free. The queue screen (§13.8) asks for it in its own right and
-    // writes the same holder: the rows address themselves, so what a pass
-    // learns and what a gesture learns are one answer with one home, and this
-    // walk writes it rather than the snapshot it is filling.
-    let (reply, envelope) = answer(seat, &Ask::Attention)?;
-    *queue = match reply {
-        Reply::Attention(rows) => rows,
-        other => return Err(kind_err("attention", &other)),
-    };
-    kept.attention = Some(envelope);
     Ok(())
 }

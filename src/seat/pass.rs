@@ -6,11 +6,13 @@
 //! asks, and an act is what it says.
 
 use std::path::Path;
+use std::sync::mpsc;
 
 use serde_json::Value;
 
+use super::lane::Lanes;
+use super::model::Cmd;
 use super::options::Options;
-use super::posted::Posted;
 use super::{Focus, Snapshot};
 use crate::cache::Envelopes;
 use crate::codec::reply::Reply;
@@ -18,7 +20,9 @@ use crate::codec::{Ask, Gesture, encode};
 use crate::transport::Seat;
 use fill::fill;
 
+mod adopt;
 mod fill;
+mod publish;
 
 /// **How many consecutive failed passes an error waits for.** The cadence is
 /// the clock (bl-3202): passes are one rest apart, so a second consecutive
@@ -34,12 +38,28 @@ pub(super) struct Standing {
     /// pass does not read it — the selectors are their own gestures
     /// (bl-0267).
     pub(super) options: Options,
-    /// **The answer in flight** (bl-4822), read on its own quicker rest. It
-    /// is painted into every published snapshot and never into `last`: a
-    /// tail that changes five times a second must not make the §14 cache
-    /// rewrite itself five times a second, and what the cache is for is the
-    /// world the engine has written down.
+    /// **The answer in flight** (bl-4822), the follow lane's fold (§14.1):
+    /// every frame the lane hands over is absorbed onto it, and the stream's
+    /// end empties it. It is painted into every published snapshot and never
+    /// into `last`: a tail that grows several times a second must not make
+    /// the §14 cache rewrite itself as often, and what the cache is for is
+    /// the world the engine has written down.
     live: Option<crate::codec::Stream>,
+    /// **The two held reads** (§14.1), tended by every pass: the attention
+    /// lane always, the follow lane while the focused row states a flight.
+    lanes: Lanes,
+    /// The attention lane's last frame, verbatim — what the §14 cache stores
+    /// for the queue, the way `fill` keeps the pass's own envelopes.
+    queue_envelope: Option<Value>,
+    /// The last pass's failure sentence, held for the grace below.
+    failure: Option<String>,
+    /// **The sentence a gesture earned, carried for one pass.** A note is
+    /// set by the pass a gesture wakes (or by a lane frame this build could
+    /// not read) and stands on every snapshot until the next pass replaces
+    /// it — never only on the one snapshot it arrived with, because a lane's
+    /// frame can publish the next snapshot a moment later and a sentence
+    /// nobody saw is a message that vanished.
+    note: Option<String>,
     /// How many times the assignments have been read (bl-e9f9) — the
     /// controls' watermark for "your optimistic value has been overtaken".
     pub(super) reads: usize,
@@ -50,9 +70,9 @@ pub(super) struct Standing {
     posted: (usize, usize, usize),
     /// **The decision queue, and the trail** (§13.7, §13.8) — the two reads
     /// whose subject is the WORLD rather than a depth of the focus, so a pass
-    /// that narrows the focus loses neither. The queue is written by the pass
-    /// walk under an open conversation and by the queue screen's own gesture;
-    /// the trail only ever by the trail screen's, because nothing paints it
+    /// that narrows the focus loses neither. The queue is written by the
+    /// attention lane's frames and by nothing else (§14.1); the trail only
+    /// ever by the trail screen's gesture, because nothing paints it
     /// standing.
     pub(super) queue: Vec<crate::codec::QueueRow>,
     pub(super) trail: Vec<crate::codec::OpRow>,
@@ -75,10 +95,14 @@ impl Standing {
     /// last-good so a first pass that fails republishes them rather than
     /// blanking the screen. `stored` is seeded with them too — they ARE what
     /// the file holds, so an unchanged pass rewrites nothing.
-    pub(super) fn resumed(snap: Snapshot, options: Options) -> Self {
+    pub(super) fn resumed(snap: Snapshot, options: Options, queue_envelope: Option<Value>) -> Self {
         Self {
             options,
             live: None,
+            lanes: Lanes::default(),
+            queue_envelope,
+            failure: None,
+            note: None,
             reads: 0,
             posted: (0, 0, 0),
             // The cached queue is an answer the engine gave, so it is held as
@@ -106,25 +130,22 @@ impl Standing {
     ///   engine gave, *under the focus it was asked at*: pairing one focus's
     ///   rows with another's is the one thing [`Snapshot`] promises never to
     ///   do, so a focus that moved gets the empty lists it honestly has.
-    /// - **The sentence waits.** A refresh failure paints once it has
-    ///   persisted past [`GRACE`]; a pass that succeeds clears it instantly,
-    ///   because a standing success is never in doubt.
-    /// - **`note` never waits.** It is a gesture's own answer — a refused
-    ///   deposit, a start the engine would not run — and the operator just
-    ///   acted. Silence there is a message that vanished.
+    /// - **The sentence waits, and `note` never does** — `Self::publish`,
+    ///   which every snapshot goes out through.
     pub(super) fn pass(
         &mut self,
         seat: &Seat,
         cache: &Path,
         focus: &Focus,
         note: Option<String>,
+        tx: &mpsc::Sender<Cmd>,
     ) -> Snapshot {
         let mut fresh = Snapshot {
             focus: focus.clone(),
             ..Snapshot::default()
         };
         let mut kept = Envelopes::default();
-        let failed = fill(seat, focus, &mut fresh, &mut kept, &mut self.queue).err();
+        let failed = fill(seat, focus, &mut fresh, &mut kept).err();
         // The selectors' offerings ride every snapshot, under the focus they
         // were read for and no other (bl-0267).
         self.options.paint(focus, &mut fresh);
@@ -133,8 +154,12 @@ impl Standing {
         kept.models = models;
         kept.roles = roles;
         kept.options_workspace = self.options.workspace();
+        kept.attention.clone_from(&self.queue_envelope);
+        // The queue rides the comparison below because it is an answer the
+        // engine gave and the file holds it (§14); it is written by the lane
+        // rather than by this pass, which changes nothing about that.
+        fresh.queue.clone_from(&self.queue);
         if failed.is_none() {
-            self.failed = 0;
             self.last = fresh;
             // The cache is written from a pass the engine ANSWERED, and only
             // when what it says changed: a live conversation changes every
@@ -150,36 +175,31 @@ impl Standing {
                 let _ = crate::cache::write(cache, focus, &kept);
                 self.stored = self.last.clone();
             }
+        } else if self.last.focus != *focus {
+            self.last = fresh;
+        }
+        // **The lanes are tended after the rows** (§14.1): what should stand
+        // is read off the pass's own answer — the focused row's flight — and
+        // a lane is dialled only by a pass the engine answered, so an engine
+        // that is down costs one failed dial a pass and not two. The drop
+        // half runs regardless: a lane on a subject the focus has left must
+        // not go on writing its frames under the new one.
+        let wanted = self.wanted(focus);
+        self.lanes.tend(seat, &wanted, tx, failed.is_none());
+        if failed.is_none() {
+            self.failed = 0;
         } else {
             self.failed += 1;
-            if self.last.focus != *focus {
-                self.last = fresh;
-            }
         }
+        self.failure = failed;
         // A turn that has finished has no tail: the answer arrives as a
         // transcript row, and a fold left standing under it would be the
         // same words twice (bl-4822).
-        let flying = self.streaming(focus);
-        if !flying {
+        if !self.streaming(focus) {
             self.live = None;
         }
-        let mut out = self.last.clone();
-        (out.landed, out.refused, out.doubted) = self.posted;
-        out.roles_read = self.reads;
-        self.world(&mut out);
-        // One tail on the glass, and none at rest (bl-e3d1). The gate is the
-        // row's own flight, so the transcript's tail obeys exactly what the
-        // lane obeys.
-        out.transcript = crate::live::settled(out.transcript, self.live.as_ref(), flying);
-        // Painted onto the published snapshot as well as onto `fresh`: a
-        // pass that failed republishes last-good rows, and the selectors'
-        // offerings are not the pass's to lose (bl-0267).
-        self.options.paint(focus, &mut out);
-        out.error = match (note, failed.filter(|_| self.failed > GRACE)) {
-            (Some(note), Some(failed)) => Some(format!("{note}; {failed}")),
-            (note, failed) => note.or(failed),
-        };
-        out
+        self.note = note;
+        self.publish(focus)
     }
 }
 
@@ -205,68 +225,4 @@ pub(super) fn answer(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), String> {
 /// with `seat::acts`, which asks the same question of a receipt.
 pub(super) fn kind_err(asked: &str, got: &Reply) -> String {
     format!("{asked}: the engine answered {} instead", got.kind())
-}
-
-impl Standing {
-    /// **The reads whose subject is the world**, painted onto a snapshot
-    /// however it was built (§13.6, §13.7, §13.8). Three fields, one place:
-    /// each is a gesture's answer rather than a depth's, so a pass that failed
-    /// or narrowed must not drop any of them — and three copies of that rule
-    /// at three publishers is how one of them comes to be forgotten.
-    fn world(&self, out: &mut Snapshot) {
-        out.search.clone_from(&self.found);
-        out.queue.clone_from(&self.queue);
-        out.trail.clone_from(&self.trail);
-    }
-
-    /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot
-    /// see the receipt — the worker holds the wire — so what it watches is
-    /// these counters moving.
-    ///
-    /// **Three, since bl-07b1**: a lost reply is not a refusal (yog REMOTE
-    /// §3), and counting it as one made the echo hand its text back to the
-    /// composer — an invitation to send a message the engine may already have
-    /// taken. The third counter is what lets the echo stand instead.
-    pub(super) fn posted(&mut self, fate: &Posted) {
-        match fate {
-            Posted::Took => self.posted.0 += 1,
-            Posted::Refused(_) => self.posted.1 += 1,
-            Posted::InDoubt(_) => self.posted.2 += 1,
-        }
-    }
-
-    /// **Whether the focused conversation is writing right now** — read off
-    /// the row's own `flight`, which is where every conversation-level gate
-    /// rides (REMOTE §9.4). A conversation the list has not caught up with
-    /// has no row and so is not streaming, which is the honest answer.
-    pub(super) fn streaming(&self, focus: &Focus) -> bool {
-        let Some(agent) = focus.agent.as_deref() else {
-            return false;
-        };
-        self.last
-            .conversations
-            .iter()
-            .find(|row| row.root_id == agent)
-            .is_some_and(|row| row.flight.is_some())
-    }
-
-    /// One live read, and the snapshot to publish for it. The tail replaces
-    /// whatever was held (§5.5: every read of this seat's is a first frame),
-    /// and a failure is a sentence for the banner like any other — it does
-    /// not stop the lane, because the next tick re-asks and is whole.
-    pub(super) fn living(&mut self, seat: &Seat, focus: &Focus) -> Snapshot {
-        let read = super::asks::follow(seat, focus);
-        let mut out = self.last.clone();
-        (out.landed, out.refused, out.doubted) = self.posted;
-        out.roles_read = self.reads;
-        self.world(&mut out);
-        match read {
-            Ok(stream) => self.live = Some(stream),
-            Err(why) => out.error = Some(why),
-        }
-        let flying = self.streaming(focus);
-        out.transcript = crate::live::settled(out.transcript, self.live.as_ref(), flying);
-        self.options.paint(focus, &mut out);
-        out
-    }
 }

@@ -135,8 +135,8 @@ Two kinds of move stand behind it, and only one of them is mechanical:
   empty fold"* — under a wire spelling that did not change. A signature ledger
   records field paths and types, so nothing forced a bump and no fixture can
   fail. A client of that lane must read the section rather than re-vendor the
-  fixtures and call it consumed (§7 — this seat reads it one shot at a time,
-  where the fold is assignment).
+  fixtures and call it consumed (§14.1 — this seat holds the lane and folds
+  with the engine's own `absorb`).
 
 ## 3. The stack ruling
 
@@ -264,7 +264,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/request.rs` | the gesture codec's decode side — the inverse the corpus is replayed through | landed (bl-93e3) |
 | `corpus/` + `tests/conformance/` | the vendored wire conformance corpus and its replay: the decision table over every shape, in both directions | landed (bl-93e3) |
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
-| `src/codec/follow.rs` | REMOTE §5.5's lane, read one shot at a time: the answer in flight as much of it as has landed | landed (bl-4822) |
+| `src/codec/follow.rs` | REMOTE §5.5's frame — what landed since the frame before — and the engine's own fold that reassembles a held read from them | landed (bl-4822, the fold bl-8e3c) |
+| `src/seat/lane.rs` | the two held reads beside the pass (§14.1): a reader parked per lane handing frames down the worker's own channel, tended by every pass, hung up by a socket shutdown | landed (bl-8e3c) |
+| `src/seat/pass/adopt.rs` | what a lane's frame means to the standing: the attention fold that replaces, the follow fold that appends, and the end of a stream | landed (bl-8e3c) |
+| `src/seat/pass/publish.rs` | the one builder every published snapshot goes through, whether a pass or a frame publishes it | landed (bl-8e3c, out of `pass.rs`) |
+| `src/rows/wounded.rs` | the settled-failure notice as a row (REMOTE §9.16): the class, the remedy on the refusal arm, and no row for `none` | landed (bl-8e3c) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
@@ -302,12 +306,12 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/Span.java` | how long ago, in the unit a reader acts on — one ladder, shared by a fix's age and a notification's | landed (bl-5cbd, out of `Position.java`) |
 | `android/…/App.java` | the two handles a tool-host thread cannot get for itself: this app's context, and whether it is in front | landed (bl-f34f) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
-| `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the live tick inside it | landed (bl-dfbb, out of `model.rs`) |
+| `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the lanes' frames adopted inside it | landed (bl-dfbb, out of `model.rs`; the tick replaced by the lanes bl-8e3c) |
 | `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
 | `src/seat/acts.rs` | the acts the seat posts: the message deposit, the §8.1 start pair, the turn's stop and nudge, and the worker's tuning — none of them ever sent twice (§19.2) | landed (bl-de96, out of `pass.rs`) |
 | `src/seat/acts/row.rs` | the three acts addressed to a conversation ROW rather than to the focus (§13.5), and the read that settles each in doubt — including the one that says out loud that none does | landed (bl-f97c) |
-| `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three, the live tail, and the two world reads (§13.8). Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, bl-4822, split out bl-07b1, world reads bl-35bd) |
-| `src/codec/trail.rs` | the ops trail's row: what the engine did, read as its own facts and classified nowhere — the words for a failure are `standing` and `exit_label`, which arrive with the re-vendor (bl-8e3c) | landed (bl-35bd) |
+| `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three, the search and the trail (§13.8); the two follow-class reads are the lanes' (§14.1). Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, split out bl-07b1, world reads bl-35bd) |
+| `src/codec/trail.rs` | the ops trail's row: what the engine did, read as its own words (`failed`, `exit_label`, `standing` since protocol 11) and classified nowhere | landed (bl-35bd, the words bl-8e3c) |
 | `src/seat/acts/trail.rs` | the two acts over the engine's record rather than over a place: the acknowledgement and the truncation, neither naming a row | landed (bl-35bd) |
 | `src/shell/screens/world.rs` + `world/{waiting,trail}.rs` | android-only: the two surfaces that sit over the depths rather than inside them (§13.8) — the queue as a queue, the trail with its acts, and the one armed control this app has | landed (bl-35bd) |
 | `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
@@ -691,7 +695,7 @@ list where the two read identically is a list that cannot be scanned."*
 **The growing answer is the speaking agent's own row, and there is exactly
 one of it** (operator ruling, bl-e3d1). The engine writes the tail into the
 transcript itself as a streaming entry, so a cadence read already carries
-one; the follow lane below then reads the same answer several times a rest.
+one; the follow lane below then carries the same answer as it is written.
 Painting the lane's fold *beside* the transcript put the same words on the
 glass twice, and the projection labelled its row `live:` — a word that is not
 a speaker, in the speaker's seat, which §13.3 does not allow. So: the tail
@@ -704,30 +708,24 @@ same defect one answer: **at rest there is no tail at all**, whatever the
 response file still holds, because the row's own `flight` is the gate the
 lane already obeys.
 
-**The world is re-read at cadence; the answer being WRITTEN is followed, one
-shot at a time (bl-4822, amending bl-2842).** `seat::pass::fill` still asks
-`workspaces` → `conversations` → `transcript` on every pass of the worker's
-own clock, and a gesture still wakes it immediately. What is new is what
-happens *inside the wait*: while the focused conversation's row states a
-`flight`, the worker asks `follow` on a quicker rest and publishes the tail
-as it lands, so arriving text appears several times a cadence instead of
-once. The turn's end drops the fold — the finished answer arrives as an
-ordinary transcript row, and a fold left standing under it would be the same
-words twice.
+**The world is re-read at cadence; the answer being WRITTEN is held open
+(bl-4822, amending bl-2842; held since bl-8e3c, §14.1).** `seat::pass::fill`
+still asks `workspaces` → `conversations` → `transcript` on every pass of the
+worker's own clock, and a gesture still wakes it immediately. While the
+focused conversation's row states a `flight`, the pass keeps a `follow` lane
+standing beside it and the worker folds each frame onto the tail as it
+lands, so arriving text appears at the engine's write cadence. The turn's end
+drops the fold — the finished answer arrives as an ordinary transcript row,
+and a fold left standing under it would be the same words twice.
 
-**The lane is read one shot at a time, and no connection is held.** REMOTE
-§5.5 makes that lawful in its own words — *"a read starts holding nothing"*,
-*"the **first** frame of any read is the whole tail so far"*, and *"Two reads
-by the same seat are two reads: the second starts holding nothing, so it
-replaces rather than appending"* — so every read this seat makes is a first
-frame and its fold is assignment. Holding the connection would buy
-write-cadence and cost three things this device cannot pay cheaply: a second
-socket held open on a machine that changes networks hourly (bl-8641), a
-second worker thread, since the one there is would be parked on the read and
-could not answer a gesture, and the real append fold, whose meaning the
-corpus cannot show (below). The day those are worth paying, the design is in
-`tests/conformance/expect.rs`'s `follow` note, which states what such an
-author owes.
+**The lane is held, and the section that used to say otherwise is §14.1.**
+Until bl-8e3c this paragraph read the lane one shot at a time on REMOTE
+§5.5's words about a read that starts holding nothing, and priced holding at
+three things — a second socket, a second thread, the real append fold. The
+premise was wrong about the intake rather than the ask: the wire holds a
+follow-class read for thirty seconds, so the one-shot read was blocking a
+step at a time and decoding the final append alone. §14.1 records the
+ruling, and pays or dissolves each of the three.
 
 **Two things were measured before choosing, and both narrowed it.** Reading
 the *transcript* faster is what the lane exists to prevent: upstream measured
@@ -755,9 +753,9 @@ decision lives in a place a person reads — the `follow` note in
 `tests/conformance/expect.rs` carries it, and `transport::Seat::answered`
 carries the trap at the line that would spring it, because it decodes
 `stream.last()` and the last frame of an append stream is the final delta
-alone. `Seat::ask` hands back every frame and is the held lane's door. This
-seat is not on that door: one shot per read means one frame to read, and
-`answered` is exactly right for it.
+alone. Since bl-8e3c this seat implements the rule (`Stream::absorb`, the
+engine's own fold) and holds the door: `Seat::hold` is what a lane parks on,
+and `answered` is for the one-frame answers only.
 
 The tool host's `invocations` read (§6) is follow-**class** and is not this
 lane: it holds a connection open, but its answer is one frame of rows rather
@@ -1782,19 +1780,20 @@ forbids this app to imply. So the roster carries two entries above its
 workspaces, and each opens a screen that paints its own bar — which is the
 whole of the back rule, inherited rather than written.
 
-**Neither joins the standing set; opening one IS the ask.** The queue is
-already read on the pass under an open conversation and the trail is read by
-nothing standing, so a surface nobody has opened costs this device no radio at
-all — §14.1's own argument for the attention lane, applied at the seat rather
-than at the engine.
+**The trail does not join the standing set; opening it IS the ask.** It is
+read by nothing standing, so a surface nobody has opened costs this device no
+radio at all — REMOTE §14.1's own argument for the attention lane, applied at
+the seat rather than at the engine. The queue is the other way round since
+bl-8e3c: it is that lane's, standing for the seat's whole life (§14.1), and
+opening its screen asks nothing.
 
-**The queue has one home now, and two askers.** The rows are held by
-`Standing`, not by a depth's pass: the pass writes them when it asks under a
-conversation, the queue screen writes them when it asks under nothing, and
-every published snapshot carries the last answer whoever earned it. That is the
-queue's own nature rather than plumbing — its rows address themselves, so
-nothing about the focus a read was made under binds the answer to that focus,
-which §13.7 already said and this is the shape of.
+**The queue has one home and, since bl-8e3c, one asker.** The rows are held
+by `Standing`, not by a depth's pass, and written by the attention lane's
+frames alone — the pass that used to ask them under a conversation and the
+screen's own gesture are both gone, because a held read is asked once and
+answered as it changes. That is the queue's own nature rather than plumbing —
+its rows address themselves, so nothing about the focus binds the answer to
+that focus, which §13.7 already said and this is the shape of.
 
 **A queue row navigates; a trail row does not.** A queue row carries the
 workspace and the agent in the words every gesture takes, so tapping one opens
@@ -1809,11 +1808,14 @@ the retirement key, the ack watermark) and REMOTE §9.17 put all four on the
 wire as `failed`, `exit_label` and `standing` precisely so no seat
 re-implements them — *"a seat that wanted the banner had to re-implement …
 five derivations this document names one home for apiece, and whose failure
-mode is a seat quietly disagreeing rather than failing to build."* The corpus
-this build is vendored against predates that bump, so the row paints the
-engine's own three facts (when, from where, what it exited) and stops. Reading
-the words is bl-8e3c's, with the re-vendor that brings them — and that ball is
-where the alarm grouping and the banner belong when they land.
+mode is a seat quietly disagreeing rather than failing to build."* Since the
+protocol-13 re-vendor (bl-8e3c) the row reads all three: the line paints the
+engine's `exit_label` where it painted a number, and a `failed` row says so
+and says its `standing` word, so the alarm (`live`) is told from a row a newer
+clean run retired or the ack covered. What is not built is the banner over
+them — §7.3's *rows standing `live`, grouped by `origin`* — which is a
+surface of its own and waits for a ball that wants it; the words it is made of
+now cross.
 
 **`clear-trail` is the first armed control this app has**, and it is the
 exception §13.2's *tap is the act* was waiting for. Every gesture the seat had
@@ -1830,8 +1832,8 @@ the read that settles a lost one (§19.2). A watermark and a truncation are
 invisible until the trail is read again — unlike a deposit, whose effect
 arrives in the standing set on its own — so the re-read is what makes either
 act visible at all, and it is made straight away rather than waited for. The
-acknowledgement's *effect* is still unreadable on this build for the reason
-above: `standing` is what says a row is acked, and it is not in this corpus.
+acknowledgement's effect is what the re-read shows: the rows that stood
+`live` come back `acked`.
 
 **What the walk reaches.** Both entries paint on the roster, so `act:attention`
 and `act:ops` are observed there; the walk taps each in turn — from a fresh
@@ -1847,19 +1849,23 @@ these two entries are the only way to two screens and carry no accessibility
 node either. The line the channel draws is unchanged and is what keeps it
 bounded: the app names controls IT has, never one per thing in the world.
 
-## 14. The paint-first cache (bl-de96)
+## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
 while the operator watched three empty lists fill. The operator's ruling is
 recorded with its own caveat — *generally opposed to caches, amenable here* —
-and this section is what that permission is bounded by.
+and this section is what that permission is bounded by. §14.1, added when the
+wire moved to protocol 13, is the other half of what stands between passes:
+the two reads the engine answers as a sequence, and how this seat holds them.
 
 **One writer, one reader, one authority.** The model's worker writes after a
 pass the engine ANSWERED; the model's boot reads it once, synchronously,
 before the first frame; the next cadence read replaces whatever it painted.
 Nothing consults it to decide anything — it decides only what is on the glass
 for the second before the first answer lands. It is never consulted again for
-the life of the process.
+the life of the process. The queue's envelope in the file is the attention
+lane's last frame (§14.1) rather than a read of the pass's — still an answer
+the engine gave, written by the same writer at the same moment.
 
 **The focus rides with the rows, because rows are only paintable under the
 focus they were asked at.** That is the invariant `Snapshot` already keeps,
@@ -1894,6 +1900,111 @@ either way, because this app already paid to receive the same bytes over TLS
 on the pass that produced them. The file is `<internal>/cache/seat.json`, a
 sibling of `<internal>/wire/` — material and snapshots share no file and no
 directory, and nothing in `crate::cache` reads or writes a key.
+
+### 14.1 The held lanes beside the pass (bl-8e3c)
+
+`src/seat/lane.rs`, `src/seat/pass/adopt.rs`, `src/seat/pass/publish.rs`,
+`src/transport.rs` (`Seat::hold`, `Open`, `Hangup`), `src/codec/follow.rs`
+(`Stream::absorb`).
+
+**The premise this replaces.** §7 used to say the tail was *"read one shot
+at a time, and no connection is held"*, on REMOTE §5.5's words about a
+read that starts holding nothing. That was true of the ask and false of the
+intake: the wire intake this seat dials HOLDS every follow-class read — the
+first frame at connect, a frame per change, the terminator when the hold
+ends, thirty seconds being the follow lane's own bound. A one-shot read of a
+held lane blocks for the whole hold. `follow` was already in that class, so
+the 500 ms live tick was blocking for a step at a time and decoding the last
+append alone; protocol 10 put `attention` in the same class (REMOTE §14.1),
+which made the standing pass — it asked the queue on every cycle under an
+open conversation — wait a hold per pass. The engine's own note names the
+hang and the remedy: the strict-equality preface is what converts it into the
+upgrade sentence, and this seat is the upgrade.
+
+**The ruling: the phone holds both lanes, beside the pass, on one
+mechanism.** The alternative was attacked first and refused on its own
+terms. A one-shot ask with an explicit bound needs the wire to offer one, and
+it does not — neither `attention` nor `follow` carries a field a seat could
+shorten the hold with. The seat-side bound is a hang-up after the first
+frame, and that parks an engine thread per read for the hold's length: sixty
+of them a minute at the tail's old rest, on a lane whose whole reason is to
+cost the engine nothing while nothing changes. So the seat holds, which is
+the desktop seat's shape (lernie DESIGN §4.12: *"a read that deliberately
+never finishes, and therefore one that must never be in the serial pass"*),
+and the three costs §7 priced for holding are paid or dissolved:
+
+- **A held socket.** One per lane, the follow lane only while the focused
+  row states a flight. Against the pass's one to three connections every two
+  seconds, a lane redialled once per thirty quiet seconds is the cheaper
+  read — which is REMOTE §14.1's argument for the lane, arriving at the seat.
+- **A second thread.** A lane is a reader parked on one held connection and
+  nothing else: it decodes nothing and decides nothing, and hands each frame
+  to the worker down the worker's own command channel (`Cmd::Lane`). The
+  worker adopts a frame where it adopts every gesture, so **no lock is
+  added** (AGENTS.md rule 7 keeps `state.rs` the only home for one) and the
+  standing keeps its one home — `queue` and the tail's fold are fields of
+  `Standing`, written by the worker and by nothing else. The desktop crosses
+  a lock here; this seat already had a channel.
+- **The real append fold.** `Stream::absorb` is the engine's own operation
+  copied — `fold(a).absorb(fold(b)) == fold(a ++ b)` — so an engine frame and
+  this seat's accumulation agree by contract. The attention frame replaces
+  (REMOTE §14.1's own ruling) and the follow frame appends (§5.5's), and the
+  two folds are two arms of one `adopt`, chosen by the lane's subject and
+  checked against the reply's kind.
+
+**The pass is the lane's clock, and a special case dissolved with it.** A
+lane is opened by a pass and only by a pass: every pass ends by making what
+stands match what is wanted — the attention lane always, the follow lane
+while the focused row flies — hanging up what is no longer wanted first and
+dialling what is missing after, and only when the engine has just answered.
+A lane that ended, for any reason (the hold's bound, the step's commit, a
+socket that went away, a dial that failed), is reopened at the next pass and
+never by itself. One rule covers the redial-storm case (an engine that is
+down costs one failed dial a pass, and the pass's own grace is the
+sentence), the hold-expiry case (REMOTE §10's *"a stream that ended and a
+dial that failed are one case"*, re-asked within a cadence), and the
+step-end case (§5.5: the fold is emptied, the committed entry arrives with
+the next transcript read, and the next stream's first frame is whole). There
+is no lane-side timer, no retry counter and no back-off, because the
+cadence already is one.
+
+**A frame decides whether it is still wanted by its lane's id, never by its
+subject.** The worker hangs up a lane whose subject the focus has left
+*before* it opens one on the new subject, so a frame from a dropped lane
+carries an id no held lane has and is ignored — including the old stream's
+end, which must not empty the new stream's fold. The hang-up is a socket
+shutdown from the worker's thread (`Hangup`, a cloned handle on the same
+socket), which wakes a reader parked up to a hold away; a flag it could only
+read between frames would not. Stopping the model is the same act on every
+lane, so a stop is seen at once rather than at the next frame.
+
+**What moved on the surfaces.** The queue has one asker now — the lane — so
+`Cmd::Attention` and `Model::list_queue` are gone: the queue screen (§13.8)
+opens and asks nothing, and the pass under an open conversation asks three
+questions again rather than four. The live tick (`LIVE_REST`) is gone with
+the one-shot follow read: arriving text appears at the engine's write
+cadence, which is what bl-4822 was reaching for with a poll. `Seat::ask` is
+now `Seat::hold` with every frame collected, so a held lane and a one-shot
+answer differ only in who reads the frames and when — the one door REMOTE
+§3's *"the streaming form is not a second form"* asks for.
+
+**What rung 2 inherits** (§17.1, bl-b82d). The lane reader is the mechanism
+a foreground service holds from the pocket; what that rung still decides is
+the lane's own stop condition and how a frame becomes a notification without
+a worker on the glass to adopt it. Rung 1's scheduled fetch is untouched —
+it asks `workspaces`, which is not follow-class, and is answered in one
+frame by any intake.
+
+**The harness holds too.** The scripted engine (`src/test_support/serve.rs`)
+gained two turns — `Hold`, frames and then the connection kept open until the
+seat hangs up, and `Feed`, frames written as the test sends them, the
+terminator when it drops the sender — so a test is the world changing at
+the moment it says so. The attention lane is served aside from the script,
+by op: it stands for the seat's whole life and its redial's timing against a
+test's gestures is nobody's to script, so scripting it positionally would
+have put one line in every script and made every request index a moving
+target. The follow lane is positional, because its dial is the pass's and
+the pass's order is a script.
 
 ## 15. Render-and-see: the headless emulator loop (bl-243b)
 
@@ -2493,9 +2604,11 @@ Its rows carry `attention`, the per-workspace count the roster screen paints
 its `●` from (`src/shell/screens.rs`), and that is the cheapest
 attention-shaped read the vendored corpus answers: one connection, one frame,
 rows a handful long, and nothing derived on this end that the engine did not
-already say. REMOTE §14.1's `Query::Attention` lane — the standing ask,
-answered as a sequence — is upstream's ball (yog bl-09aa) and rung 2's
-(bl-b82d); this rung is gated on nobody and could land the day it was
+already say. It is deliberately NOT `Query::Attention`: that read is
+follow-class since protocol 10 (REMOTE §14.1) and the wire intake holds it,
+so a scheduled job that asked it one shot would wait a hold. The seat holds
+that lane on the glass (§14.1); holding it from the pocket is rung 2's
+(bl-b82d). This rung is gated on nobody and could land the day it was
 designed.
 
 ### 17.2 What wakes a human

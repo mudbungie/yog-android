@@ -2,8 +2,8 @@
 //! and every way an answer can be the wrong one.
 
 use super::{
-    Model, cache_in, conv_reply, material, model_against, nothing_set, ops, pki, queue_quiet,
-    serve_many, settle, tr_reply, ws_reply,
+    Model, cache_in, conv_reply, material, model_against, nothing_set, ops, pki, serve_many,
+    settle, tr_reply, ws_reply,
 };
 use crate::transport::Seat;
 use serde_json::{Value, json};
@@ -26,13 +26,12 @@ fn focus_deepens_and_backs_out_of_the_standing_set() {
     let (mut model, served) = model_against(vec![
         vec![ws_reply()], // boot
         vec![nothing_set()],
-        vec![ws_reply()],    // focus_workspace: refresh…
-        vec![conv_reply()],  // …now two questions deep
-        vec![ws_reply()],    // focus_conversation: refresh…
-        vec![conv_reply()],  // …
-        vec![tr_reply()],    // …three questions deep
-        vec![queue_quiet()], // …and the queue, which only this depth asks
-        vec![ws_reply()],    // back out: the roster alone again
+        vec![ws_reply()],   // focus_workspace: refresh…
+        vec![conv_reply()], // …now two questions deep
+        vec![ws_reply()],   // focus_conversation: refresh…
+        vec![conv_reply()], // …
+        vec![tr_reply()],   // …three questions deep (the queue is the lane's)
+        vec![ws_reply()],   // back out: the roster alone again
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_workspace(Some("home".into()));
@@ -60,7 +59,6 @@ fn focus_deepens_and_backs_out_of_the_standing_set() {
             "workspaces",
             "conversations",
             "transcript",
-            "attention",
             "workspaces"
         ]
     );

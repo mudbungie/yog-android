@@ -49,9 +49,34 @@ fn a_malformed_frame_refuses_naming_the_field() {
     );
 }
 
-/// The ask names the conversation and nothing else — one shot, so there is
-/// no cursor, no since, and nothing for a client to get wrong about where a
-/// read resumes (REMOTE §5.5: every read starts holding nothing).
+/// **The fold is the engine's own** (REMOTE §5.5): `fold(a).absorb(fold(b))
+/// == fold(a ++ b)`. Text accretes, the newer delta kind wins, and a part
+/// that never spoke stays absent rather than becoming an empty string.
+#[test]
+fn absorbing_a_later_frame_is_the_fold_of_both() {
+    let mut held =
+        read(&json!({ "stream": { "delta": "thinking", "thinking": "first I" } })).unwrap();
+    held.absorb(read(&json!({ "stream": { "delta": "text", "text": "then" } })).unwrap());
+    held.absorb(read(&json!({ "stream": { "text": " this" } })).unwrap());
+    assert_eq!(
+        held,
+        Stream {
+            delta: Some("text".into()),
+            text: Some("then this".into()),
+            thinking: Some("first I".into()),
+        }
+    );
+    let mut silent = Stream::default();
+    silent.absorb(Stream::default());
+    assert!(
+        silent.is_empty(),
+        "nothing absorbed onto nothing is nothing"
+    );
+}
+
+/// The ask names the conversation and nothing else — no cursor and no since,
+/// because a read starts holding nothing and its first frame is whole
+/// (REMOTE §5.5).
 #[test]
 fn the_ask_names_the_conversation_and_nothing_else() {
     use crate::codec::{Ask, Gesture, encode};

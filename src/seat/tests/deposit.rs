@@ -1,9 +1,7 @@
 //! The message deposit: what a composer's submit does, and what a refusal or
 //! an unreachable engine leaves in the banner.
 
-use super::{
-    conv_reply, model_against, nothing_set, outcome, queue_quiet, settle, tr_reply, ws_reply,
-};
+use super::{conv_reply, model_against, nothing_set, outcome, settle, tr_reply, ws_reply};
 use serde_json::{Value, json};
 
 #[test]
@@ -14,12 +12,10 @@ fn a_deposit_posts_the_composer_and_refreshes() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
         vec![outcome(true, "")], // the deposit's receipt
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -31,7 +27,7 @@ fn a_deposit_posts_the_composer_and_refreshes() {
     });
     drop(model);
     let requests = served.join().unwrap();
-    let message: Value = serde_json::from_slice(&requests[6]).unwrap();
+    let message: Value = serde_json::from_slice(&requests[5]).unwrap();
     assert_eq!(
         message,
         json!({ "op": "message", "workspace": "home", "agent": "a1", "content": "hello" })
@@ -46,12 +42,10 @@ fn a_refused_deposit_reaches_the_banner() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
         vec![outcome(false, "gate red")],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -142,13 +136,10 @@ fn wrong_reply_kinds_name_the_kind() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
         vec![tr_reply()], // wrong: the receipt slot
-        vec![queue_quiet()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -172,17 +163,14 @@ fn a_deposits_fate_is_counted_for_the_echo_to_read() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
         vec![outcome(true, "")], // taken
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
         vec![outcome(false, "gate red")], // refused
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());

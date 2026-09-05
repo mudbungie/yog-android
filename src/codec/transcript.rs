@@ -47,6 +47,18 @@ pub enum EntryKind {
         last: usize,
         summary: String,
     },
+    /// **The settled-failure notice** (REMOTE §9.16): *this conversation is
+    /// not coming back*, said as the third virtual trailing entry. The class
+    /// token crosses and the sentence does not — `wound` is the engine's own
+    /// word (`no_response` / `output_limit` / `refused` / `none`), carried
+    /// verbatim for `delta`'s reason; `reason` is the adapter's last words
+    /// where the class left any; `auth_row` the provider row a refusal
+    /// routed to, which is what a sign-in remedy names.
+    Wounded {
+        wound: String,
+        reason: Option<String>,
+        auth_row: Option<String>,
+    },
     /// An entry the parser could not read — surfaced, never dropped.
     Raw,
 }
@@ -97,6 +109,11 @@ pub(crate) fn entry(v: &Value) -> Result<Entry, String> {
             first: usize_of(o, "first")?,
             last: usize_of(o, "last")?,
             summary: str_of(o, "summary")?,
+        },
+        "wounded" => EntryKind::Wounded {
+            wound: str_of(o, "wound")?,
+            reason: opt(o, "wound_reason", str_of)?,
+            auth_row: opt(o, "auth_row", str_of)?,
         },
         "raw" => EntryKind::Raw,
         other => return Err(format!("transcript entry: unknown kind {other:?}")),

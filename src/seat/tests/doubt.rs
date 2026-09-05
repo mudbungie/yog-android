@@ -6,9 +6,7 @@
 //! the read that settles it, and the deposit's fate is counted apart from a
 //! refusal so the composer does not hand its draft back.
 
-use super::{
-    Turn, conv_reply, model_turns, nothing_set, ops, queue_quiet, settle, tr_reply, ws_reply,
-};
+use super::{Turn, conv_reply, model_turns, nothing_set, ops, settle, tr_reply, ws_reply};
 
 /// The five turns every case here shares: the first pass, the assignments
 /// preload a focus change makes, and the pass that follows it. What comes
@@ -20,7 +18,6 @@ fn focused() -> Vec<Turn> {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Answer(vec![tr_reply()]),
-        Turn::Answer(vec![queue_quiet()]),
     ]
 }
 
@@ -30,7 +27,6 @@ fn refresh() -> Vec<Turn> {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Answer(vec![tr_reply()]),
-        Turn::Answer(vec![queue_quiet()]),
     ]
 }
 

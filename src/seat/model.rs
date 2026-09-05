@@ -48,10 +48,11 @@ pub(super) enum Cmd {
     /// read and not a standing one: nothing paints it unless the surface is
     /// open, and a phone's radio is not free.
     Ops,
-    /// **Read the decision queue** (§13.8), which the pass also asks under an
-    /// open conversation. One command because it is one question: the queue
-    /// screen is asking it where no conversation is focused.
-    Attention,
+    /// **A held lane's frame, or its end** (§14.1) — the attention queue's
+    /// or the live tail's. A command like any gesture, because the worker
+    /// adopts it where it adopts everything else and no lock is needed for
+    /// a thread to hand it over.
+    Lane(super::lane::Framed),
     /// Acknowledge the trail's alarms.
     Ack,
     /// Truncate the trail — the armed act (§13.8).
@@ -90,15 +91,20 @@ impl Model {
         // resumed seat's selectors are open on the way to the first frame
         // (bl-0267) and not one round trip later.
         let kept = crate::cache::read(&cache).map(|(focus, mut snap, stored)| {
+            let queue = stored.attention.clone();
             let options = super::options::from_cache(stored);
             options.paint(&focus, &mut snap);
-            (focus, snap, options)
+            (focus, snap, options, queue)
         });
-        let last = kept.clone().map(|(_, snap, _)| snap).unwrap_or_default();
+        let last = kept.clone().map(|(_, snap, _, _)| snap).unwrap_or_default();
         let (cmds, cmd_rx) = mpsc::channel();
         let (snap_tx, snaps) = mpsc::channel();
+        // The worker holds a sender of its own for the lanes to hand frames
+        // down (§14.1), so the channel never reads as disconnected while it
+        // runs: `Stop` is the one way out, and `drop` sends it.
+        let lanes = cmds.clone();
         let worker = std::thread::spawn(move || {
-            super::worker::run(&seat, cadence, &cache, kept, &cmd_rx, &snap_tx);
+            super::worker::run(&seat, cadence, &cache, kept, &cmd_rx, &lanes, &snap_tx);
         });
         Self {
             cmds,
@@ -219,13 +225,6 @@ impl Model {
     /// painting meanwhile.
     pub fn list_trail(&self) {
         let _ = self.cmds.send(Cmd::Ops);
-    }
-
-    /// **Ask for the decision queue** — the whole-queue surface's own read
-    /// (§13.8), which is the same question a pass asks under an open
-    /// conversation and lands in the same place.
-    pub fn list_queue(&self) {
-        let _ = self.cmds.send(Cmd::Attention);
     }
 
     /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in

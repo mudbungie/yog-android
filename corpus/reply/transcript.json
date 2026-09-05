@@ -69,6 +69,38 @@
           "summary": "what the compactor cut"
         },
         {
+          "auth_row": "anthropic",
+          "kind": "wounded",
+          "name": "«wound»",
+          "raw": "{}",
+          "wound": "refused"
+        },
+        {
+          "kind": "wounded",
+          "name": "«wound»",
+          "raw": "{}",
+          "wound": "refused"
+        },
+        {
+          "kind": "wounded",
+          "name": "«wound»",
+          "raw": "{}",
+          "wound": "no_response",
+          "wound_reason": "the adapter's last words"
+        },
+        {
+          "kind": "wounded",
+          "name": "«wound»",
+          "raw": "{}",
+          "wound": "no_response"
+        },
+        {
+          "kind": "wounded",
+          "name": "«wound»",
+          "raw": "{}",
+          "wound": "output_limit"
+        },
+        {
           "kind": "raw",
           "name": "005-junk.json",
           "raw": "{}"
@@ -76,6 +108,6 @@
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 9,
   "shape": "transcript"
 }

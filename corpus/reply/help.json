@@ -230,6 +230,13 @@
           "verb": "priority"
         },
         {
+          "detail": "Starts `bz --login` for one provider row **inside the focused workspace's own                  settings**, on the engine — so the credential lands where that workspace's                  agents will read it, whichever box you are sitting at. It answers the moment                  the run starts rather than when it finishes: a browser sign-in is minutes of                  your attention and nothing else may wait on it, so what comes back is the                  run's standing, and `/login-tail <provider>` is how you watch the rest.                  Firing it again on a row already signing in cancels that run and starts a                  fresh one — the restart is the cancel, so there is no second verb. yog never                  reads or writes a credential; it carries the flow's lines and nothing else.                  A row that cannot be signed in shows the reason where the verb would be, in                  the provider list.",
+          "summary": "sign this workspace in to a provider row, on the box that holds it",
+          "surface": "control",
+          "usage": "/login <provider>",
+          "verb": "login"
+        },
+        {
           "detail": "Appends the acknowledgement line every failure-derived alarm reads past, so a failure you have understood and chosen to leave alone stops bannering. A new failure lands after the watermark and banners again.",
           "summary": "acknowledge every alarm on the ops trail",
           "surface": "control",
@@ -237,11 +244,25 @@
           "verb": "ack"
         },
         {
-          "detail": "Records what the selected conversation is currently asking about as seen, which is what takes it off the attention queue — the same watermarks the window writes simply by having that conversation open, so a headless answer and a windowed one are the same thing. The answer is the queue that remains. It quiets what the conversation has *said*; undelivered mail is not a watermark and clears only when a driver reads it. New evidence re-raises it. Refuses when the conversation is not one yog can see.",
-          "summary": "answer the selected conversation's place in the attention queue",
+          "detail": "Records what the selected conversation is currently asking about as seen, which is what takes it off the attention queue — the same watermarks the window writes simply by having that conversation open, so a headless answer and a windowed one are the same thing. It is a write, and the answer says so: the receipt names the conversation it acknowledged, and carries the queue that remains beside it — the remainder alone reads as a plain `/attention`, since the row it acted on is exactly the row the remainder no longer holds. It quiets what the conversation has *said*; undelivered mail is not a watermark and clears only when a driver reads it. New evidence re-raises it. Refuses when the conversation is not one yog can see.",
+          "summary": "acknowledge the selected conversation and answer the queue that remains",
           "surface": "control",
           "usage": "/seen",
           "verb": "seen"
+        },
+        {
+          "detail": "Adds the selected workspace to the durable pin list every seat orders its workspace strip by: pinned workspaces come first, in the order they were pinned, ahead of the rest in name order. A pin is an assertion about the world, not an arrangement of one screen, so it is the same list on every seat and it survives a restart. Pinning one already pinned moves it to the end of the pinned run rather than saying it twice. The answer is the workspace listing with the ranks it now carries. `/unpin` takes it back out.",
+          "summary": "float this workspace to the front of the strip and keep it there",
+          "surface": "control",
+          "usage": "/pin",
+          "verb": "pin"
+        },
+        {
+          "detail": "Removes the selected workspace from the pin list, so it falls back into name order with everything unpinned. Says what it means rather than flipping whatever it found: unpinning one that is not pinned leaves the list alone, which is what lets two seats send it at once and agree. The answer is the workspace listing with the ranks it now carries.",
+          "summary": "take this workspace back out of the pinned run",
+          "surface": "control",
+          "usage": "/unpin",
+          "verb": "unpin"
         },
         {
           "detail": "Answers the invocation the capability boundary parked before it ran. `pass` lets that one call through, `refuse` declines it in band — the model reads why and carries on — and `hold` keeps it parked even if the policy later would have passed it. The answer is scoped to the exact call that is held, which is read from the conversation's own hold mark, so nothing is typed and nothing can be spent by a different call. Passing or refusing then drives the conversation on (`litany advance`), which is what actually lifts the hold: the control is asked again and now finds your answer. Nothing here stops the agent. Refuses when nothing is held there.",
@@ -419,13 +440,6 @@
           "verb": "agent"
         },
         {
-          "detail": "The decision queue: one row per conversation asking for you, anywhere yog can see — why it is asking (it notified you, it came to rest, it hit its budget, a transfer was declined, its mail is undelivered), what it last said, how long it has waited, and the workspace and conversation to aim an answer at. The order is the one the down arrow walks at the window; the count is the strip's. Answer a row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else about it.",
-          "summary": "everything waiting on you, across every workspace",
-          "surface": "control",
-          "usage": "/attention",
-          "verb": "attention"
-        },
-        {
           "detail": "The tail of `ops.jsonl` — one line per action anything attempted, with its outcome. Actions only: a query reads the world and changes nothing, so it leaves no row, and what was read before an action was chosen cannot be recovered here. Defaults to the last 50 rows.",
           "summary": "the last n ops rows, newest last",
           "surface": "control",
@@ -454,6 +468,13 @@
           "verb": "help"
         },
         {
+          "detail": "The decision queue: one row per conversation asking for you, anywhere yog can see — why it is asking (it notified you, it came to rest, it hit its budget, a transfer was declined, its mail is undelivered), what it last said, how long it has waited, and the workspace and conversation to aim an answer at. The order is the one the down arrow walks at the window; the count is the strip's. Answer a row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else about it. Over a connection that can be held it stays open: the first frame is the answer as of now, and a further frame arrives whenever what needs you changes — each frame the whole answer, so paint the last one you were given. The hold ends quietly after thirty seconds and the asker asks again. At a seat that cannot hold one it is the same answer, once.",
+          "summary": "everything waiting on you, across every workspace",
+          "surface": "control",
+          "usage": "/attention",
+          "verb": "attention"
+        },
+        {
           "detail": "The routing leg's follow-class read. It does not answer until this machine has an invocation or the engine's hold expires — thirty seconds — so a tool host waits here rather than polling, and asks again the moment it is answered. It names nothing: the queue it drains is the one addressed to the certificate this connection presented, which is why a caller inside the world (`yog gesture`, the deposit inbox, the window) is refused rather than handed somebody's work. An empty answer is the ordinary answer of a hold that ended quietly, not a failure. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run it and post the result with `/complete`.",
           "summary": "a tool host's next work: wait for what this machine has been asked to run",
           "surface": "machine",
@@ -466,6 +487,13 @@
           "surface": "control",
           "usage": "/follow",
           "verb": "follow"
+        },
+        {
+          "detail": "The output of the run `/login <provider>` started in the focused workspace —                  the authorize URL, whatever else bz says, and the exit when it finishes, which                  is the last thing this ever says. It starts from the beginning every time it                  is asked, so re-asking after a dropped connection replays rather than losing                  the URL: a seat holds nothing between asks and there is no offset to name.                  Over a connection that can be held it stays open and speaks as the run does;                  at a seat that cannot it answers everything said so far, in one frame, which                  is the same reading answered once. A row with no run answers nothing said,                  which is what never-signed-in looks like — not a refusal.",
+          "summary": "watch a sign-in: what `bz --login` has printed for this row, as it prints it",
+          "surface": "control",
+          "usage": "/login-tail <provider>",
+          "verb": "login-tail"
         }
       ]
     }

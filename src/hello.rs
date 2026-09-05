@@ -45,62 +45,55 @@ use crate::frame;
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
-/// **8 since the re-vendor of bl-cc54.** Seven moves stand behind it and the
-/// last six are why an old build must not be left running: 2 was the
-/// tool-host pair (`subject_cwd` on an advertised element, `cwd` on an
-/// invocation — REMOTE §5.1, §5.3); **3** put `failure` on the conversation
-/// row, the agent answer and the queue row (§9.10); **4** put `flag` on the
-/// queue row (§9.11); **5** rewrote `reply/governing` — `branch` out,
-/// `follows` and `diverged_lineages` in, and `oid` now naming the followed
-/// lineage's head rather than the fork commit an agent's branch left (§9.12,
-/// litany's follow-the-tip ruling reaching the wire); and **6** minted the
-/// §9.4 tuning pair — `effort` and `priority`, two request shapes that are
-/// new at 6 — and widened `reply/providers`, whose rows now state per
-/// provider whether either can be asked for at all; and **7** put `surface`
-/// on every `reply/help` row — the interface-parity classification (yog
-/// `docs/PARITY.md` §2), two values, `control` for an op every seat owes a
-/// discoverable interactable and `machine` for one spoken only by programs;
-/// and **8** put `wrote` on `reply/advertised` — a required boolean saying
-/// whether the engine changed the stored set or found it identical and
-/// compared (§5.1, yog bl-66d4). `last_active_unix` rode in at 2 with §9.9.
+/// **13 since the re-vendor of bl-8e3c.** Twelve moves stand behind it, and
+/// the last five are the ones this build consumes. 2 was the tool-host pair
+/// (`subject_cwd` on an advertised element, `cwd` on an invocation — REMOTE
+/// §5.1, §5.3); **3** put `failure` on the conversation row, the agent answer
+/// and the queue row (§9.10); **4** put `flag` on the queue row (§9.11); **5**
+/// rewrote `reply/governing` (§9.12); **6** minted the §9.4 tuning pair and
+/// widened `reply/providers`; **7** put `surface` on every `reply/help` row —
+/// the interface-parity classification `crate::parity` judges this seat by;
+/// **8** put `wrote` on `reply/advertised`, the foot's own receipt
+/// (`codec::reply`, DESIGN §6). `last_active_unix` rode in at 2 with §9.9.
 ///
-/// **7 is the bump this client consumes without decoding a byte of it.** The
-/// `help` reply is a recorded refusal here, so the field reaches this repo as
-/// a fixture rather than as a codec change — and it is load-bearing anyway:
-/// `crate::parity` reads the classification straight out of the vendored
-/// corpus, which is why the roster of ops this seat owes a control is the
-/// engine's own list rather than one kept here.
+/// **9** (§9.16) put the `wounded` entry on `reply/transcript` — the settled-
+/// failure notice, read by `codec::transcript` and painted by `rows::wounded`
+/// — and took `auth_failed` off `reply/steps`, a shape this seat refuses.
+/// **10** (§14.1) moved **no field at all**: `attention` became follow-class,
+/// the same ask and the same reply shape answered as a *sequence* by an intake
+/// that can hold — precisely "what a spelling already in use is taken to
+/// say", and the one class of move the corpus ledger cannot see, since frame
+/// count is not a field signature. **11** (§9.17) put `failed`, `exit_label`
+/// and `standing` on `reply/ops`, so the trail reads the engine's words rather
+/// than classifying `exit` (`codec::trail`). **12** put `says` on every queue
+/// row — the firing rules in words, one home on the engine (`codec::queue`).
+/// **13** (§9.18) put a typed `settings` array on `reply/config`, a shape this
+/// seat refuses; it cost the integer and nothing else.
 ///
-/// **8 is the one this device reads as a device.** The other six moved shapes
-/// a seat paints; this one moved the foot's own receipt, and this box is a
-/// foot — so `wrote` is decoded (`codec::reply`), carried out of
-/// [`crate::foot::Foot::advertise`], and judged by the host loop, where a
-/// `true` on a re-assertion is this machine learning its advertised set was
-/// replaced while it was off running a tool (DESIGN §6). The seat half reads
-/// nothing off it: a seat never advertises, so it never earns the receipt —
-/// the desktop seat's own re-vendor reached the same conclusion.
+/// **10 is the bump that was a design decision here, not a re-vendor.** The
+/// wire intake this seat dials HOLDS a follow-class read: the first frame at
+/// connect, a frame per change, a terminator when the hold ends — thirty
+/// seconds, the follow lane's own bound. A one-shot read of a held lane
+/// blocks for the whole hold, and the standing pass used to make exactly that
+/// read of `attention` on every cycle and of `follow` at a 500 ms rest. So
+/// since bl-8e3c this seat holds both lanes beside the pass (DESIGN §14.1):
+/// `seat::lane` parks a reader on the connection and hands each frame to the
+/// worker, which folds it — the §5.5 append fold for `follow`, replacement
+/// for `attention` — and the pass never waits on either.
 ///
 /// **A move in a shape this codec does not spell still moves this number,
-/// and that is the point.** `governing` is a recorded refusal here (it is
-/// the answer to a gesture this seat does not send), so 5 cost this client
-/// nothing but the integer — and the integer is the whole of what the
-/// handshake gates on. A seat that stayed at 4 because "nothing it reads
-/// changed" would simply stop speaking to the engine.
+/// and that is the point.** `governing`, `steps` and `config` are recorded
+/// refusals here (each the answer to a gesture this seat does not send), so
+/// 5, 9's loss and 13 cost this client nothing but the integer — and the
+/// integer is the whole of what the handshake gates on. A seat that stayed at
+/// 8 because "nothing it reads changed" would simply stop speaking to the
+/// engine, which is what this ball was filed against.
 ///
 /// **The version is the only thing that breaks an old seat, and it breaks it
 /// on purpose.** An unknown FIELD is tolerated — this codec reads the fields
-/// it spells and ignores the rest, which `codec::conv`'s own test pins — so
-/// none of those three shapes would have hurt a protocol-2 build. What ends
-/// it is this preface: fail-closed, both ways, by §3's design. A seat that
-/// does not follow the engine's number stops speaking to it, whatever it can
-/// or cannot read.
-///
-/// One meaning moved with no signature to see it, and it is still true:
-/// REMOTE §5.5's follow frame is an **append**, so a client that consumes
-/// that lane must read the section and not only re-vendor the fixtures
-/// (DESIGN §7 — this seat reads the lane one shot at a time, where the fold
-/// is assignment).
-pub const PROTOCOL: u32 = 8;
+/// it spells and ignores the rest, which `codec::conv`'s own test pins. What
+/// ends an old build is this preface: fail-closed, both ways, by §3's design.
+pub const PROTOCOL: u32 = 13;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

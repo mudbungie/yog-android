@@ -74,8 +74,8 @@ disarm = "unbuilt: fleet and watch (bl-477e; DESIGN §16.2)"
 # The trail and the queue were here — `ops`, `ack`, `clear-trail` and
 # `attention` — and are gone: the roster's two world entries reach both
 # surfaces, the trail carries the acknowledgement and the armed truncation, and
-# the queue read is now asked by a gesture as well as by a pass (DESIGN §13.8,
-# bl-35bd).
+# the queue is the attention lane's, held standing from the first pass (DESIGN
+# §13.8, §14.1).
 
 # --- Unbuilt: admin and armed deletions (bl-f645) ---------------------------
 config = "unbuilt: admin surface (bl-f645; DESIGN §16.2)"
@@ -92,8 +92,19 @@ help = "unbuilt: the op-detail affordance over the vendored table, never a wire 
 # --- Unbuilt: the minting seat (bl-2ee8) ------------------------------------
 enroll = "unbuilt: the minting side — this seat fires the mint and displays the QR; re-classed from never by the full-seat ruling (bl-2ee8; DESIGN §16.2, amending §11)"
 
+# --- Unbuilt: sign-in from the glass (bl-f645's admin surface, DESIGN §16.2) --
+# REMOTE §8.3's act and its held tail landed at protocol 8 (yog bl-61bf); a
+# phone screen that fires `bz --login` for a provider row and follows what it
+# prints is an admin surface this seat does not have yet.
+login = "unbuilt: the sign-in act on a provider row (bl-f645; DESIGN §16.2)"
+login-tail = "unbuilt: the held read of a sign-in's own output (bl-f645; DESIGN §16.2)"
+
+# --- Unbuilt: the pinned run of the roster (protocol 10, yog bl-7782) --------
+pin = "unbuilt: the roster's pinned run — an assertion about the world the seat does not yet offer a control for (DESIGN §16.2)"
+unpin = "unbuilt: the roster's pinned run (DESIGN §16.2)"
+
 # --- Structural reasons that survive the full-seat ruling -------------------
-follow = "read one shot at a time while a turn is in flight, never fired by a tap; the view it populates is the transcript, which act:transcript reaches (DESIGN §7)"
+follow = "held beside the pass while the focused turn is in flight, never fired by a tap; the view it populates is the transcript, which act:transcript reaches (DESIGN §14.1)"
 roles = "read at cadence to settle the controls row; what it populates is the selectors' own text, and no gesture asks for it (bl-e9f9)"
 
 # --- Unbuilt before the re-scope, standing ----------------------------------

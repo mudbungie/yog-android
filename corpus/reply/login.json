@@ -1,0 +1,38 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "login",
+      "lines": [],
+      "ok": true
+    },
+    {
+      "kind": "login",
+      "lines": [
+        {
+          "err": true,
+          "text": "open https://provider.invalid/auth"
+        },
+        {
+          "err": false,
+          "text": "{\"ready\":true}"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "fallback": "yog exec --ws /ws bz --login --provider acme --browser",
+      "kind": "login",
+      "lines": [
+        {
+          "err": true,
+          "text": "this provider has no device endpoint; use `--browser`"
+        }
+      ],
+      "ok": true,
+      "outcome": 78
+    }
+  ],
+  "protocol": 8,
+  "shape": "login"
+}

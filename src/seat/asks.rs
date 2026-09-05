@@ -1,7 +1,8 @@
-//! **The reads a gesture asks for** — the selectors' three (bl-0267, bl-e9f9)
-//! and the live tail (bl-4822). A *pass* is the standing set on the model's
-//! own clock (`seat::pass`); these are asked when the operator opens something
-//! or when a conversation is writing.
+//! **The reads a gesture asks for** — the selectors' three (bl-0267, bl-e9f9),
+//! the search, the trail. A *pass* is the standing set on the model's own
+//! clock (`seat::pass`); these are asked when the operator opens something.
+//! The two follow-class reads are neither: they are held (`seat::lane`,
+//! DESIGN §14.1), and a one-shot ask of a held lane would wait a hold.
 //!
 //! **Split from `seat::acts` on the contract's own line** (bl-07b1). yog
 //! REMOTE §3: *"Asks are the opposite case and re-ask freely: a read is
@@ -16,7 +17,7 @@ use serde_json::Value;
 use super::Focus;
 use super::pass::{answer, kind_err};
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, Found, OpRow, QueueRow};
+use crate::codec::{Ask, Found, OpRow};
 use crate::transport::Seat;
 
 /// **How much trail a phone asks for** (DESIGN §13.8). The engine's own tail
@@ -93,26 +94,6 @@ pub(super) fn search(seat: &Seat, text: &str) -> Result<Option<Found>, String> {
     }
 }
 
-/// **The answer in flight** (REMOTE §5.5, bl-4822), one shot: §5.5 says a
-/// read starts holding nothing and *"the first frame of any read is the whole
-/// tail so far"*, so what comes back is the answer as it stands and this seat
-/// replaces rather than appends. The append fold belongs to a seat that HOLDS
-/// the connection, and this one does not (DESIGN §7).
-pub(super) fn follow(seat: &Seat, focus: &Focus) -> Result<crate::codec::Stream, String> {
-    let Focus {
-        workspace: Some(workspace),
-        agent: Some(agent),
-    } = focus.clone()
-    else {
-        return Err("follow: no conversation is focused".to_owned());
-    };
-    let ask = Ask::Follow { workspace, agent };
-    match answer(seat, &ask)? {
-        (Reply::Follow(stream), _) => Ok(stream),
-        (other, _) => Err(kind_err("follow", &other)),
-    }
-}
-
 /// **The ops trail's tail** (yog §4.2, DESIGN §13.8) — the read that names no
 /// place, like the search beside it: the trail is the engine's, not a
 /// workspace's, so nothing about the focus decides what it says.
@@ -120,17 +101,5 @@ pub(super) fn ops(seat: &Seat) -> Result<Vec<OpRow>, String> {
     match answer(seat, &Ask::Ops { max: TAIL })? {
         (Reply::Ops(rows), _) => Ok(rows),
         (other, _) => Err(kind_err("ops", &other)),
-    }
-}
-
-/// **The decision queue, asked in its own right** (§13.8). The pass asks the
-/// same question under an open conversation (`seat::pass::fill`); this is the
-/// queue SCREEN asking, and both answers land in the one holder — a queue read
-/// under a focus and a queue read under none are the same answer, because the
-/// queue names no place either.
-pub(super) fn attention(seat: &Seat) -> Result<Vec<QueueRow>, String> {
-    match answer(seat, &Ask::Attention)? {
-        (Reply::Attention(rows), _) => Ok(rows),
-        (other, _) => Err(kind_err("attention", &other)),
     }
 }

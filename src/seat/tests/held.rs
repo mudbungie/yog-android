@@ -7,10 +7,22 @@
 //! `tool_use` in this envelope would be a client answering a call that may
 //! already have moved on.
 
+use std::sync::mpsc;
+
 use serde_json::{Value, json};
 
-use super::{conv_reply, nothing_set, queue_quiet, settle, tr_reply, ws_reply};
+use super::{
+    REST, Turn, conv_reply, model_lanes, nothing_set, queue_quiet, settle, tr_reply, ws_reply,
+};
 use crate::codec::Verdict;
+
+/// A model whose attention lane the test FEEDS (§14.1): the queue arrives as
+/// a frame the test sends, when the test sends it.
+fn fed(scripts: Vec<Vec<Vec<u8>>>) -> (super::Model, super::JoinHandle, mpsc::Sender<Vec<u8>>) {
+    let (feed, frames) = mpsc::channel();
+    let (model, served) = model_lanes(scripts, vec![Turn::Feed(frames)], REST);
+    (model, served, feed)
+}
 
 /// A queue with one conversation parked on a tool call — the corpus row's own
 /// spelling, addressed at the conversation these tests focus.
@@ -18,7 +30,7 @@ fn queue_held() -> Vec<u8> {
     json!({ "ok": true, "kind": "attention",
             "rows": [{ "workspace": "home", "agent": "a1", "display": "d",
                        "state": "stopped", "uncertain": false,
-                       "signals": ["held"], "preview": "", "age_secs": 3,
+                       "signals": ["held"], "says": "parked a tool invocation for your answer", "preview": "", "age_secs": 3,
                        "pending": 0,
                        "held": { "tool": "Bash", "tool_use": "toolu_1",
                                  "reason": "writes" },
@@ -39,21 +51,20 @@ fn answered(verdict: &str, advanced: bool) -> Vec<u8> {
 /// conversation and nothing else.
 #[test]
 fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation() {
-    let (mut model, served) = super::model_against(vec![
+    let (mut model, served, feed) = fed(vec![
         vec![ws_reply()],
         vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_held()],
         vec![answered("pass", true)],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_quiet()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
+    feed.send(queue_held()).unwrap();
     let snap = settle(&mut model, &|s| !s.queue.is_empty());
     let held = crate::codec::queue::held_at(&snap.queue, "home", "a1").unwrap();
     assert_eq!(
@@ -61,13 +72,15 @@ fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation()
         ("Bash", "writes")
     );
     model.answer(Verdict::Pass);
-    // The answered call is gone from the next queue read, which is the read
-    // that settles this act.
+    // The answered call is gone from the lane's next frame, which is the
+    // engine saying the answer changed (§14.1) — and the read that settles
+    // this act.
+    feed.send(queue_quiet()).unwrap();
     settle(&mut model, &|s| s.queue.is_empty() && s.error.is_none());
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        serde_json::from_slice::<Value>(&requests[6]).unwrap(),
+        serde_json::from_slice::<Value>(&requests[5]).unwrap(),
         json!({ "op": "answer", "workspace": "home", "agent": "a1", "verdict": "pass" })
     );
 }
@@ -77,21 +90,20 @@ fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation()
 /// conversation is exactly where it was.
 #[test]
 fn a_release_that_drove_nothing_says_so() {
-    let (mut model, _s) = super::model_against(vec![
+    let (mut model, _s, feed) = fed(vec![
         vec![ws_reply()],
         vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_held()],
         vec![answered("pass", false)],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_held()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
+    feed.send(queue_held()).unwrap();
     settle(&mut model, &|s| !s.queue.is_empty());
     model.answer(Verdict::Pass);
     let snap = settle(&mut model, &|s| s.error.is_some());
@@ -108,21 +120,20 @@ fn a_release_that_drove_nothing_says_so() {
 /// verdict that never releases is the state the operator asked for.
 #[test]
 fn keeping_it_parked_is_silent() {
-    let (mut model, _s) = super::model_against(vec![
+    let (mut model, _s, feed) = fed(vec![
         vec![ws_reply()],
         vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_held()],
         vec![answered("hold", false)],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_held()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
+    feed.send(queue_held()).unwrap();
     settle(&mut model, &|s| !s.queue.is_empty());
     model.answer(Verdict::Hold);
     settle(&mut model, &|s| s.roles_read > 0 || s.error.is_none());
@@ -144,51 +155,22 @@ fn an_answer_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
     drop(model);
     assert_eq!(super::ops(&served.join().unwrap()), ["workspaces"]);
 
-    let (mut model, _s) = super::model_against(vec![
+    let (mut model, _s, feed) = fed(vec![
         vec![ws_reply()],
         vec![nothing_set()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
-        vec![queue_held()],
         vec![ws_reply()], // the answer, answered with a roster
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
+    feed.send(queue_held()).unwrap();
     settle(&mut model, &|s| !s.queue.is_empty());
     model.answer(Verdict::Refuse);
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
         Some("answer: the engine answered workspaces instead")
-    );
-}
-
-/// A queue this build cannot read fails the pass like any other unreadable
-/// answer, naming the read rather than half-painting it. Two passes, because
-/// a refresh failure waits out the §13.2 grace before it is a sentence — the
-/// second `focus_conversation` is the second pass, and it moves nothing.
-#[test]
-fn a_queue_of_the_wrong_kind_names_the_read() {
-    let (mut model, _s) = super::model_against(vec![
-        vec![ws_reply()],
-        vec![nothing_set()],
-        vec![ws_reply()],
-        vec![conv_reply()],
-        vec![tr_reply()],
-        vec![ws_reply()], // the queue slot, answered with a roster
-        vec![ws_reply()],
-        vec![conv_reply()],
-        vec![tr_reply()],
-        vec![ws_reply()], // and again, which is what lifts the grace
-    ]);
-    settle(&mut model, &|s| !s.workspaces.is_empty());
-    model.focus_conversation("home".into(), "a1".into());
-    settle(&mut model, &|s| s.focus.agent.is_some());
-    model.focus_conversation("home".into(), "a1".into());
-    let snap = settle(&mut model, &|s| s.error.is_some());
-    assert_eq!(
-        snap.error.as_deref(),
-        Some("attention: the engine answered workspaces instead")
     );
 }

@@ -57,12 +57,15 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("invocations", Reads),
     ("invoke", Refuses(ASKING_SIDE)),
     ("lineages", Refuses(READ)),
+    ("login", Refuses(ACT)),
+    ("login-tail", Refuses(READ)),
     ("marks", Refuses(ACT)),
     ("message", Reads),
     ("model", Reads),
     ("models", Reads),
     ("nudge", Reads),
     ("ops", Reads),
+    ("pin", Refuses(ACT)),
     (
         "prepare",
         Partial {
@@ -94,6 +97,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("steps", Refuses(READ)),
     ("stop", Reads),
     ("transcript", Reads),
+    ("unpin", Refuses(ACT)),
     ("update", Refuses(ACT)),
     ("work-diff", Refuses(READ)),
     ("workspace-balls", Refuses(READ)),

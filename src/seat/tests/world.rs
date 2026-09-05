@@ -1,14 +1,11 @@
-//! **The two world surfaces' reads and acts** (DESIGN §13.8, bl-35bd): the
-//! trail, the queue asked in its own right, and the acknowledgement and
-//! truncation over the trail.
+//! **The trail's read and the two acts over it** (DESIGN §13.8). The queue,
+//! the other world surface, is the attention lane's and has its own file
+//! (`queue.rs`, §14.1).
 //!
-//! Two things are load-bearing here and neither is the happy path. The queue
-//! read reaches the snapshot at the TOP depth — the pass asks it only under an
-//! open conversation, so a whole-queue surface that painted the pass's answer
-//! would be empty exactly when nobody had opened a conversation first. And
-//! both acts are followed by a trail read, because a watermark and a
-//! truncation are invisible until the trail is read again: the screen would
-//! otherwise stand on the rows it had before the act.
+//! What is load-bearing here is not the happy path: both acts are followed
+//! by a trail read, because a watermark and a truncation are invisible until
+//! the trail is read again — the screen would otherwise stand on the rows it
+//! had before the act.
 
 use serde_json::{Value, json};
 
@@ -18,7 +15,8 @@ use super::{Turn, model_turns, ops, settle, ws_reply};
 fn trail(argv: &str) -> Vec<u8> {
     json!({ "ok": true, "kind": "ops",
             "rows": [{ "argv": argv, "cwd": "/p", "exit": 1, "origin": "balls",
-                       "stderr": "gate", "stdout": "", "ts": "1700" }] })
+                       "stderr": "gate", "stdout": "", "ts": "1700",
+                       "failed": true, "exit_label": "exit 1", "standing": "live" }] })
     .to_string()
     .into_bytes()
 }
@@ -28,19 +26,6 @@ fn cleared() -> Vec<u8> {
     json!({ "ok": true, "kind": "ops", "rows": [] })
         .to_string()
         .into_bytes()
-}
-
-/// The queue with one conversation waiting, addressed at no conversation this
-/// seat has focused: the whole-queue read names no place.
-fn queue() -> Vec<u8> {
-    json!({ "ok": true, "kind": "attention",
-            "rows": [{ "workspace": "home", "agent": "a9", "display": "d",
-                       "state": "stopped", "uncertain": false,
-                       "signals": ["mail"], "preview": "p", "age_secs": 5,
-                       "pending": 2, "held": null, "failure": null,
-                       "flag": null }] })
-    .to_string()
-    .into_bytes()
 }
 
 fn receipt(kind: &str) -> Vec<u8> {
@@ -72,23 +57,6 @@ fn the_trail_is_asked_for_and_its_rows_reach_the_snapshot() {
         asked["max"].as_u64().unwrap() > 0,
         "the ask carries its own bound"
     );
-}
-
-/// **The queue read reaches the snapshot with nothing focused.** The pass asks
-/// it only under an open conversation (§13.7); this is the surface asking, and
-/// the rows are the same answer in the same holder.
-#[test]
-fn the_queue_can_be_asked_for_where_no_conversation_is_open() {
-    let (mut model, served) =
-        super::model_against(vec![vec![ws_reply()], vec![queue()], vec![ws_reply()]]);
-    settle(&mut model, &|s| !s.workspaces.is_empty());
-    model.list_queue();
-    let snap = settle(&mut model, &|s| !s.queue.is_empty());
-    assert_eq!(snap.queue[0].agent, "a9");
-    assert!(snap.focus.workspace.is_none(), "asked at the top depth");
-    drop(model);
-    let requests = served.join().unwrap();
-    assert_eq!(ops(&requests), ["workspaces", "attention", "workspaces"]);
 }
 
 /// **The acknowledgement is followed by the read that shows what it did.**
@@ -156,8 +124,6 @@ fn an_answer_of_the_wrong_kind_is_named_and_keeps_what_was_there() {
         vec![ws_reply()],
         vec![receipt("acked")],
         vec![ws_reply()],
-        vec![receipt("nudged")],
-        vec![ws_reply()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.list_trail();
@@ -173,11 +139,6 @@ fn an_answer_of_the_wrong_kind_is_named_and_keeps_what_was_there() {
         1,
         "an answer this seat could not read drops none"
     );
-    model.list_queue();
-    let snap = settle(&mut model, &|s| {
-        s.error.as_deref() == Some("attention: the engine answered nudged instead")
-    });
-    assert!(snap.queue.is_empty());
     drop(model);
     served.join().unwrap();
 }

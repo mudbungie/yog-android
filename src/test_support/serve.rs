@@ -49,6 +49,15 @@ pub enum Turn {
     Answer(Vec<Vec<u8>>),
     /// Read the request and hang up — a FIN where an answer belongs.
     Hangup,
+    /// Write these frames and then HOLD the connection — no terminator —
+    /// until the seat hangs up. What a follow-class read looks like from the
+    /// engine's side, and what a lane in a test parks on.
+    Hold(Vec<Vec<u8>>),
+    /// Hold the connection and write each frame the test FEEDS, as it feeds
+    /// it — the engine's *"a frame whenever the answer changes"*, with the
+    /// test as the world. Dropping the sender ends the hold cleanly: the
+    /// terminator is written, which is the bound expiring.
+    Feed(std::sync::mpsc::Receiver<Vec<u8>>),
 }
 
 /// [`serve_many`], with each connection's turn spelled — the entry point for
@@ -59,7 +68,25 @@ pub fn serve_turns(
     leaf: &str,
     turns: Vec<Turn>,
 ) -> (String, JoinHandle<Vec<Vec<u8>>>) {
-    scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns)
+    scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns, Vec::new())
+}
+
+/// The scripted engine with **the attention lane served aside** (DESIGN
+/// §14.1): a connection whose request is `attention` is answered from `lane`
+/// — one turn per dial, in order, each on its own thread — and is not a turn
+/// of `turns`, nor a request the handle reports. The lane stands for the
+/// seat's whole life, so scripting it positionally would put one line in
+/// every script and make every request index a moving target; and it is
+/// re-dialled at the pass after it ends, whose timing against a test's
+/// gestures is nobody's to script. A lane past its script is held quiet.
+pub fn serve_lanes(
+    dir: &Path,
+    ca: &str,
+    leaf: &str,
+    turns: Vec<Turn>,
+    lane: Vec<Turn>,
+) -> (String, JoinHandle<Vec<Vec<u8>>>) {
+    scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns, lane)
 }
 
 /// [`serve_many`], with the version this engine states made a parameter — the
@@ -80,7 +107,47 @@ pub fn serve_versioned(
         leaf,
         protocol,
         scripts.into_iter().map(Turn::Answer).collect(),
+        Vec::new(),
     )
+}
+
+/// The attention lane's quiet answer: an empty queue, held.
+fn quiet_lane() -> Turn {
+    let empty = serde_json::json!({ "ok": true, "kind": "attention", "rows": [] })
+        .to_string()
+        .into_bytes();
+    Turn::Hold(vec![empty])
+}
+
+/// One connection's turn, played out. A held turn parks on the socket until
+/// the seat hangs up, so its caller runs it on a thread of its own.
+fn play(mut tls: rustls::StreamOwned<rustls::ServerConnection, std::net::TcpStream>, turn: Turn) {
+    let script = match turn {
+        Turn::Hangup => return,
+        Turn::Answer(script) => script,
+        Turn::Hold(script) => {
+            for reply in &script {
+                crate::frame::write_frame(&mut tls, reply).unwrap();
+            }
+            // The seat never writes after its request, so this read parks
+            // until it hangs up — a FIN, which is the error that ends it.
+            while crate::frame::read_frame(&mut tls).is_ok() {}
+            return;
+        }
+        Turn::Feed(frames) => {
+            while let Ok(reply) = frames.recv() {
+                if crate::frame::write_frame(&mut tls, reply.as_slice()).is_err() {
+                    return;
+                }
+            }
+            let _ = crate::frame::write_end(&mut tls);
+            return;
+        }
+    };
+    for reply in &script {
+        crate::frame::write_frame(&mut tls, reply).unwrap();
+    }
+    crate::frame::write_end(&mut tls).unwrap();
 }
 
 /// The one implementation the three entry points above share.
@@ -90,6 +157,7 @@ fn scripted(
     leaf: &str,
     protocol: u32,
     turns: Vec<Turn>,
+    lane: Vec<Turn>,
 ) -> (String, JoinHandle<Vec<Vec<u8>>>) {
     let config = config(dir, ca, leaf);
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -99,7 +167,11 @@ fn scripted(
         .into_bytes();
     let handle = std::thread::spawn(move || {
         let mut requests = Vec::new();
-        for turn in turns {
+        let mut turns = turns.into_iter();
+        let mut lane = lane.into_iter();
+        // The loop serves every scripted turn, and every scripted lane dial:
+        // a lane scripted past the last turn is still owed its connection.
+        while turns.len() > 0 || lane.len() > 0 {
             let (tcp, _) = listener.accept().unwrap();
             let conn = rustls::ServerConnection::new(Arc::clone(&config)).unwrap();
             let mut tls = rustls::StreamOwned::new(conn, tcp);
@@ -112,16 +184,22 @@ fn scripted(
                 serde_json::json!({ "protocol": crate::hello::PROTOCOL }),
                 "the seat opened a connection without stating its version"
             );
-            requests.push(crate::frame::read_frame(&mut tls).unwrap().unwrap());
-            let Turn::Answer(script) = turn else {
-                // Hang up: dropping the stream is a FIN where the answer
-                // belongs, which is the client's `receive:` error.
+            let request = crate::frame::read_frame(&mut tls).unwrap().unwrap();
+            let asked: serde_json::Value = serde_json::from_slice(&request).unwrap();
+            if asked["op"] == "attention" {
+                let turn = lane.next().unwrap_or_else(quiet_lane);
+                std::thread::spawn(move || play(tls, turn));
                 continue;
-            };
-            for reply in &script {
-                crate::frame::write_frame(&mut tls, reply).unwrap();
             }
-            crate::frame::write_end(&mut tls).unwrap();
+            requests.push(request);
+            // A request past the script's last turn is hung up on, which is
+            // the refusal a test reads as a `receive:` error.
+            match turns.next().unwrap_or(Turn::Hangup) {
+                held @ (Turn::Hold(_) | Turn::Feed(_)) => {
+                    std::thread::spawn(move || play(tls, held));
+                }
+                turn => play(tls, turn),
+            }
         }
         requests
     });

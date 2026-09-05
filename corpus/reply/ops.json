@@ -9,14 +9,89 @@
           "argv": "bl close x",
           "cwd": "/p",
           "exit": 1,
+          "exit_label": "exit 1",
+          "failed": true,
           "origin": "balls",
+          "standing": "retired",
           "stderr": "gate",
           "stdout": "",
           "ts": "1700"
+        },
+        {
+          "argv": "bl close x",
+          "cwd": "/p",
+          "exit": 0,
+          "exit_label": "exit 0",
+          "failed": false,
+          "origin": "balls",
+          "standing": "clean",
+          "stderr": "",
+          "stdout": "",
+          "ts": "1701"
+        },
+        {
+          "argv": "bz login",
+          "cwd": "/p",
+          "exit": 2,
+          "exit_label": "exit 2",
+          "failed": true,
+          "origin": "world",
+          "standing": "acked",
+          "stderr": "no credential",
+          "stdout": "",
+          "ts": "1702"
+        },
+        {
+          "argv": "yog-step ack-failures",
+          "cwd": "/p",
+          "exit": 0,
+          "exit_label": "exit 0",
+          "failed": false,
+          "origin": "world",
+          "standing": "clean",
+          "stderr": "",
+          "stdout": "",
+          "ts": "1703"
+        },
+        {
+          "argv": "litany prime",
+          "cwd": "/p",
+          "exit": 3,
+          "exit_label": "exit 3",
+          "failed": true,
+          "origin": "conversation",
+          "standing": "live",
+          "stderr": "models.yaml missing",
+          "stdout": "",
+          "ts": "1704"
+        },
+        {
+          "argv": "litany prompt c-1",
+          "cwd": "/p",
+          "exit": -2,
+          "exit_label": "detached — handed off, no exit to observe",
+          "failed": false,
+          "origin": "conversation",
+          "standing": "detached",
+          "stderr": "",
+          "stdout": "",
+          "ts": "1705"
+        },
+        {
+          "argv": "yog-drift unannounced",
+          "cwd": "/p",
+          "exit": -4,
+          "exit_label": "drift observation — not an attempted action",
+          "failed": false,
+          "origin": "world",
+          "standing": "clean",
+          "stderr": "/root",
+          "stdout": "",
+          "ts": "1706"
         }
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 11,
   "shape": "ops"
 }

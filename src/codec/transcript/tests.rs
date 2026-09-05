@@ -111,6 +111,38 @@ fn tool_result_streaming_compacted_and_raw_read_back() {
     assert_eq!(entry(&raw).unwrap().kind, EntryKind::Raw);
 }
 
+/// The wound (REMOTE §9.16): the class always, the adapter's words and the
+/// provider row only where the engine stated them — an absence is a class
+/// that left no words, never an empty string standing in for one.
+#[test]
+fn a_wound_reads_its_class_and_whatever_words_came_with_it() {
+    let refused = json!({ "name": "«wound»", "raw": "{}", "kind": "wounded",
+                          "wound": "refused", "auth_row": "anthropic" });
+    assert_eq!(
+        entry(&refused).unwrap().kind,
+        EntryKind::Wounded {
+            wound: "refused".into(),
+            reason: None,
+            auth_row: Some("anthropic".into()),
+        }
+    );
+    let silent = json!({ "name": "«wound»", "raw": "{}", "kind": "wounded",
+                         "wound": "no_response",
+                         "wound_reason": "the adapter's last words" });
+    assert_eq!(
+        entry(&silent).unwrap().kind,
+        EntryKind::Wounded {
+            wound: "no_response".into(),
+            reason: Some("the adapter's last words".into()),
+            auth_row: None,
+        }
+    );
+    assert_eq!(
+        entry(&json!({ "name": "«wound»", "raw": "{}", "kind": "wounded" })).unwrap_err(),
+        "missing or non-string field \"wound\""
+    );
+}
+
 #[test]
 fn refusals_name_the_offender() {
     assert_eq!(

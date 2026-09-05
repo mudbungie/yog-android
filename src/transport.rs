@@ -4,9 +4,12 @@
 //!
 //! A client owns its key material and RAM, nothing else (REMOTE §6) — so
 //! this is a configuration and an address, and **every ask is its own TCP
-//! connection and its own handshake**: "the seat polls", at human cadence,
-//! exactly the shape the upstream ruling keeps (REMOTE §10 holds the held
-//! connection open as a question, not a plan).
+//! connection and its own handshake**: "the seat polls", at human cadence.
+//! A follow-class read is the same connection kept open for as long as the
+//! engine holds it (REMOTE §3: the streaming form is not a second form):
+//! [`Seat::hold`] is the one door every ask goes through, and [`Seat::ask`]
+//! is that door with every frame collected — so a held lane and a one-shot
+//! answer differ only in who reads the frames and when.
 //!
 //! **The server's name comes from the address, never from a second knob.** A
 //! dotted quad or a bracketed v6 literal is verified as an IP address — the
@@ -93,31 +96,38 @@ impl Seat {
     /// Send one request envelope and read its whole reply stream — every
     /// frame up to the terminator. A stream of one is the ordinary answer.
     pub fn ask(&self, request: &Value) -> Result<Vec<Value>, Wire> {
-        let mut tls = self.dial(request)?;
+        let mut stream = Vec::new();
+        let (open, _hangup) = self.hold(request)?;
+        open.each(&mut |frame| {
+            stream.push(frame);
+            true
+        })?;
+        Ok(stream)
+    }
+
+    /// **Open one held read** (DESIGN §14.1): the request written and the
+    /// engine's preface confirmed, with no frame read yet — and the handle
+    /// that ends it from another thread. The caller reads the frames on
+    /// whatever thread it likes and hangs up from any other, which is the
+    /// whole of what a lane needs and one-shot asks do not.
+    pub fn hold(&self, request: &Value) -> Result<(Open, Hangup), Wire> {
+        let (mut tls, hangup) = self.dial(request)?;
         // The engine's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
         hello::confirm(&mut tls).map_err(Wire::Unusable)?;
-        let mut stream = Vec::new();
-        loop {
-            // **Lost and not `Transport`** (bl-07b1): the gesture is on the
-            // wire by the time this reads, so a channel that dies here is yog
-            // REMOTE §3's lost reply — the engine may have completed the act.
-            // The channel question is unchanged (`Wire::transport` answers yes
-            // to both), so the tool host's ladder reads exactly what it read.
-            let frame =
-                frame::read_frame(&mut tls).map_err(|e| Wire::Lost(format!("receive: {e}")))?;
-            match frame {
-                Some(body) => stream.push(parsed(&body)?),
-                None => return Ok(stream),
-            }
-        }
+        Ok((Open { tls }, hangup))
     }
 
-    /// Connect, handshake and send this end's whole half of the exchange — the
-    /// handshake happens inside the first write, so what this hands back is a
-    /// socket with a preface and an envelope on it and nothing yet read.
-    fn dial(&self, request: &Value) -> Result<StreamOwned<ClientConnection, TcpStream>, Wire> {
-        let tcp = TcpStream::connect(&self.address)
+    /// The connection with the request written, and the hang-up handle on it
+    /// — a second descriptor on the same socket, taken here so that a clone
+    /// that cannot be had is the same sentence as a socket that would not
+    /// open: both are the channel failing before a byte of the act left.
+    fn dial(
+        &self,
+        request: &Value,
+    ) -> Result<(StreamOwned<ClientConnection, TcpStream>, Hangup), Wire> {
+        let (tcp, hangup) = TcpStream::connect(&self.address)
+            .and_then(|tcp| Ok((tcp.try_clone()?, tcp)))
             .map_err(|e| Wire::Transport(format!("connect {}: {e}", self.address)))?;
         // A timeout that failed to arm costs a slow failure, never a wrong
         // one — and Some(nonzero) cannot be refused, so an error arm here
@@ -135,7 +145,7 @@ impl Seat {
         // therefore begins where the write ENDS, which is why the class here
         // is the same one a socket that would not open earns.
         send(&mut tls, request).map_err(|e| Wire::Transport(format!("send: {e}")))?;
-        Ok(tls)
+        Ok((tls, Hangup { tcp: hangup }))
     }
 }
 
@@ -144,6 +154,51 @@ impl Seat {
 /// act to a caller — a connection that could not carry the preface could not
 /// have carried the request either, and two sentences for that would be two
 /// spellings of "the socket went away".
+/// A connection with its request written and the preface confirmed: the
+/// answer's frames are what is left on it.
+pub struct Open {
+    tls: StreamOwned<ClientConnection, TcpStream>,
+}
+
+/// **The way to end a held read from another thread.** A reader parked on
+/// the socket wakes when the socket is shut down under it, so a lane is
+/// stopped by hanging up rather than by a flag it would only read between
+/// frames — up to a hold away.
+pub struct Hangup {
+    tcp: TcpStream,
+}
+
+impl Open {
+    /// Read every frame up to the terminator, handing each to `adopt` as it
+    /// lands. `adopt` answering `false` ends the read here — the connection
+    /// is dropped, which is how the engine learns its answer has no reader.
+    /// A socket that ends without the terminator is a lost stream (REMOTE
+    /// §10: a stream that ended and a dial that failed are one case).
+    pub fn each(mut self, adopt: &mut dyn FnMut(Value) -> bool) -> Result<(), Wire> {
+        loop {
+            // **Lost and not `Transport`** (bl-07b1): the gesture is on the
+            // wire by the time this reads, so a channel that dies here is yog
+            // REMOTE §3's lost reply — the engine may have completed the act.
+            // The channel question is unchanged (`Wire::transport` answers yes
+            // to both), so the tool host's ladder reads exactly what it read.
+            let frame = frame::read_frame(&mut self.tls)
+                .map_err(|e| Wire::Lost(format!("receive: {e}")))?;
+            match frame {
+                Some(body) if adopt(parsed(&body)?) => {}
+                _ => return Ok(()),
+            }
+        }
+    }
+}
+
+impl Hangup {
+    /// End the held read. Idempotent, and a socket already gone is not an
+    /// error — the reader it was for has nothing left to be woken from.
+    pub fn hang_up(&self) {
+        let _ = self.tcp.shutdown(std::net::Shutdown::Both);
+    }
+}
+
 fn send(w: &mut dyn std::io::Write, request: &Value) -> std::io::Result<()> {
     hello::state(w)?;
     frame::write_frame(w, request.to_string().as_bytes())

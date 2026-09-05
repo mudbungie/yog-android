@@ -1,0 +1,12 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "login-tail",
+      "provider": "acme",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 8,
+  "shape": "login-tail"
+}

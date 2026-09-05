@@ -55,7 +55,13 @@ impl Shell {
             model.focus_conversation(row.workspace.clone(), row.agent.clone());
             self.close_world();
         }
-        if !row.signals.is_empty() {
+        // **Why it fires, in the engine's words** (REMOTE §9.11 at protocol
+        // 12): the sentence has one home and crosses rather than being
+        // re-worded here; the tokens beside it are what a row with no words
+        // still says.
+        if !row.says.is_empty() {
+            ui.weak(&row.says);
+        } else if !row.signals.is_empty() {
             ui.weak(row.signals.join(" · "));
         }
         if let Some(held) = &row.held {

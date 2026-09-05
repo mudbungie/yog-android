@@ -10,6 +10,7 @@
 
 use super::build::{key, row, with_size};
 use super::compacted::compacted_row;
+use super::wounded::wounded_row;
 use super::{Role, Row, RowClass, Tone};
 use crate::codec::{Entry, EntryKind};
 use blocks::{block_row, model_hover};
@@ -112,6 +113,16 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             last,
             summary,
         } => out.push(compacted_row(&entry.name, *first, *last, summary)),
+        EntryKind::Wounded {
+            wound,
+            reason,
+            auth_row,
+        } => out.extend(wounded_row(
+            &entry.name,
+            wound,
+            reason.as_deref(),
+            auth_row.as_deref(),
+        )),
         EntryKind::Raw => out.push(row(
             key(&entry.name, 0),
             entry.name.clone(),

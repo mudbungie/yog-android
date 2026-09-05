@@ -4,8 +4,8 @@
 //!
 //! **Why there was ever more than one.** The engine writes the growing answer
 //! into the transcript itself as an `EntryKind::Streaming`, so a cadence read
-//! already carries a tail; bl-4822 then added the follow lane, which reads
-//! the same answer four times a rest. Painting the lane's fold *beside* the
+//! already carries a tail; bl-4822 then added the follow lane, which carries
+//! the same answer as it is written. Painting the lane's fold *beside* the
 //! transcript put the same words on the glass twice — and after the turn
 //! committed, the settled row and a tail the read still carried made a
 //! finished reply read as two different people saying the same thing.

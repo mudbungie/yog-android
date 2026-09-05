@@ -2,33 +2,56 @@
 //! not there, which is what tells a client too old for a shape from one that
 //! read past it.
 
-use serde_json::json;
+use super::Standing;
+use serde_json::{Value, json};
+
+fn line(exit: i64, failed: bool, label: &str, standing: &str) -> Value {
+    json!({ "argv": "bl close x", "cwd": "/p", "exit": exit, "origin": "balls",
+            "stderr": "gate", "stdout": "", "ts": "1700", "failed": failed,
+            "exit_label": label, "standing": standing })
+}
 
 #[test]
-fn a_row_reads_its_own_facts_and_derives_nothing() {
-    let row = super::row(&json!({ "argv": "bl close x", "cwd": "/p", "exit": 1,
-                                  "origin": "balls", "stderr": "gate",
-                                  "stdout": "", "ts": "1700" }))
-    .unwrap();
+fn a_row_reads_its_own_words_and_derives_nothing() {
+    let row = super::row(&line(1, true, "exit 1", "live")).unwrap();
     assert_eq!(
         (row.ts.as_str(), row.origin.as_str(), row.exit),
         ("1700", "balls", 1)
     );
     assert_eq!(row.stderr, "gate");
+    assert!(row.failed);
+    assert_eq!(row.exit_label, "exit 1");
+    assert_eq!(row.standing, Standing::Live);
 }
 
-/// A sentinel exit crosses as the number the engine wrote. Nothing here reads
-/// meaning into it: the words for it are `exit_label` and `standing`, which
-/// this build's corpus does not carry (bl-8e3c).
+/// A sentinel exit crosses as the number the engine wrote AND as the engine's
+/// reading of it (REMOTE §9.17): nothing here reads meaning into the number.
 #[test]
-fn a_sentinel_exit_is_carried_not_interpreted() {
-    let row = super::row(
-        &json!({ "argv": "litany prompt c-1", "cwd": "/p", "exit": -2,
-                                  "origin": "conversation", "stderr": "",
-                                  "stdout": "", "ts": "1705" }),
-    )
+fn a_sentinel_exit_is_carried_with_the_engines_reading_of_it() {
+    let row = super::row(&line(
+        -2,
+        false,
+        "detached — handed off, no exit to observe",
+        "detached",
+    ))
     .unwrap();
     assert_eq!(row.exit, -2);
+    assert!(!row.failed);
+    assert_eq!(row.standing, Standing::Detached);
+}
+
+/// The five words, each its own standing, and the word reads back as the
+/// label the trail paints — one table in both directions.
+#[test]
+fn every_standing_is_read_and_says_its_own_word() {
+    for word in ["clean", "detached", "live", "retired", "acked"] {
+        let row = super::row(&line(0, false, "exit 0", word)).unwrap();
+        assert_eq!(row.standing.word(), word);
+    }
+    assert_eq!(
+        super::row(&line(0, false, "exit 0", "sleeping")).unwrap_err(),
+        "field \"standing\": unknown token \"sleeping\""
+    );
 }
 
 #[test]
@@ -42,7 +65,9 @@ fn a_row_that_is_not_an_object_refuses_naming_the_shape() {
 #[test]
 fn a_missing_field_refuses_naming_it() {
     let err = super::row(&json!({ "argv": "x", "cwd": "/p", "exit": 0,
-                                  "origin": "world", "stdout": "", "ts": "1" }))
+                                  "origin": "world", "stdout": "", "ts": "1",
+                                  "failed": false, "exit_label": "exit 0",
+                                  "standing": "clean" }))
     .unwrap_err();
     assert_eq!(err, "missing or non-string field \"stderr\"");
 }

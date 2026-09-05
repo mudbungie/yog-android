@@ -4,9 +4,85 @@
     {
       "kind": "config",
       "ok": true,
+      "settings": [],
       "text": "roles: []"
+    },
+    {
+      "kind": "config",
+      "ok": true,
+      "settings": [
+        {
+          "control": {
+            "kind": "provider"
+          },
+          "entry": "worker",
+          "fault": "brazen's table has no provider row `gone` — every dispatch through it dies with `unknown provider`; pick a live row, or add the row in the brazen config editor",
+          "help": "the brazen provider row this role dispatches through",
+          "name": "provider",
+          "value": "gone"
+        },
+        {
+          "control": {
+            "kind": "text"
+          },
+          "entry": "worker",
+          "help": "the wire id this role dispatches on — with the row beside it, the whole of the binding (nothing declares it elsewhere; an id that does not exist is caught at the first live call)",
+          "name": "model",
+          "value": "m-1"
+        },
+        {
+          "control": {
+            "kind": "list"
+          },
+          "entry": "worker",
+          "help": "the tool names this role may call (litany's vocabulary, not yog's); yog grants `message` and `dispatch` at creation",
+          "name": "tools",
+          "value": "bash"
+        }
+      ],
+      "text": "roles:\n  worker:\n    provider: gone\n    model: m-1\n    tools: [bash]\n"
+    },
+    {
+      "kind": "config",
+      "ok": true,
+      "settings": [
+        {
+          "control": {
+            "kind": "number",
+            "max": 10000,
+            "min": 0
+          },
+          "entry": "watcher",
+          "help": "how long a changed workspace coalesces before it re-derives — lower re-renders sooner under a storm, 0 turns coalescing off",
+          "name": "debounce_ms",
+          "value": "100"
+        },
+        {
+          "control": {
+            "kind": "number",
+            "max": 600000,
+            "min": 100
+          },
+          "entry": "watcher",
+          "help": "the cheap sweep: enumerations, watch reconcile and liveness re-probes, and the window's idle wake-up floor — the beat most of yog's freshness rides on",
+          "name": "cheap_sweep_ms",
+          "value": "2000"
+        },
+        {
+          "control": {
+            "kind": "number",
+            "max": 3600000,
+            "min": 1000
+          },
+          "entry": "watcher",
+          "help": "the full sweep: re-derive everything, the backstop that bounds staleness when a filesystem event is lost",
+          "name": "full_sweep_ms",
+          "value": "15000"
+        }
+      ],
+      "text": "# yog's clock: watcher-cycle periods, in milliseconds.\n# Delete this file to restore the defaults below.\ncadence:\n  watcher:\n    debounce_ms: 100\n    cheap_sweep_ms: 2000\n    full_sweep_ms: 15000\n"
     }
   ],
-  "protocol": 1,
+  "protocol": 13,
   "shape": "config"
 }

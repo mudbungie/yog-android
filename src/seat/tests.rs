@@ -12,7 +12,10 @@
 
 pub(super) use super::Model;
 use super::Snapshot;
-pub(super) use crate::test_support::{Turn, material, serve_many, serve_turns};
+
+/// The scripted engine's handle: the requests it read, in accept order.
+pub(super) type JoinHandle = std::thread::JoinHandle<Vec<Vec<u8>>>;
+pub(super) use crate::test_support::{Turn, material, serve_lanes, serve_many, serve_turns};
 use crate::test_support::{mint_ca, mint_leaf, scratch};
 use crate::transport::Seat;
 use serde_json::{Value, json};
@@ -47,6 +50,25 @@ pub(super) fn model_turns(turns: Vec<Turn>) -> (Model, std::thread::JoinHandle<V
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
     (Model::start(seat, REST, cache_in(&dir)), served)
 }
+
+/// [`model_against`], with **the attention lane scripted** (§14.1): what each
+/// dial of the standing queue read is answered with, in order. Every other
+/// model here has that lane held quiet, which is the harness's default.
+pub(super) fn model_lanes(
+    scripts: Vec<Vec<Vec<u8>>>,
+    lane: Vec<Turn>,
+    cadence: Duration,
+) -> (Model, std::thread::JoinHandle<Vec<Vec<u8>>>) {
+    let dir = pki();
+    let turns = scripts.into_iter().map(Turn::Answer).collect();
+    let (address, served) = serve_lanes(&dir, "ca", "server", turns, lane);
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    (Model::start(seat, cadence, cache_in(&dir)), served)
+}
+
+/// A rest short enough that a pass fits inside a test — for the lanes,
+/// whose reopening is the next pass's (§14.1).
+pub(super) const QUICK: Duration = Duration::from_millis(300);
 
 /// A throwaway cache path beside a test's PKI. Every model writes one
 /// (bl-de96), so every test gets its own rather than sharing a boot state —
@@ -123,11 +145,9 @@ pub(super) fn tr_reply() -> Vec<u8> {
     .into_bytes()
 }
 
-/// **The decision queue with nothing parked in it** — the fourth question a
-/// pass asks once a conversation is open (§13.7, bl-b39d), and the answer
-/// almost every script gives it. Named rather than written inline because a
-/// script is read as a sequence, and an anonymous empty frame in one teaches
-/// nobody which read it answers.
+/// **The decision queue with nothing parked in it** — what the attention
+/// lane (§14.1) is fed when a test wants the queue to empty, and what the
+/// harness holds the lane on when a test says nothing about it.
 pub(super) fn queue_quiet() -> Vec<u8> {
     json!({ "ok": true, "kind": "attention", "rows": [] })
         .to_string()
@@ -175,6 +195,7 @@ mod held;
 mod live;
 mod loaded;
 mod pick;
+mod queue;
 mod reads;
 mod resume;
 mod row;

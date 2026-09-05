@@ -1,15 +1,16 @@
-//! **The follow lane, read one shot at a time** (REMOTE §5.5, bl-4822): the
-//! accumulated tail of the answer being written right now.
+//! **The follow lane's frame** (REMOTE §5.5): what landed on the answer
+//! being written since the frame before it — and the fold that turns a
+//! sequence of them back into the tail.
 //!
-//! **A read starts holding nothing, so a re-ask replaces.** §5.5 is explicit
-//! about both halves of that: *"the engine's reader is minted per held
-//! connection and opens the response file at byte zero — so the **first**
-//! frame of any read is the whole tail so far"*, and *"Two reads by the same
-//! seat are two reads: the second starts holding nothing, so it replaces
-//! rather than appending."* This seat holds no connection, so every read it
-//! makes is a first frame and the fold it needs is assignment. The append
-//! fold is the held connection's problem and this device does not have one
-//! (DESIGN §7).
+//! **A frame is an append, and this seat holds the lane** (DESIGN §14.1,
+//! bl-8e3c). §5.5's rule is one line — *"Absorb every frame of a read, in
+//! order, onto an empty fold. What you hold after the last frame you have
+//! received is what you paint"* — and [`Stream::absorb`] is that fold, the
+//! engine's own operation copied so that an engine frame and this seat's
+//! accumulation agree by contract: `fold(a).absorb(fold(b)) == fold(a ++ b)`
+//! on any line boundary. A read starts holding nothing, so the first frame
+//! is the whole tail so far and a lane that re-asks is whole again with
+//! nothing to reconcile.
 //!
 //! **Every field is optional, including all of them.** The corpus's own
 //! first frame is `{"stream": {}}` — an answer that has begun and said
@@ -38,6 +39,23 @@ impl Stream {
     /// is not something to paint a row for.
     pub fn is_empty(&self) -> bool {
         self.text.is_none() && self.thinking.is_none()
+    }
+
+    /// Absorb the frame that landed **after** this one's bytes (REMOTE §5.5).
+    /// Text accretes in stream order and the newer delta kind wins when the
+    /// suffix had one at all. Absent stays absent — a stream that has said
+    /// nothing has said nothing, and an empty `Some("")` would read as *it
+    /// spoke* to the row projection downstream.
+    pub fn absorb(&mut self, later: Self) {
+        append(&mut self.text, later.text);
+        append(&mut self.thinking, later.thinking);
+        self.delta = later.delta.or(self.delta.take());
+    }
+}
+
+fn append(slot: &mut Option<String>, more: Option<String>) {
+    if let Some(more) = more {
+        slot.get_or_insert_default().push_str(&more);
     }
 }
 

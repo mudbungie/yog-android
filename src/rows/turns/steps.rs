@@ -44,8 +44,12 @@ pub(in crate::rows) fn step_of(kind: &EntryKind, block: usize) -> Step {
         // delivered message is: it is not something the agent did between two
         // things it said. It says the record was rewritten here, and a turn
         // that swallowed it into its aggregate would hide the one row saying
-        // so behind a fold.
-        EntryKind::Delivered { .. } | EntryKind::Compacted { .. } => Step::Boundary,
+        // so behind a fold. The wound is one for the same reason: it says the
+        // conversation is not coming back, and it must not be swallowed into
+        // the last turn's census as if it were a step of it.
+        EntryKind::Delivered { .. } | EntryKind::Compacted { .. } | EntryKind::Wounded { .. } => {
+            Step::Boundary
+        }
         EntryKind::Model { blocks, .. } => match blocks.get(block) {
             Some(Block::Thinking(_)) => Step::Thinking,
             Some(Block::ToolUse { .. }) => Step::ToolCall,
@@ -67,6 +71,7 @@ pub(in crate::rows) fn usage_of(kind: &EntryKind) -> Usage {
         | EntryKind::ToolResult { .. }
         | EntryKind::Streaming { .. }
         | EntryKind::Compacted { .. }
+        | EntryKind::Wounded { .. }
         | EntryKind::Raw => Usage::new(),
     }
 }

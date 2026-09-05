@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "unpin",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 10,
+  "shape": "unpin"
+}

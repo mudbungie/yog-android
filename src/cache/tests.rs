@@ -41,7 +41,7 @@ pub(super) fn deep() -> Focus {
 pub(super) fn queue() -> Value {
     json!({ "ok": true, "kind": "attention",
             "rows": [{ "workspace": "home", "agent": "a1", "display": "d",
-                       "state": "stopped", "uncertain": false, "signals": ["held"],
+                       "state": "stopped", "uncertain": false, "signals": ["held"], "says": "parked",
                        "preview": "", "age_secs": 3, "pending": 0,
                        "held": { "tool": "Bash", "tool_use": "toolu_1",
                                  "reason": "writes" },
