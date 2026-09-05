@@ -12,6 +12,7 @@
 
 use serde_json::{Map, Value};
 
+use super::balls;
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
 use super::follow::{Stream, stream_of};
 use super::hold::{self, Answered};
@@ -101,6 +102,12 @@ pub enum Reply {
     /// **The decision queue** (yog §8.5): every conversation waiting on the
     /// operator, each carrying the parked call this seat answers (§13.7).
     Attention(Vec<QueueRow>),
+    /// **Every ball this seat can see** (DESIGN §13.9), one row apiece.
+    Balls(Vec<balls::BallRow>),
+    /// **What one workspace holds**, with the spend upstream rendered for it.
+    WorkspaceBalls(Vec<balls::WsBallRow>),
+    /// **The board**: the columns, and a line per armed loop.
+    Board(balls::Board),
     /// **The ops trail's tail** (yog §4.2): what this engine last did, newest
     /// last, as many rows as the ask allowed.
     Ops(Vec<OpRow>),
@@ -171,6 +178,9 @@ impl Reply {
             Self::Search(_) => "search",
             Self::Attention(_) => "attention",
             Self::Ops(_) => "ops",
+            Self::Balls(_) => "balls",
+            Self::WorkspaceBalls(_) => "workspace-balls",
+            Self::Board(_) => "board",
             Self::Acked => "acked",
             Self::Acknowledged(_) => "acknowledged",
             Self::TrailCleared => "trail-cleared",
@@ -220,6 +230,9 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "search" => Reply::Search(search::found_of(o)?),
         "attention" => Reply::Attention(rows(o, queue::row)?),
         "ops" => Reply::Ops(rows(o, trail::row)?),
+        "balls" => Reply::Balls(rows(o, balls::row)?),
+        "workspace-balls" => Reply::WorkspaceBalls(rows(o, balls::bound)?),
+        "board" => Reply::Board(balls::board(o)?),
         "acked" => Reply::Acked,
         "acknowledged" => Reply::Acknowledged(rows(o, queue::row)?),
         "trail-cleared" => Reply::TrailCleared,

@@ -27,8 +27,8 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("arm", Refuses(ACT)),
     ("assign", Refuses(ACT)),
     ("attention", Reads),
-    ("balls", Refuses(READ)),
-    ("board", Refuses(READ)),
+    ("balls", Reads),
+    ("board", Reads),
     ("capture", Refuses(ASKING_SIDE)),
     ("clear-trail", Reads),
     ("clients", Refuses(READ)),
@@ -100,6 +100,6 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("unpin", Refuses(ACT)),
     ("update", Refuses(ACT)),
     ("work-diff", Refuses(READ)),
-    ("workspace-balls", Refuses(READ)),
+    ("workspace-balls", Reads),
     ("workspaces", Reads),
 ];

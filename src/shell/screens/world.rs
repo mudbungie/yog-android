@@ -48,8 +48,13 @@ pub(crate) enum World {
     Queue,
     /// What the engine last did.
     Trail,
+    /// **The ball pane at one of its three views** (§13.9). The view rides on
+    /// the navigation rather than on the answer, so a screen names itself from
+    /// what was opened and paints only the answer that belongs under it.
+    Balls(crate::codec::View),
 }
 
+mod balls;
 mod trail;
 mod waiting;
 
@@ -60,10 +65,28 @@ impl Shell {
     pub(super) fn open_world(&mut self, world: World) {
         self.opened = Some(world);
         self.armed = false;
-        if world == World::Trail
-            && let Some(model) = self.model()
-        {
-            model.list_trail();
+        let Some(model) = self.model() else { return };
+        // **Opening IS the ask**, for the trail and for the ball pane alike:
+        // both are read by nothing standing, so a surface nobody has opened
+        // costs this device no radio at all (§14.1's argument, at the seat).
+        // The queue is the exception and asks nothing — it is the lane's.
+        match world {
+            World::Trail => model.list_trail(),
+            World::Balls(view) => model.list_balls(view),
+            World::Queue => (),
+        }
+    }
+
+    /// **The one control that reaches one of the pane's reads**, painted where
+    /// that read's subject is: `balls` and `board` on the roster, because
+    /// neither names a workspace, and `workspace-balls` on a workspace's own
+    /// conversation list. The name the harness taps it by is the op's own
+    /// (§15.2), which is also the screen it opens.
+    pub(in crate::shell) fn balls_entry(&mut self, ui: &mut egui::Ui, view: crate::codec::View) {
+        let control = super::tap(ui, view.screen().into(), view.screen());
+        self.note_control(view.screen(), ui, control.rect);
+        if control.clicked() {
+            self.open_world(World::Balls(view));
         }
     }
 
@@ -74,6 +97,7 @@ impl Shell {
         match world {
             World::Queue => self.waiting(ui, snap),
             World::Trail => self.trail(ui, snap),
+            World::Balls(view) => self.balls(ui, snap, view),
         }
     }
 

@@ -197,9 +197,35 @@ relaunch
 tap_control trail
 capture trail trail
 
+# 3c. THE BALL PANE'S TWO WORLD READS (DESIGN §13.9, bl-d587). Neither names a
+#     workspace, so both are the roster's entries beside the two above — and
+#     each is walked from a fresh launch for the same reason. The pane dials an
+#     engine that is not there, so what these two capture is a screen that
+#     opened and said so; what the parity gate wants from them is the control,
+#     and the control is on the roster either way.
+relaunch
+tap_control balls
+capture balls balls
+
+relaunch
+tap_control board
+capture board board
+
 # 4. The two deeper screens, each selected by the focus stored beside its rows.
 seed_cache conversations; relaunch
 capture conversations conversations
+
+# 4a. THE BALL PANE'S AIMED READ (DESIGN §13.9). The one of the three that
+#     names a place, and it is offered on the screen that names it — a
+#     workspace's conversation list — so this is the only depth it can be
+#     reached from. Walked before the row menu, because a menu left open would
+#     be over the entry.
+tap_control workspace-balls
+capture workspace-balls workspace-balls
+
+# Back to the list the menu opens from: the seed has not changed, so this is a
+# relaunch and not a re-seed.
+relaunch
 
 # 4b. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
 #     `conversations` with a menu up, exactly as it says `transcript` with the

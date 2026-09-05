@@ -84,6 +84,14 @@ pub struct Snapshot {
     /// the cache is the standing set a pass re-asks, and this is a gesture's
     /// answer — opening the trail is what asks for it.
     pub trail: Vec<OpRow>,
+    /// **What the ball pane last read** (DESIGN §13.9), carrying which of its
+    /// three reads answered it. `None` is *nobody has opened it*; a pane
+    /// holding one view's answer is unpaintable under another, which is the
+    /// same pairing law the §14 cache keeps over rows and their focus.
+    ///
+    /// It rides the snapshot and never the cache, for the trail's reason: a
+    /// pass asks the standing set, and this is a gesture's answer.
+    pub pane: Option<crate::codec::Pane>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

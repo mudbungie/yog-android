@@ -188,6 +188,7 @@ pub(super) fn ops(requests: &[Vec<u8>]) -> Vec<String> {
         .collect()
 }
 
+mod balls;
 mod deposit;
 mod doubt;
 mod grace;

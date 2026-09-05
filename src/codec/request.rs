@@ -64,6 +64,11 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             text: str_of(o, "text")?,
         },
         "attention" => Ask::Attention,
+        "balls" => Ask::Balls,
+        "workspace-balls" => Ask::WorkspaceBalls {
+            workspace: str_of(o, "workspace")?,
+        },
+        "board" => Ask::Board,
         "ops" => Ask::Ops {
             max: super::fields::usize_of(o, "max")?,
         },

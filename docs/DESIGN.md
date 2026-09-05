@@ -1880,6 +1880,68 @@ these two entries are the only way to two screens and carry no accessibility
 node either. The line the channel draws is unchanged and is what keeps it
 bounded: the app names controls IT has, never one per thing in the world.
 
+### 13.9 The ball pane: three reads at two widths (bl-d587)
+
+`src/codec/balls.rs`, `src/seat/asks.rs`, `src/shell/screens/world/balls.rs`.
+The phone's twin of lernie's §4.31, and it answers what this seat carried the
+wire for and painted nowhere: **the task store the conversations are working**.
+Until it landed an operator could watch work happen from a phone and could not
+see the ball it was happening on.
+
+**Three reads, and the wire is what splits them.** `balls` and `board` name no
+workspace — they are about everything this seat can see — and
+`workspace-balls` names one. That is the same predicate §13.8 already sorts the
+world surfaces by, so the answer is the same: the two that name no place are
+the roster's entries beside the queue and the trail, and the one that names a
+place is offered on that place's own conversation list. There is nowhere else
+either could go without inventing an aim.
+
+**One control per read, and no switcher inside the pane.** A view switcher
+would have offered the aimed read from a screen with nothing aimed — the wrong
+claim wearing a control — and it would have made one widget carry three tokens
+where three controls carry one apiece. The pane is one screen with three names,
+each written at the arm that chose it (§15.2), and `View::screen` is the one
+home of that word: it is the screen's name, the op's token and the harness's
+tap target at once, because they are one thing.
+
+**A view paints only its own answer**, which is §14's pairing law one surface
+along. The pane holds one answer tagged with the read that produced it
+(`Pane::view`), so opening the board under a held ball list paints the board's
+own emptiness rather than the list under the board's name — the same refusal
+`cache::read` makes of rows that disagree with their focus. Two emptinesses,
+two sentences: *nothing read yet* is nobody asked, and *no balls here* is the
+engine answering with none. One sentence over both would say *there are no
+balls* about a question nobody put.
+
+**Opening is the ask, and nothing standing carries it.** The trail's rule
+exactly (§13.8): a pane nobody has opened costs this device no radio, which is
+§14.1's argument for the lane applied at the seat. A failure keeps what the
+pane already had, which is `searched`'s rule and is here for its reason.
+
+**Nothing here computes money and nothing re-derives a fleet's sentence**
+(lernie §4.31, whose rulings transfer whole). `usd` was rendered on the box
+that holds the price table, and a seat multiplying tokens by a rate of its own
+would disagree with it quietly; a fleet's `label` is upstream's own sentence
+about the cap, the tick and the lease. Both cross as strings and are painted as
+they came, and **an absent figure is a fact rather than a zero** — it paints as
+nothing. The counters, the micro-dollars and the attribution clauses ride in
+the same answers and are decoded by nobody here: a phone that read them would
+be holding a ledger it has no width to show, which is the codec's standing
+grow-per-consumer rule saying no.
+
+**The five acts are NOT this ball** (bl-f36e, the twin of lernie bl-f7ae, whose
+two rulings are recorded there for whoever takes it): the `--as` stamp is the
+workspace's own name and not an operator's, and `close` is armed because
+nothing reverses it. Their `parity.toml` lines stand and cite that ball; the
+three reads' lines are deleted.
+
+**What the walk reaches.** Three new steps: `balls` and `board` from the
+roster's own entries, each from a fresh launch, and `workspace-balls` from a
+workspace's conversation list, walked before the row menu because a menu left
+open would be over the entry. The engine is not dialled, so what the pane
+paints there is a read that failed and said so — which is what the parity gate
+asks of these three anyway, the control being on the roster either way.
+
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -2729,7 +2791,7 @@ The groups mirror the seat's own, one ball each:
 | the held tool call | answer, revoke, restore — **landed** (§13.7) | bl-b39d |
 | work review | files, work-diff | bl-5a56 |
 | conversation machinery reads | agent, steps, step, rail, governing, inbox | bl-146b |
-| the ball pane | balls, workspace-balls, board, close, assign, release, create, update | bl-d587 |
+| the ball pane | balls, workspace-balls, board — **landed** (§13.9); close, assign, release, create, update | bl-d587, then bl-f36e |
 | candidates | fan, retire, deliver, science | bl-2f17 |
 | fleet and watch | fleet, disband, arm, disarm | bl-477e |
 | trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8); seen — **landed** (§13.8) | bl-35bd, bl-2889 |
@@ -2751,8 +2813,9 @@ codec still spells none of those shapes — and each group ball moves exactly
 its own rows when it lands, which is the codec's standing
 grow-per-consumer rule. §8's "one rung" paragraph is narrowed rather than
 deleted: the bare start rung stays the default, and the ball rung becomes
-wanted when the ball pane (bl-d587) lands, which is §8's own growth rule
-doing what it says.
+wanted when the ball pane's ACTS land (bl-f36e), which is §8's own growth rule
+doing what it says. The read half (bl-d587, §13.9) does not want it: a pane
+that only reads binds nothing, and the rung is a binding.
 
 ## 17. The scheduled fetch: attention reaches a pocketed phone (bl-fcc5)
 

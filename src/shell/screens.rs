@@ -211,6 +211,12 @@ impl Shell {
         if control.clicked() {
             self.open_world(World::Trail);
         }
+        // The two ball reads that name no workspace (§13.9). They are here for
+        // the queue's and the trail's reason exactly: what they are about is
+        // everything this seat can see, and this is the screen where that is
+        // already what is on the glass.
+        self.balls_entry(ui, crate::codec::View::Everywhere);
+        self.balls_entry(ui, crate::codec::View::Board);
     }
 
     pub(super) fn focus_workspace(&self, workspace: Option<String>) {

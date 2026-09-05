@@ -101,6 +101,20 @@ pub(super) fn run(
                     Err(why) => Some(why),
                 };
             }
+            // **The ball pane's read** (§13.9), on the trail's terms exactly:
+            // opening the surface is the ask, the answer replaces what was
+            // held, and a failure keeps what was there — losing an answer the
+            // engine gave over one it did not is the defect §13.2's grace
+            // exists to prevent.
+            Ok(Cmd::Balls(view)) => {
+                note = match super::asks::balls(seat, &focus, view) {
+                    Ok(pane) => {
+                        standing.pane = Some(pane);
+                        None
+                    }
+                    Err(why) => Some(why),
+                };
+            }
             // **Both trail acts are followed by the read that says what they
             // did**, which is also the read that settles a lost one: the
             // watermark and the truncation are both invisible until the trail

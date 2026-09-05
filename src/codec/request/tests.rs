@@ -30,8 +30,8 @@ fn an_envelope_with_no_op_refuses_naming_the_field() {
 #[test]
 fn an_op_outside_this_slice_refuses_naming_itself() {
     assert_eq!(
-        decode(&json!({ "op": "board" })).unwrap_err(),
-        "unknown op \"board\""
+        decode(&json!({ "op": "fleet" })).unwrap_err(),
+        "unknown op \"fleet\""
     );
 }
 

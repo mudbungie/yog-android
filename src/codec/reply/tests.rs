@@ -246,3 +246,34 @@ fn the_acknowledgement_carries_the_queue_that_remains() {
     let e = decode(&json!({ "ok": true, "kind": "acknowledged" })).unwrap_err();
     assert_eq!(e, "missing or non-array field \"rows\"");
 }
+
+/// **The ball pane's three reads** (DESIGN §13.9) read back as themselves, and
+/// each says its own kind — the word every "the engine answered X instead"
+/// sentence is built from, so a pane asked for one view and answered another
+/// can name what it got.
+#[test]
+fn the_ball_panes_three_reads_each_read_back_as_their_own_kind() {
+    let listed = decode(&json!({ "ok": true, "kind": "balls",
+                                 "rows": [{ "ball_id": "bl-1", "project": "p",
+                                            "state": "ready" }] }))
+    .unwrap()
+    .unwrap();
+    assert_eq!(listed.kind(), "balls");
+    let held = decode(&json!({ "ok": true, "kind": "workspace-balls",
+                               "rows": [{ "id": "bl-1", "project": "p",
+                                          "state": "bound" }] }))
+    .unwrap()
+    .unwrap();
+    assert_eq!(held.kind(), "workspace-balls");
+    let board = decode(&json!({ "ok": true, "kind": "board", "rows": [] }))
+        .unwrap()
+        .unwrap();
+    assert_eq!(board.kind(), "board");
+    assert_eq!(
+        board,
+        Reply::Board(crate::codec::Board {
+            rows: Vec::new(),
+            fleet: Vec::new()
+        })
+    );
+}

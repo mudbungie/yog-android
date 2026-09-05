@@ -55,6 +55,10 @@ pub(super) enum Cmd {
     Lane(super::lane::Framed),
     /// Acknowledge the trail's alarms.
     Ack,
+    /// **Read the ball pane at one of its three views** (§13.9). One command
+    /// because the pane holds one answer: which view is open is the shell's,
+    /// and which read answered is the pane's own.
+    Balls(crate::codec::View),
     /// **Answer the attention queue at one conversation** (§13.8): the
     /// workspace and the agent the row named, both carried, because the queue
     /// spans workspaces and the focus is nobody's address here.
@@ -229,6 +233,13 @@ impl Model {
     /// painting meanwhile.
     pub fn list_trail(&self) {
         let _ = self.cmds.send(Cmd::Ops);
+    }
+
+    /// **Read the ball pane** (§13.9) at `view`. The rows arrive in the next
+    /// snapshot like every other read's, and what was already there keeps
+    /// painting meanwhile — under its own view, never under this one.
+    pub fn list_balls(&self, view: crate::codec::View) {
+        let _ = self.cmds.send(Cmd::Balls(view));
     }
 
     /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in

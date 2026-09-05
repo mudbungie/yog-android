@@ -110,6 +110,9 @@ impl Shell {
                     self.focus_workspace(None);
                 }
                 super::banner(ui, snap);
+                // The one ball read that names a place (§13.9), offered where
+                // that place is what the operator is standing in.
+                self.balls_entry(ui, crate::codec::View::Here);
                 ui.separator();
                 egui::ScrollArea::vertical()
                     .min_scrolled_height(0.0)

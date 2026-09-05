@@ -76,6 +76,11 @@ pub(super) struct Standing {
     /// standing.
     pub(super) queue: Vec<crate::codec::QueueRow>,
     pub(super) trail: Vec<crate::codec::OpRow>,
+    /// **What the ball pane last read** (DESIGN §13.9), carrying which of its
+    /// three reads answered it. Written only by that pane's own gesture, for
+    /// the trail's reason exactly: nothing paints it unless somebody opened
+    /// it, so nothing standing asks for it.
+    pub(super) pane: Option<crate::codec::Pane>,
     /// **The last needle's answer** (bl-4c2b), carried between passes for the
     /// reason the counters above are: it is a gesture's answer, not a pass's,
     /// and a pass that re-reads the world must not drop the search the
@@ -110,6 +115,7 @@ impl Standing {
             // exactly as the rows beside it do (§14).
             queue: snap.queue.clone(),
             trail: Vec::new(),
+            pane: None,
             found: None,
             last: snap.clone(),
             failed: 0,

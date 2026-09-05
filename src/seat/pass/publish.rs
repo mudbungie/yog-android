@@ -56,7 +56,8 @@ impl Standing {
     }
 
     /// **The reads whose subject is the world**, painted onto a snapshot
-    /// however it was built (§13.6, §13.7, §13.8). Three fields, one place:
+    /// however it was built (§13.6, §13.7, §13.8, §13.9). Four fields, one
+    /// place:
     /// each is a gesture's answer rather than a depth's, so a pass that failed
     /// or narrowed must not drop any of them — and three copies of that rule
     /// at three publishers is how one of them comes to be forgotten.
@@ -64,6 +65,7 @@ impl Standing {
         out.search.clone_from(&self.found);
         out.queue.clone_from(&self.queue);
         out.trail.clone_from(&self.trail);
+        out.pane.clone_from(&self.pane);
     }
 
     /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot

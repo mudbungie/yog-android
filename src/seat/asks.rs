@@ -17,7 +17,7 @@ use serde_json::Value;
 use super::Focus;
 use super::pass::{answer, kind_err};
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, Found, OpRow};
+use crate::codec::{Ask, Found, OpRow, Pane, View};
 use crate::transport::Seat;
 
 /// **How much trail a phone asks for** (DESIGN §13.8). The engine's own tail
@@ -101,5 +101,29 @@ pub(super) fn ops(seat: &Seat) -> Result<Vec<OpRow>, String> {
     match answer(seat, &Ask::Ops { max: TAIL })? {
         (Reply::Ops(rows), _) => Ok(rows),
         (other, _) => Err(kind_err("ops", &other)),
+    }
+}
+
+/// **The ball pane's three reads, as one ask** (DESIGN §13.9). One function
+/// because the view is the only thing that differs and the pane holds exactly
+/// one answer: which read was made is what [`Pane`] carries back, so nothing
+/// downstream has to remember what was asked for.
+///
+/// Only the middle one names a place, and it takes the focus the same way the
+/// selectors do — a workspace's balls under another workspace's name would be
+/// the wrong claim, so there is nothing to ask with no workspace focused.
+pub(super) fn balls(seat: &Seat, focus: &Focus, view: View) -> Result<Pane, String> {
+    let ask = match view {
+        View::Everywhere => Ask::Balls,
+        View::Board => Ask::Board,
+        View::Here => Ask::WorkspaceBalls {
+            workspace: super::acts::focused(focus)?,
+        },
+    };
+    match answer(seat, &ask)? {
+        (Reply::Balls(rows), _) => Ok(Pane::Everywhere(rows)),
+        (Reply::WorkspaceBalls(rows), _) => Ok(Pane::Here(rows)),
+        (Reply::Board(board), _) => Ok(Pane::Board(board)),
+        (other, _) => Err(kind_err(view.screen(), &other)),
     }
 }

@@ -76,6 +76,15 @@
 # `codec::row`'s three readings (`op`, `wants`, `with`), which are pure and
 # asserted too. What is left here is which widget gets which of them.
 #
+# `src/shell/screens/world/balls.rs` is the ball pane (bl-d587), the same class
+# again and named for the same reason: a `ScrollArea` of labels and one entry
+# control, `cfg(target_os = "android")` to the last line. Everything it decides
+# is somewhere else and under the floor — WHAT a ball row says and what an
+# absent figure means is `codec::balls`, WHICH read a view asks and what a
+# focus-less aimed read earns is `seat::asks::balls`, and the pairing that
+# makes one view's answer unpaintable under another is `Pane::view`, all
+# asserted by host tests. What is left here is which widget shows which of them.
+#
 # `src/shell/screens/world.rs` and its two children (`world/waiting.rs`,
 # `world/trail.rs`) are the trail and the attention queue (bl-35bd), the same
 # class again: a `ScrollArea` of labels, two `ui.button` calls and the taps
@@ -116,6 +125,7 @@ exclude-files = [
     "src/shell/screens/rows.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",
+    "src/shell/screens/world/balls.rs",
     "src/shell/screens/world/trail.rs",
     "src/shell/screens/world/waiting.rs",
     "src/shell/transcript.rs",
