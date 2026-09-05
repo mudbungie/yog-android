@@ -76,10 +76,23 @@
                  android:icon="@mipmap/ic_launcher"
                  android:roundIcon="@mipmap/ic_launcher"
                  android:theme="@style/Theme.AppCompat.NoActionBar">
+        <!-- **Every configuration change this app can redraw, absorbed**
+             (bl-be13, DESIGN §3). An owner-drawn egui surface loads no
+             resource a configuration selects: a locale, a night mode, a font
+             scale or a density is a number the next frame reads, not a layout
+             to inflate again. So the flag list is the whole of what the
+             platform offers rather than the three the shell started with —
+             every flag left OFF is an activity RELAUNCH, and a relaunch of
+             this app is a destroy the app thread cannot answer (MainActivity
+             ends the process there, and the reason it must is DESIGN §3's).
+             `assetsPaths` is the one that cannot be declared — there is no
+             flag for it in the platform's `configChanges` attribute — which
+             is why installing over a running copy still relaunches, and why
+             the destroy path has to be right as well as rare. -->
         <activity android:name=".MainActivity"
                   android:exported="true"
                   android:windowSoftInputMode="adjustResize"
-                  android:configChanges="orientation|keyboardHidden|screenSize">
+                  android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|density|layoutDirection|colorMode|grammaticalGender|fontScale|fontWeightAdjustment">
             <meta-data android:name="android.app.lib_name"
                        android:value="yog_android" />
             <intent-filter>

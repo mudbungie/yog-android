@@ -115,6 +115,62 @@ public class MainActivity extends GameActivity {
         super.onPause();
     }
 
+    /**
+     * <h2>The activity's destroy is this process's end (bl-be13)</h2>
+     *
+     * {@code GameActivity.onDestroy} calls {@code terminateNativeCode_native},
+     * whose {@code NativeCode::~NativeCode} waits on a condition variable for
+     * the app thread to return from {@code android_main} — and this app's app
+     * thread never will. winit 0.30.13's android backend reads, in full:
+     *
+     * <pre>
+     *   MainEvent::Destroy =&gt; {
+     *       // XXX: maybe exit mainloop to drop things before being killed by the OS?
+     *       warn!("TODO: forward onDestroy notification to application");
+     *   },
+     * </pre>
+     *
+     * so the destroy is dropped and the loop runs on. Nothing in this app can
+     * take it from there either: winit dispatches {@code RedrawRequested} only
+     * while its {@code running} flag is set, and that flag is cleared by the
+     * {@code onPause} which always precedes a destroy — so no frame is painted
+     * after the pause and no line of Rust in this crate is ever entered again.
+     * What the app thread does instead is spin on
+     * {@code android_app_input_available_wake_up}, logging three lines a
+     * ~57&nbsp;ms iteration ("after GameActivity was destroyed"), forever.
+     *
+     * <p>Measured: the main thread parked in
+     * {@code __futex_wait_ex &lt;- pthread_cond_wait &lt;- onDestroy &lt;-
+     * NativeCode::~NativeCode &lt;- terminateNativeCode_native &lt;-
+     * GameActivity.onDestroy &lt;- Activity.performDestroy}, indefinitely. A
+     * main thread parked there answers nothing the platform sends it: the
+     * activity cannot be created again, no binder call lands, and the first
+     * thing that needs it ANRs the process and the platform SIGKILLs it.
+     *
+     * <p>So the process ends here, deliberately, rather than leaving a wedge
+     * that is killed later and worse. The manifest's {@code configChanges} is
+     * the other half: every configuration change this app can redraw is
+     * absorbed in place, so this path is reached when the activity genuinely
+     * goes — the back gesture's {@code finish()}, a task swiped away, a
+     * reclaim, or the one configuration change no flag can absorb
+     * ({@code assetsPaths}, which is what installing over a running copy is).
+     * The exit is one line upstream — {@code MainEvent::Destroy} calling the
+     * event loop's own {@code exit()} — and it belongs on the ledger of
+     * upstream defects this client shims (bl-2958); until it lands, a foot
+     * this process was holding for DESIGN §18 ends with the window, and the
+     * operator's remedy is the one §18 already names: open the app.
+     *
+     * <p>{@code super.onDestroy()} is not reachable and is kept anyway: a kill
+     * that somehow did not take must still leave the platform's own path
+     * running rather than a method that returned without tearing anything
+     * down.
+     */
+    @Override
+    protected void onDestroy() {
+        android.os.Process.killProcess(android.os.Process.myPid());
+        super.onDestroy();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

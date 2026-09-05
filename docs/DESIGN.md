@@ -242,6 +242,68 @@ AT the repaint decision from egui's settled memory, never remembered from
 earlier in the frame. A winit release with the wake arm dissolves this poll;
 consuming it is bl-2958's exit.
 
+**The activity's teardown is this process's end, and it has to be (bl-be13).**
+`GameActivity.onDestroy` calls `terminateNativeCode_native`, whose
+`NativeCode::~NativeCode` waits on a condition variable for the app thread to
+return from `android_main`. **This app's app thread never returns**, and the
+reason is one match arm upstream — winit 0.30.13's android backend, in full:
+
+    MainEvent::Destroy => {
+        // XXX: maybe exit mainloop to drop things before being killed by the OS?
+        warn!("TODO: forward onDestroy notification to application");
+    },
+
+so the destroy is dropped and the loop runs on. **Nothing in this crate can
+take it from there**, which is the finding that decides the shape of the fix:
+winit dispatches `RedrawRequested` only while its own `running` flag is set,
+that flag is cleared by the `MainEvent::Pause` which always precedes a destroy,
+and eframe's only doors to `event_loop.exit()` are a paint that asks to close
+and a window event arriving after the window is gone. So after the pause no
+frame is painted and **no line of this crate is entered again**. What the app
+thread does instead is spin on `android_app_input_available_wake_up`, logging
+three lines an iteration ("…after GameActivity was destroyed") at ~57 ms
+forever — 793,484 of them in one measured wedge.
+
+That was the state the ball found and it is worse than an ANR. A main thread
+parked in `__futex_wait_ex <- pthread_cond_wait <- onDestroy <-
+NativeCode::~NativeCode <- terminateNativeCode_native <- GameActivity.onDestroy
+<- Activity.performDestroy` answers **nothing** the platform sends it: the
+activity cannot be created again, so the app is permanently unopenable, and
+the first thing that does need the main thread ANRs the process and the
+platform SIGKILLs it. bl-05b6 met it after an install; the everyday way in is
+the back gesture, which is `shell::back::leave` calling `Activity.finish()`.
+
+**Two halves, and neither is a special case.**
+
+- **The manifest absorbs every configuration change this app can redraw** —
+  the whole flag list the platform offers, not the three the shell started
+  with. An owner-drawn egui surface loads no resource a configuration selects:
+  a locale, a night mode, a font scale, a density is a number the next frame
+  reads. Every flag left off is a relaunch, and a relaunch is a destroy. The
+  one that cannot be declared is `assetsPaths` — the platform's
+  `configChanges` attribute has no flag for it — which is why installing over
+  a running copy still relaunches, and why the second half has to be right as
+  well as rare.
+- **`MainActivity.onDestroy` ends the process**, rather than leaving a wedge
+  for the platform to kill later and worse. The reasoning is written there
+  beside the call.
+
+**Measured on the emulator, mid-dial throughout** — the seat's address pointed
+at a listener that accepts and never speaks, so a wire read is always in
+flight: **20/20 destroys ended the process with no ANR and no spin line, and
+20/20 rotations were absorbed with no relaunch, no ANR and no spin line.**
+Against the same build with these two changes reverted, the FIRST destroy
+wedged and the app never painted again.
+
+**What it costs, stated rather than buried.** A foot this process was holding
+for §18 ends with the window; the operator's remedy is the one §18 already
+names — open the app, whose resume arms the service. That is not a loss
+against what stood before it: a wedged process cannot start an activity, so
+the foot it kept was one nothing could ever get back to. The exit is the one
+upstream line (`MainEvent::Destroy` calling the event loop's own `exit()`),
+which belongs on the ledger of upstream defects this client shims (bl-2958);
+consuming it turns the kill back into a return.
+
 The shell is a thin paint-and-input layer over the tested core (bl-c761):
 `src/shell/{sys,inset,bridge,app}.rs` are `cfg(target_os = "android")`,
 excluded from coverage with their reasoning in `tarpaulin.toml`, and CI's
@@ -2514,16 +2576,18 @@ Two beats stand before them and are not invocations at all: the device
 than a clock), and the platform holds the foreground service that makes the
 rest of the run a pocketed foot's.
 
-**One defect the loop found on its first run, and it is the app's rather than
-the harness's** (bl-be13). Installing a package makes the platform re-apply its
-overlays; that lands as a configuration change and destroys the activity that
-is already up, and a destroy which catches this app mid-dial **hangs** in
-`GameActivity`'s native teardown — `NativeCode::~NativeCode` waiting on an app
-thread that is inside a wire read — until the platform ANRs and kills the
-process. The walk never meets it because minutes of seeds and taps sit between
-its install and its first relaunch. The harness relaunches onto the settled
-package so this is not what it discovers every run; the hang is filed where it
-belongs.
+**One defect the loop found on its first run, and it was the app's rather than
+the harness's** (bl-be13, fixed in §3). Installing a package makes the platform
+re-apply its overlays; that lands as a configuration change no `configChanges`
+flag can absorb (`assetsPaths` has none) and destroys the activity that is
+already up. A destroy used to **hang** in `GameActivity`'s native teardown —
+`NativeCode::~NativeCode` waiting on an app thread winit never returns — until
+the platform ANRed and killed the process. The walk never meets it because
+minutes of seeds and taps sit between its install and its first relaunch. §3
+is the fix and the measurement; **the harness's second launch stays**, because
+it was never only a workaround: the churn still destroys the activity, the
+process now ends there cleanly, and a relaunch is what puts the app back on
+the settled package.
 
 ## 16. The full seat and the teleoperation corpus (bl-eac2)
 
@@ -3001,6 +3065,18 @@ and both are the point.
 
 The frame reads `state::standing()` where it used to hold a handle, so the
 roster's tools line and the shade's notification are written from one fact.
+
+**What the process-lifetime promise is bounded by, since bl-be13.** The
+activity's destroy ends this PROCESS (§3), so a foot held here goes with the
+window rather than outliving it, and the swipe-out-of-Recents case this section
+opens with is the case it costs. That is a smaller loss than it reads as, and
+it is stated where the promise is made rather than only where the kill is: what
+stood before was not a foot that survived the swipe, it was a process whose
+main thread was parked forever in `GameActivity`'s native teardown — one that
+could not create an activity, could not answer a binder call, and was ANRed and
+SIGKILLed by the first thing that needed it. The remedy is unchanged and is
+this section's own: open the app, whose resume arms the service. The exit is
+the one upstream line §3 names.
 
 ### 18.2 The operator act is the leaf, and there is no switch
 

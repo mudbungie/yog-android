@@ -187,14 +187,18 @@ rm -rf "$MATERIAL"
 
 # **Launched twice, and the second one is not superstition.** Installing a
 # package makes the platform re-apply its overlays, which lands as a
-# configuration change and DESTROYS the activity that is already up — and a
-# destroy that catches this app mid-dial hangs in `GameActivity`'s native
-# teardown (`NativeCode::~NativeCode` waits for an app thread that is inside a
-# wire read), which the platform then ANRs and kills. The walk never meets it
-# because its seeds and taps put minutes between the install and its first
-# relaunch. So: launch, let the churn happen, and relaunch onto the settled
-# package. The hang itself is a defect of this app and is filed as one; the
-# harness must not be what discovers it every run (bl-be13).
+# configuration change no `configChanges` flag can absorb (`assetsPaths` has
+# none) and DESTROYS the activity that is already up. So: launch, let the churn
+# happen, and relaunch onto the settled package.
+#
+# **What that used to be hiding is fixed, and the second launch still earns its
+# place** (bl-be13, DESIGN §3). The destroy used to HANG in `GameActivity`'s
+# native teardown — `NativeCode::~NativeCode` waiting for an app thread winit
+# never returns — until the platform ANRed and killed the process, and this
+# relaunch was what kept the loop from rediscovering that every run. The app now
+# ends its process at that destroy instead of wedging in it, which is a
+# behaviour this harness can see: the first launch's app is GONE after the
+# churn, so the relaunch is what there is to advertise from.
 echo "invoke: launching the app" >&2
 "${ADB[@]}" shell "am start -n $PKG/.MainActivity" >/dev/null || die "the app did not launch"
 # The two reads below hold their output and match it with a herestring rather
