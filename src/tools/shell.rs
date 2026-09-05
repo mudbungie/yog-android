@@ -131,6 +131,15 @@ fn joined(reader: Option<std::thread::JoinHandle<Vec<u8>>>) -> String {
 /// Wait for the child, up to `deadline`; `None` is a child that outran it and
 /// was killed. The kill is what makes the pipe readers finish, which is what
 /// makes the caller's `join` return.
+///
+/// **The poll comes before the clock is read**, so which lines this loop runs
+/// depends on the CHILD, never on the scheduler. Read the other way round — a
+/// clock first — a busy box could blow the bound before the first sleep, and
+/// the sleep then went unexecuted on a run that had done nothing wrong: a
+/// coverage line whose reachability the machine's load adjudicated (bl-600e).
+/// A child that has not finished always costs one poll now, which is the whole
+/// price: it is `POLL` against a `DEADLINE` three thousand times its size, and
+/// a child that HAS finished pays nothing at all.
 fn wait(child: &mut std::process::Child, deadline: Duration) -> Option<i32> {
     let started = Instant::now();
     loop {
@@ -142,12 +151,12 @@ fn wait(child: &mut std::process::Child, deadline: Duration) -> Option<i32> {
         if let Ok(Some(status)) = child.try_wait() {
             return Some(code_of(status));
         }
+        std::thread::sleep(POLL);
         if started.elapsed() >= deadline {
             let _ = child.kill();
             let _ = child.wait();
             return None;
         }
-        std::thread::sleep(POLL);
     }
 }
 

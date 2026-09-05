@@ -103,7 +103,12 @@ fn the_shell_tool_runs_a_command_and_carries_all_three_facts() {
 
 #[test]
 fn a_command_that_outruns_its_deadline_is_terminated_and_says_so() {
-    let capture = super::shell::execute("sleep 30", Duration::from_millis(80));
+    // A deadline of ZERO is the loaded box, staged: the wait begins already
+    // past its bound, which is what a busy scheduler does to any bound small
+    // enough to wait out. The child provably outlives every bound, so the
+    // kill is the only way this wait can end, and the poll before the clock
+    // is read is the only line it can run first (bl-600e).
+    let capture = super::shell::execute("sleep 30", Duration::ZERO);
     assert_eq!(capture.exit_code, super::shell::TIMED_OUT);
     assert!(
         capture.stderr.contains("still running after"),
