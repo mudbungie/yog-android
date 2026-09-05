@@ -91,6 +91,13 @@ body = {"yog-seat-cache": version, "protocol": protocol,
         "workspaces": workspaces, "conversations": None, "transcript": None,
         "attention": None,
         "options": {"workspace": None, "providers": None, "models": {}}}
+# **The queue rides beside the depths and pairs with nothing** (DESIGN §13.7):
+# it names no workspace and no conversation, so a cache written at the top
+# depth may carry it — which is what puts rows on the queue screen (§13.8) for
+# a walk that dials nothing. The transcript seeds below REPLACE it with the
+# same answer re-addressed at the conversation they open, because the band
+# there paints only where the engine says THAT conversation holds a call.
+body["attention"] = frame("attention")
 # The pairing law `cache::read` enforces on the FILE: rows deeper than the
 # focus they were asked at are unpaintable, and a file carrying them is
 # discarded whole. So each depth carries exactly its own envelopes.

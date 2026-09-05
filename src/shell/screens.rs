@@ -17,6 +17,9 @@ use crate::seat::Snapshot;
 
 mod rows;
 mod search;
+mod world;
+
+pub(crate) use world::World;
 
 impl Shell {
     /// Everything below the top inset: the yog mark, then the component this
@@ -44,6 +47,15 @@ impl Shell {
         let Some(snap) = self.model_mut().map(crate::seat::Model::snapshot) else {
             return;
         };
+        // **The two world surfaces sit over the depths, not inside them**
+        // (§13.8): neither read names a workspace or a conversation, so
+        // neither belongs to a focus — and the focus is left exactly where it
+        // was, which is where backing out of one lands.
+        if let Some(world) = self.opened {
+            self.settle_echo(&snap);
+            self.world(ui, &snap, world);
+            return;
+        }
         // The outbox settles once per frame, whatever screen is up: an echo
         // whose conversation the operator left is not an echo any more
         // (bl-66fb).
@@ -100,6 +112,8 @@ impl Shell {
         ui.weak("workspaces");
         ui.weak(self.identity());
         Self::hosting(ui);
+        ui.separator();
+        self.world_entries(ui, snap);
         ui.separator();
         egui::ScrollArea::vertical().show(ui, |ui| {
             for row in &snap.workspaces {
@@ -160,6 +174,28 @@ impl Shell {
                 egui::Color32::LIGHT_YELLOW,
                 format!("{} (×{})", crate::host::RESTORED, standing.restored),
             );
+        }
+    }
+
+    /// **The way to the two world surfaces** (§13.8), above the workspaces
+    /// because neither is one: the queue spans every workspace and the trail
+    /// is the engine's own record. The mark on the queue entry is the roster
+    /// rows' own reading — *any workspace is waiting on you* — and not a
+    /// second count derived here.
+    fn world_entries(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
+        let waiting = snap.workspaces.iter().any(|row| row.attention > 0);
+        let mark = if waiting { " ●" } else { "" };
+        let control = tap(ui, format!("waiting{mark}").into(), "attention");
+        // Where the harness finds them (§15.2): neither carries a node it
+        // could be addressed by, and they are the only way to two screens.
+        self.note_control("waiting", ui, control.rect);
+        if control.clicked() {
+            self.open_world(World::Queue);
+        }
+        let control = tap(ui, "trail".into(), "ops");
+        self.note_control("trail", ui, control.rect);
+        if control.clicked() {
+            self.open_world(World::Trail);
         }
     }
 

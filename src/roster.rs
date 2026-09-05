@@ -41,7 +41,14 @@ const WEEK: i64 = 7 * DAY;
 /// clock ahead of the engine's reads as `now` rather than as a negative age:
 /// the two clocks disagreeing is not a fact about the conversation.
 pub fn stamp(last_active_unix: i64, now_unix: i64) -> String {
-    let ago = now_unix.saturating_sub(last_active_unix);
+    ago(now_unix.saturating_sub(last_active_unix))
+}
+
+/// The same spelling over an age the engine already took (§13.8): a queue row
+/// carries `age_secs` rather than a stamp, and the two must read alike or one
+/// screen's *4h* is another's *4 hours ago*. One home, spent twice — [`stamp`]
+/// is this function with the subtraction in front of it.
+pub fn ago(ago: i64) -> String {
     if ago < MINUTE {
         return "now".to_owned();
     }

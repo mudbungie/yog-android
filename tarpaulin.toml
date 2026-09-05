@@ -76,6 +76,17 @@
 # `codec::row`'s three readings (`op`, `wants`, `with`), which are pure and
 # asserted too. What is left here is which widget gets which of them.
 #
+# `src/shell/screens/world.rs` and its two children (`world/waiting.rs`,
+# `world/trail.rs`) are the trail and the attention queue (bl-35bd), the same
+# class again: a `ScrollArea` of labels, two `ui.button` calls and the taps
+# that open them, `cfg(target_os = "android")` to the last line. Everything
+# they decide is somewhere else and under the floor — WHAT a trail row says is
+# `codec::trail`, WHAT a queue row says is `codec::queue`, how an age is
+# spelled is `roster::ago`, and WHICH gesture each control fires is
+# `seat::asks`/`seat::acts::trail`, all asserted by host tests. What is left
+# here is which widget shows which of them, and the arm — one bool the walk
+# observes as a painted label.
+#
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
 [default]
 exclude-files = [
@@ -104,6 +115,9 @@ exclude-files = [
     "src/shell/screens.rs",
     "src/shell/screens/rows.rs",
     "src/shell/screens/search.rs",
+    "src/shell/screens/world.rs",
+    "src/shell/screens/world/trail.rs",
+    "src/shell/screens/world/waiting.rs",
     "src/shell/transcript.rs",
     "src/shell/sys.rs",
     "src/tools/bridged/door.rs",

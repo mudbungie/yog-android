@@ -10,7 +10,7 @@
 //! happens on the model's one worker thread, and the two sides talk over
 //! channels — no locks, so rule 7 stays vacuous here.
 
-use crate::codec::{ConvRow, Entry, Found, ProviderRow, QueueRow, RoleRow, WsRow};
+use crate::codec::{ConvRow, Entry, Found, OpRow, ProviderRow, QueueRow, RoleRow, WsRow};
 
 /// What the frame paints: the standing set as of the last completed
 /// refresh, with the focus it was asked under — one value, published
@@ -59,13 +59,31 @@ pub struct Snapshot {
     /// said again. The echo watches this move exactly as it watches the other
     /// two, and stands where it is when it does.
     pub doubted: usize,
-    /// **The decision queue as the engine last answered it** (§13.7,
-    /// bl-b39d), asked at the conversation depth because that is the only
-    /// screen that spends it. Empty is *nothing is waiting on you* — and, at
-    /// any shallower focus, *this seat did not ask*, which paints the same
-    /// because a band with no held call and a band nobody asked about are the
-    /// same absence of a parked invocation on the screen in front of you.
+    /// **The decision queue as the engine last answered it, whoever asked**
+    /// (§13.7, §13.8). Two surfaces spend it now — the held-call band under an
+    /// open conversation, which a pass reads it for, and the queue screen,
+    /// which asks for it when it opens (bl-35bd) — so the rows are held by
+    /// `Standing` rather than by one depth's pass, and every published
+    /// snapshot carries the last answer whichever gesture earned it. That is
+    /// the queue's own nature rather than a convenience: it names no workspace
+    /// and no conversation, so nothing about the focus it was read under binds
+    /// it to that focus.
+    ///
+    /// Empty is *nothing is waiting on you*, and — before the first read of a
+    /// launch that also missed the §14 cache — *nobody has asked yet*. The two
+    /// paint the same, because an empty band and an unasked one are the same
+    /// absence on the screen in front of you.
     pub queue: Vec<QueueRow>,
+    /// **The ops trail as it was last read** (yog §4.2, DESIGN §13.8). Empty
+    /// is two things that paint the same and are not worth telling apart: an
+    /// engine that has done nothing since the trail was cleared, and a seat
+    /// that has not opened the surface. Neither is an error, and both mean
+    /// *there is nothing here to read*.
+    ///
+    /// It rides the snapshot and never the §14 cache, for the search's reason:
+    /// the cache is the standing set a pass re-asks, and this is a gesture's
+    /// answer — opening the trail is what asks for it.
+    pub trail: Vec<OpRow>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

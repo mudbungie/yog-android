@@ -141,7 +141,7 @@ impl Shell {
             // walk needs one row to press, and a rectangle per row would be a
             // channel that grows with the world instead of with the app.
             if std::mem::take(&mut first) {
-                self.note_row(ui, control.rect);
+                self.note_control("row", ui, control.rect);
             }
             // The menu is painted before the tap is spent, because it is what
             // decides whether the tap was a navigation at all.

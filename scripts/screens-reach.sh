@@ -12,17 +12,24 @@
 # still travelling (the top inset is a throttled JNI probe), and a gesture
 # aimed at the first answer lands somewhere else.
 
-# Where the mark is, in device pixels, as the app itself reported it. The mark
-# carries no text and no accessibility node; this is the only way to find it,
-# and it is the app's own answer rather than a coordinate guessed here.
-tap_mark() {
+# Tap a control the app NAMED, in device pixels, as the app itself reported it
+# (`app/probe.rs`). None of them carries text or an accessibility node — the
+# mark is a picture, a conversation row and the two world entries are egui
+# labels — so a rectangle the app states is the only way to any of them, and it
+# is the app's own answer rather than a coordinate guessed here.
+tap_control() {        # tap_control <name>
   settle
-  local rect; rect=$(printf '%s' "$SETTLED" | sed -n 's/.*mark=\([0-9,]*\).*/\1/p')
-  [ -n "$rect" ] || { verdict fail "the screen reported no mark to tap"; return 0; }
+  local rect; rect=$(printf '%s' "$SETTLED" | sed -n "s/.*[ ]$1=\([0-9,]*\).*/\1/p")
+  [ -n "$rect" ] || { verdict fail "the screen reported no $1 to tap"; return 0; }
   local x y w h; IFS=, read -r x y w h <<<"$rect"
   "${ADB[@]}" logcat -c || true
   "${ADB[@]}" shell input tap $((x + w / 2)) $((y + h / 2))
 }
+
+# The mark, which every screen paints and which toggles the configuration
+# surface. Named because the standing assertion is about that surface and
+# reads better for it.
+tap_mark() { tap_control mark; }
 
 # Press and HOLD the first conversation row, which is the one way the row menu
 # opens (DESIGN §13.5). The rectangle is the app's own answer, for the mark's

@@ -85,7 +85,7 @@ impl Shell {
         paint(ui.painter(), rect.shrink(4.0));
         // Where the one control with no text is, for the harness that has to
         // tap it (`app/probe.rs`): the tap target, not the shrunk picture.
-        self.note_mark(ui, rect);
+        self.note_control("mark", ui, rect);
         if !hit.clicked() {
             return;
         }

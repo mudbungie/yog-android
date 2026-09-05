@@ -6,8 +6,8 @@
 //! a new read is only ever a new arm in this walk.
 
 use crate::cache::Envelopes;
-use crate::codec::Ask;
 use crate::codec::reply::Reply;
+use crate::codec::{Ask, QueueRow};
 use crate::transport::Seat;
 
 use super::{Focus, Snapshot, answer, kind_err};
@@ -19,6 +19,7 @@ pub(super) fn fill(
     focus: &Focus,
     snap: &mut Snapshot,
     kept: &mut Envelopes,
+    queue: &mut Vec<QueueRow>,
 ) -> Result<(), String> {
     let (reply, envelope) = answer(seat, &Ask::Workspaces)?;
     snap.workspaces = match reply {
@@ -49,12 +50,14 @@ pub(super) fn fill(
     kept.transcript = Some(envelope);
     // **The decision queue, at the depth that spends it** (§13.7). It names no
     // workspace and no conversation — it is the whole world's queue — but it
-    // is asked here rather than at every depth because the only screen that
-    // paints it is the one a conversation is open on, and a phone's radio is
-    // not free. Its rows address themselves, so nothing about being read under
-    // one focus binds it to that focus.
+    // is asked here rather than at every depth because the screen that paints
+    // it as a BAND is the one a conversation is open on, and a phone's radio
+    // is not free. The queue screen (§13.8) asks for it in its own right and
+    // writes the same holder: the rows address themselves, so what a pass
+    // learns and what a gesture learns are one answer with one home, and this
+    // walk writes it rather than the snapshot it is filling.
     let (reply, envelope) = answer(seat, &Ask::Attention)?;
-    snap.queue = match reply {
+    *queue = match reply {
         Reply::Attention(rows) => rows,
         other => return Err(kind_err("attention", &other)),
     };

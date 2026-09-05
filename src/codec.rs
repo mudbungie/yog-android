@@ -29,6 +29,7 @@ mod row;
 pub mod search;
 pub mod start;
 pub mod tools;
+pub mod trail;
 mod transcript;
 mod ws;
 
@@ -42,6 +43,7 @@ pub use row::RowAct;
 pub use search::{Address, Found, Hit, HitField};
 pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
+pub use trail::OpRow;
 pub use transcript::{Block, Entry, EntryKind};
 pub use ws::{ConfigTip, WsKind, WsRow};
 
@@ -120,6 +122,17 @@ pub enum Act {
         role: String,
         on: bool,
     },
+    /// **Acknowledge the trail's alarms** (yog DESIGN §4.2, §7.3). It names
+    /// no row and takes no argument: the ack is a watermark over the trail as
+    /// it stands, so there is nothing here for a client to select — and
+    /// nothing for it to select wrongly.
+    Ack,
+    /// **Truncate the trail** (yog §4.2). The one act this seat sends that
+    /// DISCARDS a durable record, which is why the control that fires it is
+    /// armed (DESIGN §13.8) and why nothing about the arming is on the wire:
+    /// an arm is a property of the glass, and the gesture is the same one a
+    /// slash line spells.
+    ClearTrail,
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather
@@ -166,6 +179,12 @@ pub enum Ask {
     /// carry — the one thing on the wire that must be *answered* rather than
     /// noticed — and paints that where the answer is given (DESIGN §13.7).
     Attention,
+    /// **The ops trail's tail** (yog §4.2, REMOTE §9.17): the last `max`
+    /// actions the engine took, newest last. `max` is the client's, not the
+    /// engine's — a phone asks for a screenful — and it is carried rather
+    /// than defaulted so the frame this codec writes is the frame the engine
+    /// reads back.
+    Ops { max: usize },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here
@@ -200,6 +219,9 @@ pub fn encode(gesture: &Gesture) -> Value {
         Gesture::Ask(Ask::Invocations) => json!({ "op": "invocations" }),
         Gesture::Ask(Ask::Search { text }) => json!({ "op": "search", "text": text }),
         Gesture::Ask(Ask::Attention) => json!({ "op": "attention" }),
+        Gesture::Ask(Ask::Ops { max }) => json!({ "op": "ops", "max": max }),
+        Gesture::Act(Act::Ack) => json!({ "op": "ack" }),
+        Gesture::Act(Act::ClearTrail) => json!({ "op": "clear-trail" }),
         Gesture::Act(Act::Answer {
             workspace,
             agent,

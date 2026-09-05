@@ -61,6 +61,16 @@ pub(crate) struct Shell {
     /// paints the configuration regardless of this flag, and nothing about
     /// what runs is stored here.
     pub(crate) settings: bool,
+    /// **Which world surface is open over the roster** (§13.8) — the queue,
+    /// the trail, or neither. Navigation like `settings` above and no more
+    /// durable than a scroll position: the focus underneath it is untouched,
+    /// which is what makes backing out of one land where the operator was.
+    pub(crate) opened: Option<super::screens::World>,
+    /// **Whether the trail's truncation is armed** (§13.8). The one armed
+    /// control this app has, so the arm is one bool rather than a mechanism —
+    /// and it is cleared by leaving the screen, by the act beside it, and by
+    /// firing, because an arm nobody is looking at must not survive.
+    pub(crate) armed: bool,
     pub(crate) composer: String,
     /// What the search field holds. A question, not an answer — the hits are
     /// the model's and ride the snapshot — and it is emptied when the search
@@ -133,19 +143,14 @@ pub(crate) struct Shell {
     /// rewritten every pass.
     pub(crate) back: bool,
     /// **What the render-and-see probe says about this pass** (`app/probe.rs`,
-    /// bl-243b): the screen the dispatch chose, and where the mark was put in
-    /// device pixels. Frame-scoped like `back` above — both are taken at the
-    /// end of the pass, so a screen that stops painting stops saying it is
-    /// there. `probed` is the last line said, and the reason a repaint is not
-    /// news.
+    /// bl-243b): the screen the dispatch chose, and where each control the
+    /// harness has to reach was painted, in device pixels — the mark, the
+    /// first conversation row, and the roster's two world entries (§15.2,
+    /// §13.8). Frame-scoped like `back` above — taken at the end of the pass,
+    /// so a screen that stops painting one stops saying where it is.
+    /// `probed` is the last line said, and the reason a repaint is not news.
     pub(crate) screen: Option<&'static str>,
-    pub(crate) mark_at: Option<[i32; 4]>,
-    /// **Where the first conversation row was painted** (§15.2, bl-f97c), in
-    /// device pixels. Its long press is the only way into the row menu, and
-    /// like the mark it carries no accessibility node — so it is the second
-    /// control a harness cannot otherwise find. Frame-scoped like the mark:
-    /// a screen that stops painting rows stops saying where one is.
-    pub(crate) row_at: Option<[i32; 4]>,
+    pub(crate) at: Vec<(&'static str, [i32; 4])>,
     probed: String,
 }
 
@@ -155,6 +160,8 @@ impl Shell {
             running: boot(&android),
             chose: None,
             settings: false,
+            opened: None,
+            armed: false,
             scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),
@@ -177,8 +184,7 @@ impl Shell {
             tuned_at: 0,
             back: false,
             screen: None,
-            mark_at: None,
-            row_at: None,
+            at: Vec::new(),
             probed: String::new(),
         }
     }

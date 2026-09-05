@@ -83,6 +83,42 @@ pub(super) fn run(
             Ok(Cmd::Search(text)) => {
                 note = searched(super::asks::search(seat, &text), &mut standing);
             }
+            // **The two world reads a gesture makes** (§13.8), and the two
+            // acts over the trail. Each read replaces what it answers and a
+            // failure keeps what was there, which is `searched`'s rule and is
+            // here for its reason: losing an answer the engine gave over one
+            // it did not is the defect §13.2's grace exists to prevent.
+            Ok(Cmd::Ops) => {
+                note = match super::asks::ops(seat) {
+                    Ok(rows) => {
+                        standing.trail = rows;
+                        None
+                    }
+                    Err(why) => Some(why),
+                };
+            }
+            Ok(Cmd::Attention) => {
+                note = match super::asks::attention(seat) {
+                    Ok(rows) => {
+                        standing.queue = rows;
+                        None
+                    }
+                    Err(why) => Some(why),
+                };
+            }
+            // **Both trail acts are followed by the read that says what they
+            // did**, which is also the read that settles a lost one: the
+            // watermark and the truncation are both invisible until the trail
+            // is read again, so the screen would otherwise stand on what it
+            // had before the act.
+            Ok(Cmd::Ack) => {
+                note = super::acts::ack(seat).note();
+                reread(seat, &mut standing);
+            }
+            Ok(Cmd::ClearTrail) => {
+                note = super::acts::clear_trail(seat).note();
+                reread(seat, &mut standing);
+            }
             Ok(Cmd::StopTurn(children)) => {
                 note = super::acts::stop(seat, &focus, children).note();
             }
@@ -138,6 +174,16 @@ fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
     if let Ok((workspace, envelope)) = super::asks::roles(seat, focus) {
         standing.options.assigned(&workspace, envelope);
         standing.reads += 1;
+    }
+}
+
+/// **Re-read the trail after an act on it**, swallowing the failure: this is
+/// not the operator's gesture, it is what makes the gesture's effect visible,
+/// and its absence leaves the rows exactly as they were — which is where they
+/// stood before the act was fired. `preload`'s rule, on the other pair.
+fn reread(seat: &Seat, standing: &mut Standing) {
+    if let Ok(rows) = super::asks::ops(seat) {
+        standing.trail = rows;
     }
 }
 

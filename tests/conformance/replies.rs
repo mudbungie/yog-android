@@ -15,7 +15,7 @@ use super::expect::Expect::{self, Reads, Refuses};
 use super::expect::{NOT_THE_MINTER, UNSENT};
 
 pub const REPLIES: &[(&str, Expect)] = &[
-    ("acked", Refuses(UNSENT)),
+    ("acked", Reads),
     ("advertised", Reads),
     ("agent", Refuses(UNSENT)),
     ("answered", Reads),
@@ -43,7 +43,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("marks", Refuses(UNSENT)),
     ("models", Reads),
     ("nudged", Reads),
-    ("ops", Refuses(UNSENT)),
+    ("ops", Reads),
     ("outcome", Reads),
     ("prepared", Reads),
     ("providers", Reads),
@@ -57,7 +57,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("started", Reads),
     ("step", Refuses(UNSENT)),
     ("steps", Refuses(UNSENT)),
-    ("trail-cleared", Refuses(UNSENT)),
+    ("trail-cleared", Reads),
     ("transcript", Reads),
     ("work-diff", Refuses(UNSENT)),
     ("workspace-balls", Refuses(UNSENT)),

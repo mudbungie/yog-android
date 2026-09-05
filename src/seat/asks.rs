@@ -16,8 +16,15 @@ use serde_json::Value;
 use super::Focus;
 use super::pass::{answer, kind_err};
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, Found};
+use crate::codec::{Ask, Found, OpRow, QueueRow};
 use crate::transport::Seat;
+
+/// **How much trail a phone asks for** (DESIGN §13.8). The engine's own tail
+/// bound is larger; this is a screenful and a scroll, chosen here because the
+/// ask carries the number and the asker is the one that knows what it can
+/// paint. A larger window costs a radio a bigger answer for rows below the
+/// fold, on the device the §14.1 lane exists to keep asleep.
+const TAIL: usize = 64;
 
 /// **What the focused workspace's roles are set to** (bl-e9f9), handed back
 /// as the engine's own envelope like the two option reads beside it.
@@ -103,5 +110,27 @@ pub(super) fn follow(seat: &Seat, focus: &Focus) -> Result<crate::codec::Stream,
     match answer(seat, &ask)? {
         (Reply::Follow(stream), _) => Ok(stream),
         (other, _) => Err(kind_err("follow", &other)),
+    }
+}
+
+/// **The ops trail's tail** (yog §4.2, DESIGN §13.8) — the read that names no
+/// place, like the search beside it: the trail is the engine's, not a
+/// workspace's, so nothing about the focus decides what it says.
+pub(super) fn ops(seat: &Seat) -> Result<Vec<OpRow>, String> {
+    match answer(seat, &Ask::Ops { max: TAIL })? {
+        (Reply::Ops(rows), _) => Ok(rows),
+        (other, _) => Err(kind_err("ops", &other)),
+    }
+}
+
+/// **The decision queue, asked in its own right** (§13.8). The pass asks the
+/// same question under an open conversation (`seat::pass::fill`); this is the
+/// queue SCREEN asking, and both answers land in the one holder — a queue read
+/// under a focus and a queue read under none are the same answer, because the
+/// queue names no place either.
+pub(super) fn attention(seat: &Seat) -> Result<Vec<QueueRow>, String> {
+    match answer(seat, &Ask::Attention)? {
+        (Reply::Attention(rows), _) => Ok(rows),
+        (other, _) => Err(kind_err("attention", &other)),
     }
 }

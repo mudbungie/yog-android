@@ -306,7 +306,10 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
 | `src/seat/acts.rs` | the acts the seat posts: the message deposit, the §8.1 start pair, the turn's stop and nudge, and the worker's tuning — none of them ever sent twice (§19.2) | landed (bl-de96, out of `pass.rs`) |
 | `src/seat/acts/row.rs` | the three acts addressed to a conversation ROW rather than to the focus (§13.5), and the read that settles each in doubt — including the one that says out loud that none does | landed (bl-f97c) |
-| `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three and the live tail. Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, bl-4822, split out bl-07b1) |
+| `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three, the live tail, and the two world reads (§13.8). Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, bl-4822, split out bl-07b1, world reads bl-35bd) |
+| `src/codec/trail.rs` | the ops trail's row: what the engine did, read as its own facts and classified nowhere — the words for a failure are `standing` and `exit_label`, which arrive with the re-vendor (bl-8e3c) | landed (bl-35bd) |
+| `src/seat/acts/trail.rs` | the two acts over the engine's record rather than over a place: the acknowledgement and the truncation, neither naming a row | landed (bl-35bd) |
+| `src/shell/screens/world.rs` + `world/{waiting,trail}.rs` | android-only: the two surfaces that sit over the depths rather than inside them (§13.8) — the queue as a queue, the trail with its acts, and the one armed control this app has | landed (bl-35bd) |
 | `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/place.rs` | the second host-tested sliver: which side of a control its list opens on and how tall it may be, so an opened popup lands inside the tappable area — pure, and the only half of §13.2's geometry a test can reach | landed (bl-78c2) |
@@ -314,8 +317,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, the banner and the one list-row helper every navigation list paints through | landed (bl-5a98) |
 | `src/shell/screens/rows.rs` | android-only: the conversation list and the acts its rows carry (§13.5) — the long-press menu, its three items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-f97c, out of `screens.rs`) |
-| `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where the mark went, said to logcat once per change | landed (bl-243b) |
-| `scripts/screens.sh` + `scripts/screens-seed.sh` | the headless emulator loop (§15): boot, install, walk, capture, judge — and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0) |
+| `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where each control the harness must reach was painted, one named rectangle apiece, said to logcat once per change | landed (bl-243b, named controls bl-35bd) |
+| `scripts/screens.sh` + `scripts/screens-seed.sh` + `scripts/screens-capture.sh` | the headless emulator loop (§15): boot and install, then the WALK — where to go and what each beat proves — beside the INSTRUMENTS that read the app and write a row about it, and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0, the instruments split bl-35bd on bl-46e6's seam) |
 | `scripts/screens-platform.sh` + `scripts/screens-background.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the two background lanes: the scheduled fetch (§17) and the pocketed foot (§18) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0) |
 | `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
@@ -1757,8 +1760,92 @@ own queue answer with its one held row re-addressed at the conversation the
 seed opens, so the band paints on the transcript screens and `act:answer` is
 observed; `act:revoke` and `act:restore` ride the row menu the walk already
 long-presses. All three `parity.toml` lines are deleted. The `attention` line
-stays, re-cited: no gesture asks for that read, and the whole-queue surface —
-the rows, their signals, the acknowledgements — is still bl-35bd's.
+stayed one ball longer, re-cited — no gesture asked for that read — and went
+with the queue surface below.
+
+### 13.8 The trail and the queue: two surfaces over the depths (bl-35bd)
+
+`src/codec/trail.rs`, `src/seat/asks.rs`, `src/seat/acts/trail.rs`,
+`src/shell/screens/world.rs`.
+
+Two reads of this engine name no place at all: the decision queue is every
+workspace's, and the ops trail is the engine's own record of what it did. Both
+were readable nowhere on this device — the queue only as a band under one open
+conversation (§13.7), the trail not at all, which left the read every recovery
+sentence in this client points at (*"the world is the durable record"*, REMOTE
+§9.8) the one read a phone could not make.
+
+**They live at the top depth, and that is the search's rule applied again**
+(§13.6). A surface reached from a workspace's conversation list would say its
+answer was that workspace's, which is a scope the wire does not carry and §8
+forbids this app to imply. So the roster carries two entries above its
+workspaces, and each opens a screen that paints its own bar — which is the
+whole of the back rule, inherited rather than written.
+
+**Neither joins the standing set; opening one IS the ask.** The queue is
+already read on the pass under an open conversation and the trail is read by
+nothing standing, so a surface nobody has opened costs this device no radio at
+all — §14.1's own argument for the attention lane, applied at the seat rather
+than at the engine.
+
+**The queue has one home now, and two askers.** The rows are held by
+`Standing`, not by a depth's pass: the pass writes them when it asks under a
+conversation, the queue screen writes them when it asks under nothing, and
+every published snapshot carries the last answer whoever earned it. That is the
+queue's own nature rather than plumbing — its rows address themselves, so
+nothing about the focus a read was made under binds the answer to that focus,
+which §13.7 already said and this is the shape of.
+
+**A queue row navigates; a trail row does not.** A queue row carries the
+workspace and the agent in the words every gesture takes, so tapping one opens
+that conversation exactly as a search hit does. A trail row addresses nothing —
+it is a line about an action that has already happened, and nothing this device
+could open would be *that action* — so it paints and does not tap, which is the
+answer a ball hit gets on the search screen for the same reason.
+
+**Nothing here reads a verdict out of an exit number.** yog derives what a
+failed action IS four ways (the sentinel table, the `128 + n` signal reading,
+the retirement key, the ack watermark) and REMOTE §9.17 put all four on the
+wire as `failed`, `exit_label` and `standing` precisely so no seat
+re-implements them — *"a seat that wanted the banner had to re-implement …
+five derivations this document names one home for apiece, and whose failure
+mode is a seat quietly disagreeing rather than failing to build."* The corpus
+this build is vendored against predates that bump, so the row paints the
+engine's own three facts (when, from where, what it exited) and stops. Reading
+the words is bl-8e3c's, with the re-vendor that brings them — and that ball is
+where the alarm grouping and the banner belong when they land.
+
+**`clear-trail` is the first armed control this app has**, and it is the
+exception §13.2's *tap is the act* was waiting for. Every gesture the seat had
+until now kept what it acted on: an interrupt keeps what is committed, a stop
+leaves the transcript where it is, a refused call stays parked. This one
+DISCARDS a durable record. The arm is two taps on one control, stated in the
+control's own label — not a dialog, because a phone's back gesture must dismiss
+anything modal and a confirmation a back press can answer is a confirmation
+nobody read. It is cleared by leaving the screen, by firing, and by the ack
+beside it: an arm nobody is looking at must not survive.
+
+**Both acts are followed by the read that shows what they did**, which is also
+the read that settles a lost one (§19.2). A watermark and a truncation are
+invisible until the trail is read again — unlike a deposit, whose effect
+arrives in the standing set on its own — so the re-read is what makes either
+act visible at all, and it is made straight away rather than waited for. The
+acknowledgement's *effect* is still unreadable on this build for the reason
+above: `standing` is what says a row is acked, and it is not in this corpus.
+
+**What the walk reaches.** Both entries paint on the roster, so `act:attention`
+and `act:ops` are observed there; the walk taps each in turn — from a fresh
+launch rather than by backing out, because the way back is a bar control that
+carries no rectangle — and the trail screen's own two controls give `act:ack`
+and `act:clear-trail`. The queue screen has rows because the roster seed now
+carries the engine's own queue answer, which the §14 cache allows at any depth:
+the queue pairs with nothing. All four `parity.toml` lines are deleted.
+
+**The probe's second fact grew a name** (§15.2). It reported the mark and the
+first conversation row; it now reports one rectangle per NAMED control, because
+these two entries are the only way to two screens and carry no accessibility
+node either. The line the channel draws is unchanged and is what keeps it
+bounded: the app names controls IT has, never one per thing in the world.
 
 ## 14. The paint-first cache (bl-de96)
 
@@ -1875,16 +1962,26 @@ stated there.
 
 `src/shell/app/probe.rs` writes one line to logcat when what it would say
 changes — the app's answer to *"what am I showing?"*, which is the only place
-that fact honestly lives. It carries **two things and no more**:
+that fact honestly lives. It carries **two kinds of thing and no more**:
 
 - **the screen's name**, written at the dispatch arm that chose it. Not
   derived a second time from the same state: a derivation beside a branch is a
   second authority for one fact, and the two disagree the first time a branch
   moves.
-- **the mark's rectangle in device pixels.** The mark is the only way into the
-  configuration surface (§13.2) and it carries no text at all, so it is the
-  one control a harness cannot otherwise find. The app says where it put it;
-  the harness taps there and still has no say in what the tap means.
+- **one rectangle per NAMED control, in device pixels** — the name spelled at
+  the paint site (`note_control`, generalized under bl-35bd from the mark's own
+  field). None of them carries text or an accessibility node, so a rectangle
+  the app states is the only way a harness reaches one: the mark, which is the
+  sole way into the configuration surface (§13.2); the first conversation row,
+  whose long press is the only way into the row menu (§13.5); and the roster's
+  two world entries, which are the only way to the trail and the queue
+  (§13.8). The app says where it put each; the harness taps there and still has
+  no say in what the tap means.
+
+  **The vocabulary is the APP's, never the world's.** One rectangle per control
+  the app HAS is a channel that grows when a surface is built; one per row on
+  screen would grow with the world, and that is the line this channel draws —
+  which is why a list reports its first row and no other.
 
 **Nothing else may go down this channel, and the reason is disclosure.**
 Logcat is device-wide and readable by anything holding the debug bridge, so a
@@ -1896,7 +1993,7 @@ anyway.
 The marker `yog.screen` is in the MESSAGE, never the logcat tag:
 `android_logger` tags a record with its module path, so a tag filter is a
 harness coupled to where a file happens to live, and it would go quietly
-silent the day that file moves. Both facts are frame-scoped like
+silent the day that file moves. Every fact is frame-scoped like
 `Shell::back` — taken at the end of the pass — so a screen that stops painting
 stops saying it is there, and a stale rectangle can never be tapped.
 
@@ -1938,6 +2035,8 @@ The walk, and the standing assertions it exists for:
 | `roster` | a leaf | a leaf alone makes this device a seat, and "main" is its roster |
 | `settings` | — tap the mark | **the configuration surface is reachable from the roster** |
 | `back-to-roster` | — tap the mark | the mark toggles: a way in with no way out is the same defect wearing the other face |
+| `waiting` | — tap the roster's queue entry | the whole-queue surface is reachable, and paints the seeded queue (§13.8) |
+| `trail` | — relaunch, tap the roster's trail entry | the trail is reachable, and its two acts are on the glass (§13.8) |
 | `conversations` | focus at a workspace | the conversation list paints under its focus |
 | `row-menu` | — hold the first row | **the long-press synthesis works on a device**, and the three conversation acts are on the glass (§13.5) |
 | `transcript` | focus at a conversation, at rest | the chat screen paints under its focus, and the nudge is offered |
@@ -2350,7 +2449,7 @@ The groups mirror the seat's own, one ball each:
 | the ball pane | balls, workspace-balls, board, close, assign, release, create, update | bl-d587 |
 | candidates | fan, retire, deliver, science | bl-2f17 |
 | fleet and watch | fleet, disband, arm, disarm | bl-477e |
-| trail and attention | ops, ack, clear-trail, attention | bl-35bd |
+| trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8) | bl-35bd |
 | admin and armed deletions | config, marks, scan, delete-agent, delete-workspace | bl-f645 |
 | roster and discovery | clients, lineages, help | bl-3685 |
 | the minting seat | enroll | bl-2ee8 |

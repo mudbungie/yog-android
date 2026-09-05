@@ -78,6 +78,9 @@ fn every_answer_names_its_own_kind() {
             "answered",
         ),
         (Reply::Floored { standing: true }, "floored"),
+        (Reply::Ops(Vec::new()), "ops"),
+        (Reply::Acked, "acked"),
+        (Reply::TrailCleared, "trail-cleared"),
     ];
     for (reply, kind) in named {
         assert_eq!(reply.kind(), kind);

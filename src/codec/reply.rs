@@ -20,6 +20,7 @@ use super::queue::{self, QueueRow};
 use super::search::{self, Found};
 use super::start::{self, Prepared};
 use super::tools::{Capture, Invocation, capture_of, invocation_of};
+use super::trail::{self, OpRow};
 use super::{ConvRow, Entry, WsRow, conv, transcript, ws};
 
 /// The typed answer this seat's gestures earn.
@@ -100,6 +101,15 @@ pub enum Reply {
     /// **The decision queue** (yog §8.5): every conversation waiting on the
     /// operator, each carrying the parked call this seat answers (§13.7).
     Attention(Vec<QueueRow>),
+    /// **The ops trail's tail** (yog §4.2): what this engine last did, newest
+    /// last, as many rows as the ask allowed.
+    Ops(Vec<OpRow>),
+    /// The receipt an acknowledgement earns. It carries nothing, and the read
+    /// that says what it did is the trail itself.
+    Acked,
+    /// The receipt a truncation earns — nothing again, for the same reason:
+    /// the trail read after it is what says the trail is gone.
+    TrailCleared,
     /// **What an answer landed on** (§8.6): the call, the verdict, and whether
     /// the branch was driven on after it.
     Answered(Answered),
@@ -147,6 +157,9 @@ impl Reply {
             Self::Follow(_) => "follow",
             Self::Search(_) => "search",
             Self::Attention(_) => "attention",
+            Self::Ops(_) => "ops",
+            Self::Acked => "acked",
+            Self::TrailCleared => "trail-cleared",
             Self::Answered(_) => "answered",
             Self::Floored { .. } => "floored",
         }
@@ -192,6 +205,9 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "follow" => Reply::Follow(stream_of(o)?),
         "search" => Reply::Search(search::found_of(o)?),
         "attention" => Reply::Attention(rows(o, queue::row)?),
+        "ops" => Reply::Ops(rows(o, trail::row)?),
+        "acked" => Reply::Acked,
+        "trail-cleared" => Reply::TrailCleared,
         "answered" => Reply::Answered(hold::answered_of(o)?),
         "floored" => Reply::Floored {
             standing: bool_of(o, "standing")?,

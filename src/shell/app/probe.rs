@@ -16,17 +16,20 @@
 //!
 //! - **the name of the screen the dispatch chose**, written at the arm that
 //!   chose it, so the name has one home and cannot drift from the branch;
-//! - **where the mark was painted**, in device pixels. The mark is the only
-//!   way into the configuration surface (§13.2) and it carries no text at
-//!   all, so it is the one control a harness cannot otherwise find. It says
-//!   where a tap must land; the app is still the thing that decides what a
-//!   tap there means.
-//! - **where the first conversation row was painted** (bl-f97c), on the one
-//!   screen that has rows. It is the mark's case exactly: the row menu opens
-//!   on a long press and nothing else opens it, and a row carries no node a
-//!   harness can address. Only the FIRST — the walk needs one row to press,
-//!   and a rectangle per row would be a channel that grows with the WORLD
-//!   rather than with the app, which is the line this file draws.
+//! - **where a NAMED control was painted**, in device pixels — one field per
+//!   control, spelled by the paint site (`note_control`). egui's controls
+//!   carry no accessibility node (§15.1), so a rectangle the app reports is
+//!   the only way a harness reaches one: the mark, which is the sole way into
+//!   the configuration surface and carries no text at all; the first
+//!   conversation row, whose long press is the only way into the row menu
+//!   (bl-f97c); and the two world entries on the roster, which are the only
+//!   way to the trail and the queue (§13.8, bl-35bd).
+//!
+//!   **Only the FIRST of a list, and never a row per row.** The line names
+//!   controls the APP has — a fixed set that grows when a surface is built —
+//!   and never one per thing in the WORLD, which is the line this file draws
+//!   and the reason the vocabulary is a paint-site string rather than an
+//!   enumeration of what is on screen.
 //!
 //! **Nothing else may go down this channel.** No bar title, no row label, no
 //! identity: logcat is device-wide and readable by anything holding the debug
@@ -34,7 +37,7 @@
 //! whole device. A screen name and a rectangle disclose the shape of the app,
 //! which its own store already publishes.
 //!
-//! Both facts are **frame-scoped**, like `Shell::back`: they are taken at the
+//! Every fact is **frame-scoped**, like `Shell::back`: they are taken at the
 //! end of the pass, so a screen that stops painting stops saying it is there,
 //! and a rectangle is never one from a frame ago. The line is emitted only
 //! when it CHANGES — a repaint at 60 Hz is not news, and a log a harness has
@@ -65,53 +68,45 @@ impl Shell {
         self.screen = Some(name);
     }
 
-    /// Record where the mark was painted, in **device pixels** — the unit
-    /// `adb shell input tap` takes, so the harness does no arithmetic of its
-    /// own and cannot get the scale wrong. egui works in points; the scale is
-    /// read here, at the paint, from the context that laid the rect out.
-    pub(crate) fn note_mark(&mut self, ui: &egui::Ui, rect: egui::Rect) {
-        self.mark_at = Some(pixels(ui, rect));
-    }
-
-    /// Record where the first conversation row was painted, in device pixels
-    /// and by the same arithmetic the mark takes.
-    pub(crate) fn note_row(&mut self, ui: &egui::Ui, rect: egui::Rect) {
-        self.row_at = Some(pixels(ui, rect));
+    /// Record where a named control was painted, in **device pixels** — the
+    /// unit `adb shell input tap` takes, so the harness does no arithmetic of
+    /// its own and cannot get the scale wrong. egui works in points; the scale
+    /// is read here, at the paint, from the context that laid the rect out.
+    ///
+    /// The name is the paint site's own word and is the harness's whole
+    /// vocabulary for reaching that control. A second call under one name in
+    /// one pass is the FIRST one — the first row of a list is what the walk
+    /// presses, and a list that reported its last row would move the target
+    /// with the world.
+    pub(crate) fn note_control(&mut self, name: &'static str, ui: &egui::Ui, rect: egui::Rect) {
+        if self.at.iter().any(|(known, _)| *known == name) {
+            return;
+        }
+        self.at.push((name, pixels(ui, rect)));
     }
 
     /// Say it, at the end of the pass and only when it changed.
     pub(super) fn probe(&mut self) {
-        let mark = self.mark_at.take();
-        let row = self.row_at.take();
+        let at = std::mem::take(&mut self.at);
         let Some(screen) = self.screen.take() else {
             return;
         };
-        let line = format!(
-            "{MARKER} screen={screen}{}{}",
-            field("mark", mark),
-            field("row", row)
-        );
+        // The rectangle fields, in the order they were painted. Built by
+        // `fold` rather than by pushing `format!` at a `String`, which is the
+        // shape `clippy::pedantic` refuses two ways at once
+        // (`format_push_string`, `format_collect`) and whose suggested
+        // replacement — `write!` into a `String` — hands back a `Result` that
+        // cannot fail and that this crate may not `unwrap` (AGENTS rule 4).
+        let line = at
+            .iter()
+            .fold(format!("{MARKER} screen={screen}"), |line, (key, rect)| {
+                line + " " + key + "=" + &spell(*rect)
+            });
         if self.probed == line {
             return;
         }
         log::info!("{line}");
         self.probed = line;
-    }
-}
-
-/// One optional rectangle field of the line, spelled or absent.
-///
-/// The line is assembled by a single `format!` rather than pushed at,
-/// because `push_str(&format!(..))` is the shape `clippy::pedantic` refuses
-/// (`format_push_string`) and the replacement it suggests — `write!` into a
-/// `String` — hands back a `Result` that cannot fail and that this crate may
-/// not `unwrap` (AGENTS rule 4). Dissolving the push seam answers both. One
-/// helper for the same reason `spell` is one: two fields cross this channel
-/// and a second copy of the spelling would be a second answer.
-fn field(key: &str, at: Option<[i32; 4]>) -> String {
-    match at {
-        Some(at) => format!(" {key}={}", spell(at)),
-        None => String::new(),
     }
 }
 

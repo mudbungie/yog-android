@@ -44,6 +44,18 @@ pub(super) enum Cmd {
     /// empty needle is the second: it crosses no wire, so a search can be
     /// left with the engine unreachable.
     Search(String),
+    /// **Read the ops trail** (§13.8) — what the engine last did. A gesture
+    /// read and not a standing one: nothing paints it unless the surface is
+    /// open, and a phone's radio is not free.
+    Ops,
+    /// **Read the decision queue** (§13.8), which the pass also asks under an
+    /// open conversation. One command because it is one question: the queue
+    /// screen is asking it where no conversation is focused.
+    Attention,
+    /// Acknowledge the trail's alarms.
+    Ack,
+    /// Truncate the trail — the armed act (§13.8).
+    ClearTrail,
     /// Stop the focused conversation's turn, optionally its subtree with it.
     StopTurn(bool),
     /// Re-prompt the focused conversation from where it stands.
@@ -200,6 +212,34 @@ impl Model {
     /// arrive in the next snapshot like every other read's rows.
     pub fn search(&self, text: String) {
         let _ = self.cmds.send(Cmd::Search(text));
+    }
+
+    /// **Ask for the ops trail** (§13.8). The rows arrive in the next
+    /// snapshot like every other read's, and what was already there keeps
+    /// painting meanwhile.
+    pub fn list_trail(&self) {
+        let _ = self.cmds.send(Cmd::Ops);
+    }
+
+    /// **Ask for the decision queue** — the whole-queue surface's own read
+    /// (§13.8), which is the same question a pass asks under an open
+    /// conversation and lands in the same place.
+    pub fn list_queue(&self) {
+        let _ = self.cmds.send(Cmd::Attention);
+    }
+
+    /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in
+    /// any sense worth relying on and never re-sent: the watermark lands on
+    /// the trail as it stood, and the trail read after it is what says so.
+    pub fn ack_trail(&self) {
+        let _ = self.cmds.send(Cmd::Ack);
+    }
+
+    /// **Truncate the trail.** The arming is the control's, not the model's:
+    /// a handle that armed itself would be a second authority for what is on
+    /// the glass, and this seat's rule is that the tap IS the act (§13.2).
+    pub fn clear_trail(&self) {
+        let _ = self.cmds.send(Cmd::ClearTrail);
     }
 
     /// Start a new conversation in the focused workspace with `goal` as its

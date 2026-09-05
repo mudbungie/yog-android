@@ -48,6 +48,14 @@ pub(super) struct Standing {
     /// gesture, not a pass — and painted into every published snapshot for the
     /// same reason the options are.
     posted: (usize, usize, usize),
+    /// **The decision queue, and the trail** (§13.7, §13.8) — the two reads
+    /// whose subject is the WORLD rather than a depth of the focus, so a pass
+    /// that narrows the focus loses neither. The queue is written by the pass
+    /// walk under an open conversation and by the queue screen's own gesture;
+    /// the trail only ever by the trail screen's, because nothing paints it
+    /// standing.
+    pub(super) queue: Vec<crate::codec::QueueRow>,
+    pub(super) trail: Vec<crate::codec::OpRow>,
     /// **The last needle's answer** (bl-4c2b), carried between passes for the
     /// reason the counters above are: it is a gesture's answer, not a pass's,
     /// and a pass that re-reads the world must not drop the search the
@@ -73,6 +81,11 @@ impl Standing {
             live: None,
             reads: 0,
             posted: (0, 0, 0),
+            // The cached queue is an answer the engine gave, so it is held as
+            // one: the band paints from the file on the way to the first pass
+            // exactly as the rows beside it do (§14).
+            queue: snap.queue.clone(),
+            trail: Vec::new(),
             found: None,
             last: snap.clone(),
             failed: 0,
@@ -111,7 +124,7 @@ impl Standing {
             ..Snapshot::default()
         };
         let mut kept = Envelopes::default();
-        let failed = fill(seat, focus, &mut fresh, &mut kept).err();
+        let failed = fill(seat, focus, &mut fresh, &mut kept, &mut self.queue).err();
         // The selectors' offerings ride every snapshot, under the focus they
         // were read for and no other (bl-0267).
         self.options.paint(focus, &mut fresh);
@@ -153,7 +166,7 @@ impl Standing {
         let mut out = self.last.clone();
         (out.landed, out.refused, out.doubted) = self.posted;
         out.roles_read = self.reads;
-        out.search.clone_from(&self.found);
+        self.world(&mut out);
         // One tail on the glass, and none at rest (bl-e3d1). The gate is the
         // row's own flight, so the transcript's tail obeys exactly what the
         // lane obeys.
@@ -195,6 +208,17 @@ pub(super) fn kind_err(asked: &str, got: &Reply) -> String {
 }
 
 impl Standing {
+    /// **The reads whose subject is the world**, painted onto a snapshot
+    /// however it was built (§13.6, §13.7, §13.8). Three fields, one place:
+    /// each is a gesture's answer rather than a depth's, so a pass that failed
+    /// or narrowed must not drop any of them — and three copies of that rule
+    /// at three publishers is how one of them comes to be forgotten.
+    fn world(&self, out: &mut Snapshot) {
+        out.search.clone_from(&self.found);
+        out.queue.clone_from(&self.queue);
+        out.trail.clone_from(&self.trail);
+    }
+
     /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot
     /// see the receipt — the worker holds the wire — so what it watches is
     /// these counters moving.
@@ -235,7 +259,7 @@ impl Standing {
         let mut out = self.last.clone();
         (out.landed, out.refused, out.doubted) = self.posted;
         out.roles_read = self.reads;
-        out.search.clone_from(&self.found);
+        self.world(&mut out);
         match read {
             Ok(stream) => self.live = Some(stream),
             Err(why) => out.error = Some(why),

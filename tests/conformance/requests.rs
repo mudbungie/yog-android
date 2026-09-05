@@ -20,7 +20,7 @@ use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{ACT, ASKING_SIDE, BARE_RUNG, NO_FORK_POINT, NO_SEED, NOT_THE_MINTER, READ};
 
 pub const REQUESTS: &[(&str, Expect)] = &[
-    ("ack", Refuses(ACT)),
+    ("ack", Reads),
     ("advertise", Reads),
     ("agent", Refuses(READ)),
     ("answer", Reads),
@@ -30,7 +30,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("balls", Refuses(READ)),
     ("board", Refuses(READ)),
     ("capture", Refuses(ASKING_SIDE)),
-    ("clear-trail", Refuses(ACT)),
+    ("clear-trail", Reads),
     ("clients", Refuses(READ)),
     ("close", Refuses(ACT)),
     ("complete", Reads),
@@ -62,7 +62,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("model", Reads),
     ("models", Reads),
     ("nudge", Reads),
-    ("ops", Refuses(READ)),
+    ("ops", Reads),
     (
         "prepare",
         Partial {

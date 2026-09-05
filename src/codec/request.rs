@@ -54,6 +54,11 @@ pub fn decode(v: &Value) -> Result<Gesture, String> {
             text: str_of(o, "text")?,
         }),
         "attention" => Gesture::Ask(Ask::Attention),
+        "ops" => Gesture::Ask(Ask::Ops {
+            max: super::fields::usize_of(o, "max")?,
+        }),
+        "ack" => Gesture::Act(Act::Ack),
+        "clear-trail" => Gesture::Act(Act::ClearTrail),
         "answer" => {
             let (workspace, agent, verdict) = super::hold::decode(o)?;
             Gesture::Act(Act::Answer {
