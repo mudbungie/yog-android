@@ -197,8 +197,14 @@ rm -rf "$MATERIAL"
 # harness must not be what discovers it every run (bl-be13).
 echo "invoke: launching the app" >&2
 "${ADB[@]}" shell "am start -n $PKG/.MainActivity" >/dev/null || die "the app did not launch"
+# The two reads below hold their output and match it with a herestring rather
+# than piping into `grep -q` (bl-3627): a logcat dump and a `dumpsys` are both
+# far past the pipe buffer, `grep -q` exits the instant it matches, and under
+# this file's `pipefail` the SIGPIPEd writer decides the status — so the wait
+# would never end and the beat would fail on precisely the runs that matched.
 PKG="$PKG" ADB_BIN="$ADB_BIN" SERIAL="$SERIAL" timeout 60 bash -c '
-  until "$ADB_BIN" -s "$SERIAL" logcat -d 2>/dev/null | grep -q "yog\.screen"; do sleep 2; done' \
+  until grep -q "yog\.screen" \
+    <<<"$("$ADB_BIN" -s "$SERIAL" logcat -d 2>/dev/null || true)"; do sleep 2; done' \
   || die "the app never said what it painted"
 relaunch
 
@@ -229,8 +235,8 @@ fi
 #    and the `open` refusal in the judgement is a platform answer that exists
 #    only in this state.
 "${ADB[@]}" shell input keyevent KEYCODE_HOME >/dev/null
-if "${ADB[@]}" shell dumpsys activity services "$PKG" 2>/dev/null \
-   | tr -d '\r' | grep -q "ServiceRecord{[^}]*$PKG/\.Pocket"; then
+services=$("${ADB[@]}" shell dumpsys activity services "$PKG" 2>/dev/null | tr -d '\r' || true)
+if grep -q "ServiceRecord{[^}]*$PKG/\.Pocket" <<<"$services"; then
   verdict pass "the pocketed foot holds the platform's foreground service"
 else
   verdict fail "no foreground service — this device is not pocketed, and the invocations below are a foreground app's"

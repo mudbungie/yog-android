@@ -43,9 +43,10 @@ fetch_beats() {
   # THE PIPE IS THE TRAP IN EVERY READ BELOW, not the pattern. `dumpsys
   # jobscheduler` is hundreds of kilobytes; `set -o pipefail` is on; and `grep
   # -q` exits the moment it matches, which SIGPIPEs whatever is still writing —
-  # so `dumpsys | grep -q` reports 141 on the runs that MATCH, and the beat
-  # fails exactly when it should pass. Every read holds the dump in a variable
-  # first and matches it with a herestring, which is not a pipeline at all.
+  # so a `dumpsys` piped into a `grep -q` reports 141 on the runs that MATCH,
+  # and the beat fails exactly when it should pass. Every read holds the dump
+  # in a variable first and matches it with a herestring, which is not a
+  # pipeline at all.
   #
   # It reads the REGISTRATION and neither of the other two places this app's job
   # is named. The run LOG outlives the app — the same `<pkg>/.Watch` string is
@@ -101,8 +102,8 @@ pocket_beats() {
   # right.
   #
   # Every read holds its dump in a variable and matches with a herestring, for
-  # `fetch_beats`' reason: `dumpsys | grep -q` reports 141 under pipefail on
-  # exactly the runs that match.
+  # `fetch_beats`' reason: a `dumpsys` piped into a `grep -q` reports 141 under
+  # pipefail on exactly the runs that match.
   # A ServiceRecord names the component the way the INTENT did — with the
   # manifest's leading-dot shorthand, `dev.yog/.Pocket`. That is not the
   # spelling `shade_beats` matches next door: a notification-listener

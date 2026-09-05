@@ -53,8 +53,14 @@ judge_captures() {
   fi
 
   # 3. The shade, read back from the platform rather than from the answer.
+  # The dump is held and matched with a herestring, never piped into `grep -q`:
+  # this file is sourced by one that sets `pipefail`, and a `grep -q` that exits
+  # on its match SIGPIPEs the `dumpsys` still writing — so the beat would fail
+  # on exactly the runs where the channel was there (bl-3627).
+  local shade
+  shade=$("${ADB[@]}" shell dumpsys notification 2>/dev/null || true)
   if [ "$(said notify exit_code)" = 0 ] \
-    && "${ADB[@]}" shell dumpsys notification | grep -q "channel=yog.tools"; then
+    && grep -q "channel=yog.tools" <<<"$shade"; then
     verdict pass "notify: the post stands in the shade on the tools channel"
   else
     verdict fail "notify: nothing on the tools channel (said: $(said notify stderr))"

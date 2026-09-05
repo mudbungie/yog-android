@@ -91,6 +91,25 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   binaries. There is no allowlist and no path exemption. Fix the rule, not
   the coverage. `.githooks/commit-msg` runs the same scanner over commit
   messages.
+- **The self-test's own two promises** (`scripts/leak-selftest.sh`, sourced by
+  the scanner so it proves the shipped mechanism rather than a copy). A fixture
+  that does not read as **text** in this locale is reported as an
+  infrastructure fault in its own sentence, never as a dead rule (bl-3627):
+  `scan_rule` greps with `-I`, which reports no hits for a file grep judges
+  binary and says nothing about why. And **a `grep -q` reads from a herestring,
+  never from a pipe** — the self-test holds every tracked bash script under
+  `scripts/` and `.githooks/` to it, a foreign `#!` skipped (the two python
+  bridges) and a file with no `#!` in scope as a sourced fragment. A piped
+  `grep -q` exits the moment it matches and closes the read end; the writer dies
+  of SIGPIPE mid-write, and `pipefail` reports the pipeline failed *because the
+  pattern matched* (`PIPESTATUS` reads `141 0`). It flaked the self-test into
+  calling a live rule dead, at `scan_paths` — where the shape is `&& report` —
+  it would have dropped a real finding instead, and in the device harness it
+  fails a beat on exactly the runs where the platform said yes, which is why
+  every `dumpsys` read holds its dump in a variable. The ban is on the shape,
+  not on the option, because a sourced file cannot see whether its caller set
+  `pipefail`; and enumerating **zero** scripts fails outright, because a check
+  that matches nothing is broken, never a clean tree. Measured on yog bl-e33a.
 - **Never credit AI or tooling** in commit messages, code, or docs.
 
 ## What may never enter a ball body

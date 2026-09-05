@@ -31,8 +31,11 @@ held_grants() {
   # refusal halves stay host tests.
   held=$("${ADB[@]}" shell dumpsys package "$PKG" 2>/dev/null | tr -d '\r')
   for want in CAMERA POST_NOTIFICATIONS ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION; do
-    if printf '%s
-' "$held" | grep -q "android.permission.$want: granted=true"; then
+    # A herestring and not a pipe: `dumpsys package` is large, `grep -q` exits
+    # the instant it matches, and under this harness's `pipefail` the SIGPIPEd
+    # writer would report the read FAILED on exactly the runs where the grant
+    # was held (bl-3627, reasoned at the head of `leak-selftest.sh`).
+    if grep -q "android.permission.$want: granted=true" <<<"$held"; then
       verdict pass "grant: $want is declared, accepted and held"
     else
       verdict fail "grant: $want is not held — is it declared in AndroidManifest.xml?"
