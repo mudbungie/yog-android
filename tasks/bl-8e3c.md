@@ -1,7 +1,8 @@
 +++
 title = "the wire moved to PROTOCOL 13 and this build still speaks 8: re-vendor, or every connection is refused at the preface"
 created = 1788582208
-updated = 1788582254
+updated = 1788582742
+claimant = "Animations-S"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
