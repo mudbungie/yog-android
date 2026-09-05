@@ -127,6 +127,15 @@ pub enum Act {
     /// it stands, so there is nothing here for a client to select — and
     /// nothing for it to select wrongly.
     Ack,
+    /// **Answer the attention queue at one conversation** (yog §8.5, DESIGN
+    /// §13.8): records what that conversation is currently asking about as
+    /// seen, which is what takes its row off the queue.
+    ///
+    /// **It names its own subject rather than taking the focus**, and that is
+    /// the one structural difference from every other conversation-shaped act
+    /// here: the queue spans every workspace this seat can see, so a row's
+    /// workspace is the row's and not the operator's current depth.
+    Seen { workspace: String, agent: String },
     /// **Truncate the trail** (yog §4.2). The one act this seat sends that
     /// DISCARDS a durable record, which is why the control that fires it is
     /// armed (DESIGN §13.8) and why nothing about the arming is on the wire:
@@ -222,6 +231,9 @@ pub fn encode(gesture: &Gesture) -> Value {
         Gesture::Ask(Ask::Ops { max }) => json!({ "op": "ops", "max": max }),
         Gesture::Act(Act::Ack) => json!({ "op": "ack" }),
         Gesture::Act(Act::ClearTrail) => json!({ "op": "clear-trail" }),
+        Gesture::Act(Act::Seen { workspace, agent }) => {
+            json!({ "op": "seen", "workspace": workspace, "agent": agent })
+        }
         Gesture::Act(Act::Answer {
             workspace,
             agent,

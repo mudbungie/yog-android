@@ -55,6 +55,10 @@ pub(super) enum Cmd {
     Lane(super::lane::Framed),
     /// Acknowledge the trail's alarms.
     Ack,
+    /// **Answer the attention queue at one conversation** (§13.8): the
+    /// workspace and the agent the row named, both carried, because the queue
+    /// spans workspaces and the focus is nobody's address here.
+    Seen(String, String),
     /// Truncate the trail — the armed act (§13.8).
     ClearTrail,
     /// Stop the focused conversation's turn, optionally its subtree with it.
@@ -232,6 +236,14 @@ impl Model {
     /// the trail as it stood, and the trail read after it is what says so.
     pub fn ack_trail(&self) {
         let _ = self.cmds.send(Cmd::Ack);
+    }
+
+    /// **Answer the attention queue at the conversation this row names**
+    /// (yog §8.5, DESIGN §13.8). Not idempotent in any sense worth relying on
+    /// and never re-sent: what says the mark is down is the attention lane's
+    /// next frame, which arrives on its own the moment the write lands.
+    pub fn seen(&self, workspace: String, agent: String) {
+        let _ = self.cmds.send(Cmd::Seen(workspace, agent));
     }
 
     /// **Truncate the trail.** The arming is the control's, not the model's:

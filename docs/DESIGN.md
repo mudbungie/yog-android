@@ -1761,10 +1761,10 @@ long-presses. All three `parity.toml` lines are deleted. The `attention` line
 stayed one ball longer, re-cited — no gesture asked for that read — and went
 with the queue surface below.
 
-### 13.8 The trail and the queue: two surfaces over the depths (bl-35bd)
+### 13.8 The trail and the queue: two surfaces over the depths (bl-35bd), and the act that answers a mark (bl-2889)
 
 `src/codec/trail.rs`, `src/seat/asks.rs`, `src/seat/acts/trail.rs`,
-`src/shell/screens/world.rs`.
+`src/seat/acts/seen.rs`, `src/shell/screens/world.rs`.
 
 Two reads of this engine name no place at all: the decision queue is every
 workspace's, and the ops trail is the engine's own record of what it did. Both
@@ -1801,6 +1801,35 @@ that conversation exactly as a search hit does. A trail row addresses nothing �
 it is a line about an action that has already happened, and nothing this device
 could open would be *that action* — so it paints and does not tap, which is the
 answer a ball hit gets on the search screen for the same reason.
+
+**A queue row can be ANSWERED, and until bl-2889 no mark on this device
+could be.** The attention mark painted on two screens — the roster's rollup
+and the conversation row's — and nothing in the app fired the engine's `seen`,
+so the one thing an operator could do about a mark was watch it accumulate.
+Three decisions make it one control rather than three:
+
+- **The act goes on the queue row, not on either mark.** `seen` names one
+  conversation; the roster's mark is a *workspace's* rollup and cannot address
+  it, and the conversation row's mark could but would put the answer on a
+  screen whose subject is a workspace rather than the queue. The way from
+  either mark to the answer is the roster's own queue entry, which is the way
+  to this screen — so the mark leads to the place the mark is cleared.
+- **The row is the whole address.** This is the one act this seat sends whose
+  workspace comes from the row instead of the focus, because the queue spans
+  every workspace it can see. A row act (§13.5) may take its workspace from
+  the focus — a conversation list is only ever painted under one — and a queue
+  row may not.
+- **Nothing is read after it, and that is the lane's doing** (§14.1). The two
+  trail acts below are each followed by a re-read because nothing stands over
+  the trail. The queue has a held lane whose contract is *a frame whenever
+  what needs the operator changes*, so the acknowledgement's effect arrives as
+  the next frame, from the queue's one writer. The receipt's own remainder is
+  decoded and adopted by nothing: a second writer could overwrite a newer
+  frame with an older receipt, and the shape is read anyway because a `rows`
+  array skipped is a shape this codec could misread (REMOTE §3).
+
+It is a plain tap and not an armed one: `seen` discards nothing, and
+`clear-trail` below stays this app's one exception to *tap is the act*.
 
 **Nothing here reads a verdict out of an exit number.** yog derives what a
 failed action IS four ways (the sentinel table, the `128 + n` signal reading,
@@ -1841,7 +1870,9 @@ launch rather than by backing out, because the way back is a bar control that
 carries no rectangle — and the trail screen's own two controls give `act:ack`
 and `act:clear-trail`. The queue screen has rows because the roster seed now
 carries the engine's own queue answer, which the §14 cache allows at any depth:
-the queue pairs with nothing. All four `parity.toml` lines are deleted.
+the queue pairs with nothing — and since bl-2889 each of those rows carries
+its own `act:seen`, observed on the same `waiting` capture. All five
+`parity.toml` lines are deleted.
 
 **The probe's second fact grew a name** (§15.2). It reported the mark and the
 first conversation row; it now reports one rectangle per NAMED control, because
@@ -2561,8 +2592,8 @@ they want are things this app's composer and rows already do, and nothing
 about a phone refuses any of them. The reasons that DO survive are structural,
 and were never §2 citations: `follow` and `roles` are ops no gesture fires
 (their views are reached through other controls), and they stand unchanged;
-`search` (bl-4c2b, **landed** — §13.6) and `seen` (bl-2889) were already
-unbuilt-with-ball.
+`search` (bl-4c2b, **landed** — §13.6) and `seen` (bl-2889, **landed** —
+§13.8, the act on the queue row) were already unbuilt-with-ball.
 `enroll` is the one re-classification: §11's "enrolls nobody" was the
 chat-first framing speaking, and under the mesh ruling (§5) a full phone seat
 mints and *displays* the QR the next device scans — bl-2ee8, which amends
@@ -2579,7 +2610,7 @@ The groups mirror the seat's own, one ball each:
 | the ball pane | balls, workspace-balls, board, close, assign, release, create, update | bl-d587 |
 | candidates | fan, retire, deliver, science | bl-2f17 |
 | fleet and watch | fleet, disband, arm, disarm | bl-477e |
-| trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8) | bl-35bd |
+| trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8); seen — **landed** (§13.8) | bl-35bd, bl-2889 |
 | admin and armed deletions | config, marks, scan, delete-agent, delete-workspace | bl-f645 |
 | roster and discovery | clients, lineages, help | bl-3685 |
 | the minting seat | enroll | bl-2ee8 |

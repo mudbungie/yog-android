@@ -16,7 +16,7 @@ use super::expect::{NOT_THE_MINTER, UNSENT};
 
 pub const REPLIES: &[(&str, Expect)] = &[
     ("acked", Reads),
-    ("acknowledged", Refuses(UNSENT)),
+    ("acknowledged", Reads),
     ("advertised", Reads),
     ("agent", Refuses(UNSENT)),
     ("answered", Reads),

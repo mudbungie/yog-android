@@ -25,10 +25,12 @@ use super::posted::{Posted, faulted};
 
 mod held;
 mod row;
+mod seen;
 mod trail;
 
 pub(super) use held::answer;
 pub(super) use row::row;
+pub(super) use seen::seen;
 pub(super) use trail::{ack, clear_trail};
 
 /// Post one message. The receipt is an `outcome` whose `ok` is the server's

@@ -11,7 +11,7 @@ use std::sync::mpsc;
 
 use serde_json::json;
 
-use super::{QUICK, REST, Turn, model_lanes, ops, queue_quiet, settle, ws_reply};
+use super::{QUICK, REST, Turn, model_lanes, model_turns, ops, queue_quiet, settle, ws_reply};
 
 /// The queue with one conversation waiting, addressed at no conversation this
 /// seat has focused: the whole-queue read names no place.
@@ -111,4 +111,134 @@ fn a_queue_frame_of_the_wrong_kind_names_the_read_and_keeps_what_was_there() {
         s.error.as_deref() == Some("registered nowhere")
     });
     assert_eq!(snap.queue.len(), 1);
+}
+
+/// The receipt `seen` earns: the queue that remains, which this seat decodes
+/// and adopts none of.
+fn acknowledged(rows: serde_json::Value) -> Vec<u8> {
+    json!({ "ok": true, "kind": "acknowledged", "workspace": "home",
+            "agent": "a9", "rows": rows })
+    .to_string()
+    .into_bytes()
+}
+
+/// **The act carries the ROW's address, and the focus is nobody's business
+/// here** (bl-2889): nothing is focused in this test and the gesture still
+/// names the workspace and the agent the queue row stated.
+///
+/// And nothing is asked after it. The row leaves when the LANE says it has —
+/// the queue's one writer — which is the frame that arrives next.
+#[test]
+fn seen_crosses_with_the_row_s_own_address_and_the_lane_answers_it() {
+    let (feed, frames) = mpsc::channel();
+    let (mut model, served) = model_lanes(
+        vec![
+            vec![ws_reply()],
+            vec![acknowledged(json!([]))],
+            vec![ws_reply()],
+        ],
+        vec![Turn::Feed(frames)],
+        REST,
+    );
+    feed.send(queue()).unwrap();
+    settle(&mut model, &|s| !s.queue.is_empty());
+    model.seen("home".to_owned(), "a9".to_owned());
+    feed.send(queue_quiet()).unwrap();
+    let snap = settle(&mut model, &|s| s.queue.is_empty());
+    assert_eq!(snap.error, None, "a receipt says nothing to the operator");
+    drop(model);
+    let requests = served.join().unwrap();
+    assert_eq!(
+        serde_json::from_slice::<serde_json::Value>(&requests[1]).unwrap(),
+        json!({ "op": "seen", "workspace": "home", "agent": "a9" })
+    );
+    // Nothing is re-asked after the act: the ops between the roster passes
+    // are the act itself and nothing else.
+    assert_eq!(ops(&requests)[1], "seen");
+    assert_eq!(ops(&requests)[2], "workspaces");
+}
+
+/// The remainder is read — a `rows` array this codec skipped would be a shape
+/// it could misread (REMOTE §3) — and it reaches no holder: the queue still
+/// says what the lane last said.
+#[test]
+fn the_remainder_is_decoded_and_replaces_nothing() {
+    let (feed, frames) = mpsc::channel();
+    let (mut model, _served) = model_lanes(
+        vec![
+            vec![ws_reply()],
+            vec![acknowledged(json!([{ "workspace": "home", "agent": "b1",
+                "display": "d", "state": "live", "uncertain": false,
+                "signals": [], "says": "", "preview": "", "age_secs": 1,
+                "pending": 0, "held": null, "failure": null, "flag": null }]))],
+            vec![super::ws_named("away")],
+        ],
+        vec![Turn::Feed(frames)],
+        REST,
+    );
+    feed.send(queue()).unwrap();
+    settle(&mut model, &|s| !s.queue.is_empty());
+    model.seen("home".to_owned(), "a9".to_owned());
+    // A whole pass after the act, so the remainder had every chance to land.
+    let snap = settle(&mut model, &|s| s.workspaces[0].workspace == "away");
+    assert_eq!(snap.queue.len(), 1);
+    assert_eq!(
+        snap.queue[0].agent, "a9",
+        "the lane is the queue's one writer"
+    );
+}
+
+/// An answer of the wrong kind is a sentence naming the act, exactly as every
+/// other act here refuses.
+#[test]
+fn an_acknowledgement_answered_with_another_kind_is_named() {
+    let (feed, frames) = mpsc::channel();
+    let (mut model, _served) = model_lanes(
+        vec![
+            vec![ws_reply()],
+            vec![
+                json!({ "ok": true, "kind": "nudged" })
+                    .to_string()
+                    .into_bytes(),
+            ],
+            vec![ws_reply()],
+        ],
+        vec![Turn::Feed(frames)],
+        REST,
+    );
+    feed.send(queue()).unwrap();
+    settle(&mut model, &|s| !s.queue.is_empty());
+    model.seen("home".to_owned(), "a9".to_owned());
+    let snap = settle(&mut model, &|s| s.error.is_some());
+    assert_eq!(
+        snap.error.as_deref(),
+        Some("seen: the engine answered nudged instead")
+    );
+}
+
+/// **A lost receipt leaves the act in doubt and is never re-sent** (§19.2),
+/// and the read it names is the one already standing: the lane restates the
+/// whole queue whenever it changes, so a row still on the glass is a row that
+/// was not acknowledged.
+#[test]
+fn a_lost_acknowledgement_is_in_doubt_and_names_the_queue() {
+    let (mut model, served) = model_turns(vec![
+        Turn::Answer(vec![ws_reply()]),
+        Turn::Hangup,
+        Turn::Answer(vec![ws_reply()]),
+    ]);
+    settle(&mut model, &|s| !s.workspaces.is_empty());
+    model.seen("home".to_owned(), "a9".to_owned());
+    let snap = settle(&mut model, &|s| s.error.is_some());
+    let said = snap.error.unwrap_or_default();
+    assert!(
+        said.starts_with("seen may have run: the reply was lost ("),
+        "said: {said}"
+    );
+    assert!(
+        said.ends_with("The queue's next frame says whether that row is still waiting."),
+        "said: {said}"
+    );
+    drop(model);
+    served.join().unwrap();
 }

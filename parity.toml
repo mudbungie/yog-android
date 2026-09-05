@@ -108,6 +108,8 @@ follow = "held beside the pass while the focused turn is in flight, never fired 
 roles = "read at cadence to settle the controls row; what it populates is the selectors' own text, and no gesture asks for it (bl-e9f9)"
 
 # --- Unbuilt before the re-scope, standing ----------------------------------
-# `search` was here, and is gone: the field paints on the roster and the hits
-# have a screen of their own (DESIGN §13.6, bl-4c2b).
-seen = "unbuilt: this seat paints the attention mark on two screens and offers no gesture that answers it (bl-2889)"
+# Both lines that stood here are gone. `search` went first: the field paints on
+# the roster and the hits have a screen of their own (DESIGN §13.6, bl-4c2b).
+# `seen` followed it (bl-2889) — the queue row is the mark that can be
+# answered, and `act:seen` is on it (DESIGN §13.8). This group is now empty and
+# is kept as the record of what was in it.

@@ -107,6 +107,19 @@ pub enum Reply {
     /// The receipt an acknowledgement earns. It carries nothing, and the read
     /// that says what it did is the trail itself.
     Acked,
+    /// **The receipt `seen` earns** (yog §8.5): the queue that REMAINS after
+    /// the acknowledged row was taken out of it — the engine's own words,
+    /// *"the remainder alone reads as a plain `/attention`"*.
+    ///
+    /// **The rows are decoded and this seat adopts none of them**, which is
+    /// deliberate rather than lazy. The queue here has exactly one writer —
+    /// the held attention lane (DESIGN §14.1), which states the whole answer
+    /// again the moment it changes — and a second writer would be a second
+    /// authority for one fact, able to overwrite a newer frame with an older
+    /// receipt. They are read anyway because reading a shape is not the same
+    /// as spending it: a `rows` array this codec skipped would be a shape it
+    /// could misread, which is exactly what REMOTE §3 forbids.
+    Acknowledged(Vec<QueueRow>),
     /// The receipt a truncation earns — nothing again, for the same reason:
     /// the trail read after it is what says the trail is gone.
     TrailCleared,
@@ -159,6 +172,7 @@ impl Reply {
             Self::Attention(_) => "attention",
             Self::Ops(_) => "ops",
             Self::Acked => "acked",
+            Self::Acknowledged(_) => "acknowledged",
             Self::TrailCleared => "trail-cleared",
             Self::Answered(_) => "answered",
             Self::Floored { .. } => "floored",
@@ -207,6 +221,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "attention" => Reply::Attention(rows(o, queue::row)?),
         "ops" => Reply::Ops(rows(o, trail::row)?),
         "acked" => Reply::Acked,
+        "acknowledged" => Reply::Acknowledged(rows(o, queue::row)?),
         "trail-cleared" => Reply::TrailCleared,
         "answered" => Reply::Answered(hold::answered_of(o)?),
         "floored" => Reply::Floored {

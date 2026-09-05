@@ -92,7 +92,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("scan", Refuses(ACT)),
     ("science", Refuses(READ)),
     ("search", Reads),
-    ("seen", Refuses(ACT)),
+    ("seen", Reads),
     ("step", Refuses(READ)),
     ("steps", Refuses(READ)),
     ("stop", Reads),

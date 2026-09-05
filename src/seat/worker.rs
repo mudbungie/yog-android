@@ -110,6 +110,16 @@ pub(super) fn run(
                 note = super::acts::ack(seat).note();
                 reread(seat, &mut standing);
             }
+            // **The queue act needs no read after it, and that is the lane's
+            // doing** (§14.1). The two trail acts are followed by `reread`
+            // because nothing stands over the trail; the queue has a held
+            // lane whose whole contract is a frame whenever what needs the
+            // operator changes, so the acknowledgement's effect arrives here
+            // as the next frame — from the one writer, in the engine's own
+            // words, without this seat asking twice.
+            Ok(Cmd::Seen(workspace, agent)) => {
+                note = super::acts::seen(seat, workspace, agent).note();
+            }
             Ok(Cmd::ClearTrail) => {
                 note = super::acts::clear_trail(seat).note();
                 reread(seat, &mut standing);

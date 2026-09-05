@@ -223,3 +223,26 @@ fn the_selector_replies_read_back() {
         Reply::Nudged
     );
 }
+
+/// **The receipt `seen` earns** (bl-2889): the queue that remains, read with
+/// the same strictness the queue itself is read with — the rows are the
+/// engine's `attention` rows, so a malformed one refuses here rather than
+/// being skipped as a field nobody spends.
+#[test]
+fn the_acknowledgement_carries_the_queue_that_remains() {
+    let row = json!({ "workspace": "home", "agent": "a9", "display": "d",
+                      "state": "live", "uncertain": false, "signals": [],
+                      "says": "", "preview": "p", "age_secs": 3, "pending": 0,
+                      "held": null, "failure": null, "flag": null });
+    let frame = json!({ "ok": true, "kind": "acknowledged", "workspace": "home",
+                        "agent": "a1", "rows": [row] });
+    let acknowledged = decode(&frame).unwrap().unwrap();
+    assert_eq!(acknowledged.kind(), "acknowledged");
+    let Reply::Acknowledged(rows) = acknowledged else {
+        panic!("not an acknowledgement")
+    };
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].agent, "a9");
+    let e = decode(&json!({ "ok": true, "kind": "acknowledged" })).unwrap_err();
+    assert_eq!(e, "missing or non-array field \"rows\"");
+}
