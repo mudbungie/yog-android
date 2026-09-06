@@ -11,7 +11,8 @@
 use super::super::cmd::Cmd;
 use super::super::pass::Standing;
 use super::super::{Focus, acts, asks};
-use super::fold::{self, learned, preload, reread, searched};
+use super::after::{self, preload, reread};
+use super::fold::{self, learned, searched};
 use crate::transport::Seat;
 
 /// Spend one command. `focus` is `&mut` because two of these MOVE it, which is
@@ -73,6 +74,15 @@ pub(super) fn spend(
         Cmd::Balls(view) => fold::paned(asks::balls(seat, focus, view), standing),
         Cmd::Records => fold::recorded(asks::opened(seat, focus), standing),
         Cmd::Step(seq) => fold::drilled(asks::drill(seat, focus, seq), standing),
+        // **The anchored read and the act it informs** (§13.16). The read
+        // folds into the records like the drill-in beside it; the act needs no
+        // read after it — what a fork DID is a child card on the spine, which
+        // the next opening of this screen reads.
+        Cmd::Anchor(at) => {
+            let read = asks::anchored(seat, focus, at.clone());
+            fold::anchored(read, at, standing)
+        }
+        Cmd::Fork { from, goal } => acts::fork(seat, focus, from, goal).note(),
         Cmd::Science => fold::spread(asks::science(seat, focus), standing),
         Cmd::Clients => fold::machined(asks::clients(seat, focus), standing),
         Cmd::Files(path) => fold::filed(asks::files(seat, focus, path), standing),
@@ -110,10 +120,10 @@ pub(super) fn spend(
         Cmd::Row(agent, act) => acts::row(seat, focus, agent, act).note(),
         Cmd::Start(goal) => acts::started(seat, focus, goal).note(),
         // The two aimed screens whose acts ARE invisible until re-read.
-        Cmd::Ball(project, act) => fold::balled(seat, focus, standing, project, act),
+        Cmd::Ball(project, act) => after::balled(seat, focus, standing, project, act),
         Cmd::Candidate(project, ball, act) => {
             let posted = acts::candidate(seat, project, ball, act);
-            fold::listed(seat, focus, standing, posted)
+            after::listed(seat, focus, standing, posted)
         }
         Cmd::Fan {
             project,
@@ -122,7 +132,7 @@ pub(super) fn spend(
             goal,
         } => {
             let posted = acts::spread(seat, focus, project, ball, n, goal);
-            fold::listed(seat, focus, standing, posted)
+            after::listed(seat, focus, standing, posted)
         }
         // A tuning act is followed by the read that makes it true: the control
         // showed its pick optimistically, and this is what overtakes it

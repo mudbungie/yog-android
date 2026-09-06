@@ -36,6 +36,12 @@ pub struct Notch {
     /// The commit this notch pins to, clipped by the engine. Empty is a notch
     /// no gesture can reach, which is upstream's own test for one.
     pub short: String,
+    /// **The same commit, whole** — what a fork's `from` spends (DESIGN
+    /// §13.16). Both are read since the picking surface landed: the short one
+    /// is what a phone paints, and the full one is what crosses, because a
+    /// gesture that named a clipped oid would be asking the engine to resolve
+    /// a prefix this seat chose the length of. Empty exactly where `short` is.
+    pub commit: String,
 }
 
 /// One child forked at a notch: who it is, where it came from, and what it is
@@ -83,15 +89,16 @@ pub(in super::super) fn rail_of(o: &Map<String, Value>) -> Result<Rail, String> 
     })
 }
 
-/// One notch. The full commit rides beside the clipped one upstream and is
-/// not read: the pinning gesture that would spend it is `fork`, which
-/// `parity.toml` cites to bl-99fd, and a phone paints the short form.
+/// One notch, in both spellings of its commit — the clipped one this app
+/// paints and the whole one a fork sends (DESIGN §13.16). Each absent for a
+/// notch no gesture can reach, which is upstream's own test for one.
 fn notch(v: &Value) -> Result<Notch, String> {
     let o = object(v, "rail")?;
     Ok(Notch {
         seq: str_of(&o, "seq")?,
         budget: u64_of(&o, "budget")?,
         short: opt(&o, "short", str_of)?.unwrap_or_default(),
+        commit: opt(&o, "commit", str_of)?.unwrap_or_default(),
     })
 }
 

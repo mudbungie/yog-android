@@ -7,7 +7,9 @@
 
 use serde_json::{Value, json};
 
-use super::{Act, Ask, Gesture, balls, candidates, fleet, hold, pick, row, start, tools, workdiff};
+use super::{
+    Act, Ask, Gesture, balls, candidates, fleet, fork, hold, pick, row, start, tools, workdiff,
+};
 
 /// Encode a gesture to its deposit envelope — the request frame's whole body.
 /// Total over the slice; the spellings are the server codec's, byte for byte.
@@ -80,8 +82,23 @@ fn asked(ask: &Ask) -> Value {
         Ask::Agent { workspace, agent } => aimed("agent", workspace, agent),
         Ask::Steps { workspace, agent } => aimed("steps", workspace, agent),
         Ask::Rail { workspace, agent } => aimed("rail", workspace, agent),
-        Ask::Governing { workspace, agent } => aimed("governing", workspace, agent),
         Ask::Inbox { workspace, agent } => aimed("inbox", workspace, agent),
+        // **The one aimed read with a parameter** (DESIGN §13.16): the
+        // standing question with no `at`, the fork point's own with one.
+        Ask::Governing {
+            workspace,
+            agent,
+            at,
+        } => {
+            let mut map = serde_json::Map::new();
+            map.insert("op".to_owned(), json!("governing"));
+            map.insert("workspace".to_owned(), json!(workspace));
+            map.insert("agent".to_owned(), json!(agent));
+            if let Some(at) = at {
+                map.insert("at".to_owned(), json!(at));
+            }
+            Value::Object(map)
+        }
         Ask::Step {
             workspace,
             agent,
@@ -146,6 +163,13 @@ fn acted(act: &Act) -> Value {
             agent,
             act,
         } => row::encode(workspace, agent, act),
+        Act::Fork {
+            workspace,
+            parent,
+            from,
+            role,
+            goal,
+        } => fork::encode(workspace, parent, from, role, goal),
         Act::Effort {
             workspace,
             role,
@@ -175,9 +199,11 @@ fn acted(act: &Act) -> Value {
     }
 }
 
-/// **A read addressed at one conversation and carrying nothing else** — five
+/// **A read addressed at one conversation and carrying nothing else** — four
 /// of the records screen's six (DESIGN §13.11), and one spelling rather than
-/// five, because the op token is the only thing that differs between them.
+/// four, because the op token is the only thing that differs between them.
+/// `step` names a row inside the conversation and `governing` takes a fork
+/// point, so neither is spelled here.
 fn aimed(op: &str, workspace: &str, agent: &str) -> Value {
     json!({ "op": op, "workspace": workspace, "agent": agent })
 }

@@ -45,18 +45,13 @@ pub const READ: &str = "a world read outside the chat-loop slice (DESIGN §2)";
 /// An act on the world outside the chat loop and the tool-host trio.
 pub const ACT: &str = "a world act outside the chat-loop slice (DESIGN §2)";
 
-/// **`fork` is the one row act this seat cannot fire, and the reason is a
-/// missing READ rather than a missing surface** (DESIGN §13.5, bl-f97c). Its
-/// three siblings — `interrupt`, `retarget`, `flag` — moved to `Reads` when
-/// the conversation row's menu landed. `fork` did not, because its `from` is a
-/// fork point and the engine's own `fork::Attempt` says *"Empty is not a value
-/// — the composer refuses to fire without one, because a fork with no ref is a
-/// different gesture."* Nothing this seat reads names one: the marks and the
-/// tip ride `agent` (bl-146b) and the lineage names ride `lineages` (bl-3685),
-/// both unbuilt. So the frame goes on being refused by name, which is the
-/// honest answer rather than a shape half-spelled.
-pub const NO_FORK_POINT: &str =
-    "the row act whose fork point no read here names — bl-99fd builds the picking surface";
+/// **A fork pins no skills** (DESIGN §13.16). A skill set is a choice off the
+/// same config a role is, and no read on this wire lists one — so a control
+/// offering names would be inventing them, and the empty list is the honest
+/// gesture. A frame that pins any is refused by name rather than read as the
+/// attempt without them, which is the silent misread §3's third rule forbids.
+pub const NO_SKILLS: &str =
+    "a pinned skill is a choice off a config no read here lists (DESIGN §13.16)";
 
 /// **The ball pane spells the envelope and not the scheduling inside it**
 /// (DESIGN §13.9, bl-f36e). `create` and `update` may carry `fields`: an
@@ -70,23 +65,12 @@ pub const NO_FORK_POINT: &str =
 pub const NO_SCHEDULING: &str =
     "the scheduling fields are pickers this pane does not have (DESIGN §13.9)";
 
-/// **`governing` asked ABOUT a commit is a different question** (DESIGN
-/// §13.11). The read this screen makes is the standing one — *which config
-/// governs this conversation now* — and the anchored form names a fork point,
-/// a commit of the conversation's own history. The surface that picks one is
-/// bl-99fd's, which is the same missing read `fork` is cited to in
-/// `parity.toml`. So the bare frame reads and round-trips, and the anchored
-/// one is refused by name rather than answered as the standing read.
-pub const NO_ANCHOR: &str =
-    "the config governing a COMMIT wants a fork point no read here names (bl-99fd)";
-
 /// **`files` asked AT a commit is a different tree** (DESIGN §13.15). `at` is
 /// VISION V1.2's pin — an assertion about which commit is being read — and the
 /// controls that would make one are `pin` and `unpin`, both `parity.toml`
 /// lines. So the two bare-tree frames read and round-trip, and the two
 /// anchored ones are refused by name rather than answered off the live
-/// worktree, which is the silent misread §3's third rule forbids. `NO_ANCHOR`'s
-/// argument at the other read that takes a commit.
+/// worktree, which is the silent misread §3's third rule forbids.
 pub const NO_TREE: &str =
     "the tree a pin names is an assertion this seat has no control for (DESIGN §13.15)";
 

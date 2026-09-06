@@ -66,6 +66,17 @@ impl Model {
         let _ = self.cmds.send(Cmd::Answer(verdict));
     }
 
+    /// **Fork the focused conversation at a picked point** (§13.16), with
+    /// `goal` as the child's first instruction.
+    ///
+    /// Not idempotent and never re-sent: a fork materializes a worktree and
+    /// starts a driver, so a repeat is a second child doing the same work —
+    /// the read that settles a lost one is the spine the gesture was fired
+    /// from (`seat::acts::fork`).
+    pub fn fork(&self, from: String, goal: String) {
+        let _ = self.cmds.send(Cmd::Fork { from, goal });
+    }
+
     /// **Fire one of the conversation row's acts** (§13.5, bl-f97c) at the
     /// conversation the menu was opened on — never at the focus, which is why
     /// the agent is carried rather than read from it: a long-press names its

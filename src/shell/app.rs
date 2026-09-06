@@ -67,6 +67,12 @@ pub(crate) struct Shell {
     /// operator was. There is no picked path beside it — the answer carries
     /// the path its bytes were asked at, and one name is enough.
     pub(crate) files: bool,
+    /// **Which fork point the records screen's fork addresses** (§13.16) —
+    /// the REF itself, an operable notch's whole commit or a `config/<name>`
+    /// head, off the row that was tapped. The value picked is the value sent,
+    /// so nothing looks one up again at fire time. `step`'s twin, and
+    /// navigation for its reason exactly.
+    pub(crate) from: Option<String>,
     /// **Which attempt the candidates screen's acts address** (§13.12): the
     /// project, the ball and the handle off the row that was tapped — the
     /// handle empty for the claim, which is what decides which controls are
@@ -179,6 +185,7 @@ impl Shell {
             records: false,
             files: false,
             step: None,
+            from: None,
             candidate: None,
             spread: crate::shell::screens::FLOOR,
             cap: crate::shell::screens::CAP,

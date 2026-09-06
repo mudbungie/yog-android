@@ -61,6 +61,7 @@ pub(in crate::seat) fn opened(seat: &Seat, focus: &Focus) -> Result<Records, Str
         &Ask::Governing {
             workspace: ws,
             agent: id,
+            at: None,
         },
     )? {
         (Reply::Governing(governing), _) => governing,
@@ -97,7 +98,32 @@ pub(in crate::seat) fn opened(seat: &Seat, focus: &Focus) -> Result<Records, Str
         inbox,
         lineages,
         drilled: None,
+        anchored: None,
     })
+}
+
+/// **Which config governs a picked FORK POINT** (DESIGN §13.16) — the
+/// anchored form of the read the opening already makes, posted off a picked
+/// notch for `drill`'s reason exactly: it is about one point rather than about
+/// the conversation, so nothing standing carries it.
+///
+/// The answer echoes no commit, so the caller pairs it with the one it asked
+/// at; that pairing is the value's, not this function's.
+pub(in crate::seat) fn anchored(
+    seat: &Seat,
+    focus: &Focus,
+    at: String,
+) -> Result<crate::codec::Governing, String> {
+    let (workspace, agent) = aimed(focus)?;
+    let ask = Ask::Governing {
+        workspace,
+        agent,
+        at: Some(at),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Governing(governing), _) => Ok(governing),
+        (other, _) => Err(kind_err("governing", &other)),
+    }
 }
 
 /// **One step's records**, addressed by the sequence the census stated. It is

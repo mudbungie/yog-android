@@ -63,7 +63,7 @@ fn step() -> Vec<u8> {
 
 /// The scripts every case here shares: the pass, the focus's preload, and the
 /// pass after each gesture.
-fn opened() -> Vec<Vec<Vec<u8>>> {
+pub(super) fn opened() -> Vec<Vec<Vec<u8>>> {
     vec![
         vec![ws_reply()],
         vec![nothing_set()],

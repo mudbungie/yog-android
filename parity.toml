@@ -20,18 +20,14 @@
 # its §2 constants and stays correct: this codec spells none of these shapes
 # yet, and each ball below moves exactly its own rows when it lands.
 
-# --- Unbuilt: the fourth conversation act (bl-99fd) -------------------------
-# bl-f97c landed three of this group's four on the conversation row's
-# long-press menu (DESIGN §13.5) and deleted their lines. `fork` did not go
-# with them, and the reason is a missing READ rather than a missing surface:
-# its `from` is a fork point — a commit of the conversation's own history, or a
-# `config/<name>` head — and the engine's own `fork::Attempt` says "Empty is
-# not a value". The marks and the tip ride the `agent` read (bl-146b) and the
-# lineage names ride `lineages` (bl-3685), both unbuilt, so a menu item for it
-# could not fire. A free-text field where an operator types a commit sha on a
-# phone is not the surface; it is this app asking the operator to be the read
-# §8 forbids it to derive.
-fork = "unbuilt: its fork point is a ref no read here names — the picking surface is bl-99fd (DESIGN §13.5)"
+# --- The conversation act group is whole (bl-f97c, bl-99fd) -----------------
+# Nothing of it is on this ledger. bl-f97c landed three of the four on the
+# conversation row's long-press menu (DESIGN §13.5); `fork` did not go with
+# them, because its `from` is a fork point and the engine's own
+# `fork::Attempt` says "Empty is not a value". bl-99fd built the surface that
+# names one — the operable notches of the spine and the workspace's
+# `config/<name>` heads, both already read by the records screen — so the act
+# hangs on that screen's foot, addressed at a picked point (DESIGN §13.16).
 
 # The held tool call's three — answer, revoke, restore — were here, and are
 # gone: the capability band answers the parked call on the transcript screen

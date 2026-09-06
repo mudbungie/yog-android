@@ -87,6 +87,17 @@ pub struct Records {
     /// by, so the paint asks THIS value which row it belongs to and nothing
     /// here remembers a second name for it.
     pub drilled: Option<Step>,
+    /// **The config governing a picked FORK POINT**, and the commit it was
+    /// asked at (DESIGN §13.16). `governing` above is the standing question —
+    /// *what governs this conversation now* — and this is the anchored one,
+    /// asked when an operator picks a notch to fork from, because what a
+    /// child's role resolves against is the policy at its own fork point.
+    ///
+    /// The pair is carried for `drilled`'s reason inverted: the answer is the
+    /// same shape either question earns and echoes no commit at all, so the
+    /// point is named from the ask — the one place it is known — and the paint
+    /// puts the answer under exactly that notch.
+    pub anchored: Option<(String, Governing)>,
 }
 
 impl Records {

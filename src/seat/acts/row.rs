@@ -85,13 +85,13 @@ pub(crate) fn row(seat: &Seat, focus: &Focus, agent: String, act: RowAct) -> Pos
 /// honest statement that none does.
 ///
 /// The contract (`seat::posted`) is that an act with no reply names the read
-/// showing what became of it, because the world is the durable record. Two of
-/// these can: an interrupt's text shows up in the conversation's transcript,
-/// and a flag's mark on its own row. **A retarget cannot**, and saying so is
-/// the only honest answer available: what a retarget writes is a mark the
-/// `agent` read carries, and this seat does not make that read (bl-146b). A
-/// sentence naming the conversation list here would be this app claiming a
-/// recovery it has not got.
+/// showing what became of it, because the world is the durable record. Three
+/// of these can, and one of them only since bl-146b: an interrupt's text shows
+/// up in the conversation's transcript, a flag's mark on its own row, and a
+/// retarget's mark on the records screen, which paints what the `agent` read
+/// answers. **The floor pair still cannot**, and saying so is the only honest
+/// answer available: which floor stands rides the `agent` answer's `held`
+/// object, which that screen decodes nothing of (§13.11's first ride-through).
 /// **What the floor came out as, when it is not what was asked for.** Only
 /// one of the two ever happens in practice — a restore under a still-revoked
 /// ancestor — and it is exactly the case the engine refuses to lie about, so
@@ -111,19 +111,20 @@ fn settles(act: &RowAct) -> &'static str {
              whether a turn is still in flight."
         }
         RowAct::Retarget => {
-            "No read this seat makes says whether it landed — the mark rides the \
-             conversation's own machinery read (bl-146b). Nothing was discarded either \
-             way, and the lineage it settles onto is the one it is already following."
+            "The conversation's records say whether it landed — the mark rides the \
+             `agent` read that screen makes. Nothing was discarded either way, and the \
+             lineage it settles onto is the one it is already following."
         }
         RowAct::Flag { .. } => {
             "The conversation's row carries the attention mark, and the next pass \
              re-reads it."
         }
         RowAct::Revoke | RowAct::Restore => {
-            "No read this seat makes says which floor stands — it rides the \
-             conversation's own machinery read (bl-146b). Nothing was killed either \
-             way: the conversation keeps running, keeps its branch and keeps reading, \
-             and what a floor changes is how its NEXT tool call is adjudicated."
+            "No read this seat makes says which floor stands — it rides the `agent` \
+             answer's held call, which the records screen decodes nothing of. Nothing \
+             was killed either way: the conversation keeps running, keeps its branch \
+             and keeps reading, and what a floor changes is how its NEXT tool call is \
+             adjudicated."
         }
     }
 }

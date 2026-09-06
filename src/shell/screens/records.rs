@@ -10,19 +10,21 @@
 //! **Opening is the ask**, the trail's rule and the ball pane's (§13.8,
 //! §13.9): a screen nobody has opened costs this device no radio.
 //!
-//! **The drill-in is addressed at a picked row**, which is the ball pane's
+//! **Each act is addressed at a picked row**, which is the ball pane's
 //! arrangement exactly (§13.10) and is a departure from the desktop's — there
-//! the control sits ON each steps row, because a desktop row has width for a
-//! second rectangle and a phone's has not. So a steps row is a control that
-//! picks, the foot carries the one act, and the sentence over it says which
-//! row to tap first.
+//! the control sits ON each row, because a desktop row has width for a second
+//! rectangle and a phone's has not. So a steps row is a control that picks, a
+//! fork point is another (§13.16), the foot carries both acts, and a dark one
+//! says in its own label what would light it.
 //!
 //! **Two emptinesses and they are different sentences** (§13.9's pair, at a
 //! second site): nobody has asked yet, and the engine answered.
 
 use eframe::egui;
 
+mod acts;
 mod parts;
+mod points;
 
 use parts::{head, mail, orphan, spine, step_line};
 
@@ -47,7 +49,7 @@ impl Shell {
             .clone()
             .filter(|records| records.about(workspace, agent));
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            self.drill_foot(ui);
+            self.records_acts(ui);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 if self.bar(ui, "records", &Back::To("transcript")) {
@@ -73,6 +75,10 @@ impl Shell {
         head(ui, records);
         ui.separator();
         spine(ui, records);
+        // **The fork points, between what governs the conversation and what it
+        // did** (§13.16): they are what a child would start from, so they read
+        // beside the policy rather than under the census.
+        self.points(ui, records);
         ui.separator();
         orphan(ui, records);
         for row in &records.steps.rows {
@@ -105,40 +111,13 @@ impl Shell {
         ui.add_space(4.0);
     }
 
-    /// The foot: the one act this screen has, and the sentence over it.
-    fn drill_foot(&mut self, ui: &mut egui::Ui) {
-        let picked = self.step.clone();
-        let band = egui::vec2(ui.available_width(), TOUCH);
-        ui.allocate_ui_with_layout(
-            band,
-            egui::Layout::left_to_right(egui::Align::Center),
-            |ui| {
-                let control = ui.add_enabled(
-                    picked.is_some(),
-                    egui::Button::new("step").min_size(egui::vec2(0.0, TOUCH)),
-                );
-                // The tag rides the control that fires the op, disabled or
-                // not: what it records is that the control was laid out and
-                // its rectangle was on the glass (PARITY §4).
-                crate::shell::act::act(ui, &control, "step");
-                if control.clicked()
-                    && let (Some(seq), Some(model)) = (picked, self.model())
-                {
-                    model.drill_step(seq);
-                }
-            },
-        );
-        if self.step.is_none() {
-            ui.weak("tap a step to read what it recorded");
-        }
-    }
-
     /// **Open it** — and that is the ask (§13.11). The pick goes with the
     /// opening: a step picked on one visit is not picked on the next, because
     /// the act addresses a row and a row nobody can see is not one.
     pub(in crate::shell) fn open_records(&mut self) {
         self.records = true;
         self.step = None;
+        self.from = None;
         if let Some(model) = self.model() {
             model.open_records();
         }
@@ -148,5 +127,6 @@ impl Shell {
     fn close_records(&mut self) {
         self.records = false;
         self.step = None;
+        self.from = None;
     }
 }

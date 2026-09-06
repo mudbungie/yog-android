@@ -156,7 +156,7 @@ fn every_act_in_doubt_names_itself_and_the_read_that_settles_it() {
         ),
         Case(
             "retarget",
-            "No read this seat makes says whether it landed",
+            "The conversation's records say whether it landed",
             Box::new(|m: &super::Model| m.row_act("a1".into(), crate::codec::RowAct::Retarget)),
         ),
         Case(
@@ -189,6 +189,14 @@ fn every_act_in_doubt_names_itself_and_the_read_that_settles_it() {
             "restore",
             "No read this seat makes says which floor stands",
             Box::new(|m: &super::Model| m.row_act("a1".into(), crate::codec::RowAct::Restore)),
+        ),
+        // The attempt (§13.16). A repeat is a second child doing the same
+        // work, so the sentence names the spine the gesture was fired from —
+        // a child hangs on the notch it was born at.
+        Case(
+            "fork",
+            "The conversation's spine says whether a child appeared",
+            Box::new(|m: &super::Model| m.fork("config/strict".into(), "g".into())),
         ),
         // The ball pane's own (§13.10, bl-f36e). A repeated close is a second
         // close and a repeated create is a second ball, so the sentence names

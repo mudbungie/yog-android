@@ -17,7 +17,7 @@ use serde_json::Value;
 mod records;
 mod review;
 
-pub(super) use records::{drill, opened};
+pub(super) use records::{anchored, drill, opened};
 pub(super) use review::{files, work};
 
 use super::Focus;

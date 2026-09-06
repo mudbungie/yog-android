@@ -50,11 +50,15 @@ pub(super) fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         },
         // The five the row menu fires (DESIGN §13.5, §13.7). One arm,
         // because one gesture: `codec::row` states the subject once and the
-        // choice is its own enum. `fork` is deliberately not among them and
-        // refuses below by name — the reason is in that file's header.
+        // choice is its own enum.
         "interrupt" | "retarget" | "flag" | "revoke" | "restore" => {
             super::super::row::decode(op, o)?
         }
+        // **The fourth act of that roster, and not one of them** (DESIGN
+        // §13.16): its subject is a POINT in the conversation's history
+        // rather than the conversation, so it has a shape of its own — and
+        // it refuses a pinned skill inside itself.
+        "fork" => super::super::fork::decode(o)?,
         // The five the ball pane fires (DESIGN §13.9). One arm for the same
         // reason: one family, one address, and the choice is `BallAct`.
         "assign" | "release" | "close" | "create" | "update" => {

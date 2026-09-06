@@ -59,6 +59,18 @@ pub(super) enum Cmd {
     /// own command because it is the one read of the six that is about a ROW
     /// rather than about the conversation.
     Step(String),
+    /// **Which config governs a picked fork point** (§13.16) — the anchored
+    /// form of a read the records opening already makes. Its own command for
+    /// `Step`'s reason: it is about one POINT rather than about the
+    /// conversation, so nothing standing carries it.
+    Anchor(String),
+    /// **Fork the focused conversation at a picked point** (§13.16), with the
+    /// composer's text as the child's goal. Its own command for the same
+    /// reason `codec::fork` is its own shape: the subject is the point.
+    Fork {
+        from: String,
+        goal: String,
+    },
     /// **Read this workspace's attempts** (§13.12) — what the candidates
     /// screen opens with.
     Science,

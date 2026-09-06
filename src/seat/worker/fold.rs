@@ -4,78 +4,14 @@
 //! the loop and `wait` is its clock, and everything here is *a read came back,
 //! now what does the standing hold*.
 //!
-//! Three of these swallow their failure on purpose and each says why at its
-//! own site: a preload, a re-read and a re-pane are not the operator's
-//! gesture, they are what makes a gesture's effect visible, and losing what
-//! the engine already gave over one it did not is the defect §13.2's grace
-//! exists to prevent.
+//! **What is here is one shape said many times**: an answer replaces what was
+//! held, and a failure keeps what was there — `searched`'s rule, at every site
+//! below. The folds that RE-READ after an act, which swallow their failure
+//! instead, are `worker::after` (bl-99fd), split off on the seam this file
+//! stated in its own words: they are not the operator's gesture, they are what
+//! makes a gesture's effect visible.
 
 use super::super::pass::Standing;
-use super::super::{Focus, asks};
-use crate::transport::Seat;
-
-/// **Read what the workspace is set to, and say nothing if it cannot be
-/// read** (bl-e9f9). This is a preload, not an answer to a gesture the
-/// operator made: its absence means the controls seed from nothing, which is
-/// exactly where they stood before this read existed. So every way it can
-/// fail is swallowed — including the one that will be common for a while, an
-/// engine that predates the read and refuses the op in band by name. A
-/// banner for that would be this app telling an operator off for running the
-/// engine they have.
-pub(super) fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
-    if let Ok((workspace, envelope)) = asks::roles(seat, focus) {
-        standing.options.assigned(&workspace, envelope);
-        standing.reads += 1;
-    }
-}
-
-/// **One ball act, and the read that shows what it did** (§13.9). The pane is
-/// not a standing read, so nothing re-asks it on its own and a filing, a claim
-/// or a close is invisible until the view it happened in is read again — which
-/// is `reread`'s rule, on the pane.
-///
-/// **The `--as` stamp is the focused workspace's own name**, or the empty
-/// string where nothing is focused — which the engine refuses in its own
-/// words, and is the right end for that sentence to come from. The pane that
-/// fires these is only ever painted under a focused workspace, so the empty
-/// case is unreachable from the glass and is not a second refusal here.
-pub(super) fn balled(
-    seat: &Seat,
-    focus: &Focus,
-    standing: &mut Standing,
-    project: String,
-    act: crate::codec::BallAct,
-) -> Option<String> {
-    let name = focus.workspace.clone().unwrap_or_default();
-    let note = super::super::acts::ball(seat, project, name, act).note();
-    repane(seat, focus, standing);
-    note
-}
-
-/// **Re-read the pane after an act on it**, swallowing the failure, for
-/// `reread`'s reason exactly: this is not the operator's gesture, it is what
-/// makes the gesture's effect visible, and its absence leaves the rows where
-/// they were. The view re-asked is the one the pane is holding — the act was
-/// fired from it, and a pane holding another view's answer is unpaintable
-/// anyway (§13.9).
-fn repane(seat: &Seat, focus: &Focus, standing: &mut Standing) {
-    let Some(view) = standing.pane.as_ref().map(crate::codec::Pane::view) else {
-        return;
-    };
-    if let Ok(pane) = asks::balls(seat, focus, view) {
-        standing.pane = Some(pane);
-    }
-}
-
-/// **Re-read the trail after an act on it**, swallowing the failure: this is
-/// not the operator's gesture, it is what makes the gesture's effect visible,
-/// and its absence leaves the rows exactly as they were — which is where they
-/// stood before the act was fired. `preload`'s rule, on the other pair.
-pub(super) fn reread(seat: &Seat, standing: &mut Standing) {
-    if let Ok(rows) = asks::ops(seat) {
-        standing.trail = rows;
-    }
-}
 
 /// Fold one selector read into the standing options, or hand back the
 /// sentence it failed with. One body for both reads, because the only
@@ -186,6 +122,27 @@ pub(super) fn drilled(
     }
 }
 
+/// **The governing config at a picked fork point, folded into the records it
+/// belongs to** — `drilled`'s rule exactly, one read along: a policy under no
+/// conversation's records is an answer with no subject, so an anchor that
+/// lands after the six were retired is dropped rather than held. The answer
+/// echoes no commit, so the commit it was asked at is carried in beside it.
+pub(super) fn anchored(
+    read: Result<crate::codec::Governing, String>,
+    at: String,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(governing) => {
+            if let Some(records) = standing.records.as_mut() {
+                records.anchored = Some((at, governing));
+            }
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
 /// **The candidates listing, folded** — `paned`'s terms again: the answer
 /// replaces what was held and a failure keeps what was there.
 pub(super) fn spread(
@@ -199,24 +156,6 @@ pub(super) fn spread(
         }
         Err(why) => Some(why),
     }
-}
-
-/// **The read that shows what a candidate act did** (§13.12). The listing is
-/// derived when asked and nothing stands over it, so a fan, a delivery or a
-/// retirement is invisible until it is asked again — `balled`'s rule, on the
-/// other aimed screen. One fold for both commands, because what follows an act
-/// here is the same read whichever act it was.
-pub(super) fn listed(
-    seat: &Seat,
-    focus: &Focus,
-    standing: &mut Standing,
-    posted: crate::seat::posted::Posted,
-) -> Option<String> {
-    let note = posted.note();
-    if let Ok(spread) = asks::science(seat, focus) {
-        standing.candidates = Some(spread);
-    }
-    note
 }
 
 /// **The worktree listing, folded** — `paned`'s terms again, and the value

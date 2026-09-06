@@ -116,8 +116,9 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             file: super::fields::opt_val(o, "file", super::workdiff::file::decode)?,
         },
         "governing" => Ask::Governing {
-            workspace: unanchored(o.get("at"), str_of(o, "workspace")?)?,
+            workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
+            at: super::fields::opt(o, "at", str_of)?,
         },
         "ops" => Ask::Ops {
             max: super::fields::usize_of(o, "max")?,
@@ -139,20 +140,6 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
         _ => return Ok(None),
     };
     Ok(Some(ask))
-}
-
-/// **`governing` asked ABOUT a commit is a different question**, and this
-/// codec has no field to put the anchor in. `at` names a fork point — a
-/// commit of the conversation's own history — and the surface that picks one
-/// is bl-99fd's, cited in `parity.toml` for `fork` in the same words. So the
-/// anchored frame is refused **by name** rather than answered as the standing
-/// read, which is the silent misread REMOTE §3's third rule forbids; the
-/// workspace rides through so the caller reads one expression.
-fn unanchored(at: Option<&Value>, workspace: String) -> Result<String, String> {
-    match at {
-        None => Ok(workspace),
-        Some(at) => Err(format!("governing: unimplemented anchor {at}")),
-    }
 }
 
 /// **`files` asked AT a commit is a different tree**, and this codec has no

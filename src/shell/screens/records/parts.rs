@@ -64,30 +64,14 @@ fn state(records: &Records) -> String {
     said.join(" · ")
 }
 
-/// **The spine and what governs it.** A notch with no commit carries no
-/// short form and paints as its sequence alone, which is exactly what makes
-/// it unreachable — upstream's own test for a notch no gesture can pin.
+/// **What governs the conversation now**, and the children already hanging
+/// off its spine. The notches themselves are not here: they are fork points,
+/// and a fork point is a control (§13.16) — so they paint in the screen file
+/// beside the lineages, which are the other kind of one.
 pub(super) fn spine(ui: &mut egui::Ui, records: &Records) {
-    let governing = &records.governing;
-    let follows = match &governing.follows {
-        Some(name) => format!("follows {name}"),
-        None => format!("{} lineages diverged", governing.diverged),
-    };
-    ui.weak(format!("governed by {} · {follows}", governing.short_oid));
-    if !governing.files.is_empty() {
-        ui.weak(governing.files.join(" · "));
-    }
-    for notch in &records.rail.notches {
-        ui.weak(format!(
-            "{} · {} · {} tokens",
-            notch.seq,
-            if notch.short.is_empty() {
-                "unpinnable"
-            } else {
-                notch.short.as_str()
-            },
-            notch.budget
-        ));
+    ui.weak(governed(&records.governing));
+    if !records.governing.files.is_empty() {
+        ui.weak(records.governing.files.join(" · "));
     }
     for card in &records.rail.cards {
         ui.weak(format!(
@@ -98,6 +82,18 @@ pub(super) fn spine(ui: &mut egui::Ui, records: &Records) {
             ui.weak(&card.tail);
         }
     }
+}
+
+/// **One reading of a governing answer**, spent twice since the picking
+/// surface landed (§13.16): once for the conversation's own policy, and once
+/// for the policy at a picked fork point. Two spellings of one answer would
+/// have drifted the first time either moved.
+pub(super) fn governed(governing: &crate::codec::Governing) -> String {
+    let follows = match &governing.follows {
+        Some(name) => format!("follows {name}"),
+        None => format!("{} lineages diverged", governing.diverged),
+    };
+    format!("governed by {} · {follows}", governing.short_oid)
 }
 
 /// One census row, as its control's label.

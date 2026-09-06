@@ -180,6 +180,7 @@ fn records_are_paintable_only_under_the_conversation_they_were_asked_at() {
         inbox: Vec::new(),
         lineages: Vec::new(),
         drilled: None,
+        anchored: None,
     };
     assert!(records.about("ws", "c-1"));
     assert!(!records.about("ws", "c-2"));

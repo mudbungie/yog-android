@@ -29,6 +29,7 @@ pub(crate) mod fields;
 pub mod files;
 pub mod fleet;
 pub mod follow;
+pub mod fork;
 pub mod hold;
 pub mod lineages;
 pub mod pick;
@@ -209,6 +210,22 @@ pub enum Act {
     /// `codec::fleet` is where the four spellings, the naming trap and the one
     /// shared receipt live.
     Fleet { workspace: String, act: FleetAct },
+    /// **Start a child of this conversation from a point in its history**
+    /// (DESIGN §13.16): the attempt. Its own variant rather than a sixth
+    /// [`RowAct`] — the frame names `parent` rather than `agent`, carries a
+    /// role, and its subject is a POINT in a history rather than the history
+    /// — and `codec::fork` is where that argument and the two narrowings live.
+    Fork {
+        workspace: String,
+        parent: String,
+        /// The fork point: an operable notch's commit, or a `config/<name>`
+        /// head. Empty is not a value — the engine's own `fork::Attempt` says
+        /// a fork with no ref is a different gesture — so nothing composes one
+        /// without a picked point.
+        from: String,
+        role: String,
+        goal: String,
+    },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather

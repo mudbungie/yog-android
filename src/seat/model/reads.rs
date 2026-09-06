@@ -90,6 +90,13 @@ impl Model {
     pub fn list_clients(&self) {
         let _ = self.cmds.send(Cmd::Clients);
     }
+    /// **Read which config governs a picked fork point** (§13.16). The answer
+    /// folds into the records it belongs to, carrying the commit it was asked
+    /// at, so a policy cannot paint under a notch tapped since.
+    pub fn anchor(&self, at: String) {
+        let _ = self.cmds.send(Cmd::Anchor(at));
+    }
+
     /// **Read the focused conversation's worktree** (§13.15) — the listing
     /// with no path, and one file's bytes with one. The answer replaces what
     /// was held whole, carrying the path it was asked at, so a preview cannot

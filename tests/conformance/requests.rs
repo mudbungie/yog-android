@@ -18,8 +18,8 @@
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
-    ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_ANCHOR, NO_FORK_POINT,
-    NO_SCHEDULING, NO_SEED, NO_TREE, NOT_THE_MINTER, READ,
+    ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_SCHEDULING, NO_SEED, NO_SKILLS,
+    NO_TREE, NOT_THE_MINTER, READ,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
@@ -76,14 +76,14 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("flag", Reads),
     ("fleet", Reads),
     ("follow", Reads),
-    ("fork", Refuses(NO_FORK_POINT)),
     (
-        "governing",
+        "fork",
         Partial {
             reads: 1,
-            reason: NO_ANCHOR,
+            reason: NO_SKILLS,
         },
     ),
+    ("governing", Reads),
     ("help", Refuses(ALREADY_HELD)),
     ("inbox", Reads),
     ("interrupt", Reads),

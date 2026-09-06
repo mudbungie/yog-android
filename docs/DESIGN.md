@@ -344,6 +344,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/candidates.rs` + `candidates/act.rs` | the n-candidate path (§13.12): the science row whose `handle` says which act it earns, the two handle acts, and the fan that carries a prepared body | landed (bl-2f17) |
 | `src/seat/acts/candidate.rs` | the two handle gestures and the fan's three-leg chain — stage, spread, fire each — with the two receipts worth a sentence on success | landed (bl-2f17) |
 | `src/seat/worker/spend.rs` | what one command does, split from the loop that spends it | landed (bl-2f17, out of `worker.rs`) |
+| `src/seat/worker/after.rs` | the re-reads that make an act's effect visible, every one of them swallowing its failure — split from the read folds on the seam `fold.rs` stated in its own words | landed (bl-99fd, out of `fold.rs`) |
 | `src/shell/screens/world/candidates.rs` + `candidates/acts.rs` | android-only: the candidates listing (§13.12) — the pick, the three acts on its foot, and the stepper the fan takes | landed (bl-2f17) |
 | `src/codec/files.rs` | the worktree read (§13.15): the listing whose `worktree` flag is the discriminant, and the bounded-file preview both work-review answers carry | landed (bl-5a56) |
 | `src/codec/workdiff.rs` + `workdiff/file.rs` | one diff row, read wherever it arrives — its own answer or a science row's `diff` column — with the state token read because it decides the fields; and the `file` parameter that asks for one patch | landed (bl-5a56) |
@@ -355,7 +356,10 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/ask.rs` | the ask half of the boundary's grammar, on the seam `codec::request` already reads the wire by | landed (bl-146b, out of `codec.rs`) |
 | `src/codec/reply/decode.rs` | how one reply body is READ, split from the vocabulary it builds | landed (bl-146b, out of `reply.rs`) |
 | `src/seat/asks/records.rs` | the records screen's reads: the five an opening asks, the one a picked row posts, and the first failure standing for all of them | landed (bl-146b) |
-| `src/shell/screens/records.rs` + `records/parts.rs` | android-only: the records screen (§13.11) — the pick, the one act on its foot, and what each of the six halves says | landed (bl-146b) |
+| `src/shell/screens/records.rs` + `records/parts.rs` | android-only: the records screen (§13.11) — the picks, and what each of the six halves says | landed (bl-146b) |
+| `src/codec/fork.rs` | the attempt's envelope (§13.16): its own shape rather than a `RowAct`, and the two narrowings inside it — no pinned skill, and a ref that is never empty | landed (bl-99fd) |
+| `src/seat/acts/fork.rs` | the attempt posted, and the read that settles a lost one: the spine the gesture was fired from | landed (bl-99fd) |
+| `src/shell/screens/records/points.rs` + `records/acts.rs` | android-only: the fork points as controls — the operable notches and the `config/<name>` heads — and the foot's two acts over the two picks | landed (bl-99fd) |
 | `src/codec/row.rs` | the row acts' three spellings and the `flagged` receipt (§13.5), plus the three readings the menu is built from — one roster, one home, shared by the codec, the seat and the paint | landed (bl-f97c) |
 | `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
@@ -2207,13 +2211,12 @@ change of meaning under an unchanged signature."* So the trap is restated at
 the decoder (`codec::records::spine`), where whoever paints the number is
 reading.
 
-**`governing` asked ABOUT a commit is refused by name.** The engine also
-answers *which config governed this conversation at commit X*; `at` is a fork
-point, and the surface that picks one is bl-99fd's — the same missing read
-`fork` is cited to in `parity.toml`. Answering the anchored frame as the
-standing read is the silent misread REMOTE §3's third rule forbids, so
-`tests/conformance/requests.rs` records `governing` as `Partial { reads: 1 }`
-with that reason.
+**`governing` asked ABOUT a commit is the picking surface's read** (§13.16).
+The engine also answers *which config governed this conversation at commit X*;
+`at` is a fork point, and until bl-99fd built the surface that names one the
+anchored frame was refused by name rather than answered as the standing read —
+the silent misread REMOTE §3's third rule forbids. It is now the read a picked
+notch earns, and `governing` reads whole.
 
 **The engine's tokens are carried whole here, and picked on the conversation
 row.** `agent` states the §5.1 state and the §11 flight class, which
@@ -2555,6 +2558,77 @@ full-width row of its own — and `work-diff`, tapped from the aimed band, which
 is five entries and therefore chunked rather than written out in pairs. The
 engine is not dialled, so each captures a screen that opened and said nothing
 was read, which is what the parity gate asks of them either way.
+
+### 13.16 The fork point: the picking surface, and the act that hangs on it (bl-99fd)
+
+`src/codec/fork.rs`, `src/codec/records/spine.rs`,
+`src/seat/acts/fork.rs`, `src/seat/asks/records.rs`,
+`src/shell/screens/records/points.rs` + `records/acts.rs`. The fourth act of
+§13.5's roster, held back on a read rather than on a surface, and the phone's
+twin of lernie §4.29.
+
+**`fork` is not a `RowAct`, and that was attacked before it was built.** The
+ball asked the question outright and the answer is no: the other three address
+the conversation — the same two facts, one parameter apiece, one long-press
+opening one menu — and this one names `parent` rather than `agent`, carries a
+role and a skill list, and its SUBJECT is a point in a history rather than the
+history. The grouping's own argument (`codec::row`: *"they arrive together,
+differing only in the one parameter"*) refuses it, so it is `Act::Fork` with a
+module of its own.
+
+**And it is not on a transcript row either**, which was the other half of the
+question. The refs a fork can take are the operable notches of the spine and
+the workspace's `config/<name>` heads — `rail` and `lineages`, both already
+read by the records screen (§13.11, §13.14). The picking surface is therefore a
+PLACEMENT and not a new question: the two lists become controls where they
+already paint, and the act hangs on that screen's foot.
+
+**Two picks, two lists, and neither moves the other.** `step` addresses a
+census row and `fork` addresses a fork point; they are different lists, so a
+second pick is not a second authority for one thing. What tells them apart on
+the glass is §13.13's rule — a dark control states in its own label what would
+light it (*"fork — tap a notch or a lineage"*, then *"fork — say what the child
+should do"*).
+
+**A notch with no commit is not a control.** Upstream states the commit exactly
+where the notch is reachable, so *unpinnable* is the engine's answer rather
+than this app's reading, and an unreachable notch paints as a label — the trail
+row's rule (§13.8) at another site.
+
+**What crosses is the whole commit; what paints is the clipped one.** `rail`
+answers both and this seat now reads both — `spine.rs`'s own doc anticipated
+the day the pinning gesture existed. A gesture naming the short form would be
+asking the engine to resolve a prefix this app chose the length of.
+
+**Picking a commit asks what governs THERE, and that is what lifts the
+anchored refusal.** `governing`'s `at` was refused by name while no surface
+could name a commit (§13.11); the pick is that surface, and what the read buys
+is the one fact a child's role resolves against that the standing read cannot
+state — the policy at the child's own fork point. Picking a LINEAGE asks
+nothing: a `config/<name>` head IS a policy, so the answer would be itself.
+
+**The answer says which notch it belongs under, because the ask names it.** A
+`governing` reply carries no commit — it is the same shape either question
+earns — so the fold carries in the point it was asked at, exactly as §13.15's
+two reads do, and a policy that lands after another notch was tapped has no row
+to paint under.
+
+**`skills` is empty and a frame pinning any refuses by name.** A skill set is a
+choice off the same config a role is, and no read on this wire lists one, so a
+control offering names would be inventing them (lernie §4.29 reaches the same
+place from the role's side). `tests/conformance/requests.rs` records `fork` as
+`Partial { reads: 1 }` with that reason. `role` is `worker`, this seat's one
+role, and the goal is the foot's own field — the candidates screen's shape
+(§13.12) at a second site.
+
+**Nothing here is armed** (§13.8's test): an arming is for an act whose product
+is that its subject is gone. A fork's product is a child.
+
+**What the walk reaches.** No new screen: the records step already walks, and
+what it now captures is two controls on that foot — both dark, each saying
+which tap would light it — plus the fork points as controls. `act:fork` and
+`act:governing` are on the glass there, so `parity.toml` loses its last
+conversation-act line.
 
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
@@ -3403,7 +3477,7 @@ The groups mirror the seat's own, one ball each:
 
 | group | ops | ball |
 |---|---|---|
-| conversation acts | interrupt, retarget, flag — **landed** (§13.5); `fork` held back on a read it needs | bl-f97c, then bl-99fd |
+| conversation acts | interrupt, retarget, flag — **landed** (§13.5); fork — **landed** (§13.16) | bl-f97c, then bl-99fd |
 | the held tool call | answer, revoke, restore — **landed** (§13.7) | bl-b39d |
 | work review | files, work-diff — **landed** (§13.15) | bl-5a56 |
 | conversation machinery reads | agent, steps, step, rail, governing, inbox — **landed** (§13.11) | bl-146b |

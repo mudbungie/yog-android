@@ -76,11 +76,16 @@ pub enum Ask {
     /// **The operable spine**: the notches a gesture can reach, and the
     /// children forked at them.
     Rail { workspace: String, agent: String },
-    /// **Which config commit governs it.** The engine also answers this
-    /// question ABOUT a commit — an `at` this seat has no picker to name
-    /// (`codec::request` refuses that frame by name) — so what is asked here
-    /// is the standing one.
-    Governing { workspace: String, agent: String },
+    /// **Which config commit governs it** — standing with no `at`, and **at a
+    /// picked fork point** with one (DESIGN §13.16). The anchored form was
+    /// refused by name until a surface could name a commit; the spine's
+    /// picking surface is that surface, and what it asks is *which policy
+    /// would a child forked here resolve against*.
+    Governing {
+        workspace: String,
+        agent: String,
+        at: Option<String>,
+    },
     /// **The mail nothing has delivered yet**, one row per deposit.
     Inbox { workspace: String, agent: String },
     /// **What each attempt cost** (DESIGN §13.12): one row per attempt in
