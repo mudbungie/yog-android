@@ -9,11 +9,16 @@ compiles, the APK still assembles, the app still launches — and the first
 invocation of that tool answers a `NoSuchMethodError` on a device, which is
 the one place this repo cannot look.
 
-So `make apk` asks the artifact it just built. **Both directions, because the
-two failures are different**: a name the crate resolves and the dex does not
-carry is a tool that refuses forever, and a public static entry point in a
-pinned class that no Rust site names is a door nobody comes in by — dead
-weight at best, and usually half of a rename somebody stopped in the middle.
+So `make apk` asks the artifact it just built. **Three directions, because the
+three failures are different**: a name the crate resolves and the dex does not
+carry is a tool that refuses forever; a public static entry point in a pinned
+class that no Rust site names is a door nobody comes in by — dead weight at
+best, and usually half of a rename somebody stopped in the middle; and a
+`native` the dex declares that the packaged library does not export is an
+`UnsatisfiedLinkError` in `onResume`, which is not one tool refusing but the
+whole app dying on every launch. The third lives in `apk_natives.py`, where
+the ELF reading it needs is written; this file holds the two that read source
+against dex.
 
 **It reads EVERY `classes*.dex` in the APK.** The shell's own classes are not
 in `classes.dex` today: the multidex split put them in `classes4.dex`, and
@@ -34,6 +39,11 @@ import subprocess
 import sys
 import tempfile
 import zipfile
+
+# The third direction, beside this file. A plain import resolves it: both
+# doors into this gate are scripts in this directory, so it is `sys.path[0]`
+# whichever of them was run.
+import apk_natives
 
 STRING = "Ljava/lang/String;"
 
@@ -114,8 +124,11 @@ DEX_TYPE = re.compile(r"^\s*type\s*:\s*'([^']*)'")
 DEX_ACCESS = re.compile(r"^\s*access\s*:\s*0x[0-9a-f]+ \(([^)]*)\)")
 
 
-def dex_statics(dump):
-    """Every PUBLIC STATIC method the dump declares, as (class, name, type)."""
+def dex_methods(dump):
+    """Every method the dump declares, as (class, name, type, access). One
+    parse, because the two readings taken off it — the entry points the crate
+    calls INTO and the natives the dex expects the library to define — differ
+    only in which access flags they keep."""
     found, here, name, type_ = set(), None, None, None
     for line in dump.splitlines():
         klass = DEX_CLASS.match(line)
@@ -131,9 +144,14 @@ def dex_statics(dump):
             type_ = typed.group(1)
             continue
         access = DEX_ACCESS.match(line)
-        if access and here and name and type_ and access.group(1) == "PUBLIC STATIC":
-            found.add((here, name, type_))
+        if access and here and name and type_:
+            found.add((here, name, type_, access.group(1)))
     return found
+
+
+def dex_statics(methods):
+    """The entry points a bridged call can land on: PUBLIC STATIC, exactly."""
+    return {m[:3] for m in methods if m[3] == "PUBLIC STATIC"}
 
 
 def dumped(apk, dexdump):
@@ -201,23 +219,33 @@ def main(argv):
     A path runs the real thing."""
     if "--self-test" in argv:
         here = os.path.dirname(os.path.abspath(__file__))
-        return subprocess.run(
-            [sys.executable, os.path.join(here, "bridge-selftest.py")], check=False
-        ).returncode
+        # One harness per direction-set, and BOTH must pass: the natives half
+        # reads an ELF and fabricates one to read, which is nothing the dex
+        # harness has any business holding.
+        codes = [
+            subprocess.run([sys.executable, os.path.join(here, name)], check=False).returncode
+            for name in ("bridge-selftest.py", "natives-selftest.py")
+        ]
+        return max(codes)
     apk = argv[1] if len(argv) > 1 else ""
     if not apk or not os.path.isfile(apk):
         raise SystemExit("usage: apk-bridges.py <apk>")
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "src")
     pins, classes, complaints = pins_in(root)
     dump, dexes = dumped(apk, tool())
-    said = judge(pins, classes, dex_statics(dump), complaints)
+    methods = dex_methods(dump)
+    said = judge(pins, classes, dex_statics(methods), complaints)
+    natives, complained = apk_natives.declared(methods, classes)
+    exported, unreadable = apk_natives.exported_of(apk)
+    said += complained + unreadable + apk_natives.judge(natives, exported)
     if said:
-        print("bridges: the crate and the dex disagree:", file=sys.stderr)
+        print("bridges: the crate and the artifact disagree:", file=sys.stderr)
         for line in said:
             print(f"  {line}", file=sys.stderr)
         return 1
     print(f"bridges: {len(pins)} JNI name(s) over {len(classes)} class(es), "
-          f"both directions, against {dexes} dex file(s)")
+          f"both directions, against {dexes} dex file(s); "
+          f"{len(natives)} native(s) defined in each of {len(exported)} ABI(s)")
     return 0
 
 

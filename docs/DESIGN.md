@@ -3378,9 +3378,9 @@ Extending it to every control is the point at which this stops being a probe
 and starts being an accessibility tree written by hand; if a walk needs those
 screens, the honest next step is a ball that decides which of the two this is.
 
-### 15.7 The names the dex has to carry (bl-05b6)
+### 15.7 The names the dex has to carry (bl-05b6, bl-8c32)
 
-`scripts/apk-bridges.py`, a step of `make apk`.
+`scripts/apk-bridges.py` and `scripts/apk_natives.py`, a step of `make apk`.
 
 Every call this crate makes into its own Java shell is resolved **by name at
 runtime**: a class through the app's class loader, then a static method by
@@ -3392,11 +3392,40 @@ is exactly where this repo cannot look. bl-f34f read the four paper
 descriptors out of a dex by hand once, and reading them by hand is a thing
 that happens once.
 
-**So `make apk` asks the artifact it just built, both directions**, because
-the two failures are different: a name the crate resolves and the dex does not
-carry is a tool that refuses forever, and a public static of a bridged class
+**So `make apk` asks the artifact it just built, three directions**, because
+the three failures are different: a name the crate resolves and the dex does
+not carry is a tool that refuses forever; a public static of a bridged class
 that no Rust site names is a door nobody comes in by — usually half of a
-rename somebody stopped in the middle.
+rename somebody stopped in the middle; and a `native` the dex declares that
+the packaged library does not export is the whole app dying on launch.
+
+**The third direction is the traffic the other way** (bl-8c32).
+`Pocket.standing` is `private static native` in the dex, and its body is a
+symbol in `lib/<abi>/libyog_android.so`, bound by the runtime the first time
+the method is reached — a call the crate never makes, and so a seam neither
+direction above looks at. The first two shipped an APK the gate passed whose packaged
+x86_64 library exported **none** of the five natives: `UnsatisfiedLinkError`
+in `onResume`, on every launch, before anything painted, and *"yog keeps
+stopping"* as the whole of what a person saw. The failure it hides is strictly
+worse than the two that were caught — total rather than per-tool, and at
+launch rather than at first use.
+
+**Per ABI, and the library is read rather than shelled out to.** One stale
+copy beside a fresh one is exactly the shape that shipped (the phone's arm64
+build was current, the emulator's x86_64 was not), so each ABI's declarations
+are judged against the union of what that ABI's libraries export. `nm -D` is
+not on every box that can assemble an APK and the NDK's copy moves with the
+NDK, while the dynamic symbol table is four struct reads into a file the
+script already has open — both ELF widths and both byte orders, in
+`apk_natives.py`. **A library this reader cannot read is an infrastructure
+fault in its own sentence and contributes no ABI at all**, never an empty one:
+`leak-selftest.sh`'s rule for a fixture that is not text, and for its reason —
+the box's fault and the tree's fault must not arrive as the same five
+sentences. **The package is derived, never spelled**: the natives belong to
+the classes this crate is answerable for, the doors it opens already name
+them, and doors that no longer share one package say so instead of guessing.
+`scripts/natives-selftest.py` is this direction's regression half — ten arms
+over fabricated ELF objects, the second of which is the APK that shipped.
 
 **It reads every `classes*.dex` in the APK**, and that is not thoroughness for
 its own sake: the shell's own classes are not in `classes.dex` at all today —

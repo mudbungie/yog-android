@@ -88,7 +88,8 @@ def tree(files):
 
 def verdict(files, methods):
     pins, classes, said = GATE.pins_in(tree(files))
-    return GATE.judge(pins, classes, GATE.dex_statics(dump(methods)), said)
+    statics = GATE.dex_statics(GATE.dex_methods(dump(methods)))
+    return GATE.judge(pins, classes, statics, said)
 
 
 def beat(name, said, wanted):

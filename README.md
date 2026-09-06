@@ -140,7 +140,12 @@ teleoperated phone actually is. DESIGN §15.8 is the whole design.
 
 Beside it, `make apk` now pins **every JNI name this crate resolves** against
 the dex it just built, both directions — a renamed Java method is a build
-failure instead of a `NoSuchMethodError` on somebody's phone (DESIGN §15.7).
+failure instead of a `NoSuchMethodError` on somebody's phone — and, in the
+third direction, every `native` the dex declares against the symbols the
+packaged `lib/<abi>/*.so` actually exports, per ABI. A stale library married
+to a current dex is the one build defect that kills the app outright, on every
+launch, before it paints: it is a build failure now instead of
+`UnsatisfiedLinkError` on somebody's phone (DESIGN §15.7).
 
 ## Interface parity: what this seat can reach
 
