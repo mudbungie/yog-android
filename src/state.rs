@@ -48,6 +48,20 @@ pub fn hold(host: Host) -> bool {
     true
 }
 
+/// **Whether this process already holds a LIVE host** — the question a caller
+/// asks before it BUILDS one (§18.8). [`hold`] answers it too, but only after
+/// a host exists: a `Host` starts its worker the moment it is made, so a
+/// second one made to be refused has already dialled and advertised, and
+/// REMOTE §5.1's one-reader guard would refuse this device in its own name.
+/// §18.1 made that question unaskable and this is what keeps it so.
+pub fn holding() -> bool {
+    slot()
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .as_mut()
+        .is_some_and(Host::alive)
+}
+
 /// What the process's host stands at, or `None` when it holds none — a cold
 /// device, or one whose material would not build a foot. The frame paints this
 /// and the pocket's notification is written from it, which is the single home

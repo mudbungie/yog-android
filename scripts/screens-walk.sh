@@ -189,4 +189,8 @@ pocket_beats
 # beats above end by putting a seat leaf back on this device — so this is the
 # one order in which both rungs are measured on the device they are for.
 lane_beats
+# The reboot last of all (§18.8): it is the one gesture in this walk that
+# costs a device boot, and every beat above wants a device it did not just
+# restart.
+boot_beats
 

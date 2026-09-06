@@ -60,6 +60,42 @@ pub fn line(files: &Path, standing: Option<Standing>) -> Option<Notice> {
     Some(standing.as_ref().map_or_else(idle, notice))
 }
 
+/// **One tool host, made** (§18.8) — the one place a host is built, wherever
+/// the process came from. `data_dir` is this app's private storage, which is
+/// where a screenshot goes when a caller names no path: the one directory
+/// this uid can always write.
+///
+/// **It does not HOLD it**, and that is the seam. The slot is a process
+/// global (`crate::state`), so a second writer is a second story racing the
+/// one `state::tests` tells; the two callers that hand a host to the slot are
+/// both at the process edge — the activity's boot and the service's door —
+/// and what is testable here is what a host is MADE of.
+pub fn host_from(foot: crate::foot::Foot, data_dir: String) -> crate::host::Host {
+    crate::host::Host::start(
+        foot,
+        crate::tools::advertisement(),
+        Box::new(move |tool, input| crate::tools::run_in(tool, input, &data_dir)),
+        // The device's own rest between redials, which is the whole of what
+        // the parameter is for: the suite hands the loop a recorder instead
+        // and reads the ladder back without sleeping through it (bl-8641).
+        Box::new(std::thread::sleep),
+    )
+}
+
+/// **The foot a path alone names** (§18.8): what a process with no Activity in
+/// it has to start from. `files` is this app's private files directory, handed
+/// in by the platform exactly as every other decision here is handed it.
+///
+/// The `Err` is the sentence that stopped it, and the caller has nowhere to
+/// report it to — a boot receiver has no screen and no log an operator reads —
+/// so what it is for is the shade: [`line`] is what says a device that is
+/// hands is holding nothing, and this says which way.
+pub fn footed(files: &Path) -> Result<crate::foot::Foot, String> {
+    let material = crate::material::read_dir(&files.join(WIRE))?
+        .ok_or_else(|| "nothing is provisioned on this device".to_owned())?;
+    crate::foot::Foot::open(&material)
+}
+
 /// **What the shade says while the ATTENTION lane is held** (§17.6, REMOTE
 /// §14 rung 2), or nothing at all.
 ///

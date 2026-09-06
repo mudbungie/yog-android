@@ -97,6 +97,20 @@ public final class Pocket extends Service {
      */
     private static native String standing(String dir);
 
+    /**
+     * Take the tool host up in this process (DESIGN §18.8), handing Rust the
+     * two things a Service has and a service-started process otherwise lacks:
+     * the Application, whose class loader every tool bridge resolves through,
+     * and — implied by the {@code JNIEnv} this call arrives on — the process
+     * VM. It answers the sentence a host that would not open failed with, or
+     * an empty string when there is one now.
+     *
+     * <p>Idempotent by the slot rather than by a flag here: a process that
+     * already holds a live host keeps it ({@code crate::state::hold}), so an
+     * Activity's own boot and this call cannot make two.
+     */
+    private static native String serve(String dir, Context application);
+
     /** The watcher, or null when none runs. Written and read on two threads. */
     private volatile Thread watching;
 
@@ -146,8 +160,17 @@ public final class Pocket extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String foot = standing(getFilesDir().getAbsolutePath());
+        String dir = getFilesDir().getAbsolutePath();
+        String foot = standing(dir);
         if (!foot.isEmpty()) {
+            // **Promote FIRST, and take the host up on the watcher.** This
+            // method is the main thread and `startForegroundService` gives it
+            // five seconds; taking a host up reads three files, parses a
+            // certificate chain and builds a TLS config, which is work — done
+            // here it delayed the app's own first frame past the walk's settle
+            // window on an emulator and would ANR a slower device. So the
+            // notification goes up at once and `watch` does the rest, which
+            // is the thread that was already going to re-read the line.
             hold(Notify.FOOT, foot);
             if (watching == null) {
                 watching = new Thread(this::watch, "yog-pocket");
@@ -236,6 +259,14 @@ public final class Pocket extends Service {
      * evidence with it.
      */
     private void watch() {
+        // **The host is taken up HERE, not only by the activity** (DESIGN
+        // §18.8): a boot-started process has no Activity and never will until
+        // somebody opens the app, and a foot that waited for that is the
+        // honest limit §18.3 wrote down and this ball closed. It is safe on
+        // every start — the slot holds at most one live host, and the door
+        // asks it before it builds anything — and the loop below is what puts
+        // what the host BECAME in front of the operator.
+        serve(getFilesDir().getAbsolutePath(), getApplicationContext());
         while (watching != null) {
             try {
                 Thread.sleep(REFRESH);

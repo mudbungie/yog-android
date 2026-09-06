@@ -7,7 +7,7 @@
 //! serialize two halves of one story would only re-create the ordering this
 //! test already has.
 
-use super::{hold, standing};
+use super::{hold, holding, standing};
 use crate::codec::{Capture, Tool};
 use crate::foot::Foot;
 use crate::host::{Health, Host};
@@ -74,6 +74,9 @@ fn the_process_holds_at_most_one_live_host() {
     // the state every launch begins in and the one `pocket::line` answers
     // `None` from.
     assert_eq!(standing(), None);
+    // …and nothing to ask the same question of one step earlier: `holding` is
+    // what a caller asks BEFORE it builds one (§18.8).
+    assert!(!holding());
 
     // The first host is taken up.
     assert!(hold(refused()));
@@ -96,7 +99,10 @@ fn the_process_holds_at_most_one_live_host() {
 
     // **A stopped host does not own the slot forever.** Without this the app
     // could never start a foot again inside the process that stopped one, and
-    // the operator's remedy would silently do nothing.
+    // the operator's remedy would silently do nothing. `holding` reads the
+    // same publication `hold` does, so a stopped host is not one being held
+    // either — which is what lets a service's door build a replacement.
+    assert!(!holding());
     assert!(hold(parked()));
 
     // **And a live one does own it.** This is the relaunch case: an activity
@@ -104,6 +110,7 @@ fn the_process_holds_at_most_one_live_host() {
     // device's certificate while the first is still parked on its read, which
     // REMOTE §5.1's one-reader guard refuses naming this very device.
     assert!(!hold(parked()));
+    assert!(holding());
     let standing = standing().expect("the live host is still the process's");
     assert!(!matches!(standing.health, Health::Stopped(_)));
 }

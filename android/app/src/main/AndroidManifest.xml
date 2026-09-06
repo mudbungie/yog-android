@@ -38,8 +38,9 @@
          the enrollment scanner, and a permission is the app's, not a
          feature's. GPS is a feature this app can do without, so the device
          without one still installs. -->
-    <!-- The scheduled fetch (bl-fcc5, DESIGN §17). NOT a boot receiver and
-         nothing here receives the broadcast: this is the permission
+    <!-- Used twice, and it was declared for the second one first. `.Boot`
+         below receives the broadcast (bl-d22d, DESIGN §18.8), which is what
+         this permission is nominally for; and it is also the permission
          JobScheduler REQUIRES before it will accept `setPersisted(true)`, and
          without it `Watch.arm` throws instead of scheduling. Persisted
          because a fetch that quietly stopped at the next reboot until the
@@ -158,5 +159,19 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                       android:value="This device is enrolled as a remote tool host. The service holds one outbound mTLS connection to its operator's own engine so tool calls addressed to this phone are answered while it is in a pocket. No other foreground service type describes an inbound-work connection: dataSync is capped at six hours, and connectedDevice means a Bluetooth, NFC or USB companion." />
         </service>
+        <!-- The device came back (bl-d22d, DESIGN §18.8). Exported because a
+             system broadcast is delivered to an exported receiver and
+             BOOT_COMPLETED is a PROTECTED broadcast — only the platform may
+             send it, so nothing else can reach this. It holds the only
+             `RECEIVE_BOOT_COMPLETED` use that receives anything: the
+             scheduled fetch declares that permission for `setPersisted` and
+             receives no broadcast at all (§17.3). -->
+        <receiver android:name=".Boot"
+                  android:exported="true"
+                  android:directBootAware="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

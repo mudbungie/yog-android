@@ -187,3 +187,76 @@ pocket_beats() {
   fi
 }
 
+
+boot_beats() {
+  # THE DEVICE CAME BACK (bl-d22d, DESIGN §18.8), and it is §18.3's own limit
+  # reversed. The decision — what a path alone names, and what a host is made
+  # of — is `crate::pocket`, at the coverage floor. What only a device can
+  # answer is whether the PLATFORM delivers BOOT_COMPLETED to this receiver,
+  # lets a receiver start a `specialUse` foreground service, and lets a
+  # process no Activity ever created resolve this app's own classes.
+  #
+  # IT REBOOTS THE EMULATOR, which is the one gesture in this harness that
+  # costs a boot. It runs last for that reason and for one more: every beat
+  # above wants a device it did not just restart.
+  local svc="ServiceRecord{[^}]*$PKG/\\.Pocket"
+  local i
+
+  # 1. A foot leaf and one launch, which is the state a pocketed phone is left
+  #    in — the app opened once, then put away. Nothing here asserts; it is
+  #    the premise the reboot is judged against.
+  mint_material foot; relaunch
+  "${ADB[@]}" shell input keyevent KEYCODE_HOME
+
+  # 2. THE REBOOT. `adb reboot` and then the same bounded wait the boot at the
+  #    top of this walk uses — an emulator that died looks exactly like one
+  #    still booting, so the wait watches for both.
+  "${ADB[@]}" reboot >/dev/null 2>&1 || true
+  sleep 5
+  "${ADB[@]}" wait-for-device >/dev/null 2>&1 || true
+  ADB_BIN="$ADB_BIN" SERIAL="$SERIAL" timeout 420 bash -c '
+    until [ "$("$ADB_BIN" -s "$SERIAL" shell getprop sys.boot_completed 2>/dev/null | tr -d "\r")" = "1" ]; do
+      sleep 3
+    done' || { verdict fail "boot: the device did not come back from adb reboot"; return 0; }
+
+  # 3. THE APP IS NEVER OPENED. That is the whole assertion: the receiver is
+  #    what armed the service, and a host built in a process with no Activity
+  #    in it is what the notification is evidence of. The wait is generous
+  #    because BOOT_COMPLETED is delivered after the boot animation, on a
+  #    software-GPU emulator, behind every other receiver on the device.
+  # THE WAIT IS FOR THE PROMOTION, NOT FOR THE RECORD, and that distinction
+  # cost a walk. `startForegroundService` creates the ServiceRecord before the
+  # process even exists: a dump taken in that window shows the record with
+  # `startForegroundCount=0` and `callStart=false` — the service had not been
+  # started yet — so a loop that broke on the record alone judged the beat
+  # about two seconds too early and failed on a device that was doing
+  # everything right. The dump names the allowance in the same breath
+  # (`tempAllowListReason: BOOT_COMPLETED, duration:20000`), which is how that
+  # run was read.
+  local held=""
+  for i in $(seq 1 30); do
+    held=$("${ADB[@]}" shell dumpsys activity services "$PKG" 2>/dev/null | tr -d '\r')
+    if grep -q "$svc" <<<"$held" && grep -q "isForeground=true" <<<"$held"; then break; fi
+    sleep 4
+  done
+  printf '%s\n' "$held" > "$OUT/boot-services.txt"
+  if grep -q "$svc" <<<"$held" && grep -q "isForeground=true" <<<"$held"; then
+    verdict pass "boot: the foot came back without the app being opened"
+  else
+    verdict fail "boot: no promoted service after a reboot (see $OUT/boot-services.txt) — is .Boot declared, and did it reach Pocket.arm?"
+  fi
+
+  # 4. AND IT IS A HOST, not just a notification. `foregroundNoti` on the foot
+  #    channel is what says this process took a host up: `crate::pocket::line`
+  #    answers a line at all only where the leaf is a foot's, and the words
+  #    under it are the host's own standing.
+  if grep -q "foregroundNoti=Notification(channel=yog.foot" <<<"$held"; then
+    verdict pass "boot: the returned hold carries the foot channel's standing row"
+  else
+    verdict fail "boot: the hold's notification is not on yog.foot (see $OUT/boot-services.txt)"
+  fi
+
+  # 5. THE ACT REVERSED, at boot too: a seat leaf, and the device is left the
+  #    way every other beat wants it.
+  mint_material; relaunch
+}

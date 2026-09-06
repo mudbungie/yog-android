@@ -27,6 +27,13 @@
 //!   there is a lane to hold, and then parks in it. `wake` BLOCKS for up to a
 //!   hold, which is what a lane is, and it is called from a thread the
 //!   service made for exactly that.
+//! * **`Java_dev_yog_Pocket_serve`** — the boot-started foot's door (DESIGN
+//!   §18.8). Two raw effects inside one call: `ndk_context`'s globals filled
+//!   with this process's own VM and Application, which nothing else fills in a
+//!   process no Activity created, and the global reference that publication
+//!   requires be leaked. Both arguments are checked, both outlive every use,
+//!   and the write happens only where nobody has written — the argument is
+//!   `handed`'s own.
 //! * **the `WGPU_BACKEND` fold** — `std::env::set_var` is unsafe in edition
 //!   2024 because a concurrent `getenv` is UB. Here it runs first, on the
 //!   main thread, before eframe boots and before any thread this process
@@ -146,6 +153,95 @@ extern "system" fn Java_dev_yog_Lane_wake(
         .unwrap_or_default();
     env.new_string(said)
         .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
+}
+
+/// **Take the tool host up in a process no Activity ever created** (DESIGN
+/// §18.8; `dev.yog.Pocket`). The third Java-calls-Rust door and the one that
+/// makes a boot-started foot possible at all.
+///
+/// **It fills `ndk_context` first, because nothing else will.** Those globals
+/// are android-activity's and are written on the way to [`android_main`], so a
+/// service-started process has none and every bridge answers *no JVM is
+/// attached to this process*. The two values they hold are both things a
+/// Service already has — the process `JavaVM`, and the **Application**, which
+/// is exactly the object `jvm::Bridge::open` asks for a class loader — so
+/// filling them here is a hand-over rather than an invention, and every bridge
+/// under it works unchanged.
+///
+/// **The latch is ours, because asking `ndk_context` what it holds PANICS when
+/// it holds nothing** — which is exactly the state this door exists for.
+/// `android_context()` unwraps an `Option`, so the guard *"only write it if it
+/// is empty"* aborts the process before it can decide: measured as
+/// `panic_cannot_unwind` out of this symbol and a `SIGABRT` two seconds into a
+/// boot-started process, with the platform then backing the service off for
+/// half an hour. So the door remembers, once per process, that it has handed
+/// over.
+///
+/// **Writing it a second time would be harmless anyway.** An Activity that starts later
+/// re-arms this service, and android-activity writes the same two values on
+/// the way to `android_main`; taking the null check makes this a fill rather
+/// than a race, and leaves the Activity's own hand-over the one that happens
+/// when there IS one.
+///
+/// Answers the sentence a host that would not open failed with, or an empty
+/// string — the two-line protocol's silence — when it took or was already
+/// held. `crate::state::hold` refuses a second live host, so calling this on
+/// every start is idempotent by the slot rather than by a flag here.
+#[unsafe(no_mangle)]
+extern "system" fn Java_dev_yog_Pocket_serve(
+    mut env: jni::JNIEnv<'_>,
+    _class: jni::objects::JClass<'_>,
+    dir: jni::objects::JString<'_>,
+    context: jni::objects::JObject<'_>,
+) -> jni::sys::jstring {
+    let said = if crate::state::holding() {
+        // A host is already up — the ordinary answer on every start after the
+        // first. Building one to be refused would dial and advertise before
+        // the slot could say no, which is the question §18.1 made unaskable.
+        String::new()
+    } else if let Err(why) = handed(&mut env, &context) {
+        why
+    } else {
+        let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
+        match crate::pocket::footed(std::path::Path::new(&files)) {
+            Err(why) => why,
+            Ok(foot) => {
+                crate::state::hold(crate::pocket::host_from(foot, files));
+                String::new()
+            }
+        }
+    };
+    env.new_string(said)
+        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
+}
+
+/// The hand-over itself: this process's VM and Application into
+/// `ndk_context`'s globals, once, and only where nobody has written them.
+///
+/// **The global reference is deliberately leaked.** `ndk_context` holds a raw
+/// `jobject` for the life of the process and does not own it, so a `GlobalRef`
+/// dropped at the end of this call would delete the very reference it just
+/// published. It is one reference per process and it is never released,
+/// exactly as android-activity's own is.
+fn handed(env: &mut jni::JNIEnv<'_>, context: &jni::objects::JObject<'_>) -> Result<(), String> {
+    static HANDED: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+    if HANDED.set(()).is_err() {
+        return Ok(());
+    }
+    let vm = env.get_java_vm().map_err(|e| e.to_string())?;
+    let held = env.new_global_ref(context).map_err(|e| e.to_string())?;
+    let object = held.as_raw();
+    std::mem::forget(held);
+    // SAFETY: both handles are this process's own and outlive every use — the
+    // VM lives as long as the process and the reference above is never
+    // released. The write is on the service's main thread, which is the same
+    // looper android-activity's own write runs on, so the two cannot race;
+    // and the null check above means only one of them ever writes at all.
+    let handles = (vm.get_java_vm_pointer().cast(), object.cast());
+    unsafe {
+        ndk_context::initialize_android_context(handles.0, handles.1);
+    }
+    Ok(())
 }
 
 /// The process `JavaVM`, off the handle android-activity carries.

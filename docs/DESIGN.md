@@ -387,6 +387,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/state.rs` | the process's one live tool host (§18.1) — the crate's only lock, so a foot outlives the activity and a relaunch cannot build a second | landed (bl-8bd0) |
 | `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
 | `src/attention/held.rs` | the held attention lane (§17.6): one lane life — dial, hold, and the first rise the engine writes — folded onto rung 1's own memory through rung 1's own rule | landed (bl-b82d) |
+| `android/…/Boot.java` | the device came back (§18.8): one receiver, one call, and every gate behind it is `Pocket.arm`'s | landed (bl-d22d) |
 | `android/…/Lane.java` | that lane's platform half: the three gates each kept by somebody else, and the reader that turns a frame into a wake | landed (bl-b82d) |
 | `android/…/Pocket.java` | the foreground service that holds the process: the `specialUse` grant, the standing notification it is required to carry, and the two acts that end it | landed (bl-8bd0) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements and argument reading — pure | landed (bl-1511, protocol out bl-f34f) |
@@ -4162,19 +4163,20 @@ was written to be, not because anything checks it. `FOREGROUND_SERVICE` and
 permission mandatory, and without it `startForeground` throws `SecurityException`
 rather than degrading.
 
-**No BOOT_COMPLETED receiver, and the reason is not the platform's.**
+**No BOOT_COMPLETED receiver, and the reason is not the platform's** — *until
+bl-d22d, which is §18.8 and reverses the closing sentence of this paragraph.*
 `specialUse` is *not* on Android 15's barred list, so one would be lawful. It
 would also be useless: this service cannot CREATE a lane. A service may start a
 process with no Activity in it, and this app's tool bridges resolve their
 classes through handles android-activity fills on the way to `android_main`
 (`src/shell/jvm.rs`), so a host built from a service would be a foot whose
 platform tools all refuse. `onStartCommand` returns `START_NOT_STICKY` for the
-same reason. **The honest limit: after a reboot the foot is absent until the app
-is opened once.** The scheduled fetch (§17) is `setPersisted` and still wakes
-the operator about attention, so the phone is not silent — only its hands are.
-The named exit is **bl-d22d**, which is about making a host startable without
-an Activity — a question about the bridges rather than about the service, and a
-bigger one than this rung.
+same reason. **The honest limit was: after a reboot the foot is absent until the app is
+opened once**, with the scheduled fetch (§17) still waking the operator about
+attention, so the phone was not silent — only its hands were. **bl-d22d closed
+it** (§18.8): the question really was about the bridges rather than about the
+service, and the answer was one hand-over — a Service holds both values
+`ndk_context` carries, so a boot receiver can now build a real host.
 
 ### 18.4 What the notification says, and where the price is stated
 
@@ -4347,6 +4349,130 @@ actually costs a battery over that time, which is the number §14.2 prices and
 no emulator can measure; and Doze's real behaviour on a phone that is genuinely
 still, screen off, off charge, for hours — the emulator never enters deep Doze
 on its own. Those are recorded as this rung's real-device residue on bl-8bd0.
+
+### 18.8 The foot comes back after a reboot (bl-d22d)
+
+§18.3 wrote the limit down rather than hiding it: *"after a reboot the foot is
+absent until the app is opened once."* A phone that reboots in a pocket is
+exactly the case this rung is for, so that sentence was a defect with a
+citation. This section is its exit, and the three questions bl-d22d filed are
+answered in order.
+
+**A boot receiver was never the hard part.** `specialUse` is on none of Android
+15's barred lists, so `RECEIVE_BOOT_COMPLETED` plus `Pocket.arm` was always
+lawful — and always useless, because the service could not CREATE a host.
+
+#### 1. What a service-started process holds, and the one thing it lacks
+
+`jvm::Bridge::open` resolves this app's classes through the **Application's**
+class loader, and reaches the Application through `ndk_context`'s globals —
+which android-activity writes on the way to `android_main`. A process the
+platform started for a Service has no `android_main` and therefore no globals,
+so every bridge answers *no JVM is attached to this process* and a foot built
+there would advertise tools that all refuse.
+
+**The two values those globals hold are both things a Service already has.**
+The process `JavaVM` rides in on the `JNIEnv` of any JNI call, and
+`getApplicationContext()` IS the Application — the same object android-activity
+publishes, and the one whose loader `Bridge::open` wants. So the fix is a
+hand-over, not a mechanism: `Java_dev_yog_Pocket_serve` fills `ndk_context`
+**when it is empty** and every bridge under it works unchanged.
+
+**Once per process, by a latch of this door's own — and the obvious guard was
+the defect.** *"Write it only if it is empty"* is what this was first built as,
+and `ndk_context::android_context()` UNWRAPS an option: asking what it holds
+panics when it holds nothing, which is exactly the state this door exists for.
+It aborted rather than answering — `panic_cannot_unwind` out of the JNI symbol
+two seconds into a boot-started process, then `SIGABRT`, then the platform
+backing the service off for half an hour with `startForegroundCount=0` in the
+dump. A panic may not cross an `extern "system"` boundary at all, so a question
+that panics is not a question here. The latch answers instead, and writing
+twice would have been harmless anyway: an Activity that starts later writes the
+same VM and the same Application on its own way in, both writes are on the main
+looper so they cannot be concurrent, and all the latch saves is a second global
+reference saying the same thing.
+
+The global reference is deliberately leaked: `ndk_context` holds a raw
+`jobject` for the life of the process and owns nothing, so a `GlobalRef`
+dropped at the end of the call would delete the reference it had just
+published — one per process, never released, exactly as android-activity's is.
+
+**And the door asks the slot BEFORE it builds anything** (`state::holding`). A
+`Host` starts its worker the moment it is made, so a second one made in order
+to be refused has already dialled and advertised — and REMOTE §5.1's one-reader
+guard would refuse this device in its own name, which is the question §18.1
+made unaskable. The service is armed on every resume, so without that check the
+ordinary case — an app that is open — would have re-opened it every time.
+
+#### 2. Which tools want an Activity, and why the set does not vary
+
+This is the question §16.1's standing rule made sharp: **the advertisement is
+static and whole**, so a set that varied by how the process started would be
+the two-tables defect. It does not vary, and the reason is that the difference
+is not a difference:
+
+| tool | what it needs | boot-started |
+|---|---|---|
+| `shell`, `read_file`, `write_file`, `list_files` | nothing but this process | works |
+| `ui_read`, `ui_tap`, `ui_type`, `ui_press`, `ui_screenshot` | `dev.yog.InterfaceService`, an accessibility service the operator enabled — a service, holding its own connection | works |
+| `device`, `clipboard_set`, `notifications` | a Context | works |
+| `notify` | a Context to post; an Activity only to RAISE the runtime dialog | posts; a missing grant names the settings act, as it already does with nothing in front |
+| `open` | an Activity in the FOREGROUND | refuses in band, exactly as it already does from the background (§16.1) |
+| `camera`, `location` | the foreground gate each already states | refuse in band, exactly as they already do |
+
+**Every tool a boot-started process cannot run is a tool that already refuses
+when the app is merely backgrounded**, with a sentence naming what would let it
+run. That is the state a pocketed phone is in anyway — it is the state §18
+exists for — so a boot-started foot and an opened-then-pocketed one answer
+identically. There is nothing here for a second advertisement to say, and the
+honest set is the one this app already publishes.
+
+#### 3. So the answer is the ordinary rung, started earlier
+
+`dev.yog.Boot` receives `BOOT_COMPLETED` and calls `Pocket.arm`, which is the
+same call `MainActivity.onResume` makes and reads the same gates: a foot-grade
+leaf for the tool lane (§18.2), and a seat plus an unsilenced channel plus the
+battery exemption for the attention lane (§17.6). One place decides whether
+anything runs; the receiver only moves WHEN it is asked.
+
+`Pocket` takes the host up itself now (`pocket::footed` then
+`pocket::host_from`, held in `crate::state`), which the activity's boot has
+always done — and the slot is what makes calling it on every start safe, so
+there is no flag and no second question about whether a host exists.
+
+**It happens on the watcher thread, not in `onStartCommand`, and that was
+measured.** Taking a host up reads three files, parses a certificate chain and
+builds a TLS config; done on the service's main thread it delayed the app's own
+first frame past the walk's settle window on an emulator (`23-pocketed: the app
+said nothing`) and would ANR a slower device inside the five seconds
+`startForegroundService` allows. So the notification is posted at once and the
+host comes up on the thread that was already going to re-read the line — which
+is also why the shade says what the host BECAME a beat later rather than
+nothing at all.
+
+**`START_NOT_STICKY` stays, and its reason has moved.** §18.3 gave it because a
+system-restarted service would be *"a notification claiming something no thread
+is doing"*, and that is no longer true — a restarted service could now build a
+host. It stays anyway because a sticky restart carries no `Intent` and no
+operator act behind it, and the case this ball is about is answered by the
+receiver, which does. Making it sticky is a separate ruling with a separate
+price (a service that fights every vendor killer), and nothing here needs it.
+
+**What a boot-start costs, against §17.3's and §18.4's own accounting: it moves
+the start of a cost the operator already chose, and adds none.** A device
+carrying a foot-grade leaf was going to hold a foreground service and its
+standing notification from the moment the app was next opened; this makes that
+moment the boot. The operator act that authorizes it is unchanged and is still
+the leaf (§18.2) — re-provision a seat leaf and the receiver arms nothing. A
+device that is not hands, and a seat whose operator has not allowed
+unrestricted battery, get nothing at boot for the same reason they get nothing
+at a resume.
+
+**What the emulator proves** (`boot_beats`, `scripts/screens-background.sh`): a
+foot-grade device is rebooted with `adb reboot`, the app is never opened, and
+the platform holds `dev.yog/.Pocket` promoted with its standing row — which is
+the whole of §18.3's limit, reversed. What only a real device can answer is
+§18.7's list, unchanged.
 
 ## 19. The lost reply: what an act in doubt does here (bl-07b1)
 

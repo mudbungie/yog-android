@@ -218,3 +218,78 @@ fn the_held_lane_states_its_price_and_the_act_that_ends_it() {
     assert!(notice.text.contains("unrestricted"), "{}", notice.text);
     assert!(notice.text.contains("Attention"), "{}", notice.text);
 }
+
+// --- the host a service can start (§18.8, bl-d22d) ------------------------
+
+/// **A path is enough to become a foot.** What a process with no Activity in
+/// it starts from is this app's files directory and nothing else: the material
+/// under it names the engine, and the leaf says what this device is.
+#[test]
+fn a_files_directory_is_all_a_foot_needs_to_be_opened() {
+    let files = provisioned("hands", true);
+    assert!(super::footed(&files).is_ok());
+}
+
+/// **Every way it cannot be a foot is a sentence, not a silence.** A boot
+/// receiver has nowhere to report to, so the caller keeps the words for the
+/// shade — and the two failures are told apart because they name different
+/// acts.
+#[test]
+fn a_device_that_cannot_be_a_foot_says_which_way_it_failed() {
+    assert_eq!(
+        super::footed(&scratch()).err().as_deref(),
+        Some("nothing is provisioned on this device")
+    );
+    // Half-provisioned: the material read's own sentence, naming what is
+    // missing rather than answering "not provisioned".
+    let half = scratch();
+    let wire = half.join("wire");
+    std::fs::create_dir_all(&wire).unwrap();
+    std::fs::write(wire.join("address"), "engine.example.com:7737").unwrap();
+    let why = super::footed(&half).err().unwrap_or_default();
+    assert!(why.contains("client.pem"), "{why}");
+}
+
+/// **What a host is made of, made** — the tools this build advertises, the
+/// dispatch closed over this app's own storage, and the device's own rest
+/// between redials. Built against a real engine that refuses, because what is
+/// asserted here is the CONSTRUCTION rather than the ladder (`host::tests`
+/// owns that) — and nothing here touches the process's slot, which is
+/// `state::tests`' single story.
+#[test]
+fn a_host_is_made_of_this_builds_own_set() {
+    let dir = scratch();
+    crate::test_support::mint_ca(&dir, "ca");
+    crate::test_support::mint_leaf(&dir, "ca", "server", true);
+    crate::test_support::mint_leaf(&dir, "ca", "client", false);
+    let (address, _served) = crate::test_support::serve_many(
+        &dir,
+        "ca",
+        "server",
+        vec![vec![
+            serde_json::json!({ "ok": false, "error": "not registered here" })
+                .to_string()
+                .into_bytes(),
+        ]],
+    );
+    let foot = crate::foot::Foot::open(&crate::test_support::material(
+        &dir, "ca", "client", &address,
+    ))
+    .unwrap();
+    let mut host = super::host_from(foot, dir.display().to_string());
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while !matches!(host.standing().health, Health::Stopped(_)) {
+        assert!(
+            std::time::Instant::now() < deadline,
+            "the host never settled"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    let standing = host.standing();
+    let advertised: Vec<String> = crate::tools::advertisement()
+        .into_iter()
+        .map(|tool| tool.name)
+        .collect();
+    assert_eq!(standing.tools, advertised);
+    assert!(matches!(standing.health, Health::Stopped(_)));
+}
