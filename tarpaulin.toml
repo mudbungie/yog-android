@@ -75,6 +75,12 @@
 # `place.rs`, which is pure and asserted, and the menu's ROSTER is
 # `codec::row`'s three readings (`op`, `wants`, `with`), which are pure and
 # asserted too. What is left here is which widget gets which of them.
+# `src/shell/screens/rows/menu.rs` is that same file's long-press half, split
+# off at the cap (bl-06d3), and it is named here for its parent's reason
+# verbatim. The list's other decision moved the same way and in the opposite
+# direction: WHAT ORDER the rows go in and HOW FAR each hangs under its root
+# is `roster::ordered`/`roster::indent`, which are pure and stay UNDER the
+# floor — the widget only spends the number.
 #
 # `src/shell/screens/world/balls.rs` is the ball pane (bl-d587), the same class
 # again and named for the same reason: a `ScrollArea` of labels and one entry
@@ -227,6 +233,7 @@ exclude-files = [
     "src/shell/screens/records/points.rs",
     "src/shell/screens/records/parts.rs",
     "src/shell/screens/rows.rs",
+    "src/shell/screens/rows/menu.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",
     "src/shell/screens/world/admin.rs",

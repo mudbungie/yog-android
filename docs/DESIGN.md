@@ -426,7 +426,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/controls/drop.rs` | android-only: the drop-down that spends it — `Popup` over a button, because `ComboBox` places its list against the display | landed (bl-78c2) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, the banner and the one list-row helper every navigation list paints through | landed (bl-5a98) |
-| `src/shell/screens/rows.rs` | android-only: the conversation list and the acts its rows carry (§13.5) — the long-press menu, its three items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-f97c, out of `screens.rs`) |
+| `src/shell/screens/rows.rs` | android-only: the conversation list (§13.5) — its rows at their own depth under their root, their words, and the field that starts one | landed (bl-f97c, out of `screens.rs`; menu split out bl-06d3) |
+| `src/shell/screens/rows/menu.rs` | android-only: the long press a row carries — the act roster, its items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-06d3, out of `rows.rs` at the cap) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where each control the harness must reach was painted, one named rectangle apiece, said to logcat once per change | landed (bl-243b, named controls bl-35bd) |
 | `scripts/screens.sh` + `screens-walk.sh` + `screens-seed.sh` + `screens-capture.sh` | the headless emulator loop (§15): boot, install and the two gates that judge a run, beside the WALK — where to go and what each beat proves — the INSTRUMENTS that read the app and write a row about it, and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0, the instruments split bl-35bd on bl-46e6's seam, the walk split bl-477e) |
 | `scripts/screens-platform.sh` + `screens-background.sh` + `screens-attention.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the lanes that run while nobody is looking: the pocketed foot (§18), and beside it REMOTE §14's two attention rungs, the scheduled fetch and the held lane (§17) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0, split again bl-b82d on the subject) |
@@ -437,7 +438,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/res/drawable/ic_launcher_{foreground,background}.xml` + `res/mipmap-anydpi-v26/ic_launcher.xml` | the generated layers and the five lines of adaptive-icon wiring that name them | landed (bl-0b31) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape, and the live fold under them | landed (bl-0ed6, bl-4822) |
 | `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
-| `src/roster.rs` | the conversation list's two readings of the carried stamp: newest-first order, and how long ago each row says it is — pure, host-tested | landed (bl-e837) |
+| `src/roster.rs` | what the conversation list makes of the row fields the engine carries: newest-**subtree**-first order with the engine's descent kept inside each, how far a row hangs under its root, and how long ago each says it is — pure, host-tested | landed (bl-e837, subtree order + indent bl-06d3) |
 | `src/live.rs` | the streaming tail's one rule: the lane's fold replaces the transcript's own tail, and at rest there is none — pure, host-tested | landed (bl-e3d1) |
 | `src/outbox.rs` | the local echo and every decision about it: has this message come back in a transcript read yet, and which of the three fates it stands in (§19.2) — pure, host-tested | landed (bl-66fb, the echo itself bl-07b1) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
@@ -2908,6 +2909,44 @@ the channel; this screen paints the engine's own sentence and offers no verb
 that could not finish. A device-capable row completes from here in full — the
 URL and the user code paint, the human finishes in any browser, and bz polls
 the token endpoint from the engine.
+
+### 13.20 The conversation list is a tree, and the recency order is taken over it (bl-06d3)
+
+`src/roster.rs` (pure, under the floor), painted by `src/shell/screens/rows.rs`.
+
+**A subagent is not a conversation somebody started, and the list said it
+was.** A workspace whose root had dispatched two named children painted three
+sibling rows in age order with nothing distinguishing them — the operator
+could not see the tree that stopping, messaging and adjudication all address.
+The engine had already said so: `depth` is on the conversations row and has
+been since REMOTE §9.4's rung landed, and this seat read it and dropped it.
+
+**Two facts, and the second was the reason the first could not simply be
+painted.** The wire's order is §2.3's descent — id-sorted siblings, pre-order
+within a subtree — so a row's parent is the nearest row above it one rung
+shallower. bl-e837 sorted that flat by recency, which is right for a phone (a
+list you thumb is a list of what moved) and which destroyed the adjacency an
+indent depends on: an indented row three places from its parent says less than
+no indent at all.
+
+**So the recency order moved one rung up.** The SUBTREES are ordered newest
+first and each keeps the engine's own descent inside it. Nothing is derived to
+do it: a root row's `last_active_unix` is already *the subtree's* last action
+(REMOTE §9.9 says so in those words), which is exactly the key a subtree wants
+— and a child's own stamp never lifts its tree, because that would count one
+fact twice and put a busy tree in two places. The sort stays stable, so
+subtrees sharing a stamp keep the engine's order between them.
+
+**A row whose root this answer did not carry is a subtree of one, not a
+special case.** The first row opening a subtree even at depth 2 is the general
+path with the parent absent, and it needs no arm of its own.
+
+**The indent is the desktop seat's own** — 16 points a rung, capped at eight,
+added over a bounded count rather than multiplied out of a wire width — because
+two seats reading one `depth` off one wire must not disagree about what a
+subagent looks like (lernie `ui/convs.rs`). The row is laid out BESIDE its
+indent rather than padded inside it, so the tappable rectangle the parity walk
+observes is the row a thumb actually sees.
 
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
