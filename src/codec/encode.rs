@@ -8,8 +8,8 @@
 use serde_json::{Value, json};
 
 use super::{
-    Act, Ask, Gesture, admin, balls, candidates, fleet, fork, hold, pick, row, start, tools,
-    workdiff,
+    Act, Ask, Gesture, admin, balls, candidates, enroll, fleet, fork, hold, pick, row, start,
+    tools, workdiff,
 };
 
 /// Encode a gesture to its deposit envelope — the request frame's whole body.
@@ -170,6 +170,11 @@ fn acted(act: &Act) -> Value {
             act,
         } => row::encode(workspace, agent, act),
         Act::Admin(act) => admin::act::encode(act),
+        Act::Enroll {
+            workspace,
+            name,
+            grade,
+        } => enroll::encode(workspace, name, *grade),
         Act::Fork {
             workspace,
             parent,

@@ -61,6 +61,37 @@ pub struct Envelope {
     pub key: String,
 }
 
+/// **Write one out** — the compact JSON REMOTE §8.4 rules, tag first in
+/// meaning if not in byte order: this is a JSON object and the reader is a
+/// JSON reader, so which key lands where is not part of the contract.
+///
+/// It is the minting seat's half (DESIGN §13.18) and the exact inverse of
+/// [`read`] — one shape with one home, proved by the round trip rather than by
+/// two spellings agreeing.
+///
+/// **It does not check the certificate, and [`read`] does.** That asymmetry is
+/// the whole difference between the two ends: a photograph has no provenance,
+/// so the grade and the name a scan states are checked against the leaf the
+/// same payload carries; an answer that arrived over mTLS from the engine that
+/// minted it has one, and re-deriving here would be a second authority for a
+/// fact the channel already settled.
+#[must_use]
+pub fn write(envelope: &Envelope) -> String {
+    let mut map = Map::new();
+    map.insert(TAG.to_owned(), Value::from(VERSION));
+    map.insert("grade".to_owned(), Value::from(word(envelope.grade)));
+    for (key, said) in [
+        ("name", &envelope.name),
+        ("address", &envelope.address),
+        ("ca", &envelope.ca),
+        ("cert", &envelope.cert),
+        ("key", &envelope.key),
+    ] {
+        map.insert(key.to_owned(), Value::from(said.clone()));
+    }
+    Value::Object(map).to_string()
+}
+
 /// Read an envelope out of the text a scan or a paste produced.
 ///
 /// **The version is checked first and by name.** A stranger's QR, a truncated

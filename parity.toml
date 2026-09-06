@@ -87,8 +87,12 @@
 # never asked for on the wire, which `tests/conformance/requests.rs` records
 # (DESIGN §13.14).
 
-# --- Unbuilt: the minting seat (bl-2ee8) ------------------------------------
-enroll = "unbuilt: the minting side — this seat fires the mint and displays the QR; re-classed from never by the full-seat ruling (bl-2ee8; DESIGN §16.2, amending §11)"
+# --- The minting seat is whole (bl-2ee8) ------------------------------------
+# Nothing of it is on this ledger. `enroll` is two controls on the admin
+# screen's foot — one per §4.2 grade, because the grade is which of two devices
+# is being made rather than a setting — and what the mint answers covers that
+# screen as a symbol the next device photographs, with a back control whose
+# whole product is the forgetting (DESIGN §13.18, amending §11).
 
 # --- Unbuilt: sign-in from the glass (bl-5a41) ------------------------------
 # REMOTE §8.3's act and its held tail landed at protocol 8 (yog bl-61bf); a

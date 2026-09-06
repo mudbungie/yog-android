@@ -81,6 +81,18 @@ fn an_answer_that_states_no_text_or_no_branch_refuses_naming_the_field() {
 }
 
 #[test]
+fn a_grade_this_wire_does_not_have_refuses_naming_it() {
+    let frame = object(
+        &json!({ "op": "enroll", "workspace": "ws", "name": "phone-2",
+                                "grade": "admin" }),
+    );
+    assert_eq!(
+        crate::codec::enroll::decode(&frame).unwrap_err(),
+        "enroll: unknown grade \"admin\""
+    );
+}
+
+#[test]
 fn an_op_outside_this_family_refuses_by_name() {
     let frame = object(&json!({ "op": "pin", "workspace": "ws" }));
     assert_eq!(

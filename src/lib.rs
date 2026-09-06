@@ -33,6 +33,7 @@ pub mod scan;
 pub mod seat;
 pub mod shell;
 pub mod state;
+pub mod symbol;
 pub mod tools;
 pub mod transport;
 

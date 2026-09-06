@@ -63,6 +63,10 @@ pub(super) fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         // one surface, one roster, and the choice is `AdminAct`. `config` and
         // `marks` reach here only in their WRITTEN form — the read half of
         // each op is an ask, and the ask table takes it first.
+        // **The mint** (DESIGN §13.18): its own shape, because its subject is
+        // a device that does not exist yet and its answer is material rather
+        // than a receipt.
+        "enroll" => super::super::enroll::decode(o)?,
         "config" | "marks" | "scan" | "delete-agent" | "delete-workspace" => {
             super::super::admin::act::decode(op, o)?
         }

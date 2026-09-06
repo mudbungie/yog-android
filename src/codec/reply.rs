@@ -142,6 +142,11 @@ pub enum Reply {
     Lineages(Vec<lineages::Lineage>),
     /// **What each attempt cost** (DESIGN §13.12), one row apiece.
     Science(Vec<candidates::Attempt>),
+    /// **The material a mint answered with** (REMOTE §8.4): §8.4's six
+    /// fields, as the value `crate::envelope` already spells — one shape, so
+    /// what this seat displays and what the next device reads are the same
+    /// six facts said once.
+    Enrolled(crate::envelope::Envelope),
     /// **One config file's own bytes** (DESIGN §13.17). The typed `settings`
     /// beside them are not read — `codec::admin` says why — so what this
     /// carries is what the composer edits and a write sends back. The
@@ -259,6 +264,7 @@ impl Reply {
             Self::Clients(_) => "clients",
             Self::Lineages(_) => "lineages",
             Self::Science(_) => "science",
+            Self::Enrolled(_) => "enrolled",
             Self::Config(_) => "config",
             Self::Marks(_) => "marks",
             Self::Deleted => "deleted",

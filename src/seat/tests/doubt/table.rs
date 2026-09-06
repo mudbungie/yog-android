@@ -141,6 +141,14 @@ fn surfaces() -> Vec<Case> {
                 });
             }),
         ),
+        // The mint (§13.18). A repeat is refused by the certificate the
+        // engine kept, so the sentence names the roster that lists a client
+        // the moment its registration exists.
+        Case(
+            "enroll",
+            "The workspace's machines list a client",
+            Box::new(|m: &Model| m.enroll("phone-2".into(), crate::leaf::Grade::Foot)),
+        ),
         // The ball pane's own (§13.10, bl-f36e). A repeated close is a second
         // close and a repeated create is a second ball, so the sentence names
         // the read the pane makes anyway — the view it was fired on.

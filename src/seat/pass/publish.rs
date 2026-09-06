@@ -73,6 +73,7 @@ impl Standing {
         out.work.clone_from(&self.work);
         out.config.clone_from(&self.config);
         out.marks.clone_from(&self.marks);
+        out.minted.clone_from(&self.minted);
     }
 
     /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot

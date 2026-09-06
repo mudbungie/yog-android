@@ -63,10 +63,20 @@ rustls = { version = "0.23", default-features = false, features = ["ring", "std"
 # `unimplemented!()`, which is the panic path AGENTS.md rule 4 forbids and
 # which byte-mode QR content reaches on every decode. Everything else is off:
 # no `image`/`image_formats` (the frame arrives as a luminance buffer from
-# the camera, never as a file), no `encoders` (this app reads symbols and
-# never draws one — minting is the operator seat's job, REMOTE §8.4), and no
-# other symbology.
-rxing = { version = "0.9", default-features = false, features = ["qrcode", "decoders", "encoding_rs"] }
+# the camera, never as a file), and no other symbology.
+#
+# `encoders` was OFF, on the note "this app reads symbols and never draws one
+# — minting is the operator seat's job, REMOTE §8.4". That was the chat-first
+# framing speaking, and the full-seat ruling (DESIGN §16.2) reverses it: an
+# operator-grade phone seat fires the §8.4 mint and DISPLAYS the answering
+# envelope as a QR the next device scans (bl-2ee8, DESIGN §13.18). It is a
+# feature flip on a crate this manifest already approves and NOT a new
+# dependency: enabling it adds zero crates to the committed lockfile —
+# measured by diffing it, not assumed — so no license, advisory or source
+# moved. The alternative was a second QR encoder inside this repository,
+# under the 100% floor, for a fully specified algorithm the linked crate
+# already implements.
+rxing = { version = "0.9", default-features = false, features = ["qrcode", "decoders", "encoders", "encoding_rs"] }
 
 # The shell set (operator ruling 2026-08-23, recorded on bl-c761: eframe,
 # winit, jni, log, android_logger — the versions the bl-8d03/bl-014e spikes

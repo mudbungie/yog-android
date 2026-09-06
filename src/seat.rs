@@ -129,6 +129,11 @@ pub struct Snapshot {
     /// **Which task branch the focused workspace is marked with** (DESIGN
     /// §13.17), carrying the workspace it was read for (`Marks::about`).
     pub marks: Option<crate::codec::Marks>,
+    /// **The material this seat just minted** (REMOTE §8.4, DESIGN §13.18).
+    /// `None` is the ordinary state and the one an operator should leave the
+    /// app in: it holds a private key for a device that does not exist yet,
+    /// and forgetting it is a control.
+    pub minted: Option<crate::envelope::Envelope>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

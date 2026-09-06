@@ -34,6 +34,7 @@
 use eframe::egui;
 
 mod acts;
+mod minted;
 
 use crate::codec::Destination;
 use crate::seat::Snapshot;
@@ -46,6 +47,14 @@ pub(in crate::shell) const SCREEN: &str = "config";
 
 impl Shell {
     pub(in crate::shell) fn admin(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
+        // **The minted material covers this screen while it stands** (§13.18):
+        // the whole act is look-at-it-now-and-close-it, and a surface legible
+        // behind it would invite the one thing a private key on a display must
+        // not have, which is a long life there.
+        if let Some(envelope) = snap.minted.clone() {
+            self.minted(ui, &envelope);
+            return;
+        }
         self.note_screen(SCREEN);
         let workspace = snap.focus.workspace.clone().unwrap_or_default();
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {

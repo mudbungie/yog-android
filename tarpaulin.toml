@@ -106,6 +106,15 @@
 # records unpaintable under another is `Records::about`, all asserted by host
 # tests. What is left here is which widget shows which of them.
 #
+# `src/shell/screens/world/admin/minted.rs` is the minted material's covering
+# surface (bl-2ee8), the same class again: a bar, three labels and one egui
+# `Mesh`, `cfg(target_os = "android")` to the last line. Everything it decides
+# is somewhere else and under the floor — WHAT the symbol's modules are and how
+# big one is painted is `crate::symbol` (pure, and proved by a round trip
+# through the decoder this app already links), WHAT the envelope says is
+# `crate::envelope`, and WHERE the material lives and when it is dropped is
+# `seat::pass`/`worker::after`, all asserted by host tests.
+#
 # `src/shell/screens/world/admin.rs` and `admin/acts.rs` are the admin screen
 # (bl-f645), the same class again: a list of destination controls, four
 # buttons and a multi-line field, `cfg(target_os = "android")` to the last
@@ -211,6 +220,7 @@ exclude-files = [
     "src/shell/screens/world.rs",
     "src/shell/screens/world/admin.rs",
     "src/shell/screens/world/admin/acts.rs",
+    "src/shell/screens/world/admin/minted.rs",
     "src/shell/screens/world/balls.rs",
     "src/shell/screens/world/candidates.rs",
     "src/shell/screens/world/candidates/acts.rs",

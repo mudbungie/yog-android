@@ -357,6 +357,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/reply/decode.rs` | how one reply body is READ, split from the vocabulary it builds | landed (bl-146b, out of `reply.rs`) |
 | `src/seat/asks/records.rs` | the records screen's reads: the five an opening asks, the one a picked row posts, and the first failure standing for all of them | landed (bl-146b) |
 | `src/shell/screens/records.rs` + `records/parts.rs` | android-only: the records screen (§13.11) — the picks, and what each of the six halves says | landed (bl-146b) |
+| `src/symbol.rs` | the QR symbol this seat draws (§13.18): the module matrix at level M, and the whole-device-pixel pitch rule — pure, and proved by a round trip through the decoder this app already links | landed (bl-2ee8) |
+| `src/codec/enroll.rs` + `src/seat/acts/enroll.rs` | the §8.4 mint: the act, the six fields it answers as the value the scanning half already spells, and the one act here whose ANSWER is the product | landed (bl-2ee8) |
+| `src/shell/screens/world/admin/minted.rs` | android-only: the material on the glass — this app's one covering surface, the symbol as one mesh, and the back control whose whole product is the forgetting | landed (bl-2ee8) |
 | `src/codec/admin.rs` + `admin/act.rs` | the admin family (§13.17): the three config destinations this seat spells and the refusal the other two earn, the two halves of `marks`, and the five acts whose address is inside the choice | landed (bl-f645) |
 | `src/seat/asks/admin.rs` + `src/seat/acts/admin.rs` | the two reads, each carrying the subject it was asked about because neither answer echoes one; and the five acts in the three receipt shapes they earn | landed (bl-f645) |
 | `src/shell/screens/world/admin.rs` + `admin/acts.rs` | android-only: the admin screen (§13.17) — the destinations as controls, the editor a read seeds once, and the unmaking on a band of its own | landed (bl-f645) |
@@ -1127,13 +1130,20 @@ meet and could not derive:
 
 `request/enroll` and `reply/enrolled` are additions to the wire vocabulary and
 took no protocol bump of their own (strict decode already refuses an unknown op
-in band). This client is on the enrolled side of both and sends neither; the
-decision is recorded in `tests/conformance/expect.rs` as `NOT_THE_MINTER`, and
-the corpus's `reply/enrolled` fixture was checked field for field against
-`src/envelope.rs` when it was vendored — they agree. (The "sends neither"
-half is re-classed by §16.2's full-seat ruling: bl-2ee8 builds the minting
-side — this device fires the mint and displays the QR — and amends this
-clause when it lands. The enrolled side above is untouched.)
+in band). **This client is now on BOTH sides of them** (§13.18, bl-2ee8): it is
+the enrolled side above, and it is the minting side — an operator-grade seat
+that fires the act and displays the answering envelope as a symbol. The clause
+that stood here said it "sends neither" and recorded that in
+`tests/conformance/expect.rs` as `NOT_THE_MINTER`; the full-seat ruling (§16.2)
+reversed it, both shapes read, and the constant is gone. What did NOT change is
+the paragraph above it: the enrolled side is untouched, and REMOTE §1.4 still
+holds at both ends, because the acting machine is an already-trusted seat and
+the new device performs no channel act either way.
+
+The corpus's `reply/enrolled` fixture was checked field for field against
+`src/envelope.rs` when it was vendored — they agree, and since bl-2ee8 that
+agreement is structural rather than checked: the mint decodes into that very
+type.
 
 **REMOTE §1.4 is untouched, and the reason is which machine acts.** The new
 device performs no channel act at all: an already-trusted **operator-grade**
@@ -2717,6 +2727,95 @@ that opened and said nothing was read, and four controls — three dark, each
 saying which word would light it. `act:delete-agent` rides the records screen,
 which the walk already visits.
 
+### 13.18 The minting seat: the act, the symbol, and the forgetting (bl-2ee8)
+
+`src/symbol.rs`, `src/envelope.rs`, `src/codec/enroll.rs`,
+`src/seat/acts/enroll.rs`, `src/shell/screens/world/admin/minted.rs`. §11 said
+this device enrolls nobody; the full-seat ruling (§16.2) re-classes it, and
+this section is the amendment. An operator-grade phone seat fires REMOTE
+§8.4's mint and DISPLAYS the answering envelope as a QR the next device scans —
+one trusted device bootstrapping another, with no laptop in the loop (§5's mesh
+ruling).
+
+**REMOTE §1.4 is untouched, and it is worth saying exactly why one more time.**
+The acting machine here is the already-trusted seat, performing the mint over
+its own authenticated channel; the NEW device performs no channel act at all
+and the material travels the last hop out of channel, by screen and eye. That
+is the same clause §11 states from the other end, and this ball puts this app
+on both ends of it.
+
+**This device is now on both sides of §8.4, and the two halves are not
+symmetric.** `crate::envelope` reads a payload a camera saw and checks the
+stated grade and name against the leaf the same payload carries, because a
+photograph has no provenance. The minting half does not, because the answer
+arrived over mTLS from the engine that minted it — re-deriving would be a
+second authority for a fact the channel already settled. What the two share is
+the VALUE: one `Envelope`, so what this seat displays and what the next device
+reads are the same six fields said once, and `envelope::write` is the exact
+inverse of `envelope::read`.
+
+**The encoder is a feature flip, not a dependency**, and that is measured
+rather than argued. This crate already links `rxing` to DECODE a symbol (§12);
+its `encoders` feature adds **zero crates to the committed lockfile**, so no
+license, advisory or source moved. The manifest's own note said *"no
+`encoders`: this app reads symbols and never draws one"* — the chat-first
+framing speaking — and it now carries the reversal beside it. lernie wrote its
+own encoder (§4.15) because its manifest had no QR library at all; this one
+does, and a second implementation of a fully specified algorithm would be code
+this repository maintains forever under the 100% floor for nothing.
+
+**Level M, because REMOTE §8.4 measures the envelope and rules it** — 1567
+bytes, against 2331 at M — and `crate::symbol`'s own suite takes that
+measurement against the encoder this seat actually uses rather than trusting
+the number.
+
+**The symbol is proved by the decoder this app already has.** An encoder that
+agrees with itself proves nothing (lernie's own reason for pinning its encoder
+against an independent implementation); here the independent reading is free,
+so the assertion is a ROUND TRIP — encode, render to a luminance buffer, and
+read it back through `crate::scan`, which is the same path a camera takes minus
+the camera.
+
+**The pitch is a whole number of device pixels and the symbol is one mesh**
+(lernie bl-5e0e's ruling, whose reason transfers exactly): egui feathers every
+fill by a device pixel, half of it proud of the edge, so at a fractional origin
+a module's own edge pixels come out grey and the contrast a decoder needs is
+spent on anti-aliasing. It is drawn as large as the surface allows, because its
+whole job is to be read by a camera once. The RULE is `crate::symbol::pitch` —
+pure and host-tested, `shell::place`'s seam at a second site — and the paint
+spends it.
+
+**One control per grade, not a toggle beside one.** REMOTE §4.2's two grades
+see different worlds; the grade is which of two devices is being made, not a
+setting an operator adjusts. Each control takes the device's name out of the
+admin screen's own field and says so while it is dark.
+
+**It covers the admin screen, and that is this app's one covering surface**
+(lernie §4.15's exception, for its reason): what it holds is a private key on a
+display, the whole act is *look at this now and close it*, and a surface
+legible behind it would invite the one thing the material must not have, which
+is a long life on a screen. **The key is never painted and never named** —
+what an operator needs to see is that the mint happened and for which device;
+what the camera needs is the symbol.
+
+**Leaving is forgetting, and it is a gesture.** The material lives in the
+worker's own `Standing` and NOWHERE else: not the §14 cache, not a log line,
+not a file. The back control sends `Cmd::Forget`, whose whole product is that
+the value is gone — the one command in this vocabulary that crosses no wire and
+unmakes something.
+
+**A repeat is worse than useless and the sentence says so.** A second mint
+under one name is refused by the certificate the engine kept, so a resend on a
+lost reply would turn a mint whose material was lost into a refusal saying the
+name is taken. The read that settles one is the workspace's own machines
+(§13.14).
+
+**What the walk reaches.** No new step: the admin screen already walks, and
+what it now captures is two more controls on that foot, both dark, each saying
+that a device has to be named first. The covering surface needs a mint to
+exist, which needs an engine, so what a walk with nothing dialled can reach is
+the controls — which is what the parity gate asks of them either way.
+
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -3574,7 +3673,7 @@ The groups mirror the seat's own, one ball each:
 | trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8); seen — **landed** (§13.8) | bl-35bd, bl-2889 |
 | admin and armed deletions | config, marks, scan, delete-agent, delete-workspace — **landed** (§13.17) | bl-f645 |
 | roster and discovery | clients, lineages, help — **landed** (§13.14) | bl-3685 |
-| the minting seat | enroll | bl-2ee8 |
+| the minting seat | enroll — **landed** (§13.18) | bl-2ee8 |
 
 **Ordering.** The teleoperation corpus is the operator's stated want and goes
 first (bl-f34f → bl-b0a9 → bl-5cbd → bl-8bd0, serialized on `src/tools.rs` and

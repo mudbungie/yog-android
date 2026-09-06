@@ -26,6 +26,7 @@ pub mod candidates;
 pub mod clients;
 mod conv;
 pub mod encode;
+pub mod enroll;
 pub(crate) mod fields;
 pub mod files;
 pub mod fleet;
@@ -228,6 +229,15 @@ pub enum Act {
         from: String,
         role: String,
         goal: String,
+    },
+    /// **Mint the next device's material** (REMOTE §8.4, DESIGN §13.18). It
+    /// addresses a workspace like every other gesture, and that is not
+    /// decoration: the act CREATES the registration, and a registration is the
+    /// pair `(client, workspace)`.
+    Enroll {
+        workspace: String,
+        name: String,
+        grade: crate::leaf::Grade,
     },
     /// **One act of the admin surface** (DESIGN §13.17): write a config file,
     /// mark a workspace's task branch, flush its inbox, or delete a

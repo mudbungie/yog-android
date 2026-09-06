@@ -195,6 +195,7 @@ mod candidates;
 mod clients;
 mod deposit;
 mod doubt;
+mod enroll;
 mod fleet;
 mod fork;
 mod grace;

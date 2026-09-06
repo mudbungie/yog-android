@@ -102,6 +102,11 @@ pub(super) struct Standing {
     /// subject it was asked about because neither answer echoes one.
     pub(super) config: Option<crate::codec::Config>,
     pub(super) marks: Option<crate::codec::Marks>,
+    /// **The material a mint answered with** (DESIGN §13.18), held here and
+    /// NOWHERE else — not the §14 cache, not a log line, not a file. It is a
+    /// private key for a device that does not exist yet, and the surface that
+    /// shows it has a control whose whole product is dropping it.
+    pub(super) minted: Option<crate::envelope::Envelope>,
     /// **The last needle's answer** (bl-4c2b), carried between passes for the
     /// reason the counters above are: it is a gesture's answer, not a pass's,
     /// and a pass that re-reads the world must not drop the search the
@@ -144,6 +149,7 @@ impl Standing {
             work: None,
             config: None,
             marks: None,
+            minted: None,
             found: None,
             last: snap.clone(),
             failed: 0,

@@ -66,6 +66,23 @@ impl Model {
         let _ = self.cmds.send(Cmd::Answer(verdict));
     }
 
+    /// **Mint the next device's material** (REMOTE §8.4, §13.18) in the
+    /// focused workspace, under `name` and at `grade`.
+    ///
+    /// Not idempotent and never re-sent: a second mint under one name is
+    /// refused by the certificate the engine kept, so a repeat on a lost reply
+    /// would report the name as taken rather than minting it
+    /// (`seat::acts::enroll`).
+    pub fn enroll(&self, name: String, grade: crate::leaf::Grade) {
+        let _ = self.cmds.send(Cmd::Enroll(name, grade));
+    }
+
+    /// **Forget what a mint answered with** — the one handle here whose whole
+    /// product is that something is gone. It crosses no wire.
+    pub fn forget(&self) {
+        let _ = self.cmds.send(Cmd::Forget);
+    }
+
     /// **Fire one act of the admin surface** (§13.17) — a config write, a
     /// task-branch mark, an inbox flush, or one of the two deletions.
     ///

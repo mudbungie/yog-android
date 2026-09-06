@@ -46,6 +46,7 @@ impl Shell {
             },
         );
         self.unmaking(ui, workspace);
+        self.minting(ui);
         self.editor(ui);
     }
 
@@ -85,6 +86,40 @@ impl Shell {
         if control.clicked() {
             self.fire(act);
         }
+    }
+
+    /// **The mint, one control per grade** (REMOTE §8.4, DESIGN §13.18). Two
+    /// controls rather than a toggle beside one, because the grade is not a
+    /// setting an operator adjusts — it is which of two devices is being made,
+    /// and REMOTE §4.2 says the two see different worlds. Each takes the name
+    /// out of the field and says so while it is dark.
+    fn minting(&mut self, ui: &mut egui::Ui) {
+        let typed = self.composer.trim().to_owned();
+        let band = egui::vec2(ui.available_width(), TOUCH);
+        ui.allocate_ui_with_layout(
+            band,
+            egui::Layout::left_to_right(egui::Align::Center),
+            |ui| {
+                for grade in [crate::leaf::Grade::Operator, crate::leaf::Grade::Foot] {
+                    let word = crate::codec::enroll::word(grade);
+                    let label = if typed.is_empty() {
+                        format!("enroll {word} — name the device")
+                    } else {
+                        format!("enroll {word}")
+                    };
+                    let control = ui.add_enabled(
+                        !typed.is_empty(),
+                        egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
+                    );
+                    crate::shell::act::act(ui, &control, "enroll");
+                    if control.clicked()
+                        && let Some(model) = self.model()
+                    {
+                        model.enroll(typed.clone(), grade);
+                    }
+                }
+            },
+        );
     }
 
     /// The unmaking, on a band of its own, above the three that are not one.

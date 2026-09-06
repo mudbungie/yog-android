@@ -88,6 +88,24 @@ pub(super) fn administered(
     posted.note()
 }
 
+/// **The mint, and the material it answered** (§13.18). It is here beside the
+/// other acts that write to the standing rather than in `fold`, because what
+/// it holds is not a read's answer: no read can fetch it back, the engine
+/// having shredded the key as it answered.
+pub(super) fn minted(
+    seat: &Seat,
+    focus: &Focus,
+    standing: &mut Standing,
+    name: String,
+    grade: crate::leaf::Grade,
+) -> Option<String> {
+    let (posted, envelope) = super::super::acts::enroll(seat, focus, name, grade);
+    if let Some(envelope) = envelope {
+        standing.minted = Some(envelope);
+    }
+    posted.note()
+}
+
 /// **Re-read the trail after an act on it**, swallowing the failure: this is
 /// not the operator's gesture, it is what makes the gesture's effect visible,
 /// and its absence leaves the rows exactly as they were — which is where they

@@ -71,6 +71,15 @@ pub(super) enum Cmd {
         from: String,
         goal: String,
     },
+    /// **Mint the next device's material** (§13.18), and — its own command
+    /// rather than an arm of the admin act — because its answer IS the
+    /// product rather than a receipt.
+    Enroll(String, crate::leaf::Grade),
+    /// **Forget the material a mint answered with** (§13.18). The one command
+    /// in this vocabulary whose whole product is that something is gone: the
+    /// key is held in the worker's own memory and nowhere else, and closing
+    /// the surface that shows it is what drops it.
+    Forget,
     /// **Read one config file** (§13.17). The destination is the gesture's
     /// own — two of the three name no workspace — so nothing about the focus
     /// decides what is read.
