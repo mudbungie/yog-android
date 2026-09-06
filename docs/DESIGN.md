@@ -386,6 +386,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0) |
 | `src/state.rs` | the process's one live tool host (§18.1) — the crate's only lock, so a foot outlives the activity and a relaunch cannot build a second | landed (bl-8bd0) |
 | `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
+| `src/shell/boot.rs` (`take`) | android-only: what a host is MADE of, in the one place that makes one — reached by the activity's boot and by the service's door alike (§18.8). The DECISION beside it is `crate::pocket`, under the floor; this is glue, and the nap it hands the ladder is a line no host test takes | landed (bl-d22d, seam corrected bl-996b) |
 | `src/attention/held.rs` | the held attention lane (§17.6): one lane life — dial, hold, and the first rise the engine writes — folded onto rung 1's own memory through rung 1's own rule | landed (bl-b82d) |
 | `android/…/Boot.java` | the device came back (§18.8): one receiver, one call, and every gate behind it is `Pocket.arm`'s | landed (bl-d22d) |
 | `android/…/Lane.java` | that lane's platform half: the three gates each kept by somebody else, and the reader that turns a frame into a wake | landed (bl-b82d) |
@@ -4435,8 +4436,8 @@ leaf for the tool lane (§18.2), and a seat plus an unsilenced channel plus the
 battery exemption for the attention lane (§17.6). One place decides whether
 anything runs; the receiver only moves WHEN it is asked.
 
-`Pocket` takes the host up itself now (`pocket::footed` then
-`pocket::host_from`, held in `crate::state`), which the activity's boot has
+`Pocket` takes the host up itself now (`pocket::footed` names the foot,
+`shell::boot::take` makes and holds it), which the activity's boot has
 always done — and the slot is what makes calling it on every start safe, so
 there is no flag and no second question about whether a host exists.
 

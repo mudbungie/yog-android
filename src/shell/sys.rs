@@ -206,7 +206,7 @@ extern "system" fn Java_dev_yog_Pocket_serve(
         match crate::pocket::footed(std::path::Path::new(&files)) {
             Err(why) => why,
             Ok(foot) => {
-                crate::state::hold(crate::pocket::host_from(foot, files));
+                super::boot::take(foot, files);
                 String::new()
             }
         }

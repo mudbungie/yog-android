@@ -135,14 +135,36 @@ pub(super) fn wire_dir(android: &AndroidApp) -> std::path::PathBuf {
 /// is what keeps one certificate to one parked `invocations` read (REMOTE
 /// §5.1).
 ///
-/// The construction itself is `crate::pocket::host_from` and not here: since bl-d22d
-/// a service with no Activity behind it builds the same host from the same
-/// place (§18.8), and two spellings of what a host is made of would drift the
-/// first time the dispatch or the ladder moved.
 fn host(android: &AndroidApp, foot: Foot) {
     let data_dir = android
         .internal_data_path()
         .map(|p| p.display().to_string())
         .unwrap_or_default();
-    crate::state::hold(crate::pocket::host_from(foot, data_dir));
+    take(foot, data_dir);
+}
+
+/// **What a host is made of, in the one place that makes one** (§18.8): the
+/// tools this build advertises, the dispatch closed over this app's own
+/// storage — where a screenshot goes when a caller names no path, the one
+/// directory this uid can always write — and the device's own rest between
+/// redials.
+///
+/// **Both callers are at the process edge and both are here**: the activity's
+/// boot above, and `sys::Java_dev_yog_Pocket_serve`, which is a service in a
+/// process no Activity created (§18.8). bl-d22d first put this in
+/// `crate::pocket` so the two would share one spelling, and that was one
+/// function too far: the nap handed to the ladder is never taken by any host
+/// test — every one drives an engine that refuses or answers — so a line under
+/// the coverage floor could only ever be uncovered. What `crate::pocket` owns
+/// is the DECISION (`footed`, `line`, `attending`), and this is glue.
+pub(super) fn take(foot: Foot, data_dir: String) -> bool {
+    crate::state::hold(crate::host::Host::start(
+        foot,
+        crate::tools::advertisement(),
+        Box::new(move |tool, input| crate::tools::run_in(tool, input, &data_dir)),
+        // The device's own rest between redials, which is the whole of what
+        // the parameter is for: the suite hands the loop a recorder instead
+        // and reads the ladder back without sleeping through it (bl-8641).
+        Box::new(std::thread::sleep),
+    ))
 }
