@@ -170,14 +170,7 @@ pub(crate) fn row(v: &Value) -> Result<ProviderRow, String> {
 
 /// The models listing: bare names, in the engine's order.
 pub(crate) fn names(o: &Map<String, Value>) -> Result<Vec<String>, String> {
-    super::fields::arr_of(o, "rows")?
-        .iter()
-        .map(|v| {
-            v.as_str()
-                .map(str::to_owned)
-                .ok_or_else(|| "models: non-string row".to_owned())
-        })
-        .collect()
+    super::fields::strings_of(o, "rows", "models")
 }
 
 /// `{"op":"effort", …}` — the level, or a real null for off. The key is

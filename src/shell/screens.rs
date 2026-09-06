@@ -25,11 +25,14 @@ use super::mark::Back;
 use crate::host::Health;
 use crate::seat::Snapshot;
 
+mod files;
+mod preview;
 mod records;
 mod rows;
 mod search;
 mod world;
 
+pub(crate) use files::SCREEN as FILES;
 pub(crate) use world::World;
 pub(in crate::shell) use world::{CAP, FLOOR};
 
@@ -101,6 +104,13 @@ impl Shell {
                 // the focus underneath never moves.
                 Some(agent) if self.records => {
                     self.records(ui, &snap, &workspace, &agent);
+                }
+                // **The files screen is the other depth of the transcript**
+                // (§13.15): `files` names the conversation the transcript is
+                // showing, so it opens OVER it on the records screen's terms
+                // exactly.
+                Some(agent) if self.files => {
+                    self.files(ui, &snap, &workspace, &agent);
                 }
                 Some(agent) => {
                     self.note_screen("transcript");

@@ -105,6 +105,15 @@ relaunch
 tap_control clients
 capture clients clients
 
+# 4da. THE WORK SCREEN (DESIGN §13.15). The fifth aimed entry, and the other
+#      half of the candidates screen's row: what an attempt CHANGED, off the
+#      same diff object `science` carries. The engine is not dialled, so this
+#      captures a screen that opened and said nothing was read; what the parity
+#      gate wants from it is the entry, which is on the band either way.
+relaunch
+tap_control work-diff
+capture work work-diff
+
 # Back to the list the menu opens from: the seed has not changed, so this is a
 # relaunch and not a re-seed.
 relaunch
@@ -130,6 +139,15 @@ capture transcript transcript
 #     `step` paints on this screen disabled with its reason beside it.
 tap_control records
 capture records records
+
+# 4g. THE FILES SCREEN (DESIGN §13.15). The other depth behind the transcript,
+#     beside the records entry in the same band — `files` names the
+#     conversation, so this is the only depth it can be reached from. Reached
+#     from a relaunch rather than by backing out of the records screen, which is
+#     the harness's existing door.
+relaunch
+tap_control files
+capture files files
 
 # 5. The same screen with the engine's stop gates ON. Not a sixth screen — the
 #    app says `transcript` for both — but the controls row is a different set

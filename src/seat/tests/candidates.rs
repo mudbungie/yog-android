@@ -19,7 +19,10 @@ pub(super) fn science() -> Vec<u8> {
                        "outcome": { "state": "pending" }, "steps": 1, "wall_secs": 2,
                        "verdicts": [] },
                      { "diff": { "ball_id": "bl-1", "project": "p", "state": "diff",
-                                 "handle": "at-1" },
+                                 "handle": "at-1", "target": "work/bl-1",
+                                 "source": "attempt/at-1", "target_oid": "aaa",
+                                 "source_oid": "bbb", "truncated": false,
+                                 "files": [{ "path": "src/a.rs", "added": 3, "removed": 1 }] },
                        "outcome": { "state": "accepted", "commit": "ccc" }, "steps": 1,
                        "wall_secs": 2, "verdicts": [{ "sender": "judge", "body": "cleaner" }] }] })
     .to_string()
@@ -97,7 +100,7 @@ fn opening_the_candidates_asks_science_for_the_focused_workspace() {
         spread
             .rows
             .iter()
-            .map(|row| row.handle.clone())
+            .map(|row| row.diff.handle.clone())
             .collect::<Vec<String>>(),
         [String::new(), "at-1".to_owned()]
     );

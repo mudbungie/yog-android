@@ -6,45 +6,21 @@
 //! these private fields. The seam is what the shell IS against what one frame
 //! DOES with it.
 
+mod fields;
 mod pass;
 mod probe;
 
+pub(crate) use fields::{COMPOSER, ENVELOPE, NEEDLE};
 pub(crate) use pass::run;
 
 use winit::platform::android::activity::AndroidApp;
 
 use super::boot::{Running, boot};
-use super::bridge::{Bridge, Field, FieldKind};
+use super::bridge::Bridge;
 use super::enroll::Scanner;
 use super::inset::InsetPx;
 use crate::rows::AutoExpand;
 use crate::seat::Model;
-
-/// The one editable field the shell carries. The id string is the egui
-/// widget id AND the bridge's address for it — one definition, used twice.
-pub(crate) const COMPOSER: Field = Field {
-    id: "composer",
-    kind: FieldKind::Composer,
-};
-
-/// The enrollment screen's envelope field. A separate id because the two are
-/// never on screen together for the composer's reason inverted: a cold device
-/// has no conversation to speak into, and a provisioned one has nothing left
-/// to enroll — but they are different KINDS of editor (`bridge.rs`), and the
-/// IME must be told which it is focused on.
-pub(crate) const ENVELOPE: Field = Field {
-    id: "envelope",
-    kind: FieldKind::Envelope,
-};
-
-/// **The search field** (§13.6, bl-4c2b). Its own id and its own kind: a
-/// needle is one line and must not be autocorrected — a corrected needle
-/// searches for a word the operator did not type — while the composer is
-/// prose and wants both.
-pub(crate) const NEEDLE: Field = Field {
-    id: "needle",
-    kind: FieldKind::Needle,
-};
 
 pub(crate) struct Shell {
     pub(super) android: AndroidApp,
@@ -85,6 +61,12 @@ pub(crate) struct Shell {
     /// position: the focus underneath it is untouched, which is what makes
     /// backing out of it land where the operator was.
     pub(crate) records: bool,
+    /// **Whether the files screen is open over the transcript** (§13.15).
+    /// `records`' twin exactly, and navigation for its reason: the focus
+    /// underneath it is untouched, so backing out of it lands where the
+    /// operator was. There is no picked path beside it — the answer carries
+    /// the path its bytes were asked at, and one name is enough.
+    pub(crate) files: bool,
     /// **Which attempt the candidates screen's acts address** (§13.12): the
     /// project, the ball and the handle off the row that was tapped — the
     /// handle empty for the claim, which is what decides which controls are
@@ -195,6 +177,7 @@ impl Shell {
             armed: false,
             ball: None,
             records: false,
+            files: false,
             step: None,
             candidate: None,
             spread: crate::shell::screens::FLOOR,

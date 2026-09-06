@@ -14,7 +14,9 @@ use super::super::search;
 use super::super::start;
 use super::super::tools::{capture_of, invocation_of};
 use super::super::trail;
-use super::super::{balls, candidates, clients, conv, hold, lineages, records, transcript, ws};
+use super::super::{
+    balls, candidates, clients, conv, files, hold, lineages, records, transcript, workdiff, ws,
+};
 use super::Reply;
 
 /// Read one reply body off the wire.
@@ -65,6 +67,8 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "clients" => Reply::Clients(clients::rows(o)?),
         "lineages" => Reply::Lineages(lineages::rows(o)?),
         "science" => Reply::Science(candidates::science(o)?),
+        "files" => Reply::Files(files::listing(o)?),
+        "work-diff" => Reply::WorkDiff(workdiff::churned(o)?),
         "fanned" => Reply::Fanned(candidates::fanned(o)?),
         "delivered" => Reply::Delivered(candidates::delivered(o)?),
         "armed" => Reply::Armed {

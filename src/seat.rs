@@ -113,6 +113,15 @@ pub struct Snapshot {
     /// opened it*; a roster under another workspace is unpaintable, which is
     /// the candidates screen's pairing law at a fourth site.
     pub clients: Option<crate::codec::Machines>,
+    /// **What the focused conversation's worktree holds** (DESIGN §13.15),
+    /// carrying the conversation it was read for and the path its preview was
+    /// asked at. `None` is *nobody has opened it*; a listing about another
+    /// conversation is unpaintable under this focus, which is the records
+    /// screen's pairing law at a fifth site (`Files::about`).
+    pub files: Option<crate::codec::Files>,
+    /// **What the focused workspace's attempts changed** (DESIGN §13.15), on
+    /// the same terms one subject along (`Work::about`).
+    pub work: Option<crate::codec::Work>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

@@ -15,8 +15,10 @@
 use serde_json::Value;
 
 mod records;
+mod review;
 
 pub(super) use records::{drill, opened};
+pub(super) use review::{files, work};
 
 use super::Focus;
 use super::pass::{answer, kind_err};

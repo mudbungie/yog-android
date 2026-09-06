@@ -25,7 +25,7 @@ fn bare() -> Value {
 fn a_row_with_no_handle_is_the_claim_and_says_so_by_saying_nothing() {
     let rows = super::science(&object(&bare())).unwrap();
     let row = rows.first().cloned().unwrap_or_else(|| unreachable!());
-    assert_eq!((row.handle.as_str(), row.by.as_str()), ("", ""));
+    assert_eq!((row.diff.handle.as_str(), row.by.as_str()), ("", ""));
     assert_eq!((row.goal.as_str(), row.response.as_str()), ("", ""));
     assert_eq!((row.outcome.as_str(), row.steps), ("pending", 2));
 }

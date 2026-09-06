@@ -50,6 +50,24 @@ pub(crate) fn arr_of(obj: &Map<String, Value>, key: &str) -> Result<Vec<Value>, 
         .ok_or_else(|| format!("missing or non-array field {key:?}"))
 }
 
+/// A required array field whose elements are all strings, named by the shape
+/// asking for it. Two readers wanted the same six lines — a models listing
+/// and a work diff's missing refs — and one of them would have drifted.
+pub(crate) fn strings_of(
+    obj: &Map<String, Value>,
+    key: &str,
+    kind: &str,
+) -> Result<Vec<String>, String> {
+    arr_of(obj, key)?
+        .iter()
+        .map(|v| {
+            v.as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| format!("{kind}: non-string element in field {key:?}"))
+        })
+        .collect()
+}
+
 /// An **optional** field read by a keyed reader: absent or `null` is `None` —
 /// the one field shape where "not stated" is a value rather than a malformed
 /// envelope — and anything else refuses by name on a mismatch.

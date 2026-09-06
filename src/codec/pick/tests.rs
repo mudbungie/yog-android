@@ -52,7 +52,7 @@ fn models_read_as_names_and_refuse_anything_else() {
     assert_eq!(listed, ["opus", "sonnet"]);
     let o = json!({ "rows": [{ "name": "opus" }] });
     let why = names(o.as_object().unwrap()).unwrap_err();
-    assert!(why.contains("non-string row"), "{why}");
+    assert!(why.contains("models: non-string element"), "{why}");
     let o = json!({ "kind": "models", "ok": true });
     assert!(names(o.as_object().unwrap()).is_err());
 }

@@ -219,6 +219,36 @@ pub(super) fn listed(
     note
 }
 
+/// **The worktree listing, folded** — `paned`'s terms again, and the value
+/// carries the path it was asked at, so a preview lands under its own row and
+/// never under one tapped since.
+pub(super) fn filed(
+    read: Result<crate::codec::Files, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(files) => {
+            standing.files = Some(files);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
+/// **The work diff, folded** — `filed`'s terms exactly, one subject along.
+pub(super) fn worked(
+    read: Result<crate::codec::Work, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(work) => {
+            standing.work = Some(work);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
 /// **The machines roster, folded** — `paned`'s terms again: the answer
 /// replaces what was held and a failure keeps what was there.
 pub(super) fn machined(

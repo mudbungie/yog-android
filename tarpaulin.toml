@@ -135,6 +135,22 @@
 # the pairing that makes one workspace's roster unpaintable under another is
 # `Machines::about`, all asserted by host tests.
 #
+# `src/shell/screens/files.rs`, `screens/preview.rs` and
+# `screens/world/work.rs` are the work-review surfaces (bl-5a56), the same
+# class again: two `ScrollArea`s of labels and buttons and one monospace fence,
+# `cfg(target_os = "android")` to the last line. Everything they decide is
+# somewhere else and under the floor — WHAT a listing says and what an absent
+# worktree means is `codec::files`, WHAT a diff row says and which fields its
+# state decides is `codec::workdiff`, WHICH parameter each depth's ask carries
+# and how it is paired back to its row is `seat::asks::review`, and the pairing
+# that makes one conversation's listing unpaintable under another is
+# `Files::about`/`Work::about` — all asserted by host tests. What is left here
+# is which widget shows which of them.
+#
+# `src/shell/app/fields.rs` is the three `Field` constants split out of
+# `app.rs` (bl-5a56) and inherits its entry exactly: it is `cfg(target_os =
+# "android")` data with no behaviour at all.
+#
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
 [default]
 exclude-files = [
@@ -142,6 +158,7 @@ exclude-files = [
     "src/shell/act.rs",
     "src/shell/app.rs",
     "src/shell/back.rs",
+    "src/shell/app/fields.rs",
     "src/shell/app/pass.rs",
     "src/shell/app/probe.rs",
     "src/shell/boot.rs",
@@ -161,6 +178,8 @@ exclude-files = [
     "src/shell/inset.rs",
     "src/shell/jvm.rs",
     "src/shell/screens.rs",
+    "src/shell/screens/files.rs",
+    "src/shell/screens/preview.rs",
     "src/shell/screens/records.rs",
     "src/shell/screens/records/parts.rs",
     "src/shell/screens/rows.rs",
@@ -170,6 +189,7 @@ exclude-files = [
     "src/shell/screens/world/candidates.rs",
     "src/shell/screens/world/candidates/acts.rs",
     "src/shell/screens/world/clients.rs",
+    "src/shell/screens/world/work.rs",
     "src/shell/screens/world/fleet.rs",
     "src/shell/screens/world/help.rs",
     "src/shell/screens/world/trail.rs",

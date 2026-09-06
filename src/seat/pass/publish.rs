@@ -69,6 +69,8 @@ impl Standing {
         out.records.clone_from(&self.records);
         out.candidates.clone_from(&self.candidates);
         out.clients.clone_from(&self.clients);
+        out.files.clone_from(&self.files);
+        out.work.clone_from(&self.work);
     }
 
     /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot

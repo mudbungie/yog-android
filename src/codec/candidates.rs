@@ -13,23 +13,25 @@
 //!
 //! **One reader for one shape.** An attempt's `diff` is the same object the
 //! `work-diff` answer spells, *"so an attempt's identity has one spelling
-//! anywhere"*; this seat composes no `work-diff` yet (bl-5a56 owns that
-//! surface) and reads the object where it arrives — here.
+//! anywhere"* — so it is read by `codec::workdiff` and composed here, whole,
+//! rather than by a second reader that would drift from it within a week
+//! (DESIGN §13.14, bl-5a56). This screen paints three of its fields; the
+//! churn and the refs are the work surface's, off the same value.
 //!
-//! **What is decoded is what this screen paints.** Four columns ride through
-//! unread and each is a decision: `usage`'s four counters (the ledger
+//! **What is decoded is what these two screens paint.** Three columns ride
+//! through unread and each is a decision: `usage`'s four counters (the ledger
 //! `codec::balls` already declines to hold, and there is no total here to
 //! carry instead), `pins` and `base`/`governing` (what an attempt was frozen
-//! against, which is the config surface's question and unbuilt here), the
-//! diff's `files` list and its `source`/`target` refs (the work-review
-//! surface's, bl-5a56), and `conversation` (an address this screen offers no
-//! way to open — the day it does is the day it earns a reader).
+//! against, which is the config surface's question and unbuilt here), and
+//! `conversation` (an address this screen offers no way to open — the day it
+//! does is the day it earns a reader).
 
 pub mod act;
 
 use serde_json::{Map, Value};
 
 use super::fields::{arr_of, str_of, u64_of};
+use super::workdiff::{self, Diff};
 
 /// **What the candidates screen is holding**, and the workspace it was read
 /// for. `science` names a workspace, so a listing under another one is the
@@ -52,15 +54,11 @@ impl Spread {
 /// One attempt, as the engine measured it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Attempt {
-    pub ball: String,
-    pub project: String,
-    /// **The discriminant**: the opaque handle of a candidate, or empty for
-    /// the ball's own claim. Nothing else on the row says which of the three
-    /// acts it earns.
-    pub handle: String,
-    /// The diff's own state token, carried whole — this screen paints the
-    /// word and nothing branches on it.
-    pub state: String,
+    /// **What this attempt changed**, whole, in the one spelling a diff row
+    /// has anywhere (`codec::workdiff`). Its `handle` is the discriminant —
+    /// the opaque handle of a candidate, or empty for the ball's own claim —
+    /// and nothing else on the row says which of the three acts it earns.
+    pub diff: Diff,
     /// What became of the attempt, and whatever that token can say: the
     /// acceptance's commit, the rejection's winner where there was one.
     pub outcome: String,
@@ -103,19 +101,13 @@ pub(super) fn science(o: &Map<String, Value>) -> Result<Vec<Attempt>, String> {
 /// them.
 fn row(v: &Value) -> Result<Attempt, String> {
     let o = object(v, "science")?;
-    let diff = object(
-        o.get("diff").ok_or("science: a row states no diff")?,
-        "diff",
-    )?;
+    let diff = workdiff::diff(o.get("diff").ok_or("science: a row states no diff")?)?;
     let outcome = object(
         o.get("outcome").ok_or("science: a row states no outcome")?,
         "outcome",
     )?;
     Ok(Attempt {
-        ball: str_of(&diff, "ball_id")?,
-        project: str_of(&diff, "project")?,
-        handle: said(&diff, "handle"),
-        state: str_of(&diff, "state")?,
+        diff,
         outcome: str_of(&outcome, "state")?,
         commit: said(&outcome, "commit"),
         by: said(&outcome, "by"),

@@ -15,7 +15,9 @@
 //! ball chip's `state` token ride through untyped (`Value` / `String`) until
 //! a surface here paints them, and the records screen carries the engine's
 //! state and flight WORDS rather than picking them, because nothing there
-//! branches on either (`codec::records`).
+//! branches on either (`codec::records`). A diff row's `state` is the
+//! counter-example and says why the rule is not "carry every token": it
+//! DECIDES which fields the row has, so it is read (`codec::workdiff`).
 
 mod ask;
 pub mod balls;
@@ -24,6 +26,7 @@ pub mod clients;
 mod conv;
 pub mod encode;
 pub(crate) mod fields;
+pub mod files;
 pub mod fleet;
 pub mod follow;
 pub mod hold;
@@ -39,6 +42,7 @@ pub mod start;
 pub mod tools;
 pub mod trail;
 mod transcript;
+pub mod workdiff;
 mod ws;
 
 pub use ask::Ask;
@@ -49,6 +53,7 @@ pub use candidates::{Attempt, Delivered, Judgement, Spread};
 pub use clients::{ClientRow, Machines};
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use encode::encode;
+pub use files::{FileRow, Files, Listing, Preview};
 pub use fleet::FleetAct;
 pub use follow::Stream;
 pub use hold::{Answered, Verdict};
@@ -66,6 +71,7 @@ pub use start::Prepared;
 pub use tools::{Capture, Invocation, Tool};
 pub use trail::{OpRow, Standing};
 pub use transcript::{Block, Entry, EntryKind};
+pub use workdiff::{Churn, Churned, Diff, Work, WorkFile};
 pub use ws::{ConfigTip, WsKind, WsRow};
 
 /// The mutating half this device spends: the §8.2 deposit, and the two acts

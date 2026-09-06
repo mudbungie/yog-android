@@ -204,6 +204,7 @@ mod queue;
 mod reads;
 mod records;
 mod resume;
+mod review;
 mod row;
 mod search;
 mod start;

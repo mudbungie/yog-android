@@ -79,7 +79,11 @@ impl Shell {
     /// paints under the picked row alone. It is prose, and prose under every
     /// row would make a listing nobody can scan.
     fn picking_attempt(&mut self, ui: &mut egui::Ui, row: &Attempt) {
-        let subject = (row.project.clone(), row.ball.clone(), row.handle.clone());
+        let subject = (
+            row.diff.project.clone(),
+            row.diff.ball.clone(),
+            row.diff.handle.clone(),
+        );
         let picked = self.candidate.as_ref() == Some(&subject);
         let control = ui.add(
             egui::Button::new(line(row, picked)).min_size(egui::vec2(ui.available_width(), TOUCH)),
@@ -106,10 +110,10 @@ pub(in crate::shell) const SCREEN: &str = "science";
 /// it is**, because that is what decides which controls below are live.
 fn line(row: &Attempt, picked: bool) -> String {
     let mark = if picked { "▸ " } else { "" };
-    let which = if row.handle.is_empty() {
+    let which = if row.diff.handle.is_empty() {
         "the claim".to_owned()
     } else {
-        row.handle.clone()
+        row.diff.handle.clone()
     };
     let landed = [row.commit.clone(), row.by.clone()]
         .into_iter()
@@ -117,8 +121,8 @@ fn line(row: &Attempt, picked: bool) -> String {
         .collect::<Vec<String>>()
         .join(" · ");
     [
-        format!("{mark}{} · {} · {which}", row.ball, row.project),
-        [row.outcome.clone(), row.state.clone(), landed]
+        format!("{mark}{} · {} · {which}", row.diff.ball, row.diff.project),
+        [row.outcome.clone(), row.diff.state.clone(), landed]
             .into_iter()
             .filter(|said| !said.is_empty())
             .collect::<Vec<String>>()

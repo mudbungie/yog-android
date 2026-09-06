@@ -12,6 +12,7 @@
 //! The outer `Err` is a malformed envelope or body — bytes this codec cannot
 //! read — and the inner `Err` is the refusal the envelope faithfully carried.
 
+use super::files::Listing;
 use super::follow::Stream;
 use super::hold::Answered;
 use super::pick::{ProviderRow, RoleRow};
@@ -20,6 +21,7 @@ use super::search::Found;
 use super::start::Prepared;
 use super::tools::{Capture, Invocation};
 use super::trail::OpRow;
+use super::workdiff::Churned;
 use super::{ConvRow, Entry, WsRow, balls, candidates, clients, lineages, records};
 
 mod decode;
@@ -140,6 +142,16 @@ pub enum Reply {
     Lineages(Vec<lineages::Lineage>),
     /// **What each attempt cost** (DESIGN §13.12), one row apiece.
     Science(Vec<candidates::Attempt>),
+    /// **The agent worktree** (DESIGN §13.15): the listing, and the asked-for
+    /// file's bytes when the ask named one. `worktree: false` is a fact and
+    /// not an empty listing — a torn-down worktree and one holding nothing
+    /// are different answers.
+    Files(Listing),
+    /// **What the workspace's attempts changed** (DESIGN §13.15): one diff
+    /// row per attempt, and the asked-for file's bounded patch when the ask
+    /// named one. The rows are `codec::workdiff`'s, which is also what a
+    /// science row's `diff` column is read by.
+    WorkDiff(Churned),
     /// **The candidates a fan materialized**: one prepared body each, already
     /// rebound to its own attempt, and each fired by the ordinary firing
     /// gesture.
@@ -234,6 +246,8 @@ impl Reply {
             Self::Clients(_) => "clients",
             Self::Lineages(_) => "lineages",
             Self::Science(_) => "science",
+            Self::Files(_) => "files",
+            Self::WorkDiff(_) => "work-diff",
             Self::Fanned(_) => "fanned",
             Self::Delivered(_) => "delivered",
             Self::Retired { .. } => "retired",

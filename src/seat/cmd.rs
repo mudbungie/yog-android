@@ -75,6 +75,14 @@ pub(super) enum Cmd {
         n: usize,
         goal: String,
     },
+    /// **Read the focused conversation's worktree** (§13.15) — the listing,
+    /// or one file's bytes when a path is carried. One command for both
+    /// because they are one question at two depths, and the deeper answer
+    /// carries the shallower one whole.
+    Files(Option<String>),
+    /// **Read what this workspace's attempts changed** (§13.15) — the same
+    /// pair one subject along: the listing, or one changed file's patch.
+    Work(Option<crate::codec::WorkFile>),
     /// **Read which machines may execute for this workspace** (§13.14) —
     /// what the roster screen opens with, and what it re-asks while it is
     /// open, because presence is true only at the instant it was answered.

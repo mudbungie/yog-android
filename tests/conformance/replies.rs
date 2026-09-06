@@ -32,7 +32,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("delivered", Reads),
     ("enrolled", Refuses(NOT_THE_MINTER)),
     ("fanned", Reads),
-    ("files", Refuses(UNSENT)),
+    ("files", Reads),
     ("flagged", Reads),
     ("floored", Reads),
     ("follow", Reads),
@@ -61,7 +61,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("steps", Reads),
     ("trail-cleared", Reads),
     ("transcript", Reads),
-    ("work-diff", Refuses(UNSENT)),
+    ("work-diff", Reads),
     ("workspace-balls", Reads),
     ("workspaces", Reads),
 ];

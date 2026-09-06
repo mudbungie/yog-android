@@ -19,7 +19,7 @@
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
     ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_ANCHOR, NO_FORK_POINT,
-    NO_SCHEDULING, NO_SEED, NOT_THE_MINTER, READ,
+    NO_SCHEDULING, NO_SEED, NO_TREE, NOT_THE_MINTER, READ,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
@@ -66,7 +66,13 @@ pub const REQUESTS: &[(&str, Expect)] = &[
             reason: ALWAYS_A_BALL,
         },
     ),
-    ("files", Refuses(READ)),
+    (
+        "files",
+        Partial {
+            reads: 2,
+            reason: NO_TREE,
+        },
+    ),
     ("flag", Reads),
     ("fleet", Reads),
     ("follow", Reads),
@@ -138,7 +144,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
             reason: NO_SCHEDULING,
         },
     ),
-    ("work-diff", Refuses(READ)),
+    ("work-diff", Reads),
     ("workspace-balls", Reads),
     ("workspaces", Reads),
 ];

@@ -75,6 +75,8 @@ pub(super) fn spend(
         Cmd::Step(seq) => fold::drilled(asks::drill(seat, focus, seq), standing),
         Cmd::Science => fold::spread(asks::science(seat, focus), standing),
         Cmd::Clients => fold::machined(asks::clients(seat, focus), standing),
+        Cmd::Files(path) => fold::filed(asks::files(seat, focus, path), standing),
+        Cmd::Work(file) => fold::worked(asks::work(seat, focus, file), standing),
         // **Both trail acts are followed by the read that says what they
         // did**, which is also the read that settles a lost one: the watermark
         // and the truncation are both invisible until the trail is read again,

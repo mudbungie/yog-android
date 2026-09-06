@@ -37,9 +37,12 @@ fork = "unbuilt: its fork point is a ref no read here names — the picking surf
 # gone: the capability band answers the parked call on the transcript screen
 # and the floor pair rides the row menu (DESIGN §13.7, bl-b39d).
 
-# --- Unbuilt: work review (bl-5a56) -----------------------------------------
-files = "unbuilt: work review from the glass (bl-5a56; DESIGN §16.2)"
-work-diff = "unbuilt: work review from the glass (bl-5a56; DESIGN §16.2)"
+# --- Work review from the glass is whole (bl-5a56) --------------------------
+# Nothing of it is on this ledger. `files` has a screen of its own one depth
+# behind the transcript, beside the records entry, because it names the
+# CONVERSATION; `work-diff` has one on the workspace's aimed band, because it
+# names the workspace. Each is one question at two depths, and the row that
+# asks the deeper one carries the same op's tag (DESIGN §13.15).
 
 # --- The conversation's machinery is whole (bl-146b) ------------------------
 # Nothing of it is on this ledger. The records screen carries all six: five on

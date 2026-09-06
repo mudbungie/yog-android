@@ -80,6 +80,16 @@ pub const NO_SCHEDULING: &str =
 pub const NO_ANCHOR: &str =
     "the config governing a COMMIT wants a fork point no read here names (bl-99fd)";
 
+/// **`files` asked AT a commit is a different tree** (DESIGN §13.15). `at` is
+/// VISION V1.2's pin — an assertion about which commit is being read — and the
+/// controls that would make one are `pin` and `unpin`, both `parity.toml`
+/// lines. So the two bare-tree frames read and round-trip, and the two
+/// anchored ones are refused by name rather than answered off the live
+/// worktree, which is the silent misread §3's third rule forbids. `NO_ANCHOR`'s
+/// argument at the other read that takes a commit.
+pub const NO_TREE: &str =
+    "the tree a pin names is an assertion this seat has no control for (DESIGN §13.15)";
+
 /// **A candidate gesture always names its ball** (DESIGN §13.12). All three
 /// take an optional `ball` upstream, and omitting it is the bare
 /// project-repo gesture aimed at the integration branch — a subject this seat

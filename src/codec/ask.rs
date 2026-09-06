@@ -97,6 +97,30 @@ pub enum Ask {
     /// screen's five, because what it names is what `governing`'s `follows`
     /// is one of (DESIGN §13.14).
     Lineages { workspace: String },
+    /// **The agent worktree, read-only** (DESIGN §13.15): the bounded sorted
+    /// listing, and — when `path` names one of its listed files — that file's
+    /// bounded preview. A listing and one entry's bytes are one question
+    /// asked at two depths, so `path` is a parameter and not a second op.
+    ///
+    /// **`at` is not spelled.** It names a TREE — VISION V1.2's pin, an
+    /// assertion about which commit is being read — and this seat offers no
+    /// control for one (`pin` and `unpin` are `parity.toml` lines). So this
+    /// codec asks the live worktree and refuses an anchored frame by name
+    /// (`codec::request`), rather than answering it as the live read.
+    Files {
+        workspace: String,
+        agent: String,
+        path: Option<String>,
+    },
+    /// **What this workspace's agents actually changed** (DESIGN §13.15): the
+    /// pure git read of every attempt the workspace holds, and — when `file`
+    /// names one changed path — that file's bounded patch. The `files` shape
+    /// at the other subject: a listing and one entry's bytes, one question at
+    /// two depths.
+    WorkDiff {
+        workspace: String,
+        file: Option<crate::codec::WorkFile>,
+    },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here

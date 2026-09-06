@@ -91,6 +91,12 @@ pub(super) struct Standing {
     /// **The machines roster** (DESIGN §13.14), on the same terms: written
     /// only by that screen's own gesture.
     pub(super) clients: Option<crate::codec::Machines>,
+    /// **The two work-review answers** (DESIGN §13.15), on the same terms
+    /// again: each is written only by its own screen's gesture, and each
+    /// carries the parameter it was asked with so the paint knows which row
+    /// its bytes belong under.
+    pub(super) files: Option<crate::codec::Files>,
+    pub(super) work: Option<crate::codec::Work>,
     /// **The last needle's answer** (bl-4c2b), carried between passes for the
     /// reason the counters above are: it is a gesture's answer, not a pass's,
     /// and a pass that re-reads the world must not drop the search the
@@ -129,6 +135,8 @@ impl Standing {
             records: None,
             candidates: None,
             clients: None,
+            files: None,
+            work: None,
             found: None,
             last: snap.clone(),
             failed: 0,

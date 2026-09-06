@@ -87,8 +87,8 @@ fn every_answer_names_its_own_kind() {
     }
 }
 
-/// **The machinery and the candidates name themselves out of what they decoded
-/// from** (§13.11, §13.12). Built by the decoder rather than by hand: six literal values
+/// **The machinery, the candidates and the work review name themselves out of
+/// what they decoded from** (§13.11, §13.12, §13.15). Built by the decoder rather than by hand: six literal values
 /// here would be a second spelling of the shapes `codec::records` already
 /// reads, and two spellings of one thing is what this file exists to prevent.
 #[test]
@@ -105,6 +105,8 @@ fn the_machinery_answers_name_the_kind_they_were_read_from() {
                 "follows": "default", "diverged_lineages": 0, "files": [] }),
         json!({ "ok": true, "kind": "inbox", "rows": [] }),
         json!({ "ok": true, "kind": "science", "rows": [] }),
+        json!({ "ok": true, "kind": "files", "worktree": false }),
+        json!({ "ok": true, "kind": "work-diff", "rows": [] }),
         json!({ "ok": true, "kind": "fanned", "rows": [] }),
         json!({ "ok": true, "kind": "delivered", "base": "a", "target": "main" }),
         json!({ "ok": true, "kind": "retired", "discarded": false }),

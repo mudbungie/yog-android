@@ -345,6 +345,12 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/acts/candidate.rs` | the two handle gestures and the fan's three-leg chain — stage, spread, fire each — with the two receipts worth a sentence on success | landed (bl-2f17) |
 | `src/seat/worker/spend.rs` | what one command does, split from the loop that spends it | landed (bl-2f17, out of `worker.rs`) |
 | `src/shell/screens/world/candidates.rs` + `candidates/acts.rs` | android-only: the candidates listing (§13.12) — the pick, the three acts on its foot, and the stepper the fan takes | landed (bl-2f17) |
+| `src/codec/files.rs` | the worktree read (§13.15): the listing whose `worktree` flag is the discriminant, and the bounded-file preview both work-review answers carry | landed (bl-5a56) |
+| `src/codec/workdiff.rs` + `workdiff/file.rs` | one diff row, read wherever it arrives — its own answer or a science row's `diff` column — with the state token read because it decides the fields; and the `file` parameter that asks for one patch | landed (bl-5a56) |
+| `src/seat/asks/review.rs` | the two work-review reads, each carrying the parameter it was asked with into the value, because neither answer echoes it | landed (bl-5a56) |
+| `src/seat/model/reads.rs` + `model/acts.rs` | the handles the frame sends, split on the boundary's own grammar: what it asks for, and what it says | landed (bl-5a56, out of `model.rs`) |
+| `src/shell/screens/files.rs` + `screens/preview.rs` + `screens/world/work.rs` | android-only: the worktree listing one depth behind the transcript, the churn listing on the aimed band, and the one painter for the bounded file both of them show | landed (bl-5a56) |
+| `src/shell/app/fields.rs` | the three ids that are an egui widget id and the IME bridge's address for one field | landed (bl-5a56, out of `app.rs`) |
 | `src/codec/records.rs` + `records/{agent,steps,step,spine,inbox}.rs` | the conversation's machinery (§13.11): six shapes read as ONE value carrying the conversation it is about, and the four fields that ride through unread with a reason apiece | landed (bl-146b) |
 | `src/codec/ask.rs` | the ask half of the boundary's grammar, on the seam `codec::request` already reads the wire by | landed (bl-146b, out of `codec.rs`) |
 | `src/codec/reply/decode.rs` | how one reply body is READ, split from the vocabulary it builds | landed (bl-146b, out of `reply.rs`) |
@@ -2310,13 +2316,15 @@ than predicting a policy it has not read. And a delivery that landed **no
 commit** moved nothing — a silent success there would report a delivery that
 did not happen.
 
-**Four columns ride through unread and each is a decision** (`codec::candidates`
+**Three columns ride through unread and each is a decision** (`codec::candidates`
 carries them): `usage`'s four counters, which is the ledger `codec::balls`
 already declines to hold and which states no total to carry instead; `pins`
 and `base`/`governing`, what an attempt was frozen against, which is the config
-surface's question and unbuilt here; the diff's `files` list and its
-`source`/`target` refs, which are the work-review surface's (bl-5a56); and
-`conversation`, an address this screen offers no way to open.
+surface's question and unbuilt here; and `conversation`, an address this screen
+offers no way to open. The diff's `files` list and its `source`/`target` refs
+were a fourth and are not: the work screen paints them off the SAME value
+(§13.15), because a science row's `diff` and a work-diff row are one shape with
+one reader (`codec::workdiff`).
 
 **What the walk reaches.** One new step: `science`, tapped from the workspace's
 conversation list. The engine is not dialled, so what it captures is a screen
@@ -2466,6 +2474,87 @@ the parity inventory cannot record and a thumb cannot reach.
 band, and `help`, tapped from the roster beside the queue and the trail. The
 help screen is the only one in this app that needs neither an engine nor a
 seed — the table is compiled in — so its picture is the vocabulary itself.
+
+### 13.15 Work review from the glass: what an agent wrote, and what it changed (bl-5a56)
+
+`src/codec/files.rs`, `src/codec/workdiff.rs` + `workdiff/file.rs`,
+`src/seat/asks/review.rs`, `src/shell/screens/files.rs`,
+`src/shell/screens/world/work.rs`, `src/shell/screens/preview.rs`. Reviewing
+what an agent changed, away from the desk, is the phone's own workflow — and
+the two ops that answer it name two different subjects, so they are two
+screens.
+
+**`files` names a CONVERSATION, `work-diff` names a WORKSPACE, and the
+placement follows from that** and from nothing else (§13.11's rule and
+§13.12's, each at another site). The worktree listing opens over the
+transcript, backs out into it, and the focus underneath never moves; the churn
+listing is an entry on the workspace's aimed band, beside the three that were
+already there. Nothing here is a mode, and neither screen holds a subject the
+other could contradict.
+
+**Each is one question asked at two depths, and the deeper answer carries the
+shallower one whole.** Upstream says it out loud — *"a listing and one entry's
+bytes are one question asked at two depths"* — so `path` and `file` are
+parameters rather than second ops, and an ask that names one answers the
+listing again beside the bytes. That is what lets the fold REPLACE what it
+holds rather than merge into it: nothing pairs a late preview with a listing it
+was not read beside, and `paned`'s rule needs nothing added to it.
+
+**The answer does not echo what was asked for, so the FOLD names it.** A
+`files` reply carries a preview and no path; a `work-diff` reply carries a
+patch and no address. §13.11's drill-in is the opposite case — `reply/step`
+echoes its `seq`, and the paint asks the answer which row it is under — and the
+guarantee here has to be bought somewhere else, so it is bought at
+`seat::asks::review`, which is the one place the parameter is known. A preview
+that lands after the operator tapped another row paints under the row it was
+asked for, which is the whole of what the echo was for.
+
+**The patch is bytes, and that is a decision at a different altitude from the
+desktop's.** lernie composes the bare listing of both reads and never asks for
+a patch at all, so its ledger records the field as one that *"can never arrive
+here"* (§4.33). This seat asks — a phone is where a review happens when the
+desk is elsewhere — and what it does with the answer is paint it. Nothing
+parses a unified diff into hunks: the engine bounded the bytes, and a second
+reading of them here would be this app deriving what §8 says it may not. It is
+the one shape in this app that gets §13.2's horizontal scroller, because every
+line of a patch MEANS something and a wrapped line is a changed line.
+
+**One diff row, two answers, one reader** (§13.14's rule, and the reason this
+ball touched the candidates screen at all). A science row's `diff` object IS a
+work-diff row — upstream encodes both with one encoder *"so an attempt's
+identity has one spelling anywhere"* — so `codec::workdiff` reads it and
+`codec::candidates` composes the value rather than restating four of its
+fields. The two screens then differ in the QUESTION and not in the shape: what
+an attempt cost is §13.12's, what it changed is this one's.
+
+**The state token is READ here, and it is the counter-example to the rule
+beside it.** `codec::records` carries the engine's state and flight words
+because nothing branches on them; a diff row's `state` decides which fields the
+row HAS — `unreadable` states no refs, `absent` states no oids — so a decoder
+that carried it whole would be guessing at every field under it. An unknown
+state refuses naming itself.
+
+**`at` is not spelled, and the citation is the pin.** `files` also answers
+*this worktree as of commit X*; `at` names a TREE, which is VISION V1.2's pin —
+an assertion about the world, not an arrangement of one screen — and the
+controls that would make one (`pin`, `unpin`) are `parity.toml` lines. So the
+anchored frame is refused by name, exactly as `governing`'s is (§13.11), and
+`tests/conformance/requests.rs` records `files` as `Partial { reads: 2 }` with
+that reason.
+
+**A directory paints and does not tap**, which is the trail row's rule (§13.8)
+at another site: it has no bytes, and upstream resolves `path` against the
+listing it just built, so a tap on one would be a gesture with no answer.
+**Every attempt's churn paints**, with no pick at all: the churn IS the work
+diff's answer, and a listing that hid it behind a pick would be a screen about
+a word.
+
+**What the walk reaches.** Two new steps: `files`, tapped from the transcript's
+entry band — where `records` now shares a band with it rather than taking a
+full-width row of its own — and `work-diff`, tapped from the aimed band, which
+is five entries and therefore chunked rather than written out in pairs. The
+engine is not dialled, so each captures a screen that opened and said nothing
+was read, which is what the parity gate asks of them either way.
 
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
@@ -3316,7 +3405,7 @@ The groups mirror the seat's own, one ball each:
 |---|---|---|
 | conversation acts | interrupt, retarget, flag — **landed** (§13.5); `fork` held back on a read it needs | bl-f97c, then bl-99fd |
 | the held tool call | answer, revoke, restore — **landed** (§13.7) | bl-b39d |
-| work review | files, work-diff | bl-5a56 |
+| work review | files, work-diff — **landed** (§13.15) | bl-5a56 |
 | conversation machinery reads | agent, steps, step, rail, governing, inbox — **landed** (§13.11) | bl-146b |
 | the ball pane | balls, workspace-balls, board — **landed** (§13.9); close, assign, release, create, update | bl-d587, then bl-f36e |
 | candidates | fan, retire, deliver, science — **landed** (§13.12) | bl-2f17 |

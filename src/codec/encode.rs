@@ -7,7 +7,7 @@
 
 use serde_json::{Value, json};
 
-use super::{Act, Ask, Gesture, balls, candidates, fleet, hold, pick, row, start, tools};
+use super::{Act, Ask, Gesture, balls, candidates, fleet, hold, pick, row, start, tools, workdiff};
 
 /// Encode a gesture to its deposit envelope — the request frame's whole body.
 /// Total over the slice; the spellings are the server codec's, byte for byte.
@@ -48,6 +48,32 @@ fn asked(ask: &Ask) -> Value {
             json!({ "op": "science", "workspace": workspace })
         }
         Ask::Clients { workspace } => json!({ "op": "clients", "workspace": workspace }),
+        // **The work-review pair** (DESIGN §13.15). Each states its optional
+        // parameter only when there is one: a bare frame is the listing, and
+        // a key written as null would be a third thing to read.
+        Ask::Files {
+            workspace,
+            agent,
+            path,
+        } => {
+            let mut map = serde_json::Map::new();
+            map.insert("op".to_owned(), json!("files"));
+            map.insert("workspace".to_owned(), json!(workspace));
+            map.insert("agent".to_owned(), json!(agent));
+            if let Some(path) = path {
+                map.insert("path".to_owned(), json!(path));
+            }
+            Value::Object(map)
+        }
+        Ask::WorkDiff { workspace, file } => {
+            let mut map = serde_json::Map::new();
+            map.insert("op".to_owned(), json!("work-diff"));
+            map.insert("workspace".to_owned(), json!(workspace));
+            if let Some(file) = file {
+                map.insert("file".to_owned(), workdiff::file::encode(file));
+            }
+            Value::Object(map)
+        }
         Ask::Lineages { workspace } => json!({ "op": "lineages", "workspace": workspace }),
         // **The records screen's six** (DESIGN §13.11). Five name a
         // conversation and nothing else; `step` names the row inside it.
