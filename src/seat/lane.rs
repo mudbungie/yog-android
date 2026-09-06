@@ -1,8 +1,9 @@
-//! **The held lanes beside the pass** (DESIGN §14.1, bl-8e3c): the two
+//! **The held lanes beside the pass** (DESIGN §14.1, bl-8e3c): the
 //! follow-class reads this seat keeps standing — the decision queue
-//! (`attention`, REMOTE §14.1) and the focused turn's live tail (`follow`,
-//! §5.5) — each a thread parked on one held connection, handing every frame
-//! to the worker down the worker's own command channel.
+//! (`attention`, REMOTE §14.1), the focused turn's live tail (`follow`,
+//! §5.5) and, since bl-5a41, one provider's sign-in (`login-tail`, §8.3) —
+//! each a thread parked on one held connection, handing every frame to the
+//! worker down the worker's own command channel.
 //!
 //! **Why held, and not asked.** The wire intake this seat dials HOLDS a
 //! follow-class read: the first frame at connect, a frame per change, the
@@ -42,7 +43,18 @@ use crate::transport::{Hangup, Seat};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum Subject {
     Attention,
-    Follow { workspace: String, agent: String },
+    Follow {
+        workspace: String,
+        agent: String,
+    },
+    /// **One sign-in's own output** (REMOTE §8.3, DESIGN §13.19). The third
+    /// of the three, and the only one whose subject is neither the world nor
+    /// the focused conversation: a run is one workspace and one provider, and
+    /// what ends it is the run settling rather than a step committing.
+    Login {
+        workspace: String,
+        provider: String,
+    },
 }
 
 impl Subject {
@@ -53,6 +65,13 @@ impl Subject {
                 workspace: workspace.clone(),
                 agent: agent.clone(),
             },
+            Self::Login {
+                workspace,
+                provider,
+            } => Ask::LoginTail {
+                workspace: workspace.clone(),
+                provider: provider.clone(),
+            },
         }
     }
 
@@ -61,6 +80,7 @@ impl Subject {
         match self {
             Self::Attention => "attention",
             Self::Follow { .. } => "follow",
+            Self::Login { .. } => "login-tail",
         }
     }
 }

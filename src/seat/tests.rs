@@ -210,6 +210,7 @@ mod resume;
 mod review;
 mod row;
 mod search;
+mod signin;
 mod start;
 mod tuning;
 mod turn;

@@ -65,6 +65,7 @@ fn every_answer_names_its_own_kind() {
         (Reply::Applied, "applied"),
         (Reply::Nudged, "nudged"),
         (Reply::Follow(crate::codec::Stream::default()), "follow"),
+        (Reply::Login(crate::codec::LoginView::default()), "login"),
         (Reply::Roles(Vec::new()), "roles"),
         (Reply::Search(crate::codec::Found::default()), "search"),
         (Reply::Attention(Vec::new()), "attention"),

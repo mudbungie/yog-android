@@ -10,9 +10,11 @@ use crate::seat::posted::Posted;
 
 impl Standing {
     /// The lanes a pass wants standing (§14.1): the queue's always, the tail's
-    /// while the focused conversation is writing.
+    /// while the focused conversation is writing, and the sign-in's while a
+    /// provider's run is being watched and has not settled (§13.19).
     pub(super) fn wanted(&self, focus: &Focus) -> Vec<Subject> {
         let mut wanted = vec![Subject::Attention];
+        wanted.extend(self.signing.wanted(focus));
         if let (true, Some(workspace), Some(agent)) = (
             self.streaming(focus),
             focus.workspace.clone(),
@@ -74,6 +76,7 @@ impl Standing {
         out.config.clone_from(&self.config);
         out.marks.clone_from(&self.marks);
         out.minted.clone_from(&self.minted);
+        out.login = self.signing.painted();
     }
 
     /// **One deposit's fate, counted** (bl-66fb). The composer's echo cannot

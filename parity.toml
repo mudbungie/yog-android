@@ -94,15 +94,12 @@
 # screen as a symbol the next device photographs, with a back control whose
 # whole product is the forgetting (DESIGN §13.18, amending §11).
 
-# --- Unbuilt: sign-in from the glass (bl-5a41) ------------------------------
-# REMOTE §8.3's act and its held tail landed at protocol 8 (yog bl-61bf); a
-# phone screen that fires `bz --login` for a provider row and follows what it
-# prints is a surface this seat does not have yet. It was cited to bl-f645
-# while that ball was open and is NOT what bl-f645 built: `login-tail` is a
-# THIRD held lane (§14.1) beside the queue and the follow, which is a different
-# piece of work from the admin screen's five ops.
-login = "unbuilt: the sign-in act on a provider row (bl-5a41; DESIGN §16.2)"
-login-tail = "unbuilt: the held read of a sign-in's own output (bl-5a41; DESIGN §16.2)"
+# --- Sign-in from the glass is whole (bl-5a41) ------------------------------
+# Nothing of it is on this ledger. Both are on the sign-in screen, the seventh
+# aimed entry: `login` on each provider row's own button, because the row IS
+# the subject, and `login-tail` on the row itself, because tapping it is what
+# opens the run's tail. The tail is a THIRD held lane (§14.1) beside the queue
+# and the follow, and its stop condition is the run settling (DESIGN §13.19).
 
 # --- Unbuilt: the pinned run of the roster (protocol 10, yog bl-7782) --------
 pin = "unbuilt: the roster's pinned run — an assertion about the world the seat does not yet offer a control for (DESIGN §16.2)"

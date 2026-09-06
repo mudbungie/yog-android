@@ -95,6 +95,10 @@ pub(super) fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
             role: str_of(o, "role")?,
             on: super::super::fields::bool_of(o, "on")?,
         },
+        "login" => Act::Login {
+            workspace: str_of(o, "workspace")?,
+            provider: str_of(o, "provider")?,
+        },
         "model" => Act::PickModel {
             workspace: str_of(o, "workspace")?,
             role: str_of(o, "role")?,

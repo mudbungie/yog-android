@@ -16,6 +16,15 @@ pub(super) enum Cmd {
     Providers,
     /// List one provider's models.
     Models(String),
+    /// **Sign one provider in** (§13.19) — the act, fired at the focused
+    /// workspace. Its answer is the run's standing rather than a receipt, so
+    /// it seeds the tail as well as starting the run.
+    Login(String),
+    /// **Follow one provider's sign-in, or stop** (§13.19). The lane's want,
+    /// and the empty case is the second: leaving the screen crosses no wire,
+    /// so a tail can be closed with the engine unreachable — `Cmd::Search`'s
+    /// own shape at the other gesture that turns something off.
+    Watch(Option<String>),
     /// Assign the worker role's provider and model, stated whole.
     Pick(String, String),
     /// Set the worker's reasoning level, or remove it (`None` is off).

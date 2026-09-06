@@ -37,12 +37,17 @@ impl Expect {
     }
 }
 
-/// A read of the world outside the chat loop this codec spells. DESIGN §2:
-/// the codec *"spells exactly what the phone seat spends — the chat loop …
+/// An act on the world outside the chat loop and the tool-host trio. DESIGN
+/// §2: the codec *"spells exactly what the phone seat spends — the chat loop …
 /// and grows per consumer, never speculatively."*
-pub const READ: &str = "a world read outside the chat-loop slice (DESIGN §2)";
-
-/// An act on the world outside the chat loop and the tool-host trio.
+///
+/// **Its read-side twin is gone** (bl-5a41). `READ` stood here for the same
+/// class one direction over and `login-tail` was the last shape citing it, so
+/// the constant went with the row rather than waiting for another: every read
+/// in the corpus is now one this seat spells. What is left on this side is
+/// `pin`/`unpin`, which are VISION V1.2's tree assertions and not a slice
+/// boundary at all — `NO_TREE` says the same thing about the read they would
+/// anchor.
 pub const ACT: &str = "a world act outside the chat-loop slice (DESIGN §2)";
 
 /// **A fork pins no skills** (DESIGN §13.16). A skill set is a choice off the

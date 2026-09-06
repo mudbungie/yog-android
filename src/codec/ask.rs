@@ -27,6 +27,13 @@ pub enum Ask {
     Providers { workspace: String },
     /// One provider's models, in the engine's listing order.
     Models { workspace: String, provider: String },
+    /// **What one sign-in has said** (REMOTE §8.3, DESIGN §13.19): the
+    /// held read beside [`Ask::Follow`](Ask::Follow) and
+    /// [`Ask::Attention`](Ask::Attention), buffered from the start and then
+    /// live to the settled exit. Per workspace and per provider, because a
+    /// run is one of each — and it opens on one empty frame where no run
+    /// stands, which is a reading rather than a refusal.
+    LoginTail { workspace: String, provider: String },
     /// **Search the world this seat can see** (yog DESIGN §8.5): one needle,
     /// no scope. It is the only read here that names no place — every other
     /// one asks about a workspace or a conversation the operator is already

@@ -22,6 +22,7 @@ use fill::fill;
 
 mod adopt;
 mod fill;
+pub(super) mod login;
 mod publish;
 
 /// **How many consecutive failed passes an error waits for.** The cadence is
@@ -45,9 +46,15 @@ pub(super) struct Standing {
     /// the §14 cache rewrite itself as often, and what the cache is for is
     /// the world the engine has written down.
     live: Option<crate::codec::Stream>,
-    /// **The two held reads** (§14.1), tended by every pass: the attention
-    /// lane always, the follow lane while the focused row states a flight.
+    /// **The held reads** (§14.1), tended by every pass: the attention lane
+    /// always, the follow lane while the focused row states a flight, and the
+    /// sign-in's while one is being watched.
     lanes: Lanes,
+    /// **The sign-in being followed** (§13.19) — which provider's run the
+    /// glass has open, everything it has said, and the lane that is saying
+    /// it. One field because the three are one fact; `pass::login` holds the
+    /// fold and the lane's own stop condition.
+    pub(super) signing: login::SignIn,
     /// The attention lane's last frame, verbatim — what the §14 cache stores
     /// for the queue, the way `fill` keeps the pass's own envelopes.
     queue_envelope: Option<Value>,
@@ -131,6 +138,7 @@ impl Standing {
             options,
             live: None,
             lanes: Lanes::default(),
+            signing: login::SignIn::default(),
             queue_envelope,
             failure: None,
             note: None,

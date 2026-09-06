@@ -60,6 +60,15 @@ pub(super) fn spend(
             let listed = asks::models(seat, focus, &provider);
             learned(listed, Some(provider), standing)
         }
+        // **The sign-in pair** (§13.19). The act's answer IS the tail's first
+        // frame, so it is adopted rather than reported (`after::signed`); the
+        // watch crosses no wire at all — it is what makes the lane wanted, and
+        // the next pass is what dials it.
+        Cmd::Login(provider) => after::signed(seat, focus, standing, provider),
+        Cmd::Watch(provider) => {
+            standing.signing.watch(provider);
+            None
+        }
         // **A search needs no read after it either**, and no read before it:
         // it names no place, so nothing about the focus decides what it means.
         // The answer is held by `Standing` and painted onto every snapshot

@@ -106,6 +106,23 @@ pub(super) fn minted(
     posted.note()
 }
 
+/// **The sign-in, fired and adopted** (§13.19) — `minted`'s shape at the
+/// other act whose answer is a value rather than a receipt. The standing it
+/// answered with is the run's whole output so far, which is exactly what the
+/// lane's first frame would carry, so nothing waits a cadence to paint.
+pub(super) fn signed(
+    seat: &Seat,
+    focus: &Focus,
+    standing: &mut Standing,
+    provider: String,
+) -> Option<String> {
+    let (posted, view) = super::super::acts::login(seat, focus, provider.clone());
+    if let Some(view) = view {
+        standing.signing.started(provider, view);
+    }
+    posted.note()
+}
+
 /// **Re-read the trail after an act on it**, swallowing the failure: this is
 /// not the operator's gesture, it is what makes the gesture's effect visible,
 /// and its absence leaves the rows exactly as they were — which is where they

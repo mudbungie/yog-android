@@ -10,7 +10,9 @@
 //! happens on the model's one worker thread, and the two sides talk over
 //! channels — no locks, so rule 7 stays vacuous here.
 
-use crate::codec::{ConvRow, Entry, Found, OpRow, ProviderRow, QueueRow, RoleRow, WsRow};
+use crate::codec::{
+    ConvRow, Entry, Found, LoginView, OpRow, ProviderRow, QueueRow, RoleRow, WsRow,
+};
 
 /// What the frame paints: the standing set as of the last completed
 /// refresh, with the focus it was asked under — one value, published
@@ -144,9 +146,32 @@ pub struct Snapshot {
     /// a moment ago — reviving one on the next boot would be the app opening
     /// on a search nobody just made.
     pub search: Option<Found>,
+    /// **The sign-in this seat is following** (REMOTE §8.3, DESIGN §13.19),
+    /// carrying the provider it is about. `None` is *nobody has opened one*;
+    /// one provider's lines under another's name are unpaintable, which is
+    /// the pairing law every read here keeps, one subject along.
+    pub login: Option<Signing>,
     /// The last refresh's failure or a refused deposit, one sentence for
     /// the banner. `None` is "the engine answered".
     pub error: Option<String>,
+}
+
+/// **One sign-in, and whose it is** (DESIGN §13.19): the provider the run
+/// belongs to, and everything it has said so far. The provider rides with the
+/// view for `Marks`' reason exactly — the answer echoes no subject, so a
+/// surface that painted it under a row the operator has since moved to would
+/// be showing one provider's flow under another's name.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Signing {
+    pub provider: String,
+    pub view: LoginView,
+}
+
+impl Signing {
+    /// Whether this is the named provider's run.
+    pub fn about(&self, provider: &str) -> bool {
+        self.provider == provider
+    }
 }
 
 /// Where the operator is looking. Depth is monotone: an agent without a

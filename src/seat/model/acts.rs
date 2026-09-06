@@ -26,6 +26,18 @@ impl Model {
         let _ = self.cmds.send(Cmd::Pick(provider, model));
     }
 
+    /// **Sign one provider in** (REMOTE §8.3, §13.19) in the focused
+    /// workspace: the engine starts `bz --login` inside that workspace's own
+    /// wall, and what the run says arrives on the held tail this same gesture
+    /// opens.
+    ///
+    /// Not idempotent and never re-sent: firing it again TERMINATES a run
+    /// that may already be going, so a repeat on a lost reply would end a
+    /// browser flow the operator is halfway through (`seat::acts::login`).
+    pub fn sign_in(&self, provider: String) {
+        let _ = self.cmds.send(Cmd::Login(provider));
+    }
+
     /// **Set the worker's reasoning level** (REMOTE §9.4, bl-dfbb) — how
     /// much reasoning its model calls request. `None` is off, which is the
     /// absence of a level rather than a fourth one. It takes at the next

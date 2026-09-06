@@ -8,6 +8,7 @@ use serde_json::{Map, Value};
 
 use super::super::fields::{arr_of, bool_of, i64_of, opt, opt_val, str_of};
 use super::super::follow::stream_of;
+use super::super::login;
 use super::super::pick;
 use super::super::queue;
 use super::super::search;
@@ -56,6 +57,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "nudged" => Reply::Nudged,
         "flagged" => Reply::Flagged,
         "follow" => Reply::Follow(stream_of(o)?),
+        "login" => Reply::Login(login::view(o)?),
         "search" => Reply::Search(search::found_of(o)?),
         "attention" => Reply::Attention(rows(o, queue::row)?),
         "ops" => Reply::Ops(rows(o, trail::row)?),

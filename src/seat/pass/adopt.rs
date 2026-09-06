@@ -29,7 +29,7 @@ impl Standing {
         match framed {
             Framed::Frame(id, frame) => {
                 if let Some(subject) = self.lanes.subject(id)
-                    && let Some(why) = self.adopt(&subject, &frame)
+                    && let Some(why) = self.adopt(id, &subject, &frame)
                 {
                     self.note = Some(why);
                 }
@@ -47,7 +47,7 @@ impl Standing {
         }
     }
 
-    fn adopt(&mut self, subject: &Subject, frame: &Value) -> Option<String> {
+    fn adopt(&mut self, id: u64, subject: &Subject, frame: &Value) -> Option<String> {
         let reply = match reply::decode(frame) {
             Err(unreadable) | Ok(Err(unreadable)) => return Some(unreadable),
             Ok(Ok(reply)) => reply,
@@ -60,6 +60,13 @@ impl Standing {
             }
             (Subject::Follow { .. }, Reply::Follow(later)) => {
                 self.live.get_or_insert_default().absorb(later);
+                None
+            }
+            // **The sign-in's frames fold by the LANE they came from**
+            // (§13.19): a redialled lane replays from zero, so the id is what
+            // tells a replay from a delta and the subject cannot.
+            (Subject::Login { .. }, Reply::Login(view)) => {
+                self.signing.framed(id, view);
                 None
             }
             (subject, other) => Some(kind_err(subject.name(), &other)),

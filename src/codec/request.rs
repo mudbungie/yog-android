@@ -146,6 +146,10 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             workspace: str_of(o, "workspace")?,
             provider: str_of(o, "provider")?,
         },
+        "login-tail" => Ask::LoginTail {
+            workspace: str_of(o, "workspace")?,
+            provider: str_of(o, "provider")?,
+        },
         _ => return Ok(None),
     };
     Ok(Some(ask))

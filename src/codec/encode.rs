@@ -124,6 +124,13 @@ fn asked(ask: &Ask) -> Value {
             workspace,
             provider,
         } => json!({ "op": "models", "workspace": workspace, "provider": provider }),
+        // **The held read of a sign-in** (§8.3). Its pair is the act below,
+        // and the two are spelled the same way for the same reason `config`'s
+        // read and write are: one subject, said once.
+        Ask::LoginTail {
+            workspace,
+            provider,
+        } => json!({ "op": "login-tail", "workspace": workspace, "provider": provider }),
     }
 }
 
@@ -192,6 +199,10 @@ fn acted(act: &Act) -> Value {
             role,
             on,
         } => pick::encode_priority(workspace, role, *on),
+        Act::Login {
+            workspace,
+            provider,
+        } => json!({ "op": "login", "workspace": workspace, "provider": provider }),
         Act::PickModel {
             workspace,
             role,

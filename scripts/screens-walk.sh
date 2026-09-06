@@ -124,6 +124,17 @@ relaunch
 tap_control config
 capture admin config
 
+# 4dc. THE SIGN-IN SCREEN (DESIGN §13.19). The seventh aimed entry, and the
+#      only one whose rows come out of the seeded cache rather than out of a
+#      dial: the `conversations` seed carries the workspace's `providers`
+#      envelope, so both provider rows paint with the engine's own credential
+#      facts on them — one signable and one blocked, which is what puts
+#      `act:login` on the glass enabled AND dark. The tail under them is
+#      empty, because nothing is dialled and nobody has tapped a row.
+relaunch
+tap_control login
+capture signin login
+
 # Back to the list the menu opens from: the seed has not changed, so this is a
 # relaunch and not a re-seed.
 relaunch

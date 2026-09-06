@@ -34,6 +34,7 @@ pub mod follow;
 pub mod fork;
 pub mod hold;
 pub mod lineages;
+pub mod login;
 pub mod pick;
 pub mod queue;
 pub mod records;
@@ -63,6 +64,7 @@ pub use fleet::FleetAct;
 pub use follow::Stream;
 pub use hold::{Answered, Verdict};
 pub use lineages::Lineage;
+pub use login::{LoginLine, LoginView};
 pub use pick::{Effort, ProviderRow, RoleRow};
 pub use queue::{Held, QueueRow};
 pub use records::{
@@ -246,6 +248,14 @@ pub enum Act {
     /// not share one — `codec::admin::act` says why that differs from
     /// [`Act::Ball`].
     Admin(AdminAct),
+    /// **Sign one provider in** (REMOTE §8.3, DESIGN §13.19): start
+    /// `bz --login` for the row, inside the named workspace's wall, on the
+    /// ENGINE. It answers the run's standing at once rather than waiting a
+    /// browser's minutes out, and [`Ask::LoginTail`](Ask::LoginTail) is how
+    /// the rest of it is watched. Firing it again on a row already signing in
+    /// cancels that run and starts a fresh one — the restart IS the cancel,
+    /// so there is no second gesture here for it.
+    Login { workspace: String, provider: String },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather

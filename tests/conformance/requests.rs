@@ -19,7 +19,7 @@
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
     ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_DESTINATION, NO_SCHEDULING,
-    NO_SEED, NO_SKILLS, NO_TREE, READ,
+    NO_SEED, NO_SKILLS, NO_TREE,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
@@ -96,8 +96,8 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("invocations", Reads),
     ("invoke", Refuses(ASKING_SIDE)),
     ("lineages", Reads),
-    ("login", Refuses(ACT)),
-    ("login-tail", Refuses(READ)),
+    ("login", Reads),
+    ("login-tail", Reads),
     ("marks", Reads),
     ("message", Reads),
     ("model", Reads),

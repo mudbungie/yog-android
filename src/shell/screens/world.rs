@@ -63,6 +63,9 @@ pub(crate) enum World {
     /// **The admin surface** (§13.17) — the config files, the task branch,
     /// the inbox flush, and the unmaking of the workspace itself.
     Admin,
+    /// **The sign-in surface** (§13.19) — this workspace's provider rows,
+    /// the act that signs one in, and the held tail of what that run says.
+    SignIn,
     /// **The op table** (§13.14) — every gesture the engine speaks, read out
     /// of the vendored table and costing no wire read at all.
     Help,
@@ -78,6 +81,7 @@ mod candidates;
 mod clients;
 mod fleet;
 mod help;
+mod signin;
 mod work;
 
 pub(in crate::shell) use candidates::FLOOR;
@@ -104,6 +108,12 @@ impl Shell {
         self.destination = None;
         self.seeded = None;
         let Some(model) = self.model() else { return };
+        // **A tail followed on one visit is not still followed on the next**
+        // (§13.19), and it is the WORKER that holds which one — so leaving
+        // the screen is a command rather than a field cleared here. It is
+        // sent on the way into every surface, this one included: the lane's
+        // subject is a row somebody tapped, and nobody has yet.
+        model.watch_login(None);
         // **Opening IS the ask**, for the trail and for the ball pane alike:
         // both are read by nothing standing, so a surface nobody has opened
         // costs this device no radio at all (§14.1's argument, at the seat).
@@ -118,6 +128,11 @@ impl Shell {
             // all; a config file is read by tapping its destination, because
             // opening a screen is not a request for three files.
             World::Admin => model.read_marks(),
+            // **Opening IS the `providers` ask** (§13.19). The tail is not
+            // asked for here: which run is followed is a row's own tap, and
+            // a lane on a provider nobody has picked would be a held socket
+            // for a question nobody asked.
+            World::SignIn => model.list_providers(),
             // **The three that ask nothing.** The queue is the held lane's,
             // so opening it is a look at what is already held (§14.1); the
             // fleet screen reads nothing at all, because what its acts DID is
@@ -163,6 +178,7 @@ impl Shell {
             (clients::SCREEN, World::Clients),
             (work::SCREEN, World::Work),
             (admin::SCREEN, World::Admin),
+            (signin::SCREEN, World::SignIn),
         ];
         for band in aimed.chunks(2) {
             self.entry_band(ui, band);
@@ -217,12 +233,18 @@ impl Shell {
             World::Help => self.help(ui, snap),
             World::Work => self.work(ui, snap),
             World::Admin => self.admin(ui, snap),
+            World::SignIn => self.signin(ui, snap),
         }
     }
 
     /// Leave, back to the roster. The arm goes with it: an armed control the
     /// operator walked away from is not still armed when they come back.
     fn close_world(&mut self) {
+        // The tail is the worker's, so leaving is a command (§13.19) — and it
+        // is sent first, while `opened` still says which screen was left.
+        if let Some(model) = self.model() {
+            model.watch_login(None);
+        }
         self.opened = None;
         self.armed = false;
         self.ball = None;

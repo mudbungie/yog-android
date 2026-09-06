@@ -25,6 +25,7 @@ use super::workdiff::Churned;
 use super::{ConvRow, Entry, WsRow, balls, candidates, clients, lineages, records};
 
 mod decode;
+mod kind;
 
 pub use decode::decode;
 
@@ -82,6 +83,12 @@ pub enum Reply {
     /// **What each role is set to** (bl-e9f9). An empty list is the answer
     /// for a workspace with nothing assigned — never a refusal.
     Roles(Vec<RoleRow>),
+    /// **What one sign-in has said** (REMOTE §8.3, DESIGN §13.19): the
+    /// receipt the act earns and every frame of the held read, which are the
+    /// same value at the same moment — the run's standing as it stands. The
+    /// frames APPEND (`codec::login`), and the one carrying an `outcome` is
+    /// the last.
+    Login(super::login::LoginView),
     /// **The answer in flight** (REMOTE §5.5): as much of it as has landed
     /// when the read was made. One shot per read, so this is the whole tail
     /// and not a delta to append — see `codec::follow`.
@@ -227,64 +234,6 @@ pub enum Reply {
         invocation: String,
         capture: Option<Capture>,
     },
-}
-
-impl Reply {
-    /// This answer's `kind` token — the word the engine wrote. Named here
-    /// rather than at each caller because two readers already need it (the
-    /// seat model and the tool host both say "the engine answered X instead")
-    /// and a second table of these words would drift from the decoder's own.
-    pub fn kind(&self) -> String {
-        match self {
-            Self::Outcome { .. } => "outcome",
-            Self::Workspaces { .. } => "workspaces",
-            Self::Conversations(_) => "conversations",
-            Self::Transcript(_) => "transcript",
-            Self::Advertised { .. } => "advertised",
-            Self::Invocations(_) => "invocations",
-            Self::Routed { .. } => "routed",
-            Self::Prepared(_) => "prepared",
-            Self::Started { .. } => "started",
-            Self::Providers(_) => "providers",
-            Self::Models(_) => "models",
-            Self::Roles(_) => "roles",
-            Self::Applied => "applied",
-            Self::Nudged => "nudged",
-            Self::Flagged => "flagged",
-            Self::Follow(_) => "follow",
-            Self::Search(_) => "search",
-            Self::Attention(_) => "attention",
-            Self::Ops(_) => "ops",
-            Self::Agent(_) => "agent",
-            Self::Steps(_) => "steps",
-            Self::Step(_) => "step",
-            Self::Rail(_) => "rail",
-            Self::Governing(_) => "governing",
-            Self::Inbox(_) => "inbox",
-            Self::Clients(_) => "clients",
-            Self::Lineages(_) => "lineages",
-            Self::Science(_) => "science",
-            Self::Enrolled(_) => "enrolled",
-            Self::Config(_) => "config",
-            Self::Marks(_) => "marks",
-            Self::Deleted => "deleted",
-            Self::Files(_) => "files",
-            Self::WorkDiff(_) => "work-diff",
-            Self::Fanned(_) => "fanned",
-            Self::Delivered(_) => "delivered",
-            Self::Retired { .. } => "retired",
-            Self::Armed { .. } => "armed",
-            Self::Balls(_) => "balls",
-            Self::WorkspaceBalls(_) => "workspace-balls",
-            Self::Board(_) => "board",
-            Self::Acked => "acked",
-            Self::Acknowledged(_) => "acknowledged",
-            Self::TrailCleared => "trail-cleared",
-            Self::Answered(_) => "answered",
-            Self::Floored { .. } => "floored",
-        }
-        .to_owned()
-    }
 }
 
 #[cfg(test)]

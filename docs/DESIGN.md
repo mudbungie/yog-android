@@ -360,6 +360,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/symbol.rs` | the QR symbol this seat draws (§13.18): the module matrix at level M, and the whole-device-pixel pitch rule — pure, and proved by a round trip through the decoder this app already links | landed (bl-2ee8) |
 | `src/codec/enroll.rs` + `src/seat/acts/enroll.rs` | the §8.4 mint: the act, the six fields it answers as the value the scanning half already spells, and the one act here whose ANSWER is the product | landed (bl-2ee8) |
 | `src/shell/screens/world/admin/minted.rs` | android-only: the material on the glass — this app's one covering surface, the symbol as one mesh, and the back control whose whole product is the forgetting | landed (bl-2ee8) |
+| `src/codec/login.rs` | the sign-in family (§13.19): the act's spelling, the held read's, and the fold a frame is absorbed onto — lines append, and the frame carrying an `outcome` is the last | landed (bl-5a41) |
+| `src/codec/reply/kind.rs` | the word each answer is spelled with, split from the vocabulary it names | landed (bl-5a41, out of `reply.rs`) |
+| `src/seat/pass/login.rs` | the third held lane's whole state (§13.19, §14.1): which run the glass watches, the fold keyed on the LANE that fed it, and the stop condition — a run that settled | landed (bl-5a41) |
+| `src/seat/acts/login.rs` | the sign-in posted, and the second act in this crate whose ANSWER is a value: the receipt IS the tail's first frame | landed (bl-5a41) |
+| `src/shell/screens/world/signin.rs` | android-only: the sign-in screen (§13.19) — the provider rows, the act on each, and the held tail under the one being followed | landed (bl-5a41) |
 | `src/codec/admin.rs` + `admin/act.rs` | the admin family (§13.17): the three config destinations this seat spells and the refusal the other two earn, the two halves of `marks`, and the five acts whose address is inside the choice | landed (bl-f645) |
 | `src/seat/asks/admin.rs` + `src/seat/acts/admin.rs` | the two reads, each carrying the subject it was asked about because neither answer echoes one; and the five acts in the three receipt shapes they earn | landed (bl-f645) |
 | `src/shell/screens/world/admin.rs` + `admin/acts.rs` | android-only: the admin screen (§13.17) — the destinations as controls, the editor a read seeds once, and the unmaking on a band of its own | landed (bl-f645) |
@@ -2816,6 +2821,86 @@ that a device has to be named first. The covering surface needs a mint to
 exist, which needs an engine, so what a walk with nothing dialled can reach is
 the controls — which is what the parity gate asks of them either way.
 
+### 13.19 Sign-in from the glass: the act, and the third held lane (bl-5a41)
+
+REMOTE §8.3's pair, consumed. The gap it closes is upstream's own and is
+structural rather than a misclick: a sign-in performed at THIS seat spawns
+`bz --login` on this phone with a wall derived here, so the credential lands
+where no agent will ever read it. The engine runs it instead, inside the named
+workspace's own wall, and streams the flow back — **nothing credential-shaped
+crosses this wire**, at either end (§8.3: the token moves from the provider to
+the engine's box over the provider's own channel).
+
+**Two gestures, and the wire already had both.** `login` is the act: it starts
+the run and answers the run's STANDING rather than waiting a browser's minutes
+out. `login-tail` is a held read: buffered from the start, live to the settled
+exit, the exit's frame last. Their receipt and their first frame are the same
+value at the same moment, which is what lets the act seed the tail with no
+special case (`seat::acts::login`).
+
+**It is a depth, not a control on the composer's row.** The provider selector
+under the composer states each row's credential fact and stays tappable
+*because* an operator may be about to sign it in (§13.2) — and what a sign-in
+produces is a URL to copy, a device code to type and, when it fails, a command
+to run by hand. None of that fits in a popup over a composer, and a band under
+it would push the transcript off the glass for the minutes a browser flow
+takes. So it is the seventh aimed entry beside the admin screen: one
+workspace, its providers, and room to read. **The rows are the same fact
+painted twice and that is not two homes** — both surfaces read the engine's
+own `providers` rows and neither derives anything. Opening the screen IS the
+`providers` ask, exactly as opening the records screen is its five.
+
+**Tapping a row opens its tail; the button beside it starts a run.** The two
+are different gestures and the wire says so, one a read and one an act. A row
+that cannot be signed in shows the engine's reason where the verb would be and
+its button is dark — the greying discipline the selector already keeps, which
+never derives the reason and never hides the row. The engine's refusal for an
+unsigned wall arrives as the act's own `ok: false` and is painted in the
+banner, where every refusal in this app is.
+
+**The lane's stop condition, which is this rung's real decision.** The other
+two lanes take theirs from the world: the queue stands for the seat's whole
+life, and the tail stands while the focused row states a flight. A sign-in has
+neither, so it is bounded from both ends and needs both.
+
+- **The glass says which run is watched.** A lane on a provider nobody has
+  picked would be a held socket for a question nobody asked, so tapping a row
+  is what makes one wanted and leaving the screen is what makes it unwanted.
+  The watch lives in the WORKER, beside the lane it governs (§14.1's "one
+  reader, one authority"), and the snapshot carries it back with the lines —
+  so which row is open has one home and the screen paints rather than
+  remembers it.
+- **The run says when it is over.** The engine's lane ends at the outcome
+  frame, so a seat that went on wanting one would redial a FINISHED sign-in
+  once a cadence for as long as the screen stood open — replaying a settled
+  buffer and ending again, forever. The fold's own `outcome` is the gate, and
+  the lines stay on the glass after it: what an operator needs most from a
+  failed sign-in is the reason and the fallback command, and a screen that
+  cleared itself at the moment of failure would take both away.
+
+**A frame folds by the LANE it came from, never by the subject.** The engine's
+cursor is per read, so a lane that expired at its hold hands the next one the
+whole buffer from zero (§8.3: *"a dropped lane, a re-attached seat and a
+settled run are one case"*). Folding that onto what stands would print every
+line twice. So the first frame of a lane this fold has not seen REPLACES it
+and every later frame of the same lane appends — which is also why the act's
+receipt can seed the fold with no special case, and why nothing here needs to
+know whether a frame is the first.
+
+**`err` is which stream a line came down, never a verdict on it.** bz writes
+its whole human-facing flow to stderr, the authorize URL included, so the two
+streams paint the same and neither is coloured. It is upstream's own defect
+(their bl-b4e5, defect 3) arriving here as a rule.
+
+**What this does not solve, and it is upstream's shape.** A browser-only
+provider row cannot be completed from a phone at all: the redirect binds to
+the ENGINE's loopback, and reaching it wants a port-forward from a terminal
+this device has not got. §8.3 states the remedy and refuses to build it into
+the channel; this screen paints the engine's own sentence and offers no verb
+that could not finish. A device-capable row completes from here in full — the
+URL and the user code paint, the human finishes in any browser, and bz polls
+the token endpoint from the engine.
+
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -2872,7 +2957,18 @@ directory, and nothing in `crate::cache` reads or writes a key.
 
 `src/seat/lane.rs`, `src/seat/pass/adopt.rs`, `src/seat/pass/publish.rs`,
 `src/transport.rs` (`Seat::hold`, `Open`, `Hangup`), `src/codec/follow.rs`
-(`Stream::absorb`).
+(`Stream::absorb`), and — since bl-5a41 — `src/seat/pass/login.rs` with
+`src/codec/login.rs`.
+
+**There are THREE lanes since bl-5a41**, and the third is why this section
+reads as a mechanism rather than as a pair. `login-tail` (§13.19) is
+follow-class for the same reason the other two are — its answer is written at
+the provider's pace, not the asker's — and it needed nothing new here: one
+arm on `Subject`, one fold in `adopt`, one line in `wanted`. What it DID
+need was a stop condition of its own, and §13.19 states it, because the two
+that were here have theirs from the world (the queue stands for the seat's
+whole life; the tail stands while the row flies) and a sign-in's is its own
+run ending.
 
 **The premise this replaces.** §7 used to say the tail was *"read one shot
 at a time, and no connection is held"*, on REMOTE §5.5's words about a
@@ -2888,7 +2984,7 @@ open conversation — wait a hold per pass. The engine's own note names the
 hang and the remedy: the strict-equality preface is what converts it into the
 upgrade sentence, and this seat is the upgrade.
 
-**The ruling: the phone holds both lanes, beside the pass, on one
+**The ruling: the phone holds these lanes, beside the pass, on one
 mechanism.** The alternative was attacked first and refused on its own
 terms. A one-shot ask with an explicit bound needs the wire to offer one, and
 it does not — neither `attention` nor `follow` carries a field a seat could
@@ -3674,6 +3770,7 @@ The groups mirror the seat's own, one ball each:
 | admin and armed deletions | config, marks, scan, delete-agent, delete-workspace — **landed** (§13.17) | bl-f645 |
 | roster and discovery | clients, lineages, help — **landed** (§13.14) | bl-3685 |
 | the minting seat | enroll — **landed** (§13.18) | bl-2ee8 |
+| sign-in from the glass | login, login-tail — **landed** (§13.19) | bl-5a41 |
 
 **Ordering.** The teleoperation corpus is the operator's stated want and goes
 first (bl-f34f → bl-b0a9 → bl-5cbd → bl-8bd0, serialized on `src/tools.rs` and
