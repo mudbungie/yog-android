@@ -40,6 +40,10 @@ use crate::codec::reply::Reply;
 use crate::codec::{Ask, Gesture, WsRow, encode};
 use crate::transport::Seat;
 
+mod held;
+
+pub use held::wake;
+
 /// The material directory, as [`crate::shell`] spells it: the fetch is handed
 /// this app's private files directory and finds the wire under it, exactly
 /// where the enrollment channels write it.

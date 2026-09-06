@@ -14,6 +14,17 @@ import android.os.IBinder;
  * holds this process open so the tool host's {@code invocations} read keeps
  * standing while the phone is in a pocket.
  *
+ * <h2>Two lanes, one service, and they never overlap</h2>
+ *
+ * Since bl-b82d this service also carries REMOTE §14's rung 2 (DESIGN §17.6):
+ * a SEAT device holds {@code Query::Attention} open from the pocket, and a
+ * frame is the wake. It is the same service and not a second one — one
+ * {@code specialUse} grant per device, one arming point, one standing row —
+ * and the two lanes are mutually exclusive by GRADE rather than by
+ * arbitration: a foot may not ask the world anything (REMOTE §4.2), and a seat
+ * hosts no tools. So exactly one of {@link #standing} and {@link #attending}
+ * ever answers, which is what lets one notification say one thing.
+ *
  * <h2>What it holds, and what it does not</h2>
  *
  * It runs no lane of its own. The host is the process's
@@ -89,8 +100,32 @@ public final class Pocket extends Service {
     /** The watcher, or null when none runs. Written and read on two threads. */
     private volatile Thread watching;
 
+    /** The attention lane's reader, on the same terms. */
+    private volatile Thread listening;
+
     /** What the notification currently says, so an unchanged line is not re-posted. */
     private volatile String said = "";
+
+    /** Whether the attention lane's reader should still be reading — the one
+     * fact {@link Lane} asks this service, so the thread's life has one home. */
+    boolean listens() {
+        return listening != null;
+    }
+
+    /** What the lane says it is holding, when the line it holds has changed. */
+    void restate(String line) {
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (!line.equals(said) && manager != null) {
+            said = line;
+            manager.notify(Notify.HOLDING, of(Notify.HOLDING_ATTENTION, line));
+        }
+    }
+
+    /** The lane has nothing left to hold: drop the row and stop. */
+    void released() {
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        stopSelf();
+    }
 
     /**
      * Start the hold where this device is hands, stop it where it is not.
@@ -101,7 +136,8 @@ public final class Pocket extends Service {
      */
     static void arm(Context ctx) {
         Intent intent = new Intent(ctx, Pocket.class);
-        if (standing(ctx.getFilesDir().getAbsolutePath()).isEmpty()) {
+        if (standing(ctx.getFilesDir().getAbsolutePath()).isEmpty()
+                && Lane.line(ctx).isEmpty()) {
             ctx.stopService(intent);
             return;
         }
@@ -110,17 +146,26 @@ public final class Pocket extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String now = standing(getFilesDir().getAbsolutePath());
-        if (now.isEmpty()) {
+        String foot = standing(getFilesDir().getAbsolutePath());
+        if (!foot.isEmpty()) {
+            hold(Notify.FOOT, foot);
+            if (watching == null) {
+                watching = new Thread(this::watch, "yog-pocket");
+                watching.start();
+            }
+            return START_NOT_STICKY;
+        }
+        String lane = Lane.line(this);
+        if (lane.isEmpty()) {
             // Nothing to hold. Stop before the five-second promise
             // `startForegroundService` made comes due.
             stopSelf();
             return START_NOT_STICKY;
         }
-        hold(now);
-        if (watching == null) {
-            watching = new Thread(this::watch, "yog-pocket");
-            watching.start();
+        hold(Notify.HOLDING_ATTENTION, lane);
+        if (listening == null) {
+            listening = new Thread(new Lane(this), "yog-attention-lane");
+            listening.start();
         }
         return START_NOT_STICKY;
     }
@@ -130,13 +175,22 @@ public final class Pocket extends Service {
         return null;
     }
 
+    /**
+     * Both threads are dropped, and neither is waited on. The foot's watcher
+     * answers an interrupt at once; the lane's reader is parked in a socket
+     * read that no interrupt reaches, so it leaves when its hold ends — at
+     * worst one hold later, holding nothing but a connection the far end is
+     * about to close anyway.
+     */
     @Override
     public void onDestroy() {
-        Thread thread = watching;
-        watching = null;
-        if (thread != null) {
-            thread.interrupt();
+        for (Thread thread : new Thread[] {watching, listening}) {
+            if (thread != null) {
+                thread.interrupt();
+            }
         }
+        watching = null;
+        listening = null;
         super.onDestroy();
     }
 
@@ -144,20 +198,24 @@ public final class Pocket extends Service {
      * The two-line answer protocol this crate speaks everywhere Java asks Rust
      * a question (§17.4): the title, then the line under it.
      */
-    private Notification of(String now) {
+    Notification of(String channel, String now) {
         int cut = now.indexOf('\n');
         return Notify.build(
                 this,
-                Notify.FOOT,
+                channel,
                 cut < 0 ? now : now.substring(0, cut),
                 cut < 0 ? "" : now.substring(cut + 1),
                 true);
     }
 
-    /** Put the line in front of the operator, as the notification this holds. */
-    private void hold(String now) {
+    /** Put the line in front of the operator, as the notification this holds.
+     *
+     * <p>One id for both lanes ({@link Notify#HOLDING}) because it is one row —
+     * the thing this service is holding — and no device is ever both a foot
+     * and a seat, so the two can never be on screen together. */
+    private void hold(String channel, String now) {
         said = now;
-        Notification notification = of(now);
+        Notification notification = of(channel, now);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(
                     Notify.HOLDING, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
@@ -198,7 +256,7 @@ public final class Pocket extends Service {
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (!now.equals(said) && manager != null) {
                 said = now;
-                manager.notify(Notify.HOLDING, of(now));
+                manager.notify(Notify.HOLDING, of(Notify.FOOT, now));
             }
         }
     }

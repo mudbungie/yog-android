@@ -60,6 +60,43 @@ pub fn line(files: &Path, standing: Option<Standing>) -> Option<Notice> {
     Some(standing.as_ref().map_or_else(idle, notice))
 }
 
+/// **What the shade says while the ATTENTION lane is held** (§17.6, REMOTE
+/// §14 rung 2), or nothing at all.
+///
+/// `None` means exactly one thing — **this device is not a seat** — and it is
+/// the lane's stop condition on this side, so it must mean nothing else. The
+/// two operator gates that also govern the lane are Android's own facts about
+/// this app, read where they live (`dev.yog.Pocket`): a client that re-derived
+/// a platform switch here would be a second authority for a fact the OS keeps.
+///
+/// **A foot never reaches this lane** (REMOTE §4.2: *"a foot cannot ask about
+/// the world"*, and §14.1's own *"a foot never reaches it"*), so the two holds
+/// are mutually exclusive by GRADE rather than by arbitration — which is what
+/// lets one service carry one notification and never have to choose between
+/// two lines. [`line`] answers for hands and this answers for a seat, and no
+/// device is both.
+pub fn attending(files: &Path) -> Option<Notice> {
+    seated(files).then(|| Notice {
+        title: "yog is listening for your turn".to_owned(),
+        text: "yog holds one connection open so a workspace that wants you reaches this \
+               phone while it is pocketed. The connection stays up and the radio wakes with \
+               it — this is the battery cost of being told promptly. Take back unrestricted \
+               battery under Settings > Apps > yog > Battery, or silence the Attention \
+               channel, and it stops."
+            .to_owned(),
+    })
+}
+
+/// Whether this device's leaf enrols it as a seat — the other arm of the same
+/// derivation [`hands`] makes, and unreadable material is *not a seat* for its
+/// reason exactly.
+fn seated(files: &Path) -> bool {
+    matches!(
+        crate::bootstrap::standing(&files.join(WIRE)),
+        Ok(Enrolment::Enrolled(enrolled)) if enrolled.component == Component::Seat
+    )
+}
+
 /// Hands with no lane. It names the act that answers both of its causes, and
 /// it never claims to be serving.
 fn idle() -> Notice {

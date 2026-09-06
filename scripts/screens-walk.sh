@@ -185,4 +185,8 @@ shade_beats
 # what this device IS — it re-provisions the leaf as foot-grade and back — and
 # every screen above wants the seat it was walked with.
 pocket_beats
+# The held attention lane last of all (§17.6): it is a SEAT's rung, and the
+# beats above end by putting a seat leaf back on this device — so this is the
+# one order in which both rungs are measured on the device they are for.
+lane_beats
 

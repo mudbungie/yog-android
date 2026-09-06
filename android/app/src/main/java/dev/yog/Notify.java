@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.PowerManager;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -58,6 +59,16 @@ final class Notify {
 
     /** The channel the pocketed foot's standing notification lives on. */
     static final String FOOT = "yog.foot";
+
+    /**
+     * The channel the HELD attention lane's standing notification lives on
+     * (DESIGN §17.6). Its own rather than {@link #ATTENTION}'s because the two
+     * say different things and an operator may want one and not the other: the
+     * wakes are news and are posted at default importance, and this one is the
+     * evidence that a connection is being held, which is a low-importance row
+     * that must not buzz every time the service is re-armed.
+     */
+    static final String HOLDING_ATTENTION = "yog.attention.held";
 
     /**
      * The attention post's fixed id: a later one REPLACES the one before it,
@@ -165,8 +176,41 @@ final class Notify {
         answered = true;
     }
 
+    /**
+     * **Whether the operator has said this app may spend battery in the
+     * background** (DESIGN §17.6) — Android's own unrestricted-battery switch,
+     * off by default and read where the platform keeps it. It is the held
+     * lane's consent gate and there is no second copy of it in this app: a
+     * stored want beside an OS switch is the second authority §16.1 refuses,
+     * and it would disagree the first time one of them was changed.
+     *
+     * <p>It lives here rather than in {@link Pocket} because it is the same
+     * question this class already answers about notifications — *may this app
+     * reach the operator, and at what cost* — and one home for that keeps the
+     * two gates readable side by side.
+     */
+    static boolean unrestricted(Context ctx) {
+        PowerManager power = ctx.getSystemService(PowerManager.class);
+        return power != null && power.isIgnoringBatteryOptimizations(ctx.getPackageName());
+    }
+
     /** A channel, and what the operator reads about it in system settings. */
     private static NotificationChannel described(String channel) {
+        if (HOLDING_ATTENTION.equals(channel)) {
+            NotificationChannel held =
+                    new NotificationChannel(
+                            HOLDING_ATTENTION, "Listening for your turn",
+                            NotificationManager.IMPORTANCE_LOW);
+            held.setDescription(
+                    "Shown while yog is holding one connection open so a workspace that wants"
+                        + " you reaches this phone promptly rather than at the next scheduled"
+                        + " check. That connection stays up and the radio wakes with it — this"
+                        + " is the battery cost of being told in seconds instead of in"
+                        + " quarter-hours. It runs only while yog is allowed unrestricted"
+                        + " battery under Settings > Apps > yog > Battery; take that back, or"
+                        + " turn the Attention channel off, and it stops.");
+            return held;
+        }
         if (FOOT.equals(channel)) {
             NotificationChannel foot =
                     new NotificationChannel(

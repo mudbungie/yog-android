@@ -143,6 +143,10 @@ echo "screens: installing $APK" >&2
 # job, a re-provisioned leaf, airplane mode), while the file above only reads
 # what the platform already holds.
 . scripts/screens-background.sh
+# The two attention rungs beside it, their own file since bl-b82d: this one is
+# what reaches the operator, that one is what reaches this device's hands, and
+# the seam is the subject rather than the size.
+. scripts/screens-attention.sh
 # How the harness REACHES a control (`screens-reach.sh`). Its own file because
 # it answers a question none of the others do: this app's accessibility tree is
 # empty (§15.1), so every control in it is unaddressable by name and the only

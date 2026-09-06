@@ -21,6 +21,12 @@
 //!   reason: a foreground service may be asking while no Activity is in
 //!   front. The `Java_`-plus-package-plus-method name makes the symbol unique
 //!   by construction exactly as the fetch's does.
+//! * **`Java_dev_yog_Lane_attending` and `Java_dev_yog_Lane_wake`** — the
+//!   held attention lane's two doors (DESIGN §17.6), the same direction and
+//!   the same argument at a third and fourth site: the service asks whether
+//!   there is a lane to hold, and then parks in it. `wake` BLOCKS for up to a
+//!   hold, which is what a lane is, and it is called from a thread the
+//!   service made for exactly that.
 //! * **the `WGPU_BACKEND` fold** — `std::env::set_var` is unsafe in edition
 //!   2024 because a concurrent `getenv` is UB. Here it runs first, on the
 //!   main thread, before eframe boots and before any thread this process
@@ -92,6 +98,50 @@ extern "system" fn Java_dev_yog_Pocket_standing(
 ) -> jni::sys::jstring {
     let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
     let said = crate::pocket::line(std::path::Path::new(&files), crate::state::standing())
+        .map(|notice| format!("{}\n{}", notice.title, notice.text))
+        .unwrap_or_default();
+    env.new_string(said)
+        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
+}
+
+/// **Whether there is an attention lane to hold** (DESIGN §17.6; yog REMOTE
+/// §14 rung 2), asked by the same service. The two-line protocol again, and
+/// an empty answer means what it means everywhere here: nothing to hold.
+///
+/// The decision is [`crate::pocket::attending`]'s — is this device a seat —
+/// and the two operator gates beside it are Android's own facts, read in
+/// `dev.yog.Pocket` where the platform keeps them.
+#[unsafe(no_mangle)]
+extern "system" fn Java_dev_yog_Lane_attending(
+    mut env: jni::JNIEnv<'_>,
+    _class: jni::objects::JClass<'_>,
+    dir: jni::objects::JString<'_>,
+) -> jni::sys::jstring {
+    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
+    let said = crate::pocket::attending(std::path::Path::new(&files))
+        .map(|notice| format!("{}\n{}", notice.title, notice.text))
+        .unwrap_or_default();
+    env.new_string(said)
+        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
+}
+
+/// **One life of the held attention lane** (DESIGN §17.6): dial, hold, and
+/// answer the first rise the engine writes. It BLOCKS — up to the engine's own
+/// hold — which is what a held read is, and the caller is a thread the service
+/// made to park in it.
+///
+/// The same two-line answer, and an empty one is silence: the hold ended with
+/// nothing new, or nothing this end could use. The decision is
+/// [`crate::attention::wake`]'s and is tested on the host against a real
+/// server.
+#[unsafe(no_mangle)]
+extern "system" fn Java_dev_yog_Lane_wake(
+    mut env: jni::JNIEnv<'_>,
+    _class: jni::objects::JClass<'_>,
+    dir: jni::objects::JString<'_>,
+) -> jni::sys::jstring {
+    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
+    let said = crate::attention::wake(std::path::Path::new(&files))
         .map(|notice| format!("{}\n{}", notice.title, notice.text))
         .unwrap_or_default();
     env.new_string(said)

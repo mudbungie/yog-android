@@ -180,3 +180,41 @@ fn a_healed_disarming_reaches_the_shade_in_the_hosts_own_words() {
     assert!(text.contains(crate::host::RESTORED), "{text}");
     assert!(text.ends_with("(×2)"), "{text}");
 }
+
+// --- the attention lane's half (§17.6, bl-b82d) ---------------------------
+
+/// **A seat holds the attention lane; a foot does not, and no device is
+/// both.** The two lanes are mutually exclusive by GRADE rather than by
+/// arbitration (REMOTE §4.2: a foot cannot ask about the world), which is what
+/// lets one service carry one notification without choosing between two lines.
+#[test]
+fn the_two_lanes_are_told_apart_by_the_leaf_and_never_overlap() {
+    let seat = provisioned("phone", false);
+    let foot = provisioned("hands", true);
+    assert!(super::attending(&seat).is_some());
+    assert!(super::line(&seat, None).is_none());
+    assert!(super::attending(&foot).is_none());
+    assert!(super::line(&foot, None).is_some());
+}
+
+/// **Unreadable material is not a seat**, which is the direction this rung
+/// must fail in: a device nobody enrolled spends no battery holding anything.
+#[test]
+fn a_device_with_no_material_holds_no_lane() {
+    let bare = scratch();
+    assert!(super::attending(&bare).is_none());
+    assert!(super::line(&bare, None).is_none());
+}
+
+/// **The price is in the line the operator reads**, and so is the act that
+/// ends it — the house rule that a standing cost is stated where it is met
+/// (§17.3's precedent, §18.4's own).
+#[test]
+fn the_held_lane_states_its_price_and_the_act_that_ends_it() {
+    let seat = provisioned("phone", false);
+    let notice = super::attending(&seat).unwrap();
+    assert_eq!(notice.title, "yog is listening for your turn");
+    assert!(notice.text.contains("radio wakes"), "{}", notice.text);
+    assert!(notice.text.contains("unrestricted"), "{}", notice.text);
+    assert!(notice.text.contains("Attention"), "{}", notice.text);
+}

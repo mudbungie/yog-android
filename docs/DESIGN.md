@@ -386,6 +386,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0) |
 | `src/state.rs` | the process's one live tool host (§18.1) — the crate's only lock, so a foot outlives the activity and a relaunch cannot build a second | landed (bl-8bd0) |
 | `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
+| `src/attention/held.rs` | the held attention lane (§17.6): one lane life — dial, hold, and the first rise the engine writes — folded onto rung 1's own memory through rung 1's own rule | landed (bl-b82d) |
+| `android/…/Lane.java` | that lane's platform half: the three gates each kept by somebody else, and the reader that turns a frame into a wake | landed (bl-b82d) |
 | `android/…/Pocket.java` | the foreground service that holds the process: the `specialUse` grant, the standing notification it is required to carry, and the two acts that end it | landed (bl-8bd0) |
 | `src/tools/ui.rs` | the interface tools: their advertised elements and argument reading — pure | landed (bl-1511, protocol out bl-f34f) |
 | `src/tools/ui/bridge.rs` | android-only: the JNI into the accessibility service, class resolved through this app's own loader | landed (bl-1511) |
@@ -421,7 +423,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/screens/rows.rs` | android-only: the conversation list and the acts its rows carry (§13.5) — the long-press menu, its three items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-f97c, out of `screens.rs`) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where each control the harness must reach was painted, one named rectangle apiece, said to logcat once per change | landed (bl-243b, named controls bl-35bd) |
 | `scripts/screens.sh` + `screens-walk.sh` + `screens-seed.sh` + `screens-capture.sh` | the headless emulator loop (§15): boot, install and the two gates that judge a run, beside the WALK — where to go and what each beat proves — the INSTRUMENTS that read the app and write a row about it, and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0, the instruments split bl-35bd on bl-46e6's seam, the walk split bl-477e) |
-| `scripts/screens-platform.sh` + `scripts/screens-background.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the two background lanes: the scheduled fetch (§17) and the pocketed foot (§18) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0) |
+| `scripts/screens-platform.sh` + `screens-background.sh` + `screens-attention.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the lanes that run while nobody is looking: the pocketed foot (§18), and beside it REMOTE §14's two attention rungs, the scheduled fetch and the held lane (§17) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0, split again bl-b82d on the subject) |
 | `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
 | `src/icon.rs` + `icon/arc.rs` | the application mark's generation walk, ported from the yog crate: compass-work arcs, the flat shape list, the hue drive — pure, host-tested | landed (bl-ff27) |
@@ -3933,6 +3935,133 @@ beats hold the dump in a variable and match with a herestring. It cost two
 full walks and it is the shape to look for whenever a harness beat fails only
 under `pipefail`.
 
+### 17.6 Rung 2: the held lane, and the consent that turns it on (bl-b82d)
+
+Rung 1 asks on the platform's schedule and cannot be timely — *"that bound is
+the platform's"* (§17.3). Rung 2 is what buys the seconds, and REMOTE §14.2
+prices it exactly: *"a permanent notification, the radio wakes, and vendor task
+killers that fight even granted services. Off by default, enabled as an
+explicit operator act."* This section is that rung, and the two decisions it
+had to make for itself.
+
+**The whole of it: a foreground service holds the process, a thread parks in
+`Query::Attention`, and a frame is the wake.** No wire change and no engine
+work — the lane landed upstream at protocol 10 (REMOTE §14.1) and this is the
+seat's second consumer of it, beside the one on the glass (§14.1).
+
+**It is `dev.yog.Pocket`, not a second service**, which §18.6 already ruled:
+one `specialUse` grant per device, one arming point (`MainActivity.onResume`),
+one standing row, `START_NOT_STICKY`. What §18.6 left open was *"whether the
+service should stand when only one of the two lanes is wanted"*, and the answer
+turned out to need no arbitration at all: **the two lanes are mutually
+exclusive by GRADE.** A foot may not ask the world anything (REMOTE §4.2, and
+§14.1 there says of this lane *"a foot never reaches it"*), and a seat hosts no
+tools — so `pocket::line` answers for hands, `pocket::attending` answers for a
+seat, and no device is ever both. One service, one notification, one line.
+
+#### The consent is Android's own unrestricted-battery switch
+
+**Three gates, and not one of them is a setting this app stores** (`Lane.line`):
+this device is a seat, the `Attention` channel is not silenced, and **this app
+is allowed unrestricted battery**. The third is REMOTE §14.2's explicit
+operator act, and choosing it rather than an in-app toggle is the same ruling
+§18.2 made for the foot, one switch along:
+
+- **It is off by default and it is the operator's**, granted in Settings > Apps
+  > yog > Battery, where Android states in its own words what it means.
+- **It is a fact the platform keeps**, read through
+  `PowerManager.isIgnoringBatteryOptimizations`. A stored want beside it would
+  be the second authority §16.1 refuses, disagreeing the first time one of the
+  two was changed — which is precisely why §9 refused a stored component and
+  §18.2 refused a foot toggle.
+- **It is severable and it is honest about what it authorizes.** The switch's
+  own subject is this app running unrestricted in the background at a battery
+  cost; that IS the thing this rung asks for. Taking it back stops the hold at
+  the next pass and at the next resume, and deletes no state because none was
+  written.
+- **A harness can perform it**, which is not a detail: the foot's operator act
+  is a certificate a harness can mint (§18.7), and a consent no walk could
+  grant would be a rung whose off-by-default half could never be measured
+  against its on half. `cmd deviceidle whitelist ±<pkg>` is the same list the
+  settings screen writes.
+
+**The app asks for no permission to raise that dialog.** Reading the exemption
+needs none; `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` would let this app put the
+system's own prompt up, and it is not declared — the operator's act stays the
+operator's, which is §1.4's posture at a switch rather than at a key.
+
+**The channel gate is rung 1's, deliberately shared.** §17.3's rule is that
+silencing the `Attention` channel stops the checking as well as the telling,
+and it applies here unchanged: a held lane whose only product is a notification
+nobody may see is battery spent for nothing. The standing row this rung holds
+is on a channel of its OWN (`yog.attention.held`, low importance, its own
+description carrying the price) — the wakes are news and the hold is evidence,
+and an operator may want one and not the other.
+
+#### The lane's stop condition, and what one memory buys
+
+**The lane stands while the three gates hold, and every pass re-reads them.**
+The resume is what arms a hold and the reader is what ends one, so an operator
+who revokes the exemption, silences the channel, or re-provisions this device
+as a foot has the hold taken down without visiting a second place.
+
+**A life is one dial, and a life that said nothing rests one hold.**
+`attention::wake` dials, holds, and answers the first rise the engine writes;
+`Lane` posts it and dials again. The rest is thirty seconds — the engine's own
+hold width, REMOTE §5.1's stated number, taken from where it is already
+stated. The price is that a change can wait one rest before it is heard, which
+is still seconds against rung 1's quarter-hours; what it buys is the bound on
+an engine that is simply gone, two connections a minute rather than a spin.
+There is no ladder and no attempt counter, for §18.5's own reason: a phone that
+changes networks hourly has no number of failures after which giving up is
+right.
+
+**Both rungs decide with ONE memory, and that is what stops them
+double-waking.** `attention/seen.json` (§17.2) holds what was last announced
+per workspace, and rung 2 writes it through the same `risen` rule rung 1 does.
+The two are comparable because the engine derives them from one predicate: a
+`workspaces` row's `attention` is the count of that workspace's agents whose §6
+predicate fires (yog `answer::chrome::workspace_stats`), and the attention
+queue is every agent whose predicate fires across every workspace
+(`answer::queue::queue`) — one rollup and one flattening of the same thing. So
+a queue frame folded per workspace IS rung 1's number, a rise announced by
+either rung is silent at the other, and the post lands on rung 1's own fixed
+notification id, so a pocketed phone carries one standing attention row
+whichever wrote it.
+
+**Every failure is silence**, unchanged from §17.2: no material, an engine that
+will not answer, a frame of a kind this end does not expect. A frame this
+codec cannot read ENDS the lane rather than being guessed at (REMOTE §3's third
+rule), and the rest before the next dial is what keeps that from spinning.
+
+#### What the emulator proves, and what only a device can
+
+The walk's own beats (`lane_beats`, `scripts/screens-background.sh`): a seat
+with no exemption holds no service — the off-by-default half, without which the
+next beat would prove the opposite of the design; the platform holds the
+exemption when it is granted; a consenting seat holds `dev.yog/.Pocket`
+promoted to the foreground; the standing row is on `yog.attention.held`; and
+taking the exemption back stops the hold.
+
+**The wake itself was measured, once, with an engine beside the device**, which
+the walk cannot do because it dials nothing. A `busy` fixture engine on
+loopback through `adb reverse`, a seat leaf registered into its workspace, the
+battery exemption granted, the app launched once and then sent HOME: the
+platform held `dev.yog/.Pocket` foreground with `types=0x40000000` and its
+standing row on `yog.attention.held`, and a notification landed on
+`yog.attention` reading **"home wants attention" / "home 5"** — the queue's own
+five rows, folded per workspace, through rung 1's rise rule and onto rung 1's
+notification id, with nothing on the glass. That is the rung, end to end. The
+rig is not committed: it is `scripts/invoke.sh`'s own shape with a seat leaf
+and no invocations, and what is worth keeping is the reading.
+
+**What only a real device can answer** is §18.7's list, unchanged and now
+owed twice: Doze on a phone that is genuinely still for hours, the battery a
+held lane costs over a day, and a vendor power manager that stops a granted
+foreground service. The emulator never enters deep Doze on its own, so the one
+thing this rung most wants proved — that a wake arrives while the CPU is
+suspended — is still owed by a handset.
+
 ## 18. The pocketed foot: a foreground service holds the lane (bl-8bd0)
 
 Rung 3 of §16.1, and the gap it closes is the one §16.1's own table names:
@@ -4177,14 +4306,16 @@ one-second gap instead of a dead foot.
 answer them: an OEM power manager that stops a foreground service is doing what
 Android's own Active-apps switch does, and the app cannot tell them apart.
 
-**bl-b82d adds its lane to `dev.yog.Pocket`, not a second service.** What it
-inherits: the grant and the type (one `specialUse` service per device), the
-`Notify` channel discipline (its own channel, its own description, its own
-price), the arming point (`MainActivity.onResume`), and `START_NOT_STICKY`. What
-it must decide for itself is the lane's own stop condition and whether the
-service should stand when only one of the two lanes is wanted — the natural
-shape being that the service runs while EITHER lane answers, which is what
-`pocket::line` returning `None` already means for this one.
+**bl-b82d added its lane to `dev.yog.Pocket`, not a second service, and §17.6
+is what it decided.** It inherited what this paragraph said it would: the grant
+and the type (one `specialUse` service per device), the `Notify` channel
+discipline (its own channel, its own description, its own price), the arming
+point (`MainActivity.onResume`), and `START_NOT_STICKY`. The open question —
+whether the service should stand when only one of the two lanes is wanted —
+turned out to need no arbitration: **the lanes are mutually exclusive by
+grade**, a foot never reaching the attention lane (REMOTE §4.2) and a seat
+hosting no tools, so exactly one of `pocket::line` and `pocket::attending` ever
+answers. The stop condition is §17.6's: three gates, re-read every pass.
 
 ### 18.7 What the emulator proves, and what only a device can
 
