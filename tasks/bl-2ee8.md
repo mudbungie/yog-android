@@ -1,7 +1,8 @@
 +++
 title = "the phone as minting seat: enroll, and the QR this device displays"
 created = 1788399006
-updated = 1788399006
+updated = 1788658128
+claimant = "Animations-AD"
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
