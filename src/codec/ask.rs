@@ -126,6 +126,14 @@ pub enum Ask {
         workspace: String,
         file: Option<crate::codec::WorkFile>,
     },
+    /// **What one config file holds** (DESIGN §13.17): the destination, and
+    /// nothing else — the read and the write are one op token with and without
+    /// the text (`codec::admin`).
+    Config { at: crate::codec::Destination },
+    /// **Which task branch a workspace is marked with**. The same op the write
+    /// spends, without the branch — the engine reads a frame with none as the
+    /// question.
+    Marks { workspace: String },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here

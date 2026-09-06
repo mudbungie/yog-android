@@ -15,7 +15,8 @@ use super::super::start;
 use super::super::tools::{capture_of, invocation_of};
 use super::super::trail;
 use super::super::{
-    balls, candidates, clients, conv, files, hold, lineages, records, transcript, workdiff, ws,
+    admin, balls, candidates, clients, conv, files, hold, lineages, records, transcript, workdiff,
+    ws,
 };
 use super::Reply;
 
@@ -67,6 +68,9 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "clients" => Reply::Clients(clients::rows(o)?),
         "lineages" => Reply::Lineages(lineages::rows(o)?),
         "science" => Reply::Science(candidates::science(o)?),
+        "config" => Reply::Config(admin::config(o)?),
+        "marks" => Reply::Marks(admin::marks(o)?),
+        "deleted" => Reply::Deleted,
         "files" => Reply::Files(files::listing(o)?),
         "work-diff" => Reply::WorkDiff(workdiff::churned(o)?),
         "fanned" => Reply::Fanned(candidates::fanned(o)?),

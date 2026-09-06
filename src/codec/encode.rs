@@ -8,7 +8,8 @@
 use serde_json::{Value, json};
 
 use super::{
-    Act, Ask, Gesture, balls, candidates, fleet, fork, hold, pick, row, start, tools, workdiff,
+    Act, Ask, Gesture, admin, balls, candidates, fleet, fork, hold, pick, row, start, tools,
+    workdiff,
 };
 
 /// Encode a gesture to its deposit envelope — the request frame's whole body.
@@ -50,6 +51,11 @@ fn asked(ask: &Ask) -> Value {
             json!({ "op": "science", "workspace": workspace })
         }
         Ask::Clients { workspace } => json!({ "op": "clients", "workspace": workspace }),
+        // **The admin reads** (DESIGN §13.17). Each is its write's own op
+        // token with the written half left out, which is the engine's grammar
+        // and not a convention here.
+        Ask::Config { at } => json!({ "op": "config", "target": admin::target(at) }),
+        Ask::Marks { workspace } => json!({ "op": "marks", "workspace": workspace }),
         // **The work-review pair** (DESIGN §13.15). Each states its optional
         // parameter only when there is one: a bare frame is the listing, and
         // a key written as null would be a third thing to read.
@@ -163,6 +169,7 @@ fn acted(act: &Act) -> Value {
             agent,
             act,
         } => row::encode(workspace, agent, act),
+        Act::Admin(act) => admin::act::encode(act),
         Act::Fork {
             workspace,
             parent,

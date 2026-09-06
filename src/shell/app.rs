@@ -67,6 +67,12 @@ pub(crate) struct Shell {
     /// operator was. There is no picked path beside it — the answer carries
     /// the path its bytes were asked at, and one name is enough.
     pub(crate) files: bool,
+    /// **Which config file the admin screen is showing** (§13.17), and which
+    /// destination's bytes the editor was last seeded with. Two fields and not
+    /// one: the pick is what a write is addressed at, and the seed is what
+    /// keeps a re-read of the file being edited from discarding the draft.
+    pub(crate) destination: Option<crate::codec::Destination>,
+    pub(crate) seeded: Option<String>,
     /// **Which fork point the records screen's fork addresses** (§13.16) —
     /// the REF itself, an operable notch's whole commit or a `config/<name>`
     /// head, off the row that was tapped. The value picked is the value sent,
@@ -186,6 +192,8 @@ impl Shell {
             files: false,
             step: None,
             from: None,
+            destination: None,
+            seeded: None,
             candidate: None,
             spread: crate::shell::screens::FLOOR,
             cap: crate::shell::screens::CAP,

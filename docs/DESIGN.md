@@ -357,6 +357,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/reply/decode.rs` | how one reply body is READ, split from the vocabulary it builds | landed (bl-146b, out of `reply.rs`) |
 | `src/seat/asks/records.rs` | the records screen's reads: the five an opening asks, the one a picked row posts, and the first failure standing for all of them | landed (bl-146b) |
 | `src/shell/screens/records.rs` + `records/parts.rs` | android-only: the records screen (§13.11) — the picks, and what each of the six halves says | landed (bl-146b) |
+| `src/codec/admin.rs` + `admin/act.rs` | the admin family (§13.17): the three config destinations this seat spells and the refusal the other two earn, the two halves of `marks`, and the five acts whose address is inside the choice | landed (bl-f645) |
+| `src/seat/asks/admin.rs` + `src/seat/acts/admin.rs` | the two reads, each carrying the subject it was asked about because neither answer echoes one; and the five acts in the three receipt shapes they earn | landed (bl-f645) |
+| `src/shell/screens/world/admin.rs` + `admin/acts.rs` | android-only: the admin screen (§13.17) — the destinations as controls, the editor a read seeds once, and the unmaking on a band of its own | landed (bl-f645) |
 | `src/codec/fork.rs` | the attempt's envelope (§13.16): its own shape rather than a `RowAct`, and the two narrowings inside it — no pinned skill, and a ref that is never empty | landed (bl-99fd) |
 | `src/seat/acts/fork.rs` | the attempt posted, and the read that settles a lost one: the spine the gesture was fired from | landed (bl-99fd) |
 | `src/shell/screens/records/points.rs` + `records/acts.rs` | android-only: the fork points as controls — the operable notches and the `config/<name>` heads — and the foot's two acts over the two picks | landed (bl-99fd) |
@@ -2630,6 +2633,90 @@ which tap would light it — plus the fork points as controls. `act:fork` and
 `act:governing` are on the glass there, so `parity.toml` loses its last
 conversation-act line.
 
+### 13.17 The admin surface, and which arming each deletion takes (bl-f645)
+
+`src/codec/admin.rs` + `admin/act.rs`, `src/seat/asks/admin.rs`,
+`src/seat/acts/admin.rs`, `src/shell/screens/world/admin.rs` + `admin/acts.rs`,
+`src/shell/screens/records/acts.rs`. The config files a world's policy is
+written in, the task branch a workspace is marked with, its inbox flush, and
+the two deletions — the phone's twin of lernie §4.30 and §4.20.
+
+**The screen is aimed, and it matters most here.** It holds the workspace it
+was opened on (§13.13's rule) because one of its acts deletes that workspace: a
+gesture composed against whatever the focus happened to be at the moment of the
+tap would be a control that moved under the operator.
+
+**Two of the three config destinations name no workspace, and they are on that
+screen anyway.** `config` is ONE op with a destination parameter, so splitting
+its destinations across two screens would be two homes for one op. What the
+screen holds is the workspace; what a destination names is the destination's
+own business, and the label says which.
+
+**Three destinations of five, and the other two are refused by name.** A
+`litany-workflow` names a workflow and a `branch` names a lineage, an origin and
+a PATH inside a config tree — choices off reads this app does not make. Reading
+one of those frames as one of the three this seat spells is the silent misread
+REMOTE §3's third rule forbids, so `tests/conformance/requests.rs` records
+`config` as `Partial { reads: 6 }` with that reason.
+
+**`settings` rides through unread, and that is the fifth ride-through.** The
+engine answers a config read as a typed control per setting — a provider row, a
+text box, a list, a bounded number — beside the file's own bytes. A form built
+out of them is a surface this seat does not have; what it has is the composer,
+which edits the FILE. Painting both would be two renderings of one file, and
+only one of them can be written back.
+
+**The composer is the editor, and a read is what seeds it.** Tapping a
+destination reads that file and loads its bytes into the field, so the flow is
+read, edit, write. It seeds **once per destination**: a re-read of the file
+being edited keeps the draft — a tap that discarded work is a tap nobody dares
+make — and switching destinations loads the new file, which is also how a bad
+draft is thrown away. A write KEEPS the draft too, because the engine may refuse
+it and clearing the editor would charge a retype for the engine's *no* (lernie
+§4.20's toll).
+
+**Which arming each deletion takes, and the wire is what decides** — the ruling
+this ball was asked for. Deletions are the one place a dialog-free arming must
+be more than one tap (§13.2 has no modals: a phone's back gesture must dismiss
+anything modal, and a confirmation a back press can answer is one nobody read).
+This app has two idioms, and each deletion takes the one its own op's grammar
+implies:
+
+- **`delete-workspace` takes bl-f36e's typed box, as an ENABLEMENT.** The engine
+  refuses unless `typed` matches the workspace's own name, so the box IS the
+  arming and the seat invents nothing: the control is dark until the field holds
+  that name, and **dark rather than absent**, because the parameter is missing
+  and not the subject (lernie §4.20). It sits on a band of its own above the
+  three acts that are not unmakings — the fleet screen's ORDER (§13.13) at the
+  one site where the act really is one.
+- **`delete-agent` takes bl-35bd's two taps on one label.** Its `typed` is a
+  PARAMETER and not an arming: an empty box deletes the one conversation and its
+  name typed back takes the descendants with it, so both values are gestures
+  somebody meant and the box can arm nothing. The arming therefore has to come
+  from the glass, and two taps is what this app already has. The label says
+  which of the two gestures the field has composed, since nothing else on the
+  glass can.
+
+**And `delete-agent` is not on the admin screen at all**, because its subject is
+a CONVERSATION: it lives on the records screen's foot, one band above `step` and
+`fork`, where the conversation it unmakes is what the screen is about. That is
+the same placement rule every surface here follows and the reason the admin
+screen's own unmaking is the workspace's.
+
+**`marks` is a read and a write under one op token**, exactly as `config` is: a
+frame with no `branch` asks what the workspace is marked with, one with a branch
+sets it, and the write's receipt is the branch the engine RE-READ — so nothing
+asks again after it. `codec::request` splits its ask and act tables on exactly
+that field.
+
+**`scan` unmakes nothing** and is not armed: it delivers the mail that is there.
+
+**What the walk reaches.** One new step: `config`, tapped from the aimed band,
+which is six entries now. The engine is not dialled, so it captures a screen
+that opened and said nothing was read, and four controls — three dark, each
+saying which word would light it. `act:delete-agent` rides the records screen,
+which the walk already visits.
+
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 
 Switching out of the app and back re-read the whole world through the wire
@@ -3485,7 +3572,7 @@ The groups mirror the seat's own, one ball each:
 | candidates | fan, retire, deliver, science — **landed** (§13.12) | bl-2f17 |
 | fleet and watch | fleet, disband, arm, disarm — **landed** (§13.13) | bl-477e |
 | trail and attention | ops, ack, clear-trail, attention — **landed** (§13.8); seen — **landed** (§13.8) | bl-35bd, bl-2889 |
-| admin and armed deletions | config, marks, scan, delete-agent, delete-workspace | bl-f645 |
+| admin and armed deletions | config, marks, scan, delete-agent, delete-workspace — **landed** (§13.17) | bl-f645 |
 | roster and discovery | clients, lineages, help — **landed** (§13.14) | bl-3685 |
 | the minting seat | enroll | bl-2ee8 |
 

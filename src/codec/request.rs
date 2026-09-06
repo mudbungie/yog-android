@@ -115,6 +115,15 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             workspace: str_of(o, "workspace")?,
             file: super::fields::opt_val(o, "file", super::workdiff::file::decode)?,
         },
+        // **The admin reads** (DESIGN §13.17): each is its write's op token
+        // with the written half absent, so the two tables split on exactly
+        // that — a frame carrying the write's field is not a read.
+        "config" if !o.contains_key("text") => Ask::Config {
+            at: super::admin::destination(o.get("target"))?,
+        },
+        "marks" if !o.contains_key("branch") => Ask::Marks {
+            workspace: str_of(o, "workspace")?,
+        },
         "governing" => Ask::Governing {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,

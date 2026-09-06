@@ -49,7 +49,7 @@ impl Shell {
             .clone()
             .filter(|records| records.about(workspace, agent));
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            self.records_acts(ui);
+            self.records_acts(ui, workspace, agent);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 if self.bar(ui, "records", &Back::To("transcript")) {
@@ -118,6 +118,7 @@ impl Shell {
         self.records = true;
         self.step = None;
         self.from = None;
+        self.armed = false;
         if let Some(model) = self.model() {
             model.open_records();
         }
@@ -128,5 +129,6 @@ impl Shell {
         self.records = false;
         self.step = None;
         self.from = None;
+        self.armed = false;
     }
 }

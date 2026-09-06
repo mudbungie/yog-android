@@ -71,6 +71,16 @@ pub(super) enum Cmd {
         from: String,
         goal: String,
     },
+    /// **Read one config file** (§13.17). The destination is the gesture's
+    /// own — two of the three name no workspace — so nothing about the focus
+    /// decides what is read.
+    Config(crate::codec::Destination),
+    /// **Read which task branch this workspace is marked with** (§13.17).
+    Marks,
+    /// **One act of the admin surface** (§13.17): one command for the group
+    /// because they are one surface, and the address is inside the choice
+    /// because these five do not share one.
+    Admin(crate::codec::AdminAct),
     /// **Read this workspace's attempts** (§13.12) — what the candidates
     /// screen opens with.
     Science,

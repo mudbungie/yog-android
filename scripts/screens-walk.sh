@@ -114,6 +114,16 @@ relaunch
 tap_control work-diff
 capture work work-diff
 
+# 4db. THE ADMIN SCREEN (DESIGN §13.17). The sixth aimed entry: the config
+#      files, the task branch, the inbox flush and the unmaking of the
+#      workspace itself. The engine is not dialled, so this captures a screen
+#      that opened and said nothing was read; what the parity gate wants from
+#      it is the four controls, three of them dark and saying which word would
+#      light them.
+relaunch
+tap_control config
+capture admin config
+
 # Back to the list the menu opens from: the seed has not changed, so this is a
 # relaunch and not a re-seed.
 relaunch

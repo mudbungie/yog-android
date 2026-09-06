@@ -97,6 +97,11 @@ pub(super) struct Standing {
     /// its bytes belong under.
     pub(super) files: Option<crate::codec::Files>,
     pub(super) work: Option<crate::codec::Work>,
+    /// **What the admin screen last read** (DESIGN §13.17), on the same terms:
+    /// each is written only by that screen's own gesture, and each carries the
+    /// subject it was asked about because neither answer echoes one.
+    pub(super) config: Option<crate::codec::Config>,
+    pub(super) marks: Option<crate::codec::Marks>,
     /// **The last needle's answer** (bl-4c2b), carried between passes for the
     /// reason the counters above are: it is a gesture's answer, not a pass's,
     /// and a pass that re-reads the world must not drop the search the
@@ -137,6 +142,8 @@ impl Standing {
             clients: None,
             files: None,
             work: None,
+            config: None,
+            marks: None,
             found: None,
             last: snap.clone(),
             failed: 0,

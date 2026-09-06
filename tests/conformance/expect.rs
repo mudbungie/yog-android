@@ -74,6 +74,15 @@ pub const NO_SCHEDULING: &str =
 pub const NO_TREE: &str =
     "the tree a pin names is an assertion this seat has no control for (DESIGN §13.15)";
 
+/// **The two config destinations this seat has no picker for** (DESIGN
+/// §13.17). `config` is one op that takes a `target`, and two of its five
+/// destinations want choices off reads this app does not make: a
+/// `litany-workflow` names a workflow, and a `branch` names a lineage, an
+/// origin and a path inside a config tree. Their frames are refused by name
+/// rather than read as one of the three this seat spells.
+pub const NO_DESTINATION: &str =
+    "the workflow and branch destinations want pickers this seat has not got (DESIGN §13.17)";
+
 /// **A candidate gesture always names its ball** (DESIGN §13.12). All three
 /// take an optional `ball` upstream, and omitting it is the bare
 /// project-repo gesture aimed at the integration branch — a subject this seat

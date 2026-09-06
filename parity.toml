@@ -70,12 +70,14 @@
 # the queue is the attention lane's, held standing from the first pass (DESIGN
 # §13.8, §14.1).
 
-# --- Unbuilt: admin and armed deletions (bl-f645) ---------------------------
-config = "unbuilt: admin surface (bl-f645; DESIGN §16.2)"
-marks = "unbuilt: admin surface (bl-f645; DESIGN §16.2)"
-scan = "unbuilt: admin surface — the engine's inbox flush; the app's own camera scan is not this op (bl-f645; DESIGN §16.2)"
-delete-agent = "unbuilt: a typed-name-armed deletion (bl-f645; DESIGN §16.2)"
-delete-workspace = "unbuilt: a typed-name-armed deletion (bl-f645; DESIGN §16.2)"
+# --- The admin surface is whole (bl-f645) -----------------------------------
+# Nothing of it is on this ledger. The admin screen carries four of the five on
+# the workspace's aimed band — `config` on the destination controls that read
+# it and on the write beside them, `marks` in both halves, `scan`, and
+# `delete-workspace` as an ENABLEMENT the wire's own `typed` defines — and
+# `delete-agent` is on the records screen's foot, where the conversation it
+# unmakes is the subject, armed by two taps because its `typed` is a parameter
+# rather than an arming (DESIGN §13.17).
 
 # --- Roster and discovery are whole (bl-3685) -------------------------------
 # Nothing of them is on this ledger. `clients` has a screen of its own on the
@@ -88,12 +90,15 @@ delete-workspace = "unbuilt: a typed-name-armed deletion (bl-f645; DESIGN §16.2
 # --- Unbuilt: the minting seat (bl-2ee8) ------------------------------------
 enroll = "unbuilt: the minting side — this seat fires the mint and displays the QR; re-classed from never by the full-seat ruling (bl-2ee8; DESIGN §16.2, amending §11)"
 
-# --- Unbuilt: sign-in from the glass (bl-f645's admin surface, DESIGN §16.2) --
+# --- Unbuilt: sign-in from the glass (bl-5a41) ------------------------------
 # REMOTE §8.3's act and its held tail landed at protocol 8 (yog bl-61bf); a
 # phone screen that fires `bz --login` for a provider row and follows what it
-# prints is an admin surface this seat does not have yet.
-login = "unbuilt: the sign-in act on a provider row (bl-f645; DESIGN §16.2)"
-login-tail = "unbuilt: the held read of a sign-in's own output (bl-f645; DESIGN §16.2)"
+# prints is a surface this seat does not have yet. It was cited to bl-f645
+# while that ball was open and is NOT what bl-f645 built: `login-tail` is a
+# THIRD held lane (§14.1) beside the queue and the follow, which is a different
+# piece of work from the admin screen's five ops.
+login = "unbuilt: the sign-in act on a provider row (bl-5a41; DESIGN §16.2)"
+login-tail = "unbuilt: the held read of a sign-in's own output (bl-5a41; DESIGN §16.2)"
 
 # --- Unbuilt: the pinned run of the roster (protocol 10, yog bl-7782) --------
 pin = "unbuilt: the roster's pinned run — an assertion about the world the seat does not yet offer a control for (DESIGN §16.2)"

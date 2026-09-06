@@ -85,6 +85,9 @@ pub(super) fn spend(
         Cmd::Fork { from, goal } => acts::fork(seat, focus, from, goal).note(),
         Cmd::Science => fold::spread(asks::science(seat, focus), standing),
         Cmd::Clients => fold::machined(asks::clients(seat, focus), standing),
+        Cmd::Config(at) => fold::configured(asks::config(seat, at), standing),
+        Cmd::Marks => fold::marked(asks::marks(seat, focus), standing),
+        Cmd::Admin(act) => after::administered(seat, standing, act),
         Cmd::Files(path) => fold::filed(asks::files(seat, focus, path), standing),
         Cmd::Work(file) => fold::worked(asks::work(seat, focus, file), standing),
         // **Both trail acts are followed by the read that says what they

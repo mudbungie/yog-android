@@ -66,6 +66,17 @@ impl Model {
         let _ = self.cmds.send(Cmd::Answer(verdict));
     }
 
+    /// **Fire one act of the admin surface** (§13.17) — a config write, a
+    /// task-branch mark, an inbox flush, or one of the two deletions.
+    ///
+    /// Not idempotent, any of the five, so nothing here is ever sent twice: a
+    /// repeated config write re-applies bytes the operator may have edited
+    /// since, and a lost reply becomes the banner's sentence and the read that
+    /// settles it (`seat::acts::admin`).
+    pub fn admin(&self, act: crate::codec::AdminAct) {
+        let _ = self.cmds.send(Cmd::Admin(act));
+    }
+
     /// **Fork the focused conversation at a picked point** (§13.16), with
     /// `goal` as the child's first instruction.
     ///

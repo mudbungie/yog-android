@@ -188,6 +188,36 @@ pub(super) fn worked(
     }
 }
 
+/// **One config file, folded** — `filed`'s terms exactly: the answer replaces
+/// what was held, carries the destination it was asked at, and a failure keeps
+/// what was there.
+pub(super) fn configured(
+    read: Result<crate::codec::Config, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(config) => {
+            standing.config = Some(config);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
+/// **The task branch, folded** — `configured`'s terms one read along.
+pub(super) fn marked(
+    read: Result<crate::codec::Marks, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(marks) => {
+            standing.marks = Some(marks);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
 /// **The machines roster, folded** — `paned`'s terms again: the answer
 /// replaces what was held and a failure keeps what was there.
 pub(super) fn machined(

@@ -19,6 +19,7 @@
 //! counter-example and says why the rule is not "carry every token": it
 //! DECIDES which fields the row has, so it is read (`codec::workdiff`).
 
+pub mod admin;
 mod ask;
 pub mod balls;
 pub mod candidates;
@@ -46,6 +47,8 @@ mod transcript;
 pub mod workdiff;
 mod ws;
 
+pub use admin::act::AdminAct;
+pub use admin::{Config, Destination, Marks};
 pub use ask::Ask;
 pub use balls::act::BallAct;
 pub use balls::{BallRow, Board, BoardRow, Pane, View, WsBallRow};
@@ -226,6 +229,13 @@ pub enum Act {
         role: String,
         goal: String,
     },
+    /// **One act of the admin surface** (DESIGN §13.17): write a config file,
+    /// mark a workspace's task branch, flush its inbox, or delete a
+    /// conversation or a workspace. One variant for the group because they are
+    /// one surface; the address is INSIDE the choice, because these five do
+    /// not share one — `codec::admin::act` says why that differs from
+    /// [`Act::Ball`].
+    Admin(AdminAct),
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather

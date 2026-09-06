@@ -60,6 +60,9 @@ pub(crate) enum World {
     /// **What this workspace's attempts changed** (§13.15) — the churn, and
     /// the bytes of any one changed file.
     Work,
+    /// **The admin surface** (§13.17) — the config files, the task branch,
+    /// the inbox flush, and the unmaking of the workspace itself.
+    Admin,
     /// **The op table** (§13.14) — every gesture the engine speaks, read out
     /// of the vendored table and costing no wire read at all.
     Help,
@@ -69,6 +72,7 @@ pub(crate) enum World {
     Balls(crate::codec::View),
 }
 
+mod admin;
 mod balls;
 mod candidates;
 mod clients;
@@ -93,6 +97,12 @@ impl Shell {
         // not one.
         self.ball = None;
         self.candidate = None;
+        // A destination picked on one visit is not still picked on the next,
+        // and neither is the draft it seeded: the editor's text is the file
+        // that was read, and a screen that reopened holding one would be
+        // offering to write bytes nobody had just looked at.
+        self.destination = None;
+        self.seeded = None;
         let Some(model) = self.model() else { return };
         // **Opening IS the ask**, for the trail and for the ball pane alike:
         // both are read by nothing standing, so a surface nobody has opened
@@ -104,6 +114,10 @@ impl Shell {
             World::Candidates => model.list_candidates(),
             World::Clients => model.list_clients(),
             World::Work => model.open_work(None),
+            // The admin screen opens on the mark it can read with no pick at
+            // all; a config file is read by tapping its destination, because
+            // opening a screen is not a request for three files.
+            World::Admin => model.read_marks(),
             // **The three that ask nothing.** The queue is the held lane's,
             // so opening it is a look at what is already held (§14.1); the
             // fleet screen reads nothing at all, because what its acts DID is
@@ -148,6 +162,7 @@ impl Shell {
             (fleet::SCREEN, World::Fleet),
             (clients::SCREEN, World::Clients),
             (work::SCREEN, World::Work),
+            (admin::SCREEN, World::Admin),
         ];
         for band in aimed.chunks(2) {
             self.entry_band(ui, band);
@@ -201,6 +216,7 @@ impl Shell {
             World::Clients => self.clients(ui, snap),
             World::Help => self.help(ui, snap),
             World::Work => self.work(ui, snap),
+            World::Admin => self.admin(ui, snap),
         }
     }
 
@@ -211,5 +227,7 @@ impl Shell {
         self.armed = false;
         self.ball = None;
         self.candidate = None;
+        self.destination = None;
+        self.seeded = None;
     }
 }

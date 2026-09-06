@@ -142,6 +142,19 @@ pub enum Reply {
     Lineages(Vec<lineages::Lineage>),
     /// **What each attempt cost** (DESIGN §13.12), one row apiece.
     Science(Vec<candidates::Attempt>),
+    /// **One config file's own bytes** (DESIGN §13.17). The typed `settings`
+    /// beside them are not read — `codec::admin` says why — so what this
+    /// carries is what the composer edits and a write sends back. The
+    /// destination is NOT here: the answer is the same shape every destination
+    /// earns, so the ask names it (`codec::files`' rule at a third site).
+    Config(String),
+    /// **A workspace's task branch**, as the engine re-read it after a write
+    /// or as it stands. The workspace is the ask's, for the same reason.
+    Marks(String),
+    /// **The receipt a deletion earns.** It carries nothing but its own `ok`:
+    /// what a deletion DID is that its subject is gone, and the read that says
+    /// so is the roster or the conversation list the next pass makes.
+    Deleted,
     /// **The agent worktree** (DESIGN §13.15): the listing, and the asked-for
     /// file's bytes when the ask named one. `worktree: false` is a fact and
     /// not an empty listing — a torn-down worktree and one holding nothing
@@ -246,6 +259,9 @@ impl Reply {
             Self::Clients(_) => "clients",
             Self::Lineages(_) => "lineages",
             Self::Science(_) => "science",
+            Self::Config(_) => "config",
+            Self::Marks(_) => "marks",
+            Self::Deleted => "deleted",
             Self::Files(_) => "files",
             Self::WorkDiff(_) => "work-diff",
             Self::Fanned(_) => "fanned",

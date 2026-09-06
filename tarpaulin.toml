@@ -106,6 +106,18 @@
 # records unpaintable under another is `Records::about`, all asserted by host
 # tests. What is left here is which widget shows which of them.
 #
+# `src/shell/screens/world/admin.rs` and `admin/acts.rs` are the admin screen
+# (bl-f645), the same class again: a list of destination controls, four
+# buttons and a multi-line field, `cfg(target_os = "android")` to the last
+# line. Everything they decide is somewhere else and under the floor — WHICH
+# destinations this seat spells and what a frame naming another earns is
+# `codec::admin`, WHICH word each act takes is `AdminAct::wants`, what each
+# receipt MEANS and the read that settles a lost one is `seat::acts::admin`,
+# and the pairing that makes one workspace's mark unpaintable under another is
+# `Marks::about` — all asserted by host tests. What is left here is which
+# widget shows which of them, and the seed — one comparison the walk observes
+# as a field with a file in it.
+#
 # `src/shell/screens/records/points.rs` and `records/acts.rs` are the fork
 # picking surface and the foot over it (bl-99fd), the same class again: two
 # buttons, a field and a list of picking controls, `cfg(target_os = "android")`
@@ -197,6 +209,8 @@ exclude-files = [
     "src/shell/screens/rows.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",
+    "src/shell/screens/world/admin.rs",
+    "src/shell/screens/world/admin/acts.rs",
     "src/shell/screens/world/balls.rs",
     "src/shell/screens/world/candidates.rs",
     "src/shell/screens/world/candidates/acts.rs",

@@ -23,6 +23,7 @@ use crate::transport::Seat;
 use super::pass::kind_err;
 use super::posted::{Posted, faulted};
 
+mod admin;
 mod ball;
 mod candidate;
 mod fleet;
@@ -32,6 +33,7 @@ mod row;
 mod seen;
 mod trail;
 
+pub(super) use admin::admin;
 pub(super) use ball::ball;
 pub(super) use candidate::{candidate, spread};
 pub(super) use fleet::fleet;

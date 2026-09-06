@@ -122,6 +122,13 @@ pub struct Snapshot {
     /// **What the focused workspace's attempts changed** (DESIGN §13.15), on
     /// the same terms one subject along (`Work::about`).
     pub work: Option<crate::codec::Work>,
+    /// **What one config file holds** (DESIGN §13.17), carrying the
+    /// destination it was read at — the answer echoes none, so a file cannot
+    /// paint under another destination's name.
+    pub config: Option<crate::codec::Config>,
+    /// **Which task branch the focused workspace is marked with** (DESIGN
+    /// §13.17), carrying the workspace it was read for (`Marks::about`).
+    pub marks: Option<crate::codec::Marks>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

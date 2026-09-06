@@ -14,9 +14,11 @@
 
 use serde_json::Value;
 
+mod admin;
 mod records;
 mod review;
 
+pub(super) use admin::{config, marks};
 pub(super) use records::{anchored, drill, opened};
 pub(super) use review::{files, work};
 

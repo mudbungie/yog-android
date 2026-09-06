@@ -67,6 +67,27 @@ fn repane(seat: &Seat, focus: &Focus, standing: &mut Standing) {
     }
 }
 
+/// **One admin act, and the branch a `marks` write answers with** (§13.17).
+/// Four of the five need no read after them — what a config write did is read
+/// by tapping the destination again, and what a deletion did is that its
+/// subject is gone, which the next pass re-reads — and the fifth answers with
+/// the engine's own re-read, so there is nothing to ask twice.
+pub(super) fn administered(
+    seat: &Seat,
+    standing: &mut Standing,
+    act: crate::codec::AdminAct,
+) -> Option<String> {
+    let workspace = match &act {
+        crate::codec::AdminAct::Marks { workspace, .. } => Some(workspace.clone()),
+        _ => None,
+    };
+    let (posted, landed) = super::super::acts::admin(seat, act);
+    if let (Some(workspace), Some(branch)) = (workspace, landed) {
+        standing.marks = Some(crate::codec::Marks { workspace, branch });
+    }
+    posted.note()
+}
+
 /// **Re-read the trail after an act on it**, swallowing the failure: this is
 /// not the operator's gesture, it is what makes the gesture's effect visible,
 /// and its absence leaves the rows exactly as they were — which is where they

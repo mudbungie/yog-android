@@ -18,8 +18,8 @@
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
-    ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_SCHEDULING, NO_SEED, NO_SKILLS,
-    NO_TREE, NOT_THE_MINTER, READ,
+    ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_DESTINATION, NO_SCHEDULING,
+    NO_SEED, NO_SKILLS, NO_TREE, NOT_THE_MINTER, READ,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
@@ -37,7 +37,13 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("clients", Reads),
     ("close", Reads),
     ("complete", Reads),
-    ("config", Refuses(ACT)),
+    (
+        "config",
+        Partial {
+            reads: 6,
+            reason: NO_DESTINATION,
+        },
+    ),
     ("conversations", Reads),
     (
         "create",
@@ -46,8 +52,8 @@ pub const REQUESTS: &[(&str, Expect)] = &[
             reason: NO_SCHEDULING,
         },
     ),
-    ("delete-agent", Refuses(ACT)),
-    ("delete-workspace", Refuses(ACT)),
+    ("delete-agent", Reads),
+    ("delete-workspace", Reads),
     (
         "deliver",
         Partial {
@@ -92,7 +98,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("lineages", Reads),
     ("login", Refuses(ACT)),
     ("login-tail", Refuses(READ)),
-    ("marks", Refuses(ACT)),
+    ("marks", Reads),
     ("message", Reads),
     ("model", Reads),
     ("models", Reads),
@@ -128,7 +134,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ),
     ("roles", Reads),
     ("revoke", Reads),
-    ("scan", Refuses(ACT)),
+    ("scan", Reads),
     ("science", Reads),
     ("search", Reads),
     ("seen", Reads),

@@ -97,6 +97,19 @@ impl Model {
         let _ = self.cmds.send(Cmd::Anchor(at));
     }
 
+    /// **Read one config file** (§13.17). The destination is the gesture's
+    /// own; the answer comes back carrying it, so a file cannot paint under
+    /// another destination's name.
+    pub fn read_config(&self, at: crate::codec::Destination) {
+        let _ = self.cmds.send(Cmd::Config(at));
+    }
+
+    /// **Read which task branch the focused workspace is marked with**
+    /// (§13.17).
+    pub fn read_marks(&self) {
+        let _ = self.cmds.send(Cmd::Marks);
+    }
+
     /// **Read the focused conversation's worktree** (§13.15) — the listing
     /// with no path, and one file's bytes with one. The answer replaces what
     /// was held whole, carrying the path it was asked at, so a preview cannot
