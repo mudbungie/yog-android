@@ -62,12 +62,18 @@ make install-hooks  # seat the pre-commit / commit-msg hooks, once
 ```
 
 The APK build needs the Android NDK, `cargo-ndk`, the two Android targets
-pinned in `rust-toolchain.toml`, and a
-**gradle** 8.7+ on JDK 17 — `make apk GRADLE=/path/to/gradle` when it is not
-on `PATH`. There is deliberately no gradle wrapper:
-the wrapper is a committed jar, and the disclosure gate refuses any binary
-it cannot read — correctly. The release profile is load-bearing, not an
-optimization (see the Makefile `apk` target).
+pinned in `rust-toolchain.toml`, and a **gradle** 8.7+ on JDK 17. There is
+deliberately no gradle wrapper: the wrapper is a committed jar, and the
+disclosure gate refuses any binary it cannot read — correctly. The release
+profile is load-bearing, not an optimization (see the Makefile `apk` target).
+
+**Which gradle is `scripts/gradle.sh`'s one rule**, and both doors spend it:
+`GRADLE=/path/to/gradle` outright, else `PATH`, else the newest bin
+distribution under the gradle wrapper's own dists cache — because a box that
+has ever run a wrapper has a whole distribution there and no `gradle` command,
+which is exactly the box this repo is developed on. It had two spellings once,
+and they disagreed: `make deploy-phone` found a gradle where `make apk` — the
+target it builds through — had already given up (bl-2a31).
 
 One APK carries **both ABIs**: `arm64-v8a` for the phone and `x86_64` for the
 emulator the enrollment stories run on. Gradle packs a `jniLibs/<abi>/`
@@ -92,11 +98,10 @@ unattended CD, because the address is something a human reads off the phone.
 Two things it resolves so you do not have to. `ANDROID_HOME` defaults to the
 conventional SDK location and is **exported**, since the Gradle Android plugin
 reads it from the environment and a developer SDK exports nothing. And gradle
-is looked for in the two places one is actually found: `PATH` first, then the
-newest bin distribution under the gradle wrapper's own dists cache — a box that
-has ever run a wrapper has a whole distribution there and no `gradle` command.
-`make deploy-phone ADDR=... GRADLE=/path/to/gradle` still wins over both, the
-same override `make apk` takes.
+comes from `scripts/gradle.sh` above — the same rule `make apk` spends, called
+rather than restated, so the two cannot answer differently again.
+`make deploy-phone ADDR=... GRADLE=/path/to/gradle` still wins over both
+probes, the same override `make apk` takes.
 
 ## Looking at it without a phone
 

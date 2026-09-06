@@ -19,17 +19,19 @@ release:
 # null guard is tracked under bl-2958).
 #
 # Requires: the Android NDK + cargo-ndk (`cargo install cargo-ndk`), the
-# Android targets rust-toolchain.toml pins, and a SYSTEM
-# `gradle` (8.7+, JDK 17). There is deliberately no gradle wrapper: the
-# wrapper is a committed jar, and the leak gate refuses any binary it cannot
-# read (BINARY_ALLOWED matches nothing) — which is correct, so the pin lives
-# in this comment and the README instead of a jar.
-# `gradle` is a variable so a box without one on PATH can point at a
-# distribution it already has (a wrapper cache, a package manager's prefix)
-# without editing this file — `make apk GRADLE=/path/to/gradle`. The default
-# is still a system gradle, because a committed wrapper jar is a binary the
-# leak gate refuses and should.
-GRADLE ?= gradle
+# Android targets rust-toolchain.toml pins, and a gradle 8.7+ on JDK 17.
+# There is deliberately no gradle wrapper: the wrapper is a committed jar, and
+# the leak gate refuses any binary it cannot read (BINARY_ALLOWED matches
+# nothing) — which is correct, so the pin lives in this comment and the README
+# instead of a jar.
+#
+# WHICH gradle is `scripts/gradle.sh`'s question and not this file's (bl-2a31):
+# `GRADLE=/path/to/gradle` outright, else PATH, else the newest bin
+# distribution under the gradle wrapper's own dists cache. This target used to
+# default `GRADLE ?= gradle` and die with `gradle: not found` — after the long
+# cargo-ndk half had run — on the very box `make deploy-phone` built on,
+# because that script carried the complete rule and this target carried a
+# different one. `GRADLE=` still wins, spelled the same way at both doors.
 
 # The device matrix, and therefore the ABI list. Two members: an arm64 phone
 # and the x86_64 emulator the enrollment stories are driven through (an ARM
@@ -48,7 +50,7 @@ APK_OUT := android/app/build/outputs/apk/debug/app-debug.apk
 
 apk:
 	cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
-	cd android && $(GRADLE) assembleDebug
+	gradle=$$(GRADLE='$(GRADLE)' scripts/gradle.sh) && cd android && "$$gradle" assembleDebug
 	@python3 scripts/apk-bridges.py --self-test
 	@python3 scripts/apk-bridges.py $(APK_OUT)
 	@echo "apk: $(APK_OUT)"

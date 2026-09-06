@@ -45,25 +45,15 @@ export ANDROID_HOME="$SDK"
 ADB="$SDK/platform-tools/adb"
 [ -x "$ADB" ] || die "no adb at $ADB — set ANDROID_HOME, or install platform-tools"
 
-# GRADLE, in the two places a working one is actually found. `GRADLE` keeps the
-# Makefile's override semantics: it names a command, so an absolute path and a
-# bare name resolve the same way, and an operator's `GRADLE=/path/to/gradle`
-# wins over everything below. Then PATH. Then the wrapper's own distribution
-# cache, because a box that has ever run a gradle wrapper has a complete
-# distribution under it while having no `gradle` on PATH — which is the state
-# this target was written on. Newest wins; a failure names both probes, since
-# "gradle not found" with only one of them stated sends you looking in the
-# wrong place.
-dists="${GRADLE_USER_HOME:-$HOME/.gradle}/wrapper/dists"
-gradle=$(command -v "${GRADLE:-gradle}" 2>/dev/null) || gradle=""
-if [ -z "$gradle" ]; then
-  gradle=$(ls -d "$dists"/gradle-*-bin/*/gradle-*/bin/gradle 2>/dev/null | sort -V | tail -1) \
-    || gradle=""
-fi
-[ -n "$gradle" ] && [ -x "$gradle" ] \
-  || die "no gradle: '${GRADLE:-gradle}' is not on PATH and no bin distribution
-  lives under $dists — install one, or name it:
-  make deploy-phone ADDR=... GRADLE=/path/to/gradle"
+# GRADLE, by the one rule this repo has (`scripts/gradle.sh`, bl-2a31): an
+# explicit `GRADLE=` outright, then PATH, then the newest bin distribution
+# under the gradle wrapper's own dists cache. It is CALLED and not restated,
+# because the target this one builds through — `make apk` — needs the same
+# answer, and two implementations of one rule is the defect that got filed:
+# `deploy-phone` found a gradle where `apk` had already given up. The script
+# prints the command and nothing else; its refusal names both probes, so the
+# only thing left here is to stop.
+gradle=$(scripts/gradle.sh) || exit 1
 
 # The build is `make apk`, not a second copy of it. That target is the one
 # definition of how this APK is assembled (cargo-ndk into jniLibs, then

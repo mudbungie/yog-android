@@ -311,8 +311,12 @@ android leg is their compile check; the UTF-16 span math
 (`src/shell/span.rs`) is host-tested under the 100% floor. `unsafe` is
 confined to `src/shell/sys.rs` (`rules/unsafe-outside-sys.yml`), where the
 soundness arguments are written. The Gradle shell lives in `android/` — no
-wrapper jar (the leak gate refuses binaries, correctly); the system-gradle
-requirement is documented in the Makefile `apk` target.
+wrapper jar (the leak gate refuses binaries, correctly), and **which gradle a
+build spends is `scripts/gradle.sh`'s one rule** (bl-2a31): `GRADLE=` outright,
+else `PATH`, else the newest bin distribution under the wrapper's own dists
+cache. `make apk` and `scripts/deploy-phone.sh` both call it; they carried two
+spellings of it once, and the one in the target a fresh checkout runs first was
+the incomplete one.
 
 ## 4. Module map
 
