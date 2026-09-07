@@ -8,9 +8,12 @@
 //!
 //! **The number itself is quoted from nowhere, deliberately.** REMOTE §3's
 //! prose named a version and went stale the day the wire moved; the standing
-//! value is the server's `src/wire/hello.rs` constant and nothing else, so
-//! [`PROTOCOL`] below mirrors that constant and this paragraph states no
-//! integer for a second reader to trust. One fact, one home.
+//! value is the server's repo-root `PROTOCOL` file and nothing else, so
+//! [`PROTOCOL`] below is this repository's own such file compiled in
+//! (`build.rs`, bl-6fec) and this paragraph states no integer for a second
+//! reader to trust. One fact, one home — and a file-shaped one, because the
+//! release gates that read it are other repositories fetching one path out of
+//! a tree they do not build.
 //!
 //! Three properties this end must keep, each the refusal of something easier:
 //!
@@ -130,7 +133,20 @@ use crate::frame;
 /// on purpose.** An unknown FIELD is tolerated — this codec reads the fields
 /// it spells and ignores the rest, which `codec::conv`'s own test pins. What
 /// ends an old build is this preface: fail-closed, both ways, by §3's design.
-pub const PROTOCOL: u32 = 17;
+///
+/// **It is not declared here** (bl-6fec). The repo-root `PROTOCOL` file states
+/// it and `build.rs` compiles that into the constant re-exported below — the
+/// shape yog and every consumer now carry, because the gates that read this
+/// number are other repositories fetching one path out of a tree they do not
+/// build, and a Rust path is not a stable address for that. **Bump it by
+/// editing that line**; nothing under `src` says the number.
+pub use protocol::PROTOCOL;
+
+/// The generated constant: `build.rs` writes it from the repo-root `PROTOCOL`
+/// file.
+mod protocol {
+    include!(concat!(env!("OUT_DIR"), "/protocol.rs"));
+}
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

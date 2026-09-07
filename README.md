@@ -130,8 +130,10 @@ the box that holds the key. Everything after it is the workflow's (DESIGN
 §20.1).
 
 **A protocol bump waits for the engine** (bl-5b19). yog mints the wire protocol
-version and this app *vendors* a copy of the constant; the wire is fail-closed
-on a mismatch and does not negotiate (yog `docs/REMOTE.md` §3). So
+version and this app *vendors* a copy of the number in a repo-root `PROTOCOL`
+file — one line, compiled into the constant by `build.rs` (bl-6fec), at the one
+address a module split cannot move, which is what both gates read; the wire is
+fail-closed on a mismatch and does not negotiate (yog `docs/REMOTE.md` §3). So
 `merge-release-pr` **holds a release whose `PROTOCOL` exceeds the newest
 published yog's** — thrall took that road first, publishing 16 while the newest
 engine spoke 15, and here the landing is worse because the offer below carries

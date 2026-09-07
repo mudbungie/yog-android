@@ -67,5 +67,5 @@ actually speaks, under rule 3 above.
 
 That rewrites every file from the boundary. It **refuses** when a shape already
 in use changed its fields while the protocol version stood still — the change
-is lawful only after `PROTOCOL` in `src/wire/hello.rs` is raised. A new shape
+is lawful only after the engine's repo-root `PROTOCOL` file is raised. A new shape
 needs no bump: strict decode already refuses an unknown verb in band.

@@ -83,7 +83,9 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   tarpaulin 0.35.2 — bump only deliberately, and in lockstep with CI.
 - **A PROTOCOL bump is a four-repository act** (bl-5b19; yog bl-bca2). yog
   mints the wire protocol version. This app, the seat (`lernie`) and the foot
-  (`thrall`) each **vendor** a copy of the constant (`src/hello.rs`), and the
+  (`thrall`) each **vendor** a copy of the number in a **repo-root `PROTOCOL`
+  file** — one line, the integer, compiled into `src/hello.rs`'s constant by
+  `build.rs` (bl-6fec) — and the
   wire is fail-closed on a mismatch with no negotiation (yog `docs/REMOTE.md`
   §3 — the authority, and the one place the two-direction rule is written out).
   So each direction of the skew is gated where it can be decided: **yog does
@@ -97,6 +99,13 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   then yog publishes, then the consumers publish.** Landing the constant on
   `main` is held by neither gate. `make protocol-gate` proves the decision both
   ways in `lint`, because the workflow that spends it cannot run locally.
+  **Bump it by editing `PROTOCOL`**: both gates read that path at the root of
+  whatever tree, tag or main they judge, and no gate, workflow or roster in any
+  of the four repositories names a Rust path for the number (bl-6fec). It used
+  to — this repository fetched the engine's constant from `src/wire/hello.rs`,
+  yog split that file, and the fetch went on succeeding while the read found
+  nothing, so the hold would have become permanent at the next engine
+  publish.
 - **The disclosure gate** (`make leak-scan`) reads INDEX blobs and self-tests
   its own rules per line before every scan. `scripts/leak-rules.sh` is the one
   definition of what may not be committed: private keys, vendor tokens,

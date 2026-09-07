@@ -80,7 +80,7 @@ authority and this file cites rather than restates it: each end writes one
 frame, `{"protocol": <integer>}`, before it reads the peer's; a mismatch is
 fail-closed and the refusal names both versions and the remedy; a peer that
 states no version is refused exactly as a peer of the wrong one. Landed here
-as `src/hello.rs`, the mirror of the server's `src/wire/hello.rs`, with the
+as `src/hello.rs`, the mirror of the server's preface (its number read, like this one, out of the repo-root `PROTOCOL` file — bl-6fec), with the
 same sentence word for word — one rule said two ways is two rules. This seat
 writes its preface and its request in one breath and confirms the engine's on
 the way to the answer, so the check costs no round trip.
