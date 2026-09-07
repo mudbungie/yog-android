@@ -12,17 +12,13 @@ use eframe::egui;
 use super::app::Shell;
 use super::boot::Running;
 
-/// **The attention mark** (bl-f34b): the one glyph that says *something is
-/// waiting on you*, painted on the roster's queue entry, the workspace rows
-/// and the conversation rows — one constant, because a mark that differs by
-/// screen is three marks. U+2022 BULLET, because the bundled proportional
-/// face (egui's Ubuntu-Light) carries it; U+25CF BLACK CIRCLE, which stood
-/// here before, is in none of the four bundled faces and painted as the
-/// missing-glyph box on the one screen an operator lands on. Checked against
-/// the face's own `cmap`, and by the walk's picture (`02-roster.png`).
-pub(super) const ATTENTION_MARK: &str = " \u{2022}";
 use super::mark::Back;
 use crate::host::Health;
+/// **The attention mark**, re-exported from where it lives (`crate::roster`,
+/// bl-4d17). It moved because the conversation row's words are composed in
+/// that module and the mark sits in the middle of a row's first line; the
+/// reasoning for the glyph itself travelled with it.
+pub(super) use crate::roster::ATTENTION_MARK;
 use crate::seat::Snapshot;
 
 mod files;

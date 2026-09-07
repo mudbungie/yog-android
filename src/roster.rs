@@ -35,6 +35,12 @@
 
 use crate::codec::ConvRow;
 
+mod thread;
+mod words;
+
+pub use thread::threads;
+pub use words::{ATTENTION_MARK, lines};
+
 /// The list, newest subtree first, each subtree still in the engine's descent.
 ///
 /// A row at depth 0 opens a subtree and everything under it belongs to that
@@ -69,8 +75,7 @@ pub fn ordered(rows: Vec<ConvRow>) -> Vec<ConvRow> {
 /// extra width would have cost.
 pub fn indent(depth: usize) -> f32 {
     const STEP: f32 = 16.0;
-    const DEEPEST: usize = 8;
-    (0..depth.min(DEEPEST)).fold(0.0, |at, _| at + STEP)
+    (0..depth.min(thread::DEEPEST)).fold(0.0, |at, _| at + STEP)
 }
 
 /// Seconds in the units a roster row speaks.

@@ -114,6 +114,39 @@ if depth in ("conversations", "transcript", "running"):
     # effort or priority — does not paint at all. They are the engine's own
     # envelopes like everything else here; the worker role's provider in the
     # roles fixture is the one the models map is keyed by.
+    # **A tree to draw the threading over** (DESIGN §13.20, bl-4d17). The
+    # corpus answer carries one subagent and two roots, which proves an indent
+    # and nothing about a CONNECTOR: no row in it has a sibling, so no rule
+    # ever continues past one and no elbow ever has a second child to reach.
+    # So the conversations depth — and only it, because the transcript seeds
+    # below pick a row out of this same list — hangs two fans off the roots
+    # the engine already answered with. Every row is a COPY of one of those,
+    # with the four fields that say where a row sits and what it says moved
+    # onto it: no field is invented and no spelling this codec does not
+    # already decode is used, which is the same rule the `running` seed keeps.
+    if depth == "conversations":
+        rows = conversations["rows"]
+        def under(base, root_id, at, display, preview, failure=None):
+            row = dict(base, root_id=root_id, depth=at, display=display,
+                       name=display, display_only=False, preview=preview,
+                       failure=failure, tone="bad" if failure else "weak")
+            row.pop("ball", None)
+            return row
+        first, second = rows[1], rows[2]
+        conversations["rows"] = [rows[0], first,
+            under(first, "c-2a", 1, "linen-otter",
+                  "read the four call sites and say which one owns the retry"),
+            under(first, "c-2a1", 2, "amber-quill",
+                  "the second one does, and it swallows the error it should raise"),
+            under(first, "c-2a2", 2, "slate-heron",
+                  "counted 41 call sites across the tree, not four \u2014 the retry lives in the transport and every one of them inherits it, so the question as asked has no answer"),
+            under(first, "c-2b", 1, "copper-vane",
+                  "asked for the branch summary",
+                  "You are the compactor for branch `20260906T174515Z`.\n"
+                  "No tool call found for function call output"),
+            second,
+            under(second, "c-3a", 1, "moss-lantern", "say hello and stop"),
+        ]
     roles = frame("roles")
     worker = next(r for r in roles["rows"] if r["role"] == "worker")
     body["options"] = {"workspace": workspace, "providers": frame("providers"),

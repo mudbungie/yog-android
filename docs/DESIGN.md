@@ -446,6 +446,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape, and the live fold under them | landed (bl-0ed6, bl-4822) |
 | `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
 | `src/roster.rs` | what the conversation list makes of the row fields the engine carries: newest-**subtree**-first order with the engine's descent kept inside each, how far a row hangs under its root, and how long ago each says it is — pure, host-tested | landed (bl-e837, subtree order + indent bl-06d3) |
+| `src/roster/thread.rs` | which indent columns a row's connector carries a rule through, read off §2.3's descent because the wire carries no parent id — pure, host-tested | landed (bl-4d17) |
+| `src/roster/words.rs` | what one row SAYS: the three lines, each folded to one line so a provider's clause cannot take four of them — pure, host-tested | landed (bl-4d17, out of `roster.rs`) |
+| `src/shell/screens/rows/thread.rs` | android-only: one row's ink — the rails, the elbow, the box at the row's own indent, and each line elided against that box | landed (bl-4d17, out of `rows.rs`) |
 | `src/live.rs` | the streaming tail's one rule: the lane's fold replaces the transcript's own tail, and at rest there is none — pure, host-tested | landed (bl-e3d1) |
 | `src/outbox.rs` | the local echo and every decision about it: has this message come back in a transcript read yet, and which of the three fates it stands in (§19.2) — pure, host-tested | landed (bl-66fb, the echo itself bl-07b1) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
@@ -3025,6 +3028,67 @@ two seats reading one `depth` off one wire must not disagree about what a
 subagent looks like (lernie `ui/convs.rs`). The row is laid out BESIDE its
 indent rather than padded inside it, so the tappable rectangle the parity walk
 observes is the row a thumb actually sees.
+
+#### The indent alone was a poor witness, so the thread is drawn (bl-4d17)
+
+The offset above says a row is somebody's child and nothing else. An operator
+looking at a phone's list could not read the tree back out of it: two children
+of one parent look like two unrelated indents, a child three rungs down looks
+the same as a child one rung down that happens to follow a deeper row, and
+nothing at all says which row a given indent hangs FROM. The operator's word
+for it was *clumsy*, over a screenshot with three of the failure on it.
+
+**So the column between a row and the screen edge carries the thread**, in the
+reddit/HN idiom: one rule per rung of depth, continuing down past every row
+whose level still has a sibling to reach, and an elbow turning into the row's
+own box. `src/roster/thread.rs` is the reading and `src/shell/screens/rows/
+thread.rs` is the ink.
+
+- **The reading is taken off the descent, not off a parent field**, because the
+  wire carries no parent id. §2.3's order is id-sorted siblings in pre-order,
+  so *"does level L have a later sibling below this row"* is answered by
+  looking forward for the first row shallow enough to close the subtree — the
+  same fact `roster::ordered` already relies on, read once more. `threads`
+  returns one `bool` per column, outermost first, and the LAST entry is the
+  row's own: `true` is an elbow whose rule carries on (├), `false` is the last
+  child (└). A root's rails are empty, which is the general path with no
+  ancestor rather than an arm of its own.
+- **The rails share the indent's cap and its arithmetic.** Past eight rungs the
+  OUTERMOST rules are the ones dropped, so the elbow is always in the column
+  the row's box begins at; and the painter reads every column's centre out of
+  `roster::indent` rather than learning the step, so the two halves of one
+  column cannot disagree.
+- **They are strokes, not box-drawing glyphs.** `└` and `│` are the idiom's
+  usual spelling and neither is in egui's bundled proportional face — the
+  precedent is `ATTENTION_MARK`, where U+25CF painted as the missing-glyph box
+  on the first screen an operator lands on. A stroke also spans a row of any
+  height, and these rows are one, two or three lines tall.
+
+**And the box beside it is painted rather than handed to a button**, which is
+what fixes the other two halves of the complaint. `egui::Button` CENTRES its
+text — that is the whole of why the list read as two alignments, short rows
+centred and long rows apparently left-aligned because they had overflowed the
+edge — and `TextWrapMode::Truncate` elides a whole galley to ONE row, so a
+two-line row cannot ask for it. Each line is laid out as its own single-row
+job against the box's width, so **every line elides with `…` and nothing
+clips**, at every depth.
+
+**A row's words are `roster::lines`, and every one of them is folded to a
+single line there.** REMOTE §9.10 carries *the provider's own first clause*,
+and a clause may be three sentences with hard breaks in it: unfolded, one
+failed call took four lines of the list and pushed the rest off the glass. The
+row now says `failed · <clause, one line, elided>`; the whole text is on the
+conversation screen, one tap away. A reddened row with no clause still says
+nothing extra, which is the third thing it is. An empty preview is no line at
+all rather than a blank one, so a list of conversations nobody has spoken in
+is a list of short rows.
+
+The fixture that proves it is the walk's own: `screens-seed.sh` hangs two fans
+off the roots the corpus answer already carries, at the `conversations` depth
+only — three depths, siblings that continue and siblings that end, one long
+preview that must elide and one failure with a hard break in it. Every row is
+a COPY of an engine row with the fields that say where it sits moved onto it;
+no field is invented, which is the rule the `running` seed already keeps.
 
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
 

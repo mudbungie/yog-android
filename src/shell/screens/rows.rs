@@ -14,13 +14,15 @@
 
 use eframe::egui;
 
-use crate::codec::ConvRow;
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
 use crate::shell::mark::Back;
 use crate::shell::place::Band;
 
 mod menu;
+mod thread;
+
+use thread::threaded;
 
 impl Shell {
     pub(crate) fn conversations(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str) {
@@ -74,11 +76,10 @@ impl Shell {
     }
 
     /// The rows themselves. Newest subtree first, each says when (REMOTE §9.9,
-    /// bl-e837), and each hangs at its own depth under its root (§11's indent,
-    /// bl-06d3). The indent is the whole of what says a row is a subagent, and
-    /// it only means anything because `roster::ordered` moves a subtree whole
-    /// — an indented row that had drifted away from its parent would say less
-    /// than no indent at all.
+    /// bl-e837), and each hangs at its own depth under its root — now with the
+    /// threading connectors that say so (§13.20, bl-4d17) rather than with
+    /// blank space alone. The indent and the rails are two halves of one
+    /// column, and both are `crate::roster`'s: the widget only spends them.
     fn listing(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str, area: Band) {
         if snap.conversations.is_empty() {
             ui.weak("nothing here yet — say what to start below");
@@ -87,20 +88,12 @@ impl Shell {
         // once for the whole list so no two rows are dated from different
         // instants.
         let now = crate::roster::now_unix();
+        let listed = crate::roster::ordered(snap.conversations.clone());
+        let rails = crate::roster::threads(&listed);
         let mut first = true;
-        for row in crate::roster::ordered(snap.conversations.clone()) {
+        for (row, rails) in listed.iter().zip(rails) {
             let ink = crate::shell::chat::tone_hue(ui, row.tone);
-            let label = egui::RichText::new(label(&row, now)).color(ink);
-            // The row is laid out beside its own indent rather than padded
-            // inside it: `tap` takes `available_width`, so the space taken
-            // here is width the button never claims, and the tappable
-            // rectangle a walk observes is the row a thumb actually sees.
-            let control = ui
-                .horizontal(|ui| {
-                    ui.add_space(crate::roster::indent(row.depth));
-                    super::tap(ui, label, "transcript")
-                })
-                .inner;
+            let control = threaded(ui, &rails, &crate::roster::lines(row, now), ink);
             // **Where the harness finds a row** (§15.2). Only the first: the
             // walk needs one row to press, and a rectangle per row would be a
             // channel that grows with the world instead of with the app.
@@ -109,7 +102,7 @@ impl Shell {
             }
             // The menu is painted before the tap is spent, because it is what
             // decides whether the tap was a navigation at all.
-            let opened = self.menu(ui, area, &row, &control);
+            let opened = self.menu(ui, area, row, &control);
             if control.clicked()
                 && !opened
                 && let Some(model) = self.model()
@@ -133,23 +126,5 @@ impl Shell {
         {
             model.start_conversation(goal);
         }
-    }
-}
-
-/// A row's whole label: who, when, what it last said, and why its latest call
-/// did not run (§9.10) where the tone already inks the row — the hue is the
-/// engine's reading and this is its words. A `Bad` tone with no clause is the
-/// third thing it is, a failure that left none, and says nothing extra.
-fn label(row: &ConvRow, now: i64) -> String {
-    let mark = if row.attention > 0 {
-        super::ATTENTION_MARK
-    } else {
-        ""
-    };
-    let when = crate::roster::stamp(row.last_active_unix, now);
-    let line = format!("{}{mark} · {when}\n{}", row.display, row.preview);
-    match &row.failure {
-        Some(why) => format!("{line}\n{why}"),
-        None => line,
     }
 }

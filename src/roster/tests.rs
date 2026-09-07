@@ -4,7 +4,7 @@
 use super::{indent, now_unix, ordered, stamp};
 use crate::codec::{AgentState, ConvRow, Tone};
 
-fn under(root_id: &str, last_active_unix: i64, depth: usize) -> ConvRow {
+pub(super) fn under(root_id: &str, last_active_unix: i64, depth: usize) -> ConvRow {
     ConvRow {
         depth,
         ..row(root_id, last_active_unix)

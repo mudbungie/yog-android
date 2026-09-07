@@ -77,7 +77,11 @@
 # asserted too. What is left here is which widget gets which of them.
 # `src/shell/screens/rows/menu.rs` is that same file's long-press half, split
 # off at the cap (bl-06d3), and it is named here for its parent's reason
-# verbatim. The list's other decision moved the same way and in the opposite
+# verbatim. `src/shell/screens/rows/thread.rs` is its third split (bl-4d17) —
+# one allocated rectangle, a `Painter` and three `line_segment` calls — and it
+# is here for the same reason again: WHICH columns carry a rule and WHAT each
+# line says are `roster::threads` and `roster::lines`, pure and asserted by
+# host tests, and what is left here is where the ink goes. The list's other decision moved the same way and in the opposite
 # direction: WHAT ORDER the rows go in and HOW FAR each hangs under its root
 # is `roster::ordered`/`roster::indent`, which are pure and stay UNDER the
 # floor — the widget only spends the number.
@@ -242,6 +246,7 @@ exclude-files = [
     "src/shell/screens/records/parts.rs",
     "src/shell/screens/rows.rs",
     "src/shell/screens/rows/menu.rs",
+    "src/shell/screens/rows/thread.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",
     "src/shell/screens/world/admin.rs",
