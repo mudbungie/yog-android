@@ -39,7 +39,7 @@ mod minted;
 use crate::codec::Destination;
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::Back;
 
 /// The screen's name and the harness's tap target (§15.2) — the op an operator
 /// comes here for.
@@ -82,12 +82,16 @@ impl Shell {
         };
         ui.separator();
         for at in files(workspace) {
+            // The picked file is told by the brand, the one ink that says
+            // *the operator's own act* (STYLE.md); the rest are rows.
             let picked = self.destination.as_ref() == Some(&at);
-            let mark = if picked { "▸ " } else { "" };
-            let control = ui.add(
-                egui::Button::new(format!("{mark}{}", at.file()))
-                    .min_size(egui::vec2(ui.available_width(), TOUCH)),
-            );
+            let ink = if picked {
+                crate::shell::theme::rgb(crate::theme::BRAND)
+            } else {
+                ui.visuals().text_color()
+            };
+            let label = crate::shell::theme::line(ui, &[(at.file().to_owned(), ink)]);
+            let control = crate::shell::theme::row(ui, label.into());
             crate::shell::act::act(ui, &control, SCREEN);
             if control.clicked() {
                 self.destination = Some(at.clone());
@@ -95,7 +99,6 @@ impl Shell {
                     model.read_config(at);
                 }
             }
-            ui.add_space(4.0);
         }
         self.seed(snap);
         if let Some(config) = snap.config.as_ref() {

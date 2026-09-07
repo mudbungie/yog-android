@@ -90,20 +90,7 @@ impl Shell {
         world: World,
         wide: f32,
     ) {
-        let touch = crate::shell::mark::TOUCH;
-        let control = ui
-            .allocate_ui_with_layout(
-                egui::vec2(wide, touch),
-                egui::Layout::left_to_right(egui::Align::Center),
-                |ui| {
-                    ui.add(
-                        egui::Button::new(label)
-                            .min_size(egui::vec2(wide, touch))
-                            .wrap_mode(egui::TextWrapMode::Truncate),
-                    )
-                },
-            )
-            .inner;
+        let control = crate::shell::theme::chip(ui, label.into(), wide, true);
         crate::shell::act::act(ui, &control, op);
         self.note_control(op, ui, control.rect);
         if control.clicked() {

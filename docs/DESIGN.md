@@ -3135,6 +3135,15 @@ whose level still has a sibling to reach, and an elbow turning into the row's
 own box. `src/roster/thread.rs` is the reading and `src/shell/screens/rows/
 thread.rs` is the ink.
 
+**The box is the language's row, not a box** (bl-83be, `docs/STYLE.md`): bare
+ground at rest with a hairline under it, a tint only under a thumb, no
+outline; its first line in the row's tone and the lines after it in weak
+ink, so the list reads as names and the state each is in. The rails are
+faint ink — structure, read after the words. The workspace bar above it
+(§13.14, bl-6e8a) and the admin foot (§13.17) are bands of the same chips,
+each an equal share of the width, a label eliding inside its share rather
+than pushing a neighbour off the glass.
+
 - **The reading is taken off the descent, not off a parent field**, because the
   wire carries no parent id. §2.3's order is id-sorted siblings in pre-order,
   so *"does level L have a later sibling below this row"* is answered by

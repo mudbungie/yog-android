@@ -29,19 +29,25 @@ impl Shell {
             band,
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
-                self.admin_item(ui, self.written());
+                // Three equal chips (STYLE.md): a label too long for its
+                // share elides in it rather than pushing the third control
+                // off the glass, which is where `scan` was.
+                let wide = crate::shell::theme::share(ui, 3);
+                self.admin_item(ui, self.written(), wide);
                 self.admin_item(
                     ui,
                     Some(AdminAct::Marks {
                         workspace: workspace.to_owned(),
                         branch: String::new(),
                     }),
+                    wide,
                 );
                 self.admin_item(
                     ui,
                     Some(AdminAct::Scan {
                         workspace: workspace.to_owned(),
                     }),
+                    wide,
                 );
             },
         );
@@ -62,12 +68,9 @@ impl Shell {
 
     /// One control. The label is the wire's own op token and so is the `act:`
     /// tag; while the act is dark the label says what would light it.
-    fn admin_item(&mut self, ui: &mut egui::Ui, act: Option<AdminAct>) {
+    fn admin_item(&mut self, ui: &mut egui::Ui, act: Option<AdminAct>, wide: f32) {
         let Some(act) = act else {
-            let dark = ui.add_enabled(
-                false,
-                egui::Button::new("config — tap a file").min_size(egui::vec2(0.0, TOUCH)),
-            );
+            let dark = crate::shell::theme::chip(ui, "config — tap a file".into(), wide, false);
             crate::shell::act::act(ui, &dark, "config");
             return;
         };
@@ -78,10 +81,7 @@ impl Shell {
             Some(ask) if !typed => format!("{} — {ask}", act.op()),
             _ => act.op().to_owned(),
         };
-        let control = ui.add_enabled(
-            live,
-            egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
-        );
+        let control = crate::shell::theme::chip(ui, label.into(), wide, live);
         crate::shell::act::act(ui, &control, act.op());
         if control.clicked() {
             self.fire(act);
@@ -100,6 +100,7 @@ impl Shell {
             band,
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
+                let wide = crate::shell::theme::share(ui, 2);
                 for grade in [crate::leaf::Grade::Operator, crate::leaf::Grade::Foot] {
                     let word = crate::codec::enroll::word(grade);
                     let label = if typed.is_empty() {
@@ -107,10 +108,8 @@ impl Shell {
                     } else {
                         format!("enroll {word}")
                     };
-                    let control = ui.add_enabled(
-                        !typed.is_empty(),
-                        egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
-                    );
+                    let control =
+                        crate::shell::theme::chip(ui, label.into(), wide, !typed.is_empty());
                     crate::shell::act::act(ui, &control, "enroll");
                     if control.clicked()
                         && let Some(model) = self.model()
@@ -138,10 +137,8 @@ impl Shell {
             band,
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
-                let control = ui.add_enabled(
-                    named,
-                    egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
-                );
+                let wide = crate::shell::theme::share(ui, 1);
+                let control = crate::shell::theme::chip(ui, label.into(), wide, named);
                 crate::shell::act::act(ui, &control, act.op());
                 if control.clicked() {
                     self.fire(act);

@@ -187,3 +187,39 @@ pub(crate) fn line(ui: &egui::Ui, parts: &[(String, egui::Color32)]) -> egui::te
     job.wrap.break_anywhere = true;
     job
 }
+
+/// **A chip** (STYLE.md, *a band of chips*): one control of a band that
+/// divides its width equally, so the COUNT of controls is a fact the layout
+/// cannot lose (bl-6e8a's argument) — laid out inside a child of exactly its
+/// share, so a label too long for it elides against that share rather than
+/// pushing its neighbours off the glass. `live` is whether it takes a tap;
+/// a dark chip stays on the glass and says in its own words what would
+/// light it (DESIGN §13.17).
+pub(crate) fn chip(
+    ui: &mut egui::Ui,
+    label: egui::WidgetText,
+    wide: f32,
+    live: bool,
+) -> egui::Response {
+    ui.allocate_ui_with_layout(
+        egui::vec2(wide, theme::TOUCH),
+        egui::Layout::left_to_right(egui::Align::Center),
+        |ui| {
+            ui.add_enabled(
+                live,
+                egui::Button::new(label)
+                    .min_size(egui::vec2(wide, theme::TOUCH))
+                    .wrap_mode(egui::TextWrapMode::Truncate),
+            )
+        },
+    )
+    .inner
+}
+
+/// The share each of `count` chips gets of the width a band has, the gaps
+/// between them taken off first.
+pub(crate) fn share(ui: &egui::Ui, count: usize) -> f32 {
+    let each = count as f32;
+    let gap = ui.spacing().item_spacing.x;
+    ((ui.available_width() - gap * (each - 1.0)) / each).max(0.0)
+}

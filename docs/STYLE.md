@@ -113,9 +113,9 @@ hierarchy. Never a `Button`: a button centres its text, which is how a list
 read as two alignments.
 
 **A threaded row** (the conversation list, DESIGN §13.20): the row above, at
-its own indent, with the connector rails in `HAIRLINE` ink and its lines
-elided against the box's width. The box has no stroke; its state — the
-row's tone — is its first line's ink.
+its own indent, its lines elided against the width it has — the first line
+(name, mark, stamp) in the row's tone, every line after it in `INK_WEAK` —
+with the connector rails in `INK_FAINT`. No fill at rest, no stroke ever.
 
 **A block** (the transcript, DESIGN §7): aligned, ruled, never bubbled. Every
 block starts at the same left edge; a `RULE`-wide vertical line in the
@@ -140,8 +140,14 @@ words are `INK_FAINT` and it stays on the glass.
 state's accent as ink, no fill, no box. An error is `Error` ink; a note is
 `Annotation` ink; nothing about the shape changes with the state.
 
-**A band of entries** (the aimed and world entries): rows, not buttons —
-each an entry of the list it heads, at the same anatomy as a row.
+**A band of chips** (the workspace bar, the admin foot, the controls under
+the composer; `shell::theme::chip`): a band `TOUCH` tall divided EQUALLY
+among its controls, so the count of controls is a fact the layout cannot
+lose (DESIGN §13.14) — each chip a `SURFACE` block with `RADIUS` corners, its
+label eliding inside its share rather than pushing a neighbour off the
+glass. Dark chips stay on the glass in `INK_FAINT` and say what would light
+them. The world entries on the roster are rows, not chips: a list of places
+is a list.
 
 ## 6. Where it is asserted
 

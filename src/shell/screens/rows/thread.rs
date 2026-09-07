@@ -1,6 +1,12 @@
 //! **How one conversation row is painted** (DESIGN §13.20, bl-4d17): the
-//! threading column beside it, the box it sits in, and each of its lines
-//! elided against that box's width.
+//! threading column beside it, the band it sits in, and each of its lines
+//! elided against that band's width.
+//!
+//! **The band is the language's row** (docs/STYLE.md, bl-83be): bare ground
+//! at rest, a tint only under a thumb, a hairline under it, and no outline.
+//! Its first line — the name, the mark, the stamp — is in the row's tone,
+//! and every line after it is weak ink, so a list of twenty reads as twenty
+//! names and the state each is in, not twenty paragraphs.
 //!
 //! Split from the list that spends it on the seam that file already draws —
 //! what a list IS against what one row LOOKS like — and it is the third split
@@ -38,14 +44,18 @@ pub(super) fn threaded(
     if !ui.is_rect_visible(rect) {
         return response;
     }
-    let visuals = *ui.style().interact(&response);
     let boxed = rect.with_min_x(rect.left() + crate::roster::indent(rails.len()));
-    ui.painter().rect(
-        boxed,
-        visuals.corner_radius,
-        visuals.weak_bg_fill,
-        visuals.bg_stroke,
-        egui::StrokeKind::Inside,
+    if response.is_pointer_button_down_on() || response.hovered() {
+        ui.painter().rect_filled(
+            boxed,
+            egui::CornerRadius::same(crate::theme::RADIUS),
+            crate::shell::theme::rgb(crate::theme::RAISED),
+        );
+    }
+    ui.painter().hline(
+        boxed.x_range(),
+        rect.bottom(),
+        egui::Stroke::new(1.0, crate::shell::theme::rgb(crate::theme::HAIRLINE)),
     );
     // A row shorter than the touch floor is padded to it, and its lines sit in
     // the MIDDLE of what that bought rather than at the top: a conversation
@@ -55,12 +65,14 @@ pub(super) fn threaded(
     let elbow = first + line / 2.0;
     connectors(ui, rect, boxed.left(), rails, elbow, gap);
     let wide = boxed.width() - pad.x * 2.0;
+    let weak = ui.visuals().weak_text_color();
     for (at, text) in lines.iter().enumerate() {
         let job = elided(text, &font, wide);
         let galley = ui.ctx().fonts_mut(|fonts| fonts.layout_job(job));
         let top = first + line * at as f32;
+        let color = if at == 0 { ink } else { weak };
         ui.painter()
-            .galley(egui::pos2(boxed.left() + pad.x, top), galley, ink);
+            .galley(egui::pos2(boxed.left() + pad.x, top), galley, color);
     }
     response
 }
@@ -77,7 +89,9 @@ pub(super) fn threaded(
 /// Every column's centre is read out of `roster::indent`, so this file never
 /// learns the step and cannot disagree with the offset the box is drawn at.
 fn connectors(ui: &egui::Ui, rect: egui::Rect, boxed: f32, rails: &[bool], elbow: f32, gap: f32) {
-    let stroke = egui::Stroke::new(1.0, ui.visuals().weak_text_color());
+    // Faint ink: a thread is structure, and structure is read after the
+    // words, never before them (STYLE.md).
+    let stroke = egui::Stroke::new(1.0, crate::shell::theme::rgb(crate::theme::INK_FAINT));
     for (at, carries) in rails.iter().enumerate() {
         let column = f32::midpoint(crate::roster::indent(at), crate::roster::indent(at + 1));
         let x = rect.left() + column;
