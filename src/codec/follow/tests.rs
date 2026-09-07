@@ -5,8 +5,13 @@
 use super::{Stream, stream_of};
 use serde_json::{Value, json};
 
+/// Every frame carries a window, empty included (REMOTE §5.5), so these
+/// fixtures state one exactly as the corpus does and the required field is
+/// pinned by every case rather than by one.
 fn read(v: &Value) -> Result<Stream, String> {
-    stream_of(v.as_object().unwrap())
+    let mut frame = v.as_object().unwrap().clone();
+    frame.entry("tools").or_insert_with(|| json!([]));
+    stream_of(&frame)
 }
 
 #[test]
@@ -64,6 +69,7 @@ fn absorbing_a_later_frame_is_the_fold_of_both() {
             delta: Some("text".into()),
             text: Some("then this".into()),
             thinking: Some("first I".into()),
+            tools: Vec::new(),
         }
     );
     let mut silent = Stream::default();
@@ -72,6 +78,34 @@ fn absorbing_a_later_frame_is_the_fold_of_both() {
         silent.is_empty(),
         "nothing absorbed onto nothing is nothing"
     );
+}
+
+/// **The window absorbs by concatenation** (REMOTE §5.5): the lists of a
+/// read's frames append in order, exactly as the prose accretes, and what the
+/// concatenation means is `window`'s merge.
+#[test]
+fn absorbing_a_later_frame_appends_its_window() {
+    let mut held = read(&json!({ "stream": {},
+        "tools": [{ "tool_use": "toolu_01", "tool": "box2_Bash", "input": "{}" }] }))
+    .unwrap();
+    held.absorb(
+        read(&json!({ "stream": { "text": "done" },
+        "tools": [{ "tool_use": "toolu_01", "exit_code": 0 }] }))
+        .unwrap(),
+    );
+    assert_eq!(held.tools.len(), 2, "both transitions are held");
+    let calls = held.window();
+    assert_eq!(calls.len(), 1, "and they are one call");
+    assert_eq!(calls[0].tool.as_deref(), Some("box2_Bash"));
+    assert_eq!(calls[0].exit_code, Some(0));
+}
+
+/// A frame in the spelling from before the window refuses by name rather than
+/// reading as one with nothing running.
+#[test]
+fn a_frame_with_no_window_refuses_naming_the_field() {
+    let refusal = stream_of(json!({ "stream": {} }).as_object().unwrap()).unwrap_err();
+    assert!(refusal.contains("\"tools\""), "{refusal}");
 }
 
 /// The ask names the conversation and nothing else — no cursor and no since,

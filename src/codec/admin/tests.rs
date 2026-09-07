@@ -92,6 +92,22 @@ fn a_grade_this_wire_does_not_have_refuses_naming_it() {
     );
 }
 
+/// **A stated route refuses by name** (REMOTE §8.4, PROTOCOL 14). The address
+/// the enrolled device will dial is a fact about a box this seat cannot see,
+/// so a frame carrying one is refused rather than read as the mint without it
+/// — the silent misread REMOTE §3's third rule forbids, and the recorded
+/// decision `tests/conformance/requests.rs` counts.
+#[test]
+fn an_enrolment_stating_a_route_refuses_naming_the_op() {
+    let frame = object(
+        &json!({ "op": "enroll", "workspace": "ws", "name": "phone-2",
+                 "grade": "operator", "address": "engine.invalid:7737" }),
+    );
+    let refusal = crate::codec::enroll::decode(&frame).unwrap_err();
+    assert!(refusal.starts_with("enroll: "), "{refusal}");
+    assert!(refusal.contains("engine.invalid"), "{refusal}");
+}
+
 #[test]
 fn an_op_outside_this_family_refuses_by_name() {
     let frame = object(&json!({ "op": "pin", "workspace": "ws" }));

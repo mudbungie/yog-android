@@ -12,8 +12,15 @@
       "name": "phone-1",
       "op": "enroll",
       "workspace": "ws"
+    },
+    {
+      "address": "engine.invalid:7737",
+      "grade": "operator",
+      "name": "phone-1",
+      "op": "enroll",
+      "workspace": "ws"
     }
   ],
-  "protocol": 1,
+  "protocol": 14,
   "shape": "enroll"
 }

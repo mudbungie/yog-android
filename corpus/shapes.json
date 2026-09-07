@@ -1,5 +1,5 @@
 {
-  "protocol": 13,
+  "protocol": 17,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -252,6 +252,7 @@
         "/kind:string",
         "/ok:bool",
         "/rows/[]/client:string",
+        "/rows/[]/last_seen:number",
         "/rows/[]/present:bool",
         "/rows/[]/tools/[]/description:string",
         "/rows/[]/tools/[]/input_schema/properties/command/minLength:number",
@@ -270,7 +271,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 2
+      "since": 14
     },
     "reply/config": {
       "signature": [
@@ -353,6 +354,20 @@
       ],
       "since": 1
     },
+    "reply/doctor": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/check:string",
+        "/rows/[]/fact:string",
+        "/rows/[]/ok:bool",
+        "/rows/[]/remedy:string",
+        "/rows/[]:object",
+        "/rows:array",
+        ":object"
+      ],
+      "since": 13
+    },
     "reply/enrolled": {
       "signature": [
         "/address:string",
@@ -427,9 +442,15 @@
         "/stream/text:string",
         "/stream/thinking:string",
         "/stream:object",
+        "/tools/[]/exit_code:number",
+        "/tools/[]/input:string",
+        "/tools/[]/tool:string",
+        "/tools/[]/tool_use:string",
+        "/tools/[]:object",
+        "/tools:array",
         ":object"
       ],
-      "since": 1
+      "since": 14
     },
     "reply/governing": {
       "signature": [
@@ -469,6 +490,7 @@
         "/rows/[]/deposit/deposited_at:string",
         "/rows/[]/deposit/epitaph:string",
         "/rows/[]/deposit/from:string",
+        "/rows/[]/deposit/from_name:string",
         "/rows/[]/deposit/terminal_ref:string",
         "/rows/[]/deposit:object",
         "/rows/[]/name:string",
@@ -477,7 +499,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 17
     },
     "reply/invocations": {
       "signature": [
@@ -557,6 +579,7 @@
         "/kind:string",
         "/ok:bool",
         "/rows/[]/argv:string",
+        "/rows/[]/client:string",
         "/rows/[]/cwd:string",
         "/rows/[]/exit:number",
         "/rows/[]/exit_label:string",
@@ -570,7 +593,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 11
+      "since": 15
     },
     "reply/outcome": {
       "signature": [
@@ -861,6 +884,7 @@
         "/rows/[]/name:string",
         "/rows/[]/raw:string",
         "/rows/[]/sender:string",
+        "/rows/[]/sender_name:string",
         "/rows/[]/summary:string",
         "/rows/[]/text:string",
         "/rows/[]/thinking:string",
@@ -873,7 +897,7 @@
         "/rows:array",
         ":object"
       ],
-      "since": 9
+      "since": 17
     },
     "reply/work-diff": {
       "signature": [
@@ -1176,6 +1200,14 @@
       ],
       "since": 1
     },
+    "request/doctor": {
+      "signature": [
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 13
+    },
     "request/effort": {
       "signature": [
         "/level:null",
@@ -1189,13 +1221,14 @@
     },
     "request/enroll": {
       "signature": [
+        "/address:string",
         "/grade:string",
         "/name:string",
         "/op:string",
         "/workspace:string",
         ":object"
       ],
-      "since": 1
+      "since": 14
     },
     "request/fan": {
       "signature": [

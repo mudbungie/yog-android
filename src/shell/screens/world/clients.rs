@@ -1,6 +1,12 @@
 //! **The machines roster** (REMOTE §5, §5.1; DESIGN §13.14): which machines
 //! may execute for this workspace, and what each one says it offers.
 //!
+//! **A third fact, and it is the one that answers "is that machine real"**
+//! (REMOTE §5, PROTOCOL 14). `last_seen` is durable where presence is not, so
+//! a row with no stamp at all has never dialled — the enrolment was minted and
+//! abandoned, and it is the row an operator can safely remove. The sentence is
+//! `roster::spoke`'s, in the same units the conversation list speaks.
+//!
 //! **Two lifetimes on one row, and the screen says both** (lernie DESIGN
 //! §4.28, whose ruling transfers whole). `present` is an observation — true at
 //! the instant the engine answered — and the advertised set is a statement the
@@ -73,7 +79,7 @@ fn listed(ui: &mut egui::Ui, held: Option<&Machines>) {
 }
 
 /// One machine: what it is called, whether it was connected when the engine
-/// answered, and what it says it offers.
+/// answered, when it last spoke, and what it says it offers.
 fn machine(ui: &mut egui::Ui, row: &ClientRow) {
     let seen = if row.present {
         "connected"
@@ -81,6 +87,10 @@ fn machine(ui: &mut egui::Ui, row: &ClientRow) {
         "not connected — a busy host holds no connection either"
     };
     ui.label(format!("{} · {seen}", row.client));
+    ui.weak(crate::roster::spoke(
+        row.last_seen,
+        crate::roster::now_unix(),
+    ));
     if row.tools.is_empty() {
         ui.weak("offers nothing");
     }

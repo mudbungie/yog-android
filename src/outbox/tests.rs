@@ -9,6 +9,7 @@ fn delivered(body: &str) -> Entry {
         raw: String::new(),
         kind: EntryKind::Delivered {
             sender: "op".to_owned(),
+            sender_name: None,
             epitaph: None,
             body: body.to_owned(),
         },

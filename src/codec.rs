@@ -61,7 +61,7 @@ pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use encode::encode;
 pub use files::{FileRow, Files, Listing, Preview};
 pub use fleet::FleetAct;
-pub use follow::Stream;
+pub use follow::{Call, Stream};
 pub use hold::{Answered, Verdict};
 pub use lineages::Lineage;
 pub use login::{LoginLine, LoginView};

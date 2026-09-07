@@ -141,3 +141,22 @@ fn the_indent_steps_per_rung_and_stops_at_the_cap() {
     assert_eq!(points(9), points(8));
     assert_eq!(points(usize::MAX), points(8));
 }
+
+/// **The machines roster's own spelling** (REMOTE §5): an age in the units
+/// every other surface speaks, and a row that never dialled saying so in
+/// words rather than as a missing line.
+#[test]
+fn a_machine_says_when_it_last_spoke_or_that_it_never_has() {
+    assert_eq!(
+        super::spoke(Some(1_700_000_000), 1_700_000_180),
+        "last spoke 3m"
+    );
+    assert_eq!(
+        super::spoke(Some(1_700_000_000), 1_700_000_000),
+        "last spoke now"
+    );
+    assert_eq!(
+        super::spoke(None, 1_700_000_000),
+        "never dialled — minted and never used"
+    );
+}

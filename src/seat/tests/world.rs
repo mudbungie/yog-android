@@ -16,7 +16,8 @@ fn trail(argv: &str) -> Vec<u8> {
     json!({ "ok": true, "kind": "ops",
             "rows": [{ "argv": argv, "cwd": "/p", "exit": 1, "origin": "balls",
                        "stderr": "gate", "stdout": "", "ts": "1700",
-                       "failed": true, "exit_label": "exit 1", "standing": "live" }] })
+                       "failed": true, "exit_label": "exit 1", "standing": "live",
+                       "client": "local" }] })
     .to_string()
     .into_bytes()
 }

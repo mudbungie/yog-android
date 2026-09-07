@@ -12,7 +12,15 @@
 //! is the whole tail so far and a lane that re-asks is whole again with
 //! nothing to reconcile.
 //!
-//! **Every field is optional, including all of them.** The corpus's own
+//! **The frame carries the tool window beside the prose** (REMOTE §5.5,
+//! PROTOCOL 15), appended by the same rule and folded by the same operation:
+//! the lists of a read's frames concatenate, and what the concatenation MEANS
+//! — two transitions per call, merged by `tool_use` — is [`window`]'s. It is
+//! the half of the lane an operator watching an agent administer a machine
+//! actually needs, and the half this seat paints as rows the record does not
+//! carry yet (`crate::live`).
+//!
+//! **Every prose field is optional, including all of them.** The corpus's own
 //! first frame is `{"stream": {}}` — an answer that has begun and said
 //! nothing yet — and `delta` names the kind of the last content event rather
 //! than the shape of the frame. It rides as the token the engine wrote: this
@@ -23,6 +31,11 @@ use serde_json::{Map, Value};
 
 use super::fields::{opt, str_of};
 
+mod window;
+
+pub use window::Call;
+pub(crate) use window::window;
+
 /// The answer in flight, as much of it as has landed.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Stream {
@@ -32,6 +45,10 @@ pub struct Stream {
     pub text: Option<String>,
     /// The reasoning so far, where the model states one.
     pub thinking: Option<String>,
+    /// **The tool window's transitions**, in the order they landed — what is
+    /// running and what came back (REMOTE §5.5). They concatenate exactly as
+    /// the prose accretes; [`Stream::window`] is what a painter reads.
+    pub tools: Vec<Call>,
 }
 
 impl Stream {
@@ -50,6 +67,17 @@ impl Stream {
         append(&mut self.text, later.text);
         append(&mut self.thinking, later.thinking);
         self.delta = later.delta.or(self.delta.take());
+        self.tools.extend(later.tools);
+    }
+
+    /// **The tool window as calls** — the transitions held so far, merged by
+    /// `tool_use` into one entry per call, in the order they opened. Derived
+    /// on every read rather than stored beside the transitions: the list is
+    /// the record, and a second copy of it folded eagerly would be a fact with
+    /// two homes.
+    #[must_use]
+    pub fn window(&self) -> Vec<Call> {
+        window(&self.tools)
     }
 }
 
@@ -70,6 +98,9 @@ pub(crate) fn stream_of(o: &Map<String, Value>) -> Result<Stream, String> {
         delta: opt(held, "delta", str_of)?,
         text: opt(held, "text", str_of)?,
         thinking: opt(held, "thinking", str_of)?,
+        // Beside the stream object and not inside it: the window is the
+        // frame's second half, not a field of the fold (REMOTE §5.5).
+        tools: window::calls_of(o)?,
     })
 }
 

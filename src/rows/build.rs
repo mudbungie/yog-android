@@ -14,6 +14,11 @@ use super::{Fold, Role, Row, RowClass, Tone};
 /// bare filename so the set the caller keeps can hold other surfaces' keys
 /// without a collision being possible.
 const KEY_ROOT: &str = "tx";
+/// **The machinery glyph**, worn by a committed tool call ([`super::project`]),
+/// by the follow window's own row ([`super::windowed`]) and by a rolled-up turn
+/// ([`super::turns`]). It sits here with the other shared parts a row's label
+/// is made of: three spellings of one mark is three places for it to drift.
+pub(super) const GEAR: &str = "⚙";
 /// Characters of payload a contracted row previews before the ellipsis.
 const PREVIEW_CAP: usize = 160;
 

@@ -106,6 +106,23 @@ pub fn ago(ago: i64) -> String {
     format!("{}{unit}", ago / each)
 }
 
+/// **When a machine last spoke, or that it never has** (REMOTE §5, PROTOCOL
+/// 14) — the machines roster's own use of [`stamp`], in the same units the
+/// conversation list speaks so two surfaces cannot read one instant two ways.
+///
+/// An absent stamp is not an unknown: it is a client that has never dialled,
+/// the enrolment minted and abandoned, and it is the row an operator can
+/// safely remove — so it is said in words rather than left as a missing line.
+/// The derivation is here rather than in the screen that paints it for this
+/// module's whole reason: the sentence is a reading of the wire, and a reading
+/// inside a paint file is one no host test can reach.
+pub fn spoke(last_seen: Option<i64>, now_unix: i64) -> String {
+    last_seen.map_or_else(
+        || "never dialled — minted and never used".to_owned(),
+        |seen| format!("last spoke {}", stamp(seen, now_unix)),
+    )
+}
+
 /// This device's clock as an epoch second, for [`stamp`]'s other half. A
 /// clock before the epoch is a device with no clock at all, and `0` makes
 /// every row read `now` — which is the honest answer when this end cannot

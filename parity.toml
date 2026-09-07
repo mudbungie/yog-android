@@ -105,6 +105,14 @@
 pin = "unbuilt: the roster's pinned run — an assertion about the world the seat does not yet offer a control for (DESIGN §16.2)"
 unpin = "unbuilt: the roster's pinned run (DESIGN §16.2)"
 
+# --- Unbuilt: the wiring check (protocol 17, yog bl-28f4) -------------------
+# It arrived with the PROTOCOL 17 re-vendor (bl-ee21) as a control op with no
+# surface here: one read that answers *is this box wired up*, world-wide with
+# an optional workspace narrowing, whose rows carry a remedy an operator acts
+# on. bl-a393 builds the screen and deletes this line and the
+# `tests/conformance/` rows beside it.
+doctor = "unbuilt: the wiring check has no surface on this seat yet (bl-a393)"
+
 # --- Structural reasons that survive the full-seat ruling -------------------
 follow = "held beside the pass while the focused turn is in flight, never fired by a tap; the view it populates is the transcript, which act:transcript reaches (DESIGN §14.1)"
 roles = "read at cadence to settle the controls row; what it populates is the selectors' own text, and no gesture asks for it (bl-e9f9)"

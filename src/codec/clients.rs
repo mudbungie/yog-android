@@ -11,6 +11,14 @@
 //! is waiting for work, so a busy machine and an absent one are
 //! indistinguishable from here.
 //!
+//! **A third lifetime, and it is the one that answers "is that machine
+//! real"** (REMOTE §5, PROTOCOL 14). `last_seen` is durable like the
+//! advertisement and unlike presence — it is written once per request at the
+//! wire intake — so a row with no stamp at all has never dialled, which is the
+//! reading the other two facts could not give: on a workspace driven from a
+//! terminal every row reads *not connected*, because every verb opens and
+//! closes its own connection.
+//!
 //! **An advertised element has one spelling wherever it is said.** A row's
 //! tools are the same three-plus-one facts this device presents in its own
 //! `advertise` (REMOTE §5.1), so they are read by the same reader
@@ -22,7 +30,7 @@
 
 use serde_json::{Map, Value};
 
-use super::fields::{arr_of, bool_of, str_of};
+use super::fields::{arr_of, bool_of, i64_of, opt, str_of};
 use super::tools::{Tool, tool_of};
 
 /// **What this workspace's machines offer**, and the workspace it was read
@@ -52,6 +60,16 @@ pub struct ClientRow {
     pub present: bool,
     /// What it last said it offers. It stands whether or not it is connected.
     pub tools: Vec<Tool>,
+    /// **When this machine last spoke** (REMOTE §5, PROTOCOL 14) — the third
+    /// durable fact, and the one that tells a sleeping machine from a ghost.
+    /// `present` reads false for a box that spoke ten seconds ago and for one
+    /// that has never once connected; an absent stamp is the second of those,
+    /// which is the row an operator can safely remove.
+    ///
+    /// Optional because the absence is the reading, and best-effort by the
+    /// engine's own construction: a stamp it could not write costs the roster
+    /// a column and never refuses the gesture it was riding.
+    pub last_seen: Option<i64>,
 }
 
 /// Read the `clients` answer's rows.
@@ -71,6 +89,7 @@ fn row(v: &Value) -> Result<ClientRow, String> {
             .iter()
             .map(tool_of)
             .collect::<Result<Vec<Tool>, String>>()?,
+        last_seen: opt(o, "last_seen", i64_of)?,
     })
 }
 

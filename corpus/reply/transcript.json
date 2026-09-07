@@ -9,9 +9,10 @@
           "body": "hello",
           "epitaph": "budget-exhausted",
           "kind": "delivered",
-          "name": "001-user.md",
+          "name": "001-20260814T000000Z-ab12.md",
           "raw": "{}",
-          "sender": "user"
+          "sender": "20260814T000000Z-ab12",
+          "sender_name": "DulcetMongoose"
         },
         {
           "body": "",
@@ -108,6 +109,6 @@
       ]
     }
   ],
-  "protocol": 9,
+  "protocol": 17,
   "shape": "transcript"
 }

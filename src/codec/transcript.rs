@@ -22,8 +22,22 @@ pub struct Entry {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EntryKind {
     /// An operator/peer message delivered into the conversation.
+    ///
+    /// **Two facts about who spoke, since PROTOCOL 17** (yog bl-6661, litany
+    /// 0.0.11): `sender` is the framing origin token — the addressing key
+    /// litany's own inbox scan derives from — and `sender_name` is the display
+    /// name the sender wears when it is an agent that has one. The id keeps
+    /// riding beside the name rather than being replaced by it: it is the
+    /// durable handle once an agent is deleted and its name recycled.
+    ///
+    /// The name is ABSENT rather than empty when there is none — `user` never
+    /// wears one — and that absence is why the pair matters here above
+    /// anywhere: a phone's row header is the whole width it has, and every
+    /// message a child sent was attributed by sixty characters of timestamped
+    /// hex.
     Delivered {
         sender: String,
+        sender_name: Option<String>,
         epitaph: Option<String>,
         body: String,
     },
@@ -41,6 +55,27 @@ pub enum EntryKind {
     },
     /// The live streaming tail of an in-flight call.
     Streaming { thinking: String, text: String },
+    /// **A tool call the follow lane has seen and the record has not yet
+    /// committed** (REMOTE §5.5, PROTOCOL 15) — the one kind here that is not
+    /// on the wire.
+    ///
+    /// It is in this vocabulary rather than beside it because the projection
+    /// (`crate::rows`) is a fold over ENTRIES, and the window is a fact about
+    /// the same conversation at the same moment as the entries around it: a
+    /// second list painted beside them would be a second ordering rule and a
+    /// second set of fold keys. `crate::live` mints these — never
+    /// [`entry`](self::entry), which reads only what the engine wrote — and
+    /// mints one only for a call no committed block carries, so the record
+    /// stays the record and the lane paints only what it is ahead of.
+    ///
+    /// `exit_code` is carried as the engine's own number and read for its
+    /// PRESENCE alone (§5.5): absent is a call in flight, present is one whose
+    /// capture landed, and what the value means is not this lane's to say.
+    Windowed {
+        tool: String,
+        input: String,
+        exit_code: Option<i64>,
+    },
     /// A compaction marker: which entries it folded, and the summary.
     Compacted {
         first: usize,
@@ -82,6 +117,7 @@ pub(crate) fn entry(v: &Value) -> Result<Entry, String> {
     let kind = match str_of(o, "kind")?.as_str() {
         "delivered" => EntryKind::Delivered {
             sender: str_of(o, "sender")?,
+            sender_name: opt(o, "sender_name", str_of)?,
             epitaph: opt(o, "epitaph", str_of)?,
             body: str_of(o, "body")?,
         },

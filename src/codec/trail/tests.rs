@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 fn line(exit: i64, failed: bool, label: &str, standing: &str) -> Value {
     json!({ "argv": "bl close x", "cwd": "/p", "exit": exit, "origin": "balls",
             "stderr": "gate", "stdout": "", "ts": "1700", "failed": failed,
-            "exit_label": label, "standing": standing })
+            "exit_label": label, "standing": standing, "client": "seat1" })
 }
 
 #[test]
@@ -19,6 +19,7 @@ fn a_row_reads_its_own_words_and_derives_nothing() {
         ("1700", "balls", 1)
     );
     assert_eq!(row.stderr, "gate");
+    assert_eq!(row.client, "seat1", "who made the act (REMOTE §9.20)");
     assert!(row.failed);
     assert_eq!(row.exit_label, "exit 1");
     assert_eq!(row.standing, Standing::Live);
@@ -59,6 +60,21 @@ fn a_row_that_is_not_an_object_refuses_naming_the_shape() {
     assert_eq!(
         super::row(&json!("nope")).unwrap_err(),
         "ops row: not an object"
+    );
+}
+
+/// **The identity is required** (REMOTE §9.20): a row that could omit it would
+/// make an older engine and yog's own acts one shape, and yog's own acts have
+/// a true answer — `local`, §3's reserved in-world identity.
+#[test]
+fn the_client_is_required_and_the_engines_own_acts_say_local() {
+    let mut bare = line(0, false, "exit 0", "clean");
+    bare["client"] = json!("local");
+    assert_eq!(super::row(&bare).unwrap().client, "local");
+    bare.as_object_mut().unwrap().remove("client");
+    assert_eq!(
+        super::row(&bare).unwrap_err(),
+        "missing or non-string field \"client\""
     );
 }
 

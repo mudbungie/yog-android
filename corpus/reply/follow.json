@@ -4,7 +4,8 @@
     {
       "kind": "follow",
       "ok": true,
-      "stream": {}
+      "stream": {},
+      "tools": []
     },
     {
       "kind": "follow",
@@ -12,7 +13,8 @@
       "stream": {
         "delta": "thinking",
         "thinking": "first I"
-      }
+      },
+      "tools": []
     },
     {
       "kind": "follow",
@@ -21,9 +23,20 @@
         "delta": "text",
         "text": "then this",
         "thinking": "first I"
-      }
+      },
+      "tools": [
+        {
+          "input": "{\"command\":\"hostname && uptime\"}",
+          "tool": "box2_Bash",
+          "tool_use": "toolu_01"
+        },
+        {
+          "exit_code": 0,
+          "tool_use": "toolu_01"
+        }
+      ]
     }
   ],
-  "protocol": 1,
+  "protocol": 14,
   "shape": "follow"
 }

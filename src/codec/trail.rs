@@ -24,6 +24,14 @@
 //! reach this seat as a red corpus fixture at the re-vendor that brought it,
 //! which is the right moment. A signal is an open list painted as its tokens.
 //!
+//! **The row says who said it** (REMOTE §9.20, PROTOCOL 16). Two seats
+//! depositing into one conversation within the same second left two rows
+//! spelling `argv`, `cwd`, `origin` and `exit` and nothing that told them
+//! apart, and on a shared workspace that is the question a trail is read to
+//! answer. `client` is required for the reason `standing` is: a row that could
+//! omit it would make "an older engine" and "yog itself" one shape, and yog
+//! itself has a true answer — `local`.
+//!
 //! **`ack` and `clear-trail` carry nothing, and that is the whole shape.**
 //! Neither names a row: the ack is a watermark over the trail as it stands and
 //! the clear is a truncation of it, both world-wide, so there is nothing for a
@@ -62,6 +70,18 @@ pub struct OpRow {
     pub exit_label: String,
     /// Where this row stands in the tail — the alarm's whole state.
     pub standing: Standing,
+    /// **Who made this act** (REMOTE §9.20, PROTOCOL 16): a connection
+    /// certificate's common name, or `local` for the acts yog took itself —
+    /// the window's, the `gestures/` inbox's, its own loops'. Read strictly,
+    /// like `standing`: it is the one fact on this row that cannot be
+    /// recovered later, because presence is a point-in-time observation by
+    /// design and nothing after the fact can say who a row belonged to.
+    ///
+    /// It is carried as the engine's word and classified no further. `local`
+    /// is §3's reserved in-world identity and every other value is a leaf's
+    /// common name, which is the same type the roster spells — a trail row and
+    /// a client row say one identity one way.
+    pub client: String,
 }
 
 /// **Where a trail row stands** (REMOTE §9.17): DESIGN §6's outcome folded
@@ -117,6 +137,7 @@ pub(crate) fn row(v: &Value) -> Result<OpRow, String> {
         failed: bool_of(o, "failed")?,
         exit_label: str_of(o, "exit_label")?,
         standing: pick(o, "standing", &STANDINGS)?,
+        client: str_of(o, "client")?,
     })
 }
 

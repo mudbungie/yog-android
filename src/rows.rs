@@ -38,6 +38,7 @@ mod build;
 mod compacted;
 mod project;
 mod turns;
+mod windowed;
 mod wounded;
 
 /// The six-value §11 tone vocabulary, re-exported rather than restated: the

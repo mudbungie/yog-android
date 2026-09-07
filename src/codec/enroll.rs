@@ -30,6 +30,7 @@ pub(crate) fn encode(workspace: &str, name: &str, grade: Grade) -> Value {
 
 /// Read one back.
 pub(crate) fn decode(o: &Map<String, Value>) -> Result<Act, String> {
+    unrouted(o.get("address"))?;
     Ok(Act::Enroll {
         workspace: str_of(o, "workspace")?,
         name: str_of(o, "name")?,
@@ -48,6 +49,22 @@ pub(super) fn enrolled(o: &Map<String, Value>) -> Result<Envelope, String> {
         cert: str_of(o, "cert")?,
         key: str_of(o, "key")?,
     })
+}
+
+/// **The route the enrolled device will dial is a fact about THAT device**
+/// (REMOTE §8.4, PROTOCOL 14), and this seat has no field to state one in. The
+/// engine takes an optional `address` for a device that does not share its own
+/// view of itself — an emulator reaching its host by the emulator's alias, a
+/// phone on the LAN — and absent is the engine's own `wire/address`, which is
+/// the only spelling this seat can honestly send: a phone minting for the next
+/// box knows nothing about the route that box will take. So a frame stating
+/// one is refused by name rather than read as the mint without it, which is
+/// the silent misread REMOTE §3's third rule forbids.
+fn unrouted(address: Option<&Value>) -> Result<(), String> {
+    match address {
+        None => Ok(()),
+        Some(stated) => Err(format!("enroll: unimplemented address {stated}")),
+    }
 }
 
 /// The §4.2 grade, in the engine's own two words.

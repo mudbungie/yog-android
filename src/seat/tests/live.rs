@@ -26,7 +26,7 @@ fn tail(snap: &crate::seat::Snapshot) -> Option<(String, String)> {
 
 /// One follow frame: what landed since the frame before it (§5.5).
 fn frame(thinking: &str, text: &str) -> Vec<u8> {
-    json!({ "ok": true, "kind": "follow",
+    json!({ "ok": true, "kind": "follow", "tools": [],
             "stream": { "delta": "text", "thinking": thinking, "text": text } })
     .to_string()
     .into_bytes()

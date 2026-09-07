@@ -45,8 +45,9 @@ use crate::frame;
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
-/// **13 since the re-vendor of bl-8e3c.** Twelve moves stand behind it, and
-/// the last five are the ones this build consumes. 2 was the tool-host pair
+/// **17 since the re-vendor of bl-ee21.** Sixteen moves stand behind it and
+/// every one is recorded below — as a shape this seat reads, or as one whose
+/// move cost it the integer and nothing else. 2 was the tool-host pair
 /// (`subject_cwd` on an advertised element, `cwd` on an invocation — REMOTE
 /// §5.1, §5.3); **3** put `failure` on the conversation row, the agent answer
 /// and the queue row (§9.10); **4** put `flag` on the queue row (§9.11); **5**
@@ -69,6 +70,42 @@ use crate::frame;
 /// row — the firing rules in words, one home on the engine (`codec::queue`).
 /// **13** (§9.18) put a typed `settings` array on `reply/config`, a shape this
 /// seat refuses; it cost the integer and nothing else.
+///
+/// **14** moved two shapes this seat reads and one it does not send whole:
+/// `reply/clients` rows gained `last_seen` (§5), the third durable fact — a
+/// stamp absent for a client that has never dialled, which is the reading that
+/// tells a sleeping machine from a ghost, painted by `roster::spoke`; and
+/// `enroll` gained an optional `address` (§8.4), the route the enrolled device
+/// will dial, which is a fact about a box this seat cannot see and is
+/// therefore a recorded refusal here (`codec::enroll`). **15** (§5.5) put the
+/// **tool window** on the follow lane: `tools` beside the fold, required and
+/// empty-included, two transitions per call merged by `tool_use`
+/// (`codec::follow::window`) and painted as rows the record has not caught up
+/// with (`crate::live`). The lane's SUBJECT moved with it — a follow read
+/// follows a step rather than the model call inside it — which is a change of
+/// meaning under an unchanged spelling, the class the ledger cannot see: this
+/// seat consumed it by gating the prose half on `Flight::Inference` and the
+/// window on any flight at all. **16** (§9.20) put `client` on every
+/// `reply/ops` row, the identity that made the act — a leaf's common name, or
+/// `local` for yog's own — which the trail paints beside the origin.
+///
+/// **17** (yog bl-ebef, bl-6661) is two shapes under one version, both the
+/// same litany 0.0.11 pin landing. A delivered row — on `reply/transcript` and
+/// on `reply/inbox`'s deposit envelope alike — gained an optional
+/// `sender_name` / `from_name`: the sender's display name, present exactly
+/// when the sender is an agent wearing one, absent (never null) otherwise. The
+/// framing sender is the FILENAME's origin token, so every message a child
+/// sent was headed by sixty characters of timestamped hex — which on a phone
+/// is the whole width the header has, which is why the name takes the header
+/// here and the id keeps riding beside it (`codec::transcript`,
+/// `codec::records::inbox`, `rows::project`). And the §6 signal vocabulary
+/// gained `truncated`, a turn cut off at the request's output cap: **a new
+/// VALUE and not a field**, which the corpus ledger cannot see and a strict
+/// decoder would refuse by name — this seat carries `signals` as its tokens by
+/// a recorded narrowing (`codec::queue`), so the word arrives painted and
+/// nothing here had to move. `doctor` arrived with them as a whole new shape,
+/// which §3 exempts from the bump: it is a recorded refusal in both directions
+/// and a `parity.toml` line until bl-a393 builds its surface.
 ///
 /// **10 is the bump that was a design decision here, not a re-vendor.** The
 /// wire intake this seat dials HOLDS a follow-class read: the first frame at
@@ -93,7 +130,7 @@ use crate::frame;
 /// on purpose.** An unknown FIELD is tolerated — this codec reads the fields
 /// it spells and ignores the rest, which `codec::conv`'s own test pins. What
 /// ends an old build is this preface: fail-closed, both ways, by §3's design.
-pub const PROTOCOL: u32 = 13;
+pub const PROTOCOL: u32 = 17;
 
 /// The preface's one key, and the whole of its shape.
 const KEY: &str = "protocol";

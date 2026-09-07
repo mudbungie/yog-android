@@ -12,7 +12,7 @@
 //! envelope is the refusal, and decoding it hands back the engine's sentence.
 
 use super::expect::Expect::{self, Reads, Refuses};
-use super::expect::UNSENT;
+use super::expect::{NO_DOCTOR, UNSENT};
 
 pub const REPLIES: &[(&str, Expect)] = &[
     ("acked", Reads),
@@ -30,6 +30,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("conversations", Reads),
     ("deleted", Reads),
     ("delivered", Reads),
+    ("doctor", Refuses(NO_DOCTOR)),
     ("enrolled", Reads),
     ("fanned", Reads),
     ("files", Reads),

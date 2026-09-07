@@ -11,6 +11,7 @@
             "deposited_at": "t0",
             "epitaph": "sideways",
             "from": "user",
+            "from_name": "DulcetMongoose",
             "terminal_ref": "refs/x"
           },
           "name": "user-001.md",
@@ -26,6 +27,6 @@
       ]
     }
   ],
-  "protocol": 1,
+  "protocol": 17,
   "shape": "inbox"
 }

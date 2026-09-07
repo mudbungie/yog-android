@@ -153,7 +153,7 @@ pub(super) fn mail(ui: &mut egui::Ui, records: &Records) {
         ui.weak("no mail waiting");
     }
     for row in &records.inbox {
-        let from = row.from.clone().unwrap_or_else(|| row.name.clone());
+        let from = row.speaker();
         let when = row.deposited_at.clone().unwrap_or_default();
         ui.label(format!("{from} · {when}"));
         said(ui, &row.body);

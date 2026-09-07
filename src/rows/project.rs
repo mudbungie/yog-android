@@ -10,6 +10,7 @@
 
 use super::build::{key, row, with_size};
 use super::compacted::compacted_row;
+use super::windowed::windowed_row;
 use super::wounded::wounded_row;
 use super::{Role, Row, RowClass, Tone};
 use crate::codec::{Entry, EntryKind};
@@ -40,6 +41,7 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
     match &entry.kind {
         EntryKind::Delivered {
             sender,
+            sender_name,
             epitaph,
             body,
         } => {
@@ -50,7 +52,7 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             };
             out.push(row(
                 key(&entry.name, 0),
-                delivered_prefix(sender, epitaph.as_deref()),
+                delivered_prefix(sender_name.as_deref().unwrap_or(sender), epitaph.as_deref()),
                 payload,
                 RowClass::Response,
                 tone,
@@ -108,6 +110,11 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
         EntryKind::Streaming { thinking, text } => {
             push_streaming(&entry.name, speaker, thinking, text, out);
         }
+        EntryKind::Windowed {
+            tool,
+            input,
+            exit_code,
+        } => out.push(windowed_row(&entry.name, tool, input, *exit_code)),
         EntryKind::Compacted {
             first,
             last,
@@ -134,11 +141,19 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
     }
 }
 
-/// The prefix seat of a delivered message: the sender, plus **how it ended**
+/// The prefix seat of a delivered message: **the sender's name where it wears
+/// one** (PROTOCOL 17, yog bl-6661) and its addressing id where it does not,
+/// plus **how it ended**
 /// when the envelope asserted an ending. An `epitaph:` marks the message as a
 /// *result deposit* — a child's terminal, arriving because this agent
 /// dispatched it, not because someone chose to speak — and on a `stopped` /
 /// `died` one it is the entire message.
+///
+/// The name is a display fact and the id is the addressing one, so only the
+/// header takes the name: the ROLE below still reads the id, because `user` is
+/// the reserved sender token and a display name is not one. On a phone this is
+/// the difference between a row headed by a word and one headed by sixty
+/// characters of timestamped hex, which is the whole width the header has.
 ///
 /// The token rides through verbatim, which is the desktop's mapping with the
 /// table removed rather than a deviation from it: that table parses four known

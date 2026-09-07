@@ -114,6 +114,16 @@ pub const ALREADY_HELD: &str =
 /// invokes."* `capture` is that verb's read half and goes with it.
 pub const ASKING_SIDE: &str = "§5.3's asking side — this device is invoked, it never invokes";
 
+/// **The wiring check has no surface here yet** (PROTOCOL 17, yog bl-28f4).
+/// `doctor` answers *is this box wired up* — every fact the engine already
+/// holds, asked at once — and the help roster classes it `control`, so every
+/// seat owes it a discoverable interactable (PARITY §5). This one does not
+/// have it: the surface is bl-a393, which deletes this row and the
+/// `parity.toml` line beside it. Until then the shape is refused by name in
+/// both directions, which is the difference between a recorded skip and a
+/// client that quietly misreads a reply it never asked for.
+pub const NO_DOCTOR: &str = "the wiring check has no surface on this seat yet (bl-a393)";
+
 /// Every reply this client does not read is the answer to a gesture it does
 /// not send. One reason, because it is one fact: the reply vocabulary is the
 /// shadow of the request slice, and the two move together or one of them is
@@ -147,6 +157,16 @@ pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 /// The tool host's `invocations` read is follow-CLASS and is **not** this
 /// lane: its answer is one frame of rows, and §5.5's rule is about a text
 /// fold.
+/// **The route a minted device will dial is a choice about a box this seat
+/// cannot see** (REMOTE §8.4, PROTOCOL 14). `enroll` takes an optional
+/// `address` — the address THIS device will dial, for one that does not share
+/// the engine's own view of itself — and absent is the engine's own
+/// `wire/address`. A phone minting the next box knows nothing about the route
+/// that box will take, so the bare form is the only honest gesture and a frame
+/// stating a route is refused by name rather than read as the mint without it.
+pub const NO_ROUTE: &str =
+    "the address the next device dials is a fact about a box this seat cannot see (REMOTE §8.4)";
+
 /// DESIGN §8: *"One rung, and the other two are not omissions. The bare rung
 /// is the whole slice: a phone is not where a work directory is chosen or a
 /// ball is bound."*

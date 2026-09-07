@@ -7,6 +7,7 @@
       "rows": [
         {
           "argv": "bl close x",
+          "client": "local",
           "cwd": "/p",
           "exit": 1,
           "exit_label": "exit 1",
@@ -19,6 +20,7 @@
         },
         {
           "argv": "bl close x",
+          "client": "local",
           "cwd": "/p",
           "exit": 0,
           "exit_label": "exit 0",
@@ -31,6 +33,7 @@
         },
         {
           "argv": "bz login",
+          "client": "local",
           "cwd": "/p",
           "exit": 2,
           "exit_label": "exit 2",
@@ -43,6 +46,7 @@
         },
         {
           "argv": "yog-step ack-failures",
+          "client": "local",
           "cwd": "/p",
           "exit": 0,
           "exit_label": "exit 0",
@@ -55,6 +59,7 @@
         },
         {
           "argv": "litany prime",
+          "client": "local",
           "cwd": "/p",
           "exit": 3,
           "exit_label": "exit 3",
@@ -67,6 +72,7 @@
         },
         {
           "argv": "litany prompt c-1",
+          "client": "local",
           "cwd": "/p",
           "exit": -2,
           "exit_label": "detached — handed off, no exit to observe",
@@ -79,6 +85,7 @@
         },
         {
           "argv": "yog-drift unannounced",
+          "client": "local",
           "cwd": "/p",
           "exit": -4,
           "exit_label": "drift observation — not an attempted action",
@@ -92,6 +99,6 @@
       ]
     }
   ],
-  "protocol": 11,
+  "protocol": 15,
   "shape": "ops"
 }

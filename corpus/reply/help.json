@@ -272,7 +272,7 @@
           "verb": "answer"
         },
         {
-          "detail": "Stops letting the selected conversation act on its own: from its next tool call, everything but a read waits for you — the same park a held call already makes, applied to all of them. It keeps running, keeps its branch and keeps reading, so nothing is lost and nothing is killed. It covers the conversation and everything below it, including children it has not spawned yet. Anything the policy already refuses stays refused, and a call you pass with `/answer` still goes through. `/restore` gives the approval back.",
+          "detail": "Stops letting the selected conversation act on its own: from its next tool call, everything but a read waits for you — the same park a held call already makes, applied to all of them. **A read is what the call does, not which tool it is**: every invocation is classified on what it reaches, so `bash` running `ls`, `cat` or `echo` is a read and still runs, while the same `bash` writing outside its worktree, reaching the network or touching credentials parks. It keeps running, keeps its branch and keeps reading, so nothing is lost and nothing is killed. It covers the conversation and everything below it, including children it has not spawned yet. Anything the policy already refuses stays refused, and a call you pass with `/answer` still goes through. `/restore` gives the approval back.",
           "summary": "take away this conversation's tool auto-approval, and its descendants'",
           "surface": "control",
           "usage": "/revoke",
@@ -293,10 +293,10 @@
           "verb": "clear-trail"
         },
         {
-          "detail": "Issues a leaf under the stated common name on this engine's own CA, registers that client in the focused workspace, and answers the whole of what the device needs: the anchors, its certificate, its private key and the address it dials. The key is shredded here before the answer leaves, so this box keeps none of it; the certificate stays, and its presence is what refuses a second enrollment under the same name — re-issuing distrusts nothing, so both would be live. Bare is operator grade; add `foot` for a tool host that may advertise, take its invocations and complete them and say nothing else. Refuses when this box holds no CA, and when its address names no port a device can dial. The material travels to the device out of channel — a QR on a screen, adb, a hand — never over a connection the new device opened, which it could not open anyway.",
-          "summary": "mint a new device's certificate here, register it, and hand back its material",
+          "detail": "Issues a leaf under the stated common name on this engine's own CA, registers that client in the focused workspace, and answers the whole of what the device needs: the anchors, its certificate, its private key and the address it dials. The key is shredded here before the answer leaves, so this box keeps none of it. A name whose leaf `yog wire-certs WIRE_LEAF=` already minted is ADOPTED rather than refused: registering is not issuing, so the standing certificate is registered and handed over with nothing re-issued and nothing distrusted — which is the repair for a leaf that was minted into no workspace and so advertised into nothing. The grade then comes off that certificate, and an enrollment asking for a grade the subject does not carry is refused. A name already enrolled through this door has no key left to hand over and says so. `--at <host>:<port>` states the address THIS device will dial, for a device that does not share this engine's own view of itself — an emulator reaching its host through the emulator's alias, a phone on the LAN, a box on an overlay. Unstated is the engine's own `wire/address`. State one the server leaf already answers to (`WIRE_HOST` is a list), because a route the certificate omits fails verification at the device rather than here. Bare is operator grade; add `foot` for a tool host that may advertise, take its invocations and complete them and say nothing else. Refuses when this box holds no CA, and when its address names no port a device can dial. The material travels to the device out of channel — a QR on a screen, adb, a hand — never over a connection the new device opened, which it could not open anyway.",
+          "summary": "mint or adopt a device's certificate here, register it, and hand back its material",
           "surface": "control",
-          "usage": "/enroll <common-name> [foot]",
+          "usage": "/enroll <common-name> [foot] [--at <host>:<port>]",
           "verb": "enroll"
         },
         {
@@ -363,7 +363,14 @@
           "verb": "roles"
         },
         {
-          "detail": "One row per client registered in the seat's workspace: its name, whether it holds a live connection right now, and the tools it has advertised. Presence is read at the moment you ask and is true only then — a client that answers here may be gone a second later, which is why nothing durable records it. What each client advertises, by contrast, was written when it last presented its set and stands whether or not it is connected. A machine is registered by an operator's own act on the server, never over the wire.",
+          "detail": "One row per check, each carrying the fact it read and — when it fails — the act that fixes it. The engine's own four always answer, because the box this gesture is for may hold no workspace at all: the wire material, the endpoint `wire/address` names (a `127.0.0.1:0` is a request only the listener learns the answer to, and no seat can dial it), what this process actually BOUND — which the file cannot say and the boot says once on stderr — and the git identity every workspace and every step is committed under. With a workspace selected it adds that workspace's two: whether a conversation started there would reach a model, asked by the same gate the fire itself passes and quoting the sentence it would refuse with, and who is registered to reach it. It reads and never writes: a diagnostic has to work on a box that is broken in the way it is diagnosing, so every remedy is a sentence naming the operator's own act. No tally rides with the rows — count them.",
+          "summary": "is this box wired up: every check a first conversation needs, and the act that fixes each",
+          "surface": "control",
+          "usage": "/doctor",
+          "verb": "doctor"
+        },
+        {
+          "detail": "One row per client registered in the seat's workspace: its name, whether it holds a live connection right now, and the tools it has advertised. Presence is read at the moment you ask and is true only then — a client that answers here may be gone a second later, which is why nothing durable records it. What each client advertises, by contrast, was written when it last presented its set and stands whether or not it is connected. **And when it last spoke**, which is the fact that tells a machine asleep right now from one that has never once connected: presence reads false for both, and on a terminal seat it reads false for everything, since every verb opens and closes its own connection. A row with no last-seen at all has never dialled — the enrolment was minted and abandoned, and it is the row an operator can safely remove. A machine is registered by an operator's own act on the server, never over the wire.",
           "summary": "the machines registered in this workspace, who is connected, and what they offer",
           "surface": "control",
           "usage": "/clients",

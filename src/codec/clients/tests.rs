@@ -26,6 +26,32 @@ fn presence_and_the_advertised_set_are_two_facts_with_two_lifetimes() {
     assert!(phone.present && phone.tools.is_empty());
 }
 
+/// **The third fact has its own lifetime too** (REMOTE §5, PROTOCOL 14): a
+/// stamp stands for a machine that is not connected now, and its ABSENCE is
+/// the reading — a client that has never dialled at all.
+#[test]
+fn a_row_says_when_it_last_spoke_and_an_absent_stamp_is_the_reading() {
+    let rows = super::rows(&object(&json!({ "rows": [
+        { "client": "laptop", "present": false, "last_seen": 1_700_000_000, "tools": [] },
+        { "client": "phone", "present": false, "tools": [] }] })))
+    .unwrap();
+    assert_eq!(
+        rows.first().and_then(|row| row.last_seen),
+        Some(1_700_000_000)
+    );
+    assert!(
+        rows.get(1).is_some_and(|row| row.last_seen.is_none()),
+        "never dialled is an absence, not a zero"
+    );
+    assert_eq!(
+        super::rows(&object(&json!({ "rows": [
+            { "client": "laptop", "present": true, "last_seen": "recently", "tools": [] }] })))
+        .unwrap_err(),
+        "missing or non-integer field \"last_seen\"",
+        "a stamp of the wrong shape is a malformed envelope, not an absence"
+    );
+}
+
 /// **The consent is a fact of the element and absent reads false**, which is
 /// `codec::tools`' own rule — one reader, so this roster cannot disagree with
 /// what the same machine's advertisement said.

@@ -3,7 +3,8 @@
 //! painting one record.
 
 use super::{
-    SPEAKER, call, delivered, ended, go, model, prefixes, raw, result, streaming, text, thought,
+    SPEAKER, call, delivered, ended, go, model, named, prefixes, raw, result, streaming, text,
+    thought, windowed,
 };
 use crate::rows::{Fold, Role, RowClass, Tone};
 
@@ -19,6 +20,25 @@ fn a_delivered_message_wears_its_sender_and_the_operator_role() {
     assert_eq!(rows[0].tone, Tone::Plain);
     assert_eq!(rows[0].role, Some(Role::User));
     assert_eq!(rows[0].fold, Fold::Payload);
+}
+
+/// **The header takes the name and the role still reads the id** (PROTOCOL 17,
+/// yog bl-6661): a phone's row header is the whole width it has, and a message
+/// a child sent used to be attributed by sixty characters of timestamped hex.
+#[test]
+fn a_sender_wearing_a_name_is_headed_by_it() {
+    let rows = go(&[named(
+        "001",
+        "20260814T000000Z-ab12",
+        "DulcetMongoose",
+        "found it",
+    )]);
+    assert_eq!(rows[0].prefix, "DulcetMongoose:");
+    assert_eq!(
+        rows[0].role,
+        Some(Role::Peer),
+        "the role is the id's reading"
+    );
 }
 
 #[test]
@@ -164,4 +184,32 @@ fn an_unparseable_entry_surfaces_under_its_own_filename() {
     assert_eq!(rows[0].class, RowClass::Other);
     assert_eq!(rows[0].tone, Tone::Weak);
     assert_eq!(rows[0].role, None);
+}
+
+/// **The follow window wears the committed block's own words** (REMOTE §5.5):
+/// the same `⚙ <tool> — running` a tool-use block wears while nothing has
+/// retired it, so one call reads the same on either side of the commit.
+#[test]
+fn a_windowed_call_in_flight_reads_as_the_committed_block_does() {
+    let rows = go(&[windowed("box2_Bash", "{\"command\":\"uptime\"}", None)]);
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].prefix, "⚙ box2_Bash — running");
+    assert_eq!(rows[0].preview, "{\"command\":\"uptime\"}");
+    assert_eq!(rows[0].class, RowClass::Other);
+    assert_eq!(rows[0].tone, Tone::InFlight);
+    assert_eq!(rows[0].role, None);
+    assert!(rows[0].expanded, "a step happening is the show");
+}
+
+/// **A closed call states the number and claims nothing about it.** REMOTE
+/// §5.5 puts no verdict on this lane — `exit_code`'s PRESENCE is the status —
+/// so the row goes plain rather than green or red, which is the reading
+/// `codec::trail` refuses to invent one noun along.
+#[test]
+fn a_windowed_call_that_closed_states_the_number_and_no_verdict() {
+    for code in [0, 1, 127] {
+        let rows = go(&[windowed("box2_Bash", "{}", Some(code))]);
+        assert_eq!(rows[0].prefix, format!("⚙ box2_Bash — exit {code}"));
+        assert_eq!(rows[0].tone, Tone::Plain, "no hue reads the number");
+    }
 }

@@ -55,6 +55,11 @@ pub(in crate::rows) fn step_of(kind: &EntryKind, block: usize) -> Step {
             Some(Block::ToolUse { .. }) => Step::ToolCall,
             Some(Block::Text(_)) | None => Step::Model,
         },
+        // The follow window's own row is a tool call — it is the same call
+        // the block will be once the record catches up (REMOTE §5.5), and a
+        // census that counted it as anything else would say a different number
+        // about one turn depending on which side of the commit the read landed.
+        EntryKind::Windowed { .. } => Step::ToolCall,
         EntryKind::ToolResult { .. } | EntryKind::Streaming { .. } | EntryKind::Raw => Step::Plain,
     }
 }
@@ -70,6 +75,7 @@ pub(in crate::rows) fn usage_of(kind: &EntryKind) -> Usage {
         EntryKind::Delivered { .. }
         | EntryKind::ToolResult { .. }
         | EntryKind::Streaming { .. }
+        | EntryKind::Windowed { .. }
         | EntryKind::Compacted { .. }
         | EntryKind::Wounded { .. }
         | EntryKind::Raw => Usage::new(),

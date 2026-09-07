@@ -43,8 +43,8 @@ impl Standing {
         // One tail on the glass, and none at rest (bl-e3d1). The gate is the
         // row's own flight, so the transcript's tail obeys exactly what the
         // lane obeys.
-        let flying = self.streaming(focus);
-        out.transcript = crate::live::settled(out.transcript, self.live.as_ref(), flying);
+        out.transcript =
+            crate::live::settled(out.transcript, self.live.as_ref(), self.flight(focus));
         // Painted onto the published snapshot as well as onto `fresh`: a
         // pass that failed republishes last-good rows, and the selectors'
         // offerings are not the pass's to lose (bl-0267).
@@ -100,13 +100,26 @@ impl Standing {
     /// rides (REMOTE §9.4). A conversation the list has not caught up with
     /// has no row and so is not streaming, which is the honest answer.
     pub(in crate::seat) fn streaming(&self, focus: &Focus) -> bool {
-        let Some(agent) = focus.agent.as_deref() else {
-            return false;
-        };
+        self.flight(focus).is_some()
+    }
+
+    /// **What kind of work the focused conversation is doing right now**, read
+    /// off the row's own `flight` — where every conversation-level gate rides
+    /// (REMOTE §9.4). A conversation the list has not caught up with has no row
+    /// and so is doing nothing, which is the honest answer.
+    ///
+    /// Two readers spend it and they want different halves (REMOTE §5.5,
+    /// bl-ee21): the lane is worth holding for any flight, because the tool
+    /// window is the STEP's, while the prose tail is painted only for
+    /// `Inference`, because that is the only flight the engine opens the prose
+    /// half under. One derivation, so the two cannot come to disagree about a
+    /// moment.
+    fn flight(&self, focus: &Focus) -> Option<crate::codec::Flight> {
+        let agent = focus.agent.as_deref()?;
         self.last
             .conversations
             .iter()
             .find(|row| row.root_id == agent)
-            .is_some_and(|row| row.flight.is_some())
+            .and_then(|row| row.flight)
     }
 }

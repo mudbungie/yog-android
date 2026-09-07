@@ -9,9 +9,14 @@
 //! **Nothing here reads a verdict out of an exit number.** yog derives what a
 //! failed action IS four ways and put all four on the wire (REMOTE §9.17:
 //! `failed`, `exit_label`, `standing`) precisely so that no seat re-implements
-//! them; the corpus this build is vendored against predates that bump, so the
-//! row states the engine's own three facts and stops. Reading the words is
-//! bl-8e3c's, with the re-vendor that brings them.
+//! them, and the row paints those words rather than the number they came from.
+//!
+//! **And it names the client that acted** (REMOTE §9.20, PROTOCOL 16). A
+//! shared workspace is several seats depositing into one conversation, and
+//! until this field the record could not say which of them made an act; the
+//! engine's own acts say `local`. It rides the first line beside the origin,
+//! because who acted and which surface owes the row a reading are the same
+//! kind of provenance and are read in one glance.
 //!
 //! **`clear-trail` is the first armed control in this app.** Every gesture
 //! this seat had until now kept what it acted on; this one discards a durable
@@ -93,12 +98,17 @@ impl Shell {
 
 /// One line of the record: when, where it came from, what it exited, and what
 /// it said.
-/// One row: when, from where, and **the engine's own reading of what it
-/// exited** (REMOTE §9.17) — never a number this seat interprets. A failed
+/// One row: when, from where, **who made it** (REMOTE §9.20 — a leaf's common
+/// name, or `local` for the engine's own acts, which is the fact a shared
+/// workspace reads this trail to learn) and **the engine's own reading of what
+/// it exited** (REMOTE §9.17) — never a number this seat interprets. A failed
 /// row says so and says where it stands, so an operator can tell the alarm
 /// (`live`) from one a newer clean run retired or an ack covered.
 fn line(ui: &mut egui::Ui, row: &OpRow) {
-    ui.weak(format!("{} · {} · {}", row.ts, row.origin, row.exit_label));
+    ui.weak(format!(
+        "{} · {} · {} · {}",
+        row.ts, row.origin, row.client, row.exit_label
+    ));
     ui.label(&row.argv);
     if row.failed {
         ui.colored_label(

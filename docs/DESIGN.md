@@ -106,7 +106,10 @@ artifact and no endpoint that serves it) and replayed by
   spells one staging rung and predicts no conversation name (§8), so a frame
   stating another rung or a real seed is refused rather than flattened into
   the shape this codec has — the same misread the rule forbids, one level
-  down.
+  down. `enroll`'s optional `address` (REMOTE §8.4, PROTOCOL 14) is the same
+  refusal for a different reason: the route the enrolled device will dial is a
+  fact about a box this seat cannot see, so the bare form is the only honest
+  gesture and a frame stating a route is refused by name.
 
 The corpus caught one live defect on its first replay: firing a conversation
 answers `{"kind": "started"}`, which this client had no arm for, so the one
@@ -335,6 +338,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/pass/adopt.rs` | what a lane's frame means to the standing: the attention fold that replaces, the follow fold that appends, and the end of a stream | landed (bl-8e3c) |
 | `src/seat/pass/publish.rs` | the one builder every published snapshot goes through, whether a pass or a frame publishes it | landed (bl-8e3c, out of `pass.rs`) |
 | `src/rows/wounded.rs` | the settled-failure notice as a row (REMOTE §9.16): the class, the remedy on the refusal arm, and no row for `none` | landed (bl-8e3c) |
+| `src/codec/follow/window.rs` | the follow lane's tool window (REMOTE §5.5): one type for a transition and a call, the merge by `tool_use` that folds one into the other, and the status that is a field's presence rather than a verdict | landed (bl-ee21) |
+| `src/live.rs` + `src/rows/windowed.rs` | where the lane meets the record: the prose gated on the flight that opens it, and a window row minted only for a call no committed block names yet | landed (bl-e3d1, the window bl-ee21) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
@@ -778,6 +783,45 @@ client-side from the counters that crossed the wire, the 160-character
 preview cap. They are asserted in this crate's own tests, so a divergence is
 a red test here rather than two clients that disagree in front of an
 operator.
+
+**A delivered row is headed by the sender's NAME where it wears one**
+(PROTOCOL 17, yog bl-6661, bl-ee21). The framing sender is the filename's
+origin token — the addressing key litany's inbox scan derives from — so every
+message a child sent was headed by sixty characters of timestamped hex, which
+on a phone is the entire width the header has. `sender_name` rides beside it,
+present exactly when the sender is an agent wearing a name, and the header
+takes the name while the ROLE keeps reading the id: `user` is a reserved sender
+token and a display name is not one. The same pair arrives on the records
+screen's undelivered mail as `from_name`, read back through `Mail::speaker` —
+a reading in the codec rather than a fallback chain inside a paint file.
+
+**The chat shows the tool window, and only what the record is behind on**
+(REMOTE §5.5, PROTOCOL 15, bl-ee21). The follow lane gained `tools` beside the
+prose — two transitions per call, `input.json` landed and `output.json`
+returned — because a conversation administering a MACHINE says almost nothing
+in prose while it runs eight commands on two boxes, and the box is precisely
+the thing an operator cannot inspect afterwards. On this seat the transcript
+read already carries every committed call, so the lane is not a second source
+for them: `crate::live` paints a window row only for a call no committed block
+names yet, which is the same structural dedupe the tail has (replace what the
+record carries, add only what it does not) keyed on the `tool_use` id both
+sides share. The row wears the committed block's own words — `⚙ <tool> —
+running` — so one call reads one way on either side of the commit, and a
+closed one states `exit <n>` and claims nothing about it: §5.5 puts no verdict
+on this lane, and a hue read off the number would be this seat deciding what
+an exit code means. The name carries the machine already (§5.1 presents a
+routed tool as `<client>_<tool>`), so *where* a command ran needs no join.
+
+**And the prose half is gated on the flight that opens it, not on the step.**
+The lane's subject moved with the same bump: a follow read follows a STEP, so
+it stays open through the tool phase — with the settled call's words still in
+the seat's fold, while the engine's own tail stops at exactly that moment
+(`live_tail` is gated on `InFlight`). Painting the fold on any flight would
+therefore put the committed answer on the glass a second time for as long as
+the commands run, which is bl-e3d1's defect returning through a widened lane.
+So the two liveness readings §5.5 tells apart are read off the row's own
+`flight`: `Inference` opens the prose, any flight at all opens the window,
+and at rest there is neither.
 
 **One deliberate difference, and its reason:** the desktop pulses an
 in-flight row's colour. A phone repaints on a budget it is also spending on
@@ -1920,6 +1964,17 @@ answered as it changes. That is the queue's own nature rather than plumbing —
 its rows address themselves, so nothing about the focus binds the answer to
 that focus, which §13.7 already said and this is the shape of.
 
+**A trail row names the client that made the act** (REMOTE §9.20, PROTOCOL 16,
+bl-ee21). A shared workspace is several seats depositing into one conversation,
+and until that field two of them within the same second left two rows spelling
+`argv`, `cwd`, `origin` and `exit` with nothing that told them apart — on the
+one surface a person reads afterwards to reconstruct what happened. It is a
+leaf's common name, or `local` for yog's own acts (§3's reserved in-world
+identity), read strictly like `standing` and carried no further: this seat
+classifies it exactly as little as it classifies an exit number. It rides the
+first line beside the origin, because who acted and which surface owes the row
+a reading are the same kind of provenance and are read in one glance.
+
 **A queue row navigates; a trail row does not.** A queue row carries the
 workspace and the agent in the words every gesture takes, so tapping one opens
 that conversation exactly as a search hit does. A trail row addresses nothing —
@@ -2466,6 +2521,18 @@ ambiguous. And there is nothing here to fire, because every other op in REMOTE
 §5 is a MACHINE's — `invocations` above all, which a seat must never ask
 because asking it DRAINS the foot's queue. What an operator *does* about a
 tool call happens on the conversation making it (§13.7).
+
+**A third fact since PROTOCOL 14, and it is the one that answers "is that
+machine real"** (REMOTE §5, bl-ee21). `present` reads false for a box that
+spoke ten seconds ago and for one that has never once connected, and on a
+terminal seat it reads false for everything — every CLI verb opens and closes
+its own connection. `last_seen` is durable where presence is deliberately not,
+so a row with **no stamp at all** has never dialled: the enrolment was minted
+and abandoned, and it is the row an operator can safely remove. The absence is
+therefore said in words rather than left as a missing line, and the age is
+spelled by `roster::spoke` in the units the conversation list already speaks —
+the derivation lives there rather than in the screen, because a reading inside
+a paint file is one no host test can reach.
 
 **An advertised element has one reader wherever it is said.** A client row's
 tools are the same facts this device presents in its own `advertise`, so
@@ -3072,6 +3139,13 @@ and the three costs §7 priced for holding are paid or dissolved:
   (REMOTE §14.1's own ruling) and the follow frame appends (§5.5's), and the
   two folds are two arms of one `adopt`, chosen by the lane's subject and
   checked against the reply's kind.
+
+  **The fold has a second half since PROTOCOL 15** (bl-ee21): the frame's
+  `tools` list appends by the same rule the prose accretes by, and what the
+  concatenation MEANS — two transitions per call, merged by `tool_use` — is
+  `codec::follow::window`'s, derived on every read rather than stored beside
+  the transitions. `tools` is required and empty-included, so a frame in the
+  pre-15 spelling refuses by name rather than reading as *nothing is running*.
 
 **The pass is the lane's clock, and a special case dissolved with it.** A
 lane is opened by a pass and only by a pass: every pass ends by making what

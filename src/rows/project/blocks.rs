@@ -4,6 +4,7 @@
 //! blocks a turn committed. The two change for unrelated reasons — a new entry
 //! kind on the wire touches only the match, a new block kind only this file.
 
+use super::super::build::GEAR;
 use super::super::build::row;
 use super::super::{Role, Row, RowClass, Tone};
 use crate::codec::{Block, Entry, EntryKind};
@@ -44,9 +45,9 @@ pub(super) fn block_row(
         Block::ToolUse { id, name, input } => {
             let running = unresolved(entries, id);
             let prefix = if running {
-                format!("⚙ {name} — running")
+                format!("{GEAR} {name} — running")
             } else {
-                format!("⚙ {name}")
+                format!("{GEAR} {name}")
             };
             let tone = if running { Tone::InFlight } else { Tone::Plain };
             row(key, prefix, input, RowClass::Other, tone, None)

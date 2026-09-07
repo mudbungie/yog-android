@@ -1,6 +1,7 @@
 //! **The streaming tail's one rule** (bl-e3d1): the transcript a frame paints
 //! carries exactly one tail, freshened while a turn is in flight and gone
-//! when it is not.
+//! when it is not — and, since the lane widened (REMOTE §5.5, PROTOCOL 15),
+//! the tool window beside it.
 //!
 //! **Why there was ever more than one.** The engine writes the growing answer
 //! into the transcript itself as an `EntryKind::Streaming`, so a cadence read
@@ -16,13 +17,32 @@
 //! rather than a content match: when the engine's read stops carrying a tail,
 //! there is nothing to replace and nothing to dissolve.
 //!
-//! **And at rest there is no tail at all.** `in_flight` is the row's own
-//! `flight` (REMOTE §9.4 puts the gate on the row), so a conversation the
-//! engine says is not writing shows no growing text — whatever the response
-//! file still holds. That is the flight-end half of the same defect: a tail
-//! left standing under a settled reply is stale by the engine's own statement.
+//! **The prose is painted while a model call is streaming, and not merely
+//! while the step is live** (REMOTE §5.5, bl-ee21). The gate used to be the
+//! row's `flight` at all, which was the same reading back when the lane ENDED
+//! the instant a call settled — the seat's fold was emptied by the stream's
+//! end and there was nothing stale to hold. The lane now follows the STEP, so
+//! it stays open through the tool phase with the settled call's words still in
+//! the fold, and the engine's own tail (`live_tail`) is gated on `InFlight` —
+//! it stops carrying one at exactly that moment. Painting the fold on any
+//! flight would therefore put the committed answer on the glass a second time
+//! for as long as the tools run. So this reads the same two liveness questions
+//! §5.5 tells apart, off the field the engine already states on the row:
+//! `Flight::Inference` opens the prose, any flight at all opens the window.
+//!
+//! **And at rest there is neither.** `flight` is the row's own (REMOTE §9.4
+//! puts the gate on the row), so a conversation the engine says is not working
+//! shows no growing text and no window — whatever the response file still
+//! holds.
+//!
+//! **The window paints only what the record does not carry yet.** A call whose
+//! `tool_use` a committed block already names is the transcript's to paint —
+//! it is there with its input and its running mark — so the lane adds a row
+//! only for a call the cadence read has not caught up with. That is the same
+//! structural dedupe the tail has, keyed on the id the two sides share rather
+//! than on what either says.
 
-use crate::codec::{Entry, EntryKind, Stream};
+use crate::codec::{Block, Call, Entry, EntryKind, Flight, Stream};
 
 /// The name the engine gives its streaming entry, and therefore the name a
 /// replacement wears: the row keys a fold override is remembered by are built
@@ -30,29 +50,35 @@ use crate::codec::{Entry, EntryKind, Stream};
 /// operator's own flips.
 const NAME: &str = "streaming";
 
+/// The name space a windowed call's row is keyed under — `window/<tool_use>`,
+/// so the key is stable across the stateless re-read for exactly as long as
+/// the call is, and cannot collide with a transcript filename.
+const WINDOW: &str = "window";
+
 /// The transcript as it should paint.
-pub fn settled(transcript: Vec<Entry>, live: Option<&Stream>, in_flight: bool) -> Vec<Entry> {
-    let Some(fresh) = live.filter(|_| in_flight).and_then(entry_of) else {
-        // Nothing to replace it with, so there are only two answers: at rest
-        // no tail at all, and in flight the read's own tail — which is the
-        // freshest thing there is until the lane's first read lands, and
-        // whose absence for half a second would be a row that flickers.
-        return if in_flight {
-            transcript
-        } else {
-            transcript
-                .into_iter()
-                .filter(|entry| !matches!(entry.kind, EntryKind::Streaming { .. }))
-                .collect()
-        };
+pub fn settled(
+    transcript: Vec<Entry>,
+    live: Option<&Stream>,
+    flight: Option<Flight>,
+) -> Vec<Entry> {
+    let streaming = flight == Some(Flight::Inference);
+    let fresh = live.filter(|_| streaming).and_then(entry_of);
+    let mut out: Vec<Entry> = if streaming && fresh.is_none() {
+        // The read's own tail is the freshest thing there is until the lane's
+        // first frame lands, and dropping it for half a second is a row that
+        // flickers.
+        transcript
+    } else {
+        transcript
+            .into_iter()
+            .filter(|entry| !matches!(entry.kind, EntryKind::Streaming { .. }))
+            .collect()
     };
-    let mut out: Vec<Entry> = transcript
-        .into_iter()
-        .filter(|entry| !matches!(entry.kind, EntryKind::Streaming { .. }))
-        .collect();
+    let windowed = windowed(live.filter(|_| flight.is_some()), &out);
+    out.extend(windowed);
     // The tail goes last because it IS the tail: the engine writes it at the
     // end of the response file, and everything before it has committed.
-    out.push(fresh);
+    out.extend(fresh);
     out
 }
 
@@ -68,6 +94,45 @@ fn entry_of(stream: &Stream) -> Option<Entry> {
         name: NAME.to_owned(),
         raw: String::new(),
         kind: EntryKind::Streaming { thinking, text },
+    })
+}
+
+/// The window's calls as entries, minus the ones `committed` already carries.
+fn windowed(live: Option<&Stream>, committed: &[Entry]) -> Vec<Entry> {
+    live.map(Stream::window)
+        .unwrap_or_default()
+        .iter()
+        .filter(|call| !carried(committed, &call.tool_use))
+        .map(window_entry)
+        .collect()
+}
+
+/// One call as the entry the projection paints. A call whose record carried no
+/// readable name is labelled by its own id — the operator is being told a
+/// command is running on their machine, and the id is the least this lane can
+/// say while still saying it.
+fn window_entry(call: &Call) -> Entry {
+    Entry {
+        name: format!("{WINDOW}/{}", call.tool_use),
+        raw: String::new(),
+        kind: EntryKind::Windowed {
+            tool: call.tool.clone().unwrap_or_else(|| call.tool_use.clone()),
+            input: call.input.clone().unwrap_or_default(),
+            exit_code: call.exit_code,
+        },
+    }
+}
+
+/// Does the record already carry this call? Byte equality on the provider's
+/// opaque id, exactly as `rows::project::blocks` asks the neighbouring
+/// question of a committed block: the shape is the provider's and this seat
+/// assumes nothing about it.
+fn carried(entries: &[Entry], tool_use: &str) -> bool {
+    entries.iter().any(|entry| match &entry.kind {
+        EntryKind::Model { blocks, .. } => blocks
+            .iter()
+            .any(|block| matches!(block, Block::ToolUse { id, .. } if id == tool_use)),
+        _ => false,
     })
 }
 

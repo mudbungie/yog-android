@@ -28,6 +28,7 @@
 
 use std::collections::BTreeSet;
 
+use super::build::GEAR;
 use super::{AutoExpand, Fold, Row, RowClass, Tone, expanded_for, in_flight};
 
 mod counts;
@@ -41,8 +42,6 @@ pub(super) use steps::{step_of, usage_of};
 /// ordinal is always a number, so the two can never collide, and the key is
 /// the turn's first entry — stable across the stateless re-read.
 const TURN_SUFFIX: &str = "turn";
-/// The machinery glyph, as the tool-call rows already wear it.
-const TURN_GLYPH: &str = "⚙";
 /// Separator between the aggregate's terms.
 const TERM_SEP: &str = " · ";
 /// What the aggregate's fold opens onto, said in words.
@@ -136,7 +135,7 @@ fn push_turn(
 fn aggregate(first_key: &str, counts: &Counts, auto: AutoExpand, folds: &BTreeSet<String>) -> Row {
     let mut row = Row {
         key: turn_key(first_key),
-        prefix: format!("{TURN_GLYPH} {}", counts.say()),
+        prefix: format!("{GEAR} {}", counts.say()),
         preview: String::new(),
         body: String::new(),
         hover: TURN_HOVER.to_string(),

@@ -1,0 +1,24 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "doctor",
+      "ok": true,
+      "rows": [
+        {
+          "check": "listener",
+          "fact": "listening on 127.0.0.1:7737",
+          "ok": true
+        },
+        {
+          "check": "address",
+          "fact": "127.0.0.1:0 is a request, not an endpoint",
+          "ok": false,
+          "remedy": "`WIRE_HOST=<host> WIRE_PORT=<port> yog wire-certs` states it"
+        }
+      ]
+    }
+  ],
+  "protocol": 13,
+  "shape": "doctor"
+}

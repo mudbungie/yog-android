@@ -166,6 +166,26 @@ fn a_deposit_that_stated_nothing_is_absent_rather_than_empty() {
     );
 }
 
+/// **A row is headed by the name where there is one** (PROTOCOL 17): the
+/// display name, else the addressing id, else the file itself — the whole
+/// fallback chain, asserted here rather than inside a screen no host test can
+/// reach.
+#[test]
+fn a_deposit_is_headed_by_its_senders_name_then_its_id_then_its_file() {
+    let said = json!({ "rows": [
+        { "name": "001-user.md", "deposit": { "body": "hi", "from": "user",
+                                              "from_name": "DulcetMongoose" } },
+        { "name": "002-user.md", "deposit": { "body": "hi", "from": "user" } },
+        { "name": "raw.md", "deposit": { "body": "" } }] });
+    let mail = super::mail(&object(&said)).unwrap();
+    let said: Vec<String> = mail.iter().map(super::Mail::speaker).collect();
+    assert_eq!(said, ["DulcetMongoose", "user", "raw.md"]);
+    assert_eq!(
+        mail.first().and_then(|row| row.from_name.clone()),
+        Some("DulcetMongoose".to_owned())
+    );
+}
+
 #[test]
 fn records_are_paintable_only_under_the_conversation_they_were_asked_at() {
     let records = super::Records {

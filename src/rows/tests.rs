@@ -45,6 +45,20 @@ fn delivered(name: &str, sender: &str, body: &str) -> Entry {
         name,
         EntryKind::Delivered {
             sender: sender.to_string(),
+            sender_name: None,
+            epitaph: None,
+            body: body.to_string(),
+        },
+    )
+}
+
+/// A delivered message whose sender wears a display name (PROTOCOL 17).
+fn named(name: &str, sender: &str, sender_name: &str, body: &str) -> Entry {
+    entry(
+        name,
+        EntryKind::Delivered {
+            sender: sender.to_string(),
+            sender_name: Some(sender_name.to_string()),
             epitaph: None,
             body: body.to_string(),
         },
@@ -56,6 +70,7 @@ fn ended(name: &str, sender: &str, epitaph: &str, body: &str) -> Entry {
         name,
         EntryKind::Delivered {
             sender: sender.to_string(),
+            sender_name: None,
             epitaph: Some(epitaph.to_string()),
             body: body.to_string(),
         },
@@ -112,6 +127,19 @@ fn streaming(name: &str, thinking: &str, text: &str) -> Entry {
         EntryKind::Streaming {
             thinking: thinking.to_string(),
             text: text.to_string(),
+        },
+    )
+}
+
+/// The follow window's own row: a call the record has not committed yet
+/// (REMOTE §5.5), which `crate::live` mints and nothing on the wire spells.
+fn windowed(tool: &str, input: &str, exit_code: Option<i64>) -> Entry {
+    entry(
+        &format!("window/{tool}"),
+        EntryKind::Windowed {
+            tool: tool.to_string(),
+            input: input.to_string(),
+            exit_code,
         },
     )
 }

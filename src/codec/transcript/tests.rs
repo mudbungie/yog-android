@@ -17,10 +17,32 @@ fn delivered_reads_back() {
         e.kind,
         EntryKind::Delivered {
             sender: "operator".into(),
+            sender_name: None,
             epitaph: None,
             body: "hello".into()
         }
     );
+}
+
+/// **The name and the id are two facts** (PROTOCOL 17): the display name where
+/// the sender wears one, absent — never empty — where it does not, and the
+/// addressing id riding beside it either way.
+#[test]
+fn a_delivered_row_carries_the_senders_name_beside_its_id() {
+    let v = json!({
+        "name": "001-20260814T000000Z-ab12.md", "raw": "x", "kind": "delivered",
+        "sender": "20260814T000000Z-ab12", "sender_name": "DulcetMongoose", "body": "x",
+    });
+    let EntryKind::Delivered {
+        sender,
+        sender_name,
+        ..
+    } = entry(&v).unwrap().kind
+    else {
+        panic!("wrong kind");
+    };
+    assert_eq!(sender, "20260814T000000Z-ab12", "the durable handle stays");
+    assert_eq!(sender_name.as_deref(), Some("DulcetMongoose"));
 }
 
 #[test]
