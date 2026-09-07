@@ -23,6 +23,16 @@
 # the release path work without one.
 git_only = true
 
+# **AND `publish = false` BESIDE IT, because the option's own warning is a
+# state this configuration was otherwise in** (bl-ca8f). Verbatim: *"`git_only`
+# and `publish` cannot both be `true` for the same package."* This key's config
+# default is TRUE, so setting `git_only` alone put the two in exactly that
+# pair — and release-plz resolved it by answering `nothing to release` on every
+# run rather than by refusing the config, which left main carrying a version no
+# tag named. `Cargo.toml` already says the same thing from the other end; this
+# says it where release-plz reads its own policy.
+publish = false
+
 # THE TAG SPELLING. `v0.0.1` — bare, no crate prefix. This is also
 # release-plz's default for a single-crate repository, and it is written out
 # anyway because two other places name the spelling in prose (the workflow's
