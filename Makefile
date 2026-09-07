@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan protocol-gate deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity
 
 all: check
 
@@ -185,10 +185,27 @@ coverage:
 # so a structural violation fails before the minute-scale tools start.
 lint:
 	$(MAKE) line-cap
+	$(MAKE) protocol-gate
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
 	$(MAKE) rules-audit
 	$(MAKE) deny
+
+# The release-ordering gate's logic, proved both ways (bl-5b19; yog bl-bca2 is
+# the other direction). yog mints the wire protocol version and this app
+# VENDORS a copy of the constant, so the skew is two-directional: yog must not
+# publish a bump ahead of its consumers, and this repository must not RELEASE
+# one ahead of the engine. thrall took the second road first — 0.0.15 shipped
+# PROTOCOL 16 while the newest published yog spoke 15 — and the phone's landing
+# is worse, because the §20 update offer carries a released APK to every device
+# that taps it.
+#
+# `.github/workflows/release-plz.yml`'s `merge-release-pr` job spends the
+# decision and CANNOT run locally, so the decision does not live there:
+# `scripts/protocol-gate.sh` holds it, reads no network, and this target runs
+# its self-test. Milliseconds, so it sits at the head of `lint`.
+protocol-gate:
+	@scripts/protocol-gate.sh --self-test
 
 # The disclosure gate (yog bl-fd5a/bl-167d, adopted here from day zero): no
 # credential, routable address, home path, personal address, pasted dialogue,

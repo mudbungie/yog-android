@@ -77,10 +77,26 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   can't be tested, it mustn't be built. Coverage exclusions are added with
   reasoning, never to make a number.
 - **`make check` is the complete local gate and mirrors CI exactly:**
-  fmt-check → lint (line-cap + leak-scan + clippy + rules-audit + cargo-deny)
-  → coverage. The pre-commit hook (`make install-hooks`, once) runs the same
+  fmt-check → lint (line-cap + protocol-gate + leak-scan + clippy + rules-audit
+  + cargo-deny) → coverage. The pre-commit hook (`make install-hooks`, once) runs the same
   scripts. Tool pins: rustc 1.95.0, ast-grep 0.44.1, cargo-deny 0.20.2,
   tarpaulin 0.35.2 — bump only deliberately, and in lockstep with CI.
+- **A PROTOCOL bump is a four-repository act** (bl-5b19; yog bl-bca2). yog
+  mints the wire protocol version. This app, the seat (`lernie`) and the foot
+  (`thrall`) each **vendor** a copy of the constant (`src/hello.rs`), and the
+  wire is fail-closed on a mismatch with no negotiation (yog `docs/REMOTE.md`
+  §3 — the authority, and the one place the two-direction rule is written out).
+  So each direction of the skew is gated where it can be decided: **yog does
+  not publish a bump ahead of its consumers** (held at its release PR until
+  this repository's `main`, lernie's and thrall's carry the number), and **this
+  repository does not release one ahead of the engine** (`merge-release-pr`
+  guard 6 holds a release whose `PROTOCOL` *exceeds* the newest published
+  yog's). Strictly greater, not different: an app *behind* the engine is the
+  first defect and its release is the fix. **The ordering that produces, and
+  the whole of what to remember: the consumers' mains carry the number first,
+  then yog publishes, then the consumers publish.** Landing the constant on
+  `main` is held by neither gate. `make protocol-gate` proves the decision both
+  ways in `lint`, because the workflow that spends it cannot run locally.
 - **The disclosure gate** (`make leak-scan`) reads INDEX blobs and self-tests
   its own rules per line before every scan. `scripts/leak-rules.sh` is the one
   definition of what may not be committed: private keys, vendor tokens,

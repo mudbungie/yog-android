@@ -121,6 +121,19 @@ is the property that makes the channel possible rather than a place to park a
 token. Nothing is published to a registry — the crate is `publish = false`, so
 release-plz reads the last released version off the git tag instead.
 
+**A protocol bump waits for the engine** (bl-5b19). yog mints the wire protocol
+version and this app *vendors* a copy of the constant; the wire is fail-closed
+on a mismatch and does not negotiate (yog `docs/REMOTE.md` §3). So
+`merge-release-pr` **holds a release whose `PROTOCOL` exceeds the newest
+published yog's** — thrall took that road first, publishing 16 while the newest
+engine spoke 15, and here the landing is worse because the offer below carries
+a released APK to every device that taps it. Strictly greater, not different: an
+app *behind* the engine is the mirror-image defect and its release is the fix.
+Between the two gates — yog holds a bump until the consumers' mains carry it,
+each consumer holds a release until yog has published it — the ordering a bump
+requires is: **the consumers' mains first, then yog publishes, then the
+consumers publish.**
+
 On launch the app asks that feed once, compares the tag with its own version,
 and paints **one row on the roster** when the tag is newer — never a modal, and
 nothing at all when it is not. Tapping the row downloads the asset and hands it
