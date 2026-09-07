@@ -76,6 +76,7 @@ pub(crate) enum World {
 }
 
 mod admin;
+mod aimed;
 mod balls;
 mod candidates;
 mod clients;
@@ -153,59 +154,6 @@ impl Shell {
         if control.clicked() {
             self.open_world(World::Balls(view));
         }
-    }
-
-    /// **The aimed entries, in bands of two** (§13.14). Five full-width rows
-    /// over a conversation list is most of a phone screen, and the list is
-    /// what has to give way for them; bands of two is half that. TWO to a
-    /// band rather than more, because `workspace-balls` is the longest screen
-    /// name this app paints and a row of four would put the last of them off
-    /// the glass — bl-f36e's finding, which is that a control off the glass is
-    /// one the parity inventory cannot record and a thumb cannot reach.
-    ///
-    /// **The list is chunked rather than written out in pairs** (bl-5a56): the
-    /// fifth entry arrived and an odd count has to be a band of one, which a
-    /// literal of pairs cannot spell. One roster, in the order a thumb meets
-    /// it, and the banding is arithmetic.
-    pub(in crate::shell) fn aimed_entries(&mut self, ui: &mut egui::Ui) {
-        let aimed = [
-            (
-                crate::codec::View::Here.screen(),
-                World::Balls(crate::codec::View::Here),
-            ),
-            (candidates::SCREEN, World::Candidates),
-            (fleet::SCREEN, World::Fleet),
-            (clients::SCREEN, World::Clients),
-            (work::SCREEN, World::Work),
-            (admin::SCREEN, World::Admin),
-            (signin::SCREEN, World::SignIn),
-        ];
-        for band in aimed.chunks(2) {
-            self.entry_band(ui, band);
-        }
-    }
-
-    /// One band of entries, each stating its own name for the harness and the
-    /// op it reaches for the parity gate.
-    fn entry_band(&mut self, ui: &mut egui::Ui, pair: &[(&'static str, World)]) {
-        let band = egui::vec2(ui.available_width(), crate::shell::mark::TOUCH);
-        ui.allocate_ui_with_layout(
-            band,
-            egui::Layout::left_to_right(egui::Align::Center),
-            |ui| {
-                for (name, world) in pair.iter().copied() {
-                    let control = ui.add(
-                        egui::Button::new(name)
-                            .min_size(egui::vec2(0.0, crate::shell::mark::TOUCH)),
-                    );
-                    crate::shell::act::act(ui, &control, name);
-                    self.note_control(name, ui, control.rect);
-                    if control.clicked() {
-                        self.open_world(world);
-                    }
-                }
-            },
-        );
     }
 
     /// **The op table's entry** (§13.14), on the roster beside the queue and

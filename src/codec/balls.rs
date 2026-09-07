@@ -48,7 +48,7 @@ impl View {
     /// because the pane has one control per read. Named here so the dispatch
     /// arm has one word to say and the probe (§15.2) derives no second one;
     /// `pub(crate)` and borrowed because the probe stores a `&'static str`.
-    pub(crate) fn screen(self) -> &'static str {
+    pub(crate) const fn screen(self) -> &'static str {
         match self {
             Self::Everywhere => "balls",
             Self::Here => "workspace-balls",

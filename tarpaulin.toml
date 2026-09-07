@@ -95,6 +95,12 @@
 # makes one view's answer unpaintable under another is `Pane::view`, all
 # asserted by host tests. What is left here is which widget shows which of them.
 #
+# `src/shell/screens/world/aimed.rs` is the aimed bar (bl-6e8a), the same class
+# again: one `allocate_ui_with_layout` per chip and a `Button` inside it,
+# `cfg(target_os = "android")` to the last line. What it decides is a division
+# of the available width by a constant table, and the table is the file — there
+# is no reading of the world in it at all.
+#
 # `src/shell/screens/world.rs` and its two children (`world/waiting.rs`,
 # `world/trail.rs`) are the trail and the attention queue (bl-35bd), the same
 # class again: a `ScrollArea` of labels, two `ui.button` calls and the taps
@@ -249,6 +255,7 @@ exclude-files = [
     "src/shell/screens/rows/thread.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",
+    "src/shell/screens/world/aimed.rs",
     "src/shell/screens/world/admin.rs",
     "src/shell/screens/world/admin/acts.rs",
     "src/shell/screens/world/admin/minted.rs",

@@ -427,6 +427,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/trail.rs` | the ops trail's row: what the engine did, read as its own words (`failed`, `exit_label`, `standing` since protocol 11) and classified nowhere | landed (bl-35bd, the words bl-8e3c) |
 | `src/seat/acts/trail.rs` | the two acts over the engine's record rather than over a place: the acknowledgement and the truncation, neither naming a row | landed (bl-35bd) |
 | `src/shell/screens/world.rs` + `world/{waiting,trail}.rs` | android-only: the two surfaces that sit over the depths rather than inside them (§13.8) — the queue as a queue, the trail with its acts, and the one armed control this app has | landed (bl-35bd) |
+| `src/shell/screens/world/aimed.rs` | android-only: the way in to the seven surfaces that name one workspace — one bar, seven equal chips, a short noun over each op token | landed (bl-6e8a, out of `world.rs`) |
 | `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/place.rs` | the second host-tested sliver: which side of a control its list opens on and how tall it may be, so an opened popup lands inside the tappable area — pure, and the only half of §13.2's geometry a test can reach | landed (bl-78c2) |
@@ -2580,6 +2581,53 @@ bands of two. TWO bands rather than one, because `workspace-balls` is the
 longest screen name this app paints and a row of four would put the last of
 them off the glass, which is bl-f36e's finding: a control off the glass is one
 the parity inventory cannot record and a thumb cannot reach.
+
+#### And the bands became one bar, because they were never a shape (bl-6e8a)
+
+The paragraph above is the record of a ledger growing, not of a surface
+anybody designed. Three more entries arrived (§13.15, §13.17, §13.19), the
+chunking put them two to a band, and what an operator got was **seven buttons
+of seven different widths wrapped over four rows**, a third of a phone screen
+above the list they are supposed to be secondary to. The complaint was
+*incoherent*, and the widths were the tell: a layout whose only rule is *fill
+until the row ends* says the labels are the point.
+
+**The shape is one row of seven equal chips** (`screens/world/aimed.rs`), and
+the ball offered two — this, horizontally scrollable, or a bottom tab bar with
+an overflow menu. Both offered shapes were refused for the same measured
+reason, and it is bl-f36e's finding turned into a layout rule:
+`shell::act::act` returns without recording when `is_rect_visible` is false,
+so **a control off the glass records no `act:` tag** and the parity gate reads
+it as unproven, which is red (PARITY §5). A scroller would therefore trade the
+gate's meaning for a few points of width, and an overflow menu would hide four
+of the seven behind a gesture no walk performs. Equal division is the one
+shape in which the COUNT of controls is a fact the layout cannot lose: seven
+shares of the width, all seven laid out, all seven on the glass, and a label
+too long for its share elides against that share instead of pushing its
+neighbour off. The bottom is not available to a tab bar anyway — bl-192c gave
+the floor to the controls row and the starter, and *what claims it first is
+what may never be pushed off it*.
+
+**The label and the op token are two names on purpose.** The token stays the
+one name the wire, the `act:` tag, the harness's rectangle and the screen name
+all share; the chip shows a short noun, so `workspace-balls` reads as *balls*
+on a surface where every entry is already this workspace's and the prefix says
+nothing. The order is what the workspace is DOING first — balls, science, diff
+— then the machinery that runs it — fleet, clients — then the wiring
+underneath — config, login.
+
+**Two things the ball asked for are not built, and neither is an omission.**
+*Marking the active surface* would mark nothing: this bar is painted on the
+conversation list and every chip opens a screen that REPLACES that list, so
+the bar and the surface it names are never on the glass together. It is a way
+in, not a tab strip, and a tab strip is the shape that was refused. And
+*greying where the engine does not offer the op for this workspace* has no
+fact to read: the help table classes these seven `control` world-wide (§15.5)
+and no answer this seat holds narrows one to a workspace. Inventing the
+narrowing here would be §8's forbidden re-derivation of world state; if the
+engine ever carries a per-workspace offer set, it goes on the wire first and
+this bar reads it — the same order the tuning pair's capability took
+(§9.4, bl-dfbb).
 
 **What the walk reaches.** Two new steps: `clients`, tapped from the aimed
 band, and `help`, tapped from the roster beside the queue and the trail. The

@@ -79,7 +79,8 @@ pub(super) fn threaded(
 fn connectors(ui: &egui::Ui, rect: egui::Rect, boxed: f32, rails: &[bool], elbow: f32, gap: f32) {
     let stroke = egui::Stroke::new(1.0, ui.visuals().weak_text_color());
     for (at, carries) in rails.iter().enumerate() {
-        let x = rect.left() + (crate::roster::indent(at) + crate::roster::indent(at + 1)) / 2.0;
+        let column = f32::midpoint(crate::roster::indent(at), crate::roster::indent(at + 1));
+        let x = rect.left() + column;
         let own = at + 1 == rails.len();
         // The rule is drawn a gap high, so the segment meets the one the row
         // above drew: the space between two rows is where a thread would
