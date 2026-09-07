@@ -49,6 +49,15 @@
          the case the whole rung is for. It is a normal permission: the
          installer grants it, no dialog, no runtime ask. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- The release channel (bl-7a68, DESIGN §20). Android will not let a
+         process replace itself: an unattended install needs a privileged
+         installer, a device owner or an app store, and this app is none of
+         them. This permission is what lets it ask — the platform's own
+         installer, in front of a person, who taps. It is not granted by the
+         installer either: the operator turns "install unknown apps" on for
+         this app once, and Android puts that settings screen up itself the
+         first time an install is offered. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- The pocketed foot (bl-8bd0, DESIGN §18). Both are normal permissions
          the installer grants outright: FOREGROUND_SERVICE is the one every
          foreground service has needed since API 28, and API 34 added a second
@@ -159,6 +168,21 @@
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                       android:value="This device is enrolled as a remote tool host. The service holds one outbound mTLS connection to its operator's own engine so tool calls addressed to this phone are answered while it is in a pocket. No other foreground service type describes an inbound-work connection: dataSync is capped at six hours, and connectedDevice means a Bluetooth, NFC or USB companion." />
         </service>
+        <!-- The downloaded APK, handed to the installer (bl-7a68, DESIGN
+             §20). A `file:` URI has been refused by the platform since API 24,
+             so the one way to give another app a file this one wrote is a
+             content URI with a read grant on the intent. Not exported and
+             `grantUriPermissions` is the whole of what it hands out: the
+             provider serves one cache subdirectory (`res/xml/update_paths.xml`)
+             and every reader is granted per intent, for that one URI, rather
+             than by holding a permission. -->
+        <provider android:name="androidx.core.content.FileProvider"
+                  android:authorities="${applicationId}.updates"
+                  android:exported="false"
+                  android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+                       android:resource="@xml/update_paths" />
+        </provider>
         <!-- The device came back (bl-d22d, DESIGN §18.8). Exported because a
              system broadcast is delivered to an exported receiver and
              BOOT_COMPLETED is a PROTECTED broadcast — only the platform may

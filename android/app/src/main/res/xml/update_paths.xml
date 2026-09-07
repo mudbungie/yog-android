@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The one directory the update provider serves (DESIGN §20): this app's own
+     cache, and only the subdirectory a downloaded APK lands in. Narrow on
+     purpose — a provider rooted at the cache would grant read of every
+     transient this app writes to whoever is handed a URI, where what the
+     platform installer needs is one file. -->
+<paths>
+    <cache-path name="updates" path="updates/" />
+</paths>

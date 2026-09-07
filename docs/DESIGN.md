@@ -340,6 +340,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/help.rs` | the op table, vendored and compiled in (§13.14): one reader, two consumers — the parity roster folds over it and the help screen paints it | landed (bl-3685) |
+| `src/update.rs` | the release channel's decision (§20): is a published release newer than this build, and which asset under it is the APK | landed (bl-7a68) |
+| `src/shell/update.rs` | android-only: three statics into `dev.yog.Update` and the roster's one update row | landed (bl-7a68) |
 | `src/codec/clients.rs` + `src/codec/lineages.rs` | which machines may execute for a workspace, with the two lifetimes one row carries, and the config lineages its `governing` half names | landed (bl-3685) |
 | `src/shell/screens/world/clients.rs` + `world/help.rs` | android-only: the machines roster (§13.14), the one surface with no control at all, and the op table beside it | landed (bl-3685) |
 | `src/codec/fleet.rs` | the two armings (§13.13): the four spellings, the word each takes, and what the one shared receipt MEANS read against the op that earned it | landed (bl-477e) |
@@ -4675,3 +4677,168 @@ twice, and it is the effect owner's to make safe, never the wire's to promise.
 completion adds nothing an operator can act on: the engine re-delivers, this
 device answers, and a mark for the seconds in between would be noise on the one
 surface a pocketed phone has.
+
+## 20. The release channel: the phone reconciles as far as Android allows (bl-7a68)
+
+`src/update.rs`, `src/shell/update.rs`, `android/app/src/main/java/dev/yog/{Update,Release}.java`,
+`scripts/sign-apk.sh`, `.github/workflows/{apk,release-plz}.yml`,
+`release-plz.toml`.
+
+Operator ruling 2026-09-05: *all of my devices should be running effectively
+full CD — any new publication should result in an upgrade of the running
+versions.* Four of the five components already answer it, and every one of
+them answers the same question: **read the newest live version off a registry,
+compare it with what is installed, install if it differs, restart only when the
+box says it is idle.** The engine box runs the OCI image with a reconciler
+timer off `ghcr.io`; a workstation runs the native binary with an hourly
+reconciler off the crates.io sparse index; the seat and the foot install the
+newest live `lernie` and `thrall` and adopt them at the next launch.
+
+**The phone is different in exactly one respect, and everything here follows
+from it.** Android will not let a process replace itself. An unattended install
+needs a privileged installer, a device owner or an app-store channel, and this
+app is none of them. The most an app may do is *ask*. So the phone gets the
+same reconciler with the last rung replaced — **detect and offer, never
+install.**
+
+### 20.1 The publication: one signed APK per release
+
+Before this ball this repository had no release workflow at all. It now rides
+the same shape as its siblings: `release-plz.yml` runs the whole of `ci.yml`
+inside its own run, keeps one release PR fresh, merges it when the gate is
+green, and — for any manifest version no tag yet names — tags `v<version>` and
+cuts a GitHub Release. `release-apk` then builds that tag, signs it, and
+attaches the APK to that release.
+
+**Nothing publishes to a registry, and that is structural.** `Cargo.toml`
+carries `publish = false` because the deliverable is an APK, so release-plz
+skips the registry step entirely and reads the last released version off the
+git tag. None of the crates.io machinery the sibling repositories carry belongs
+here: no trusted publisher, no `id-token: write`, no registry token, and no
+constraint on the workflow's filename.
+
+**`apk.yml` is how an APK is built on a runner, and there is one of it.** Both
+`ci.yml`'s android leg and the release path call it; the only difference is a
+`tag` input. Empty is a build. Non-empty means materialize the signing key from
+the repository secrets, build the release variant, sign it, and upload it onto
+that release. One input rather than a `sign` flag beside a `tag`, because the
+two could then disagree and a signed build that goes nowhere has no meaning.
+
+**The feed is therefore `GET /repos/<owner>/<repo>/releases/latest`, and the
+artifact is one URL under it** — anonymous and unauthenticated, like every
+other box in the fleet. A device holds no registry credential, and that is the
+property that makes this channel possible rather than a place to park a token.
+
+### 20.2 The key is permanent, and it is the constraint the rest bends around
+
+Operator ruling 2026-09-05: **one signing key for the app's lifetime.** An
+Android signing key is not rotatable — a device that installed under key A
+refuses an update signed by key B, and the only remedy is uninstall and
+reinstall, which loses the app's enrolment. The key is a PKCS12 keystore held
+outside every checkout, backed up offline by the operator, and read by CI from
+the repository secrets `ANDROID_RELEASE_KEYSTORE` (base64) and
+`ANDROID_RELEASE_KEYSTORE_PASSWORD`. It may not live in this tree and cannot:
+the disclosure gate refuses a `.keystore` path outright.
+
+`scripts/sign-apk.sh` is the one recipe both doors spend. Three of its
+decisions are findings rather than taste, and each is written at the line it
+governs:
+
+- **Signing is after the assemble, not inside Gradle.** A `signingConfig` puts
+  the keystore and its password into the Gradle daemon's own model — a
+  long-lived process with a cache directory — and states none of the signature
+  schemes in the build file. Signing afterwards keeps the key in one
+  short-lived process and names the schemes.
+- **Scheme v3 and only v3, measured.** apksigner intersects the schemes it is
+  allowed with the ones the APK's own `minSdk` needs, and `minSdk 28` is
+  exactly where v3 landed: asking for v1 and v2 as well produces an APK with no
+  `META-INF/*.SF` in it at all, while the same command at
+  `--min-sdk-version 21` writes them. v3 is also the scheme that carries a
+  signer LINEAGE, which is what keeps "one key for the app's lifetime" from
+  being a trap — a future rotation could attach a lineage rather than orphan
+  every installed copy.
+- **The password is read by reference, through `env:` and never `file:`.**
+  apksigner reads a `file:` reference SEQUENTIALLY — the store password off the
+  first line, the key password off the next — so a file holding one password
+  answers `--ks-pass` and then dies on `--key-pass` with *end of file reached*.
+
+**The first release-signed install replaces a debug-signed one exactly once,
+and the platform refuses to do it in place.** Android identifies an app by its
+signer as well as its package, so the release-signed APK is a different app
+wearing the same name: the phone must uninstall `dev.yog` first, and the
+device's enrolment goes with it and has to be re-landed. `deploy-phone.sh`
+names that act rather than performing it, on both the failing exit code and the
+quiet message, because adb reports it both ways.
+
+**`make deploy-phone` follows the key.** A box holding it builds and installs
+the release-signed APK, so a phone deployed by hand is on the same signature as
+one that took an update off the channel — a phone left on the debug key can
+never take one. A box without the key builds the debug APK exactly as before:
+removing the key deletes a default and edits no script.
+
+### 20.3 The version has one home
+
+`Cargo.toml`'s `version` is the single authority. release-plz bumps that line
+and tags `v<version>`; `android/app/build.gradle` reads the same line for
+`versionName` and derives `versionCode` from it (two digits per component,
+which is what Android orders a downgrade by); the app compares
+`CARGO_PKG_VERSION` against the tag the feed answers with. A literal spelled in
+the Gradle file as well would be a second authority for one fact, and it would
+drift the first time somebody released without editing it — which is every
+release, because nothing in the release path opens that file.
+
+### 20.4 The read, the offer, and what is not built
+
+`crate::update` is the whole decision and it is pure: the bridge's two-line
+answer in, an offer or nothing out. `None` is every state that offers nothing —
+the fetch has not come back, the network refused, there is no release, the body
+was not JSON, the tag is not newer, the release carries no APK — and they are
+deliberately one answer, because the offer is one row and the absence of the
+row is the vocabulary for all six.
+
+**The check is once per process, started by the first roster paint.** A phone
+has no timer worth the battery, and opening the app is the only moment an offer
+could be seen anyway, so opening the app IS the cadence.
+
+**And it is ASKED once, not read once.** The bridge answers the empty string
+while its fetch is in flight and a two-line answer once it has concluded —
+whether that is the release document or a refusal — and the shell stops asking
+the moment an answer exists, holding the decision in a `OnceLock`. Three states
+rather than two, because a refusal spelled during the fetch would be
+indistinguishable from one the network gave: a phone with no network would then
+cache the wrong verdict, and a phone with a slow one would be crossed the JNI
+boundary on every frame forever. That is not hypothetical — an early build
+polled the bridge from every roster frame and the render-and-see walk
+(§15) lost two of its taps to the stalls, which is how the third state was
+found.
+
+**The offer is one row on the roster**, beside the two other structural things
+that screen says about this device — its identity, and what it is hosting. Not
+a modal: the phone seat is a working surface and an update prompt in front of a
+live conversation is the interruption this suite's notice discipline exists to
+avoid. Tapping it downloads the asset and hands it to the system installer
+through a `FileProvider` content URI; the person taps again. Two taps and no
+surprise. The row carries **no `act:` tag**: the parity gate judges tags
+against the engine's op roster and this control fires no op, so a tag here
+would name an op that does not exist.
+
+**What is deliberately not built.** No silent install and no self-update path —
+the platform forbids both to an app like this one. No background download on a
+metered connection: nothing downloads until the row is tapped. No version list
+— `latest` is one release, exactly as the other four reconcilers read one. No
+downgrade: the tag has to be strictly greater. And **no offer at all over
+plaintext** — an APK is code this device is about to run, so the one transport
+it may arrive over is the one the feed itself came over.
+
+**The rollback story is stated rather than implied.** crates.io yank is the
+fleet's rollback lever and a GitHub Release has no equivalent, so rolling back
+here is *delete the release and publish another*.
+
+### 20.5 The protocol-skew consequence
+
+A seat that updates ahead of its engine speaks a newer `PROTOCOL`, and REMOTE
+§9.5's hello is fail-closed. Every other box in the fleet closes that skew
+within the hour on its own; **a phone cannot**, because the last rung needs a
+tap — so a phone whose person is not holding it stays skewed indefinitely. The
+row is what makes that recoverable: the refusal names both versions, and the
+one act that fixes it is on the screen an operator lands on.

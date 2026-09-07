@@ -36,6 +36,7 @@ pub mod state;
 pub mod symbol;
 pub mod tools;
 pub mod transport;
+pub mod update;
 
 pub(crate) mod tls;
 

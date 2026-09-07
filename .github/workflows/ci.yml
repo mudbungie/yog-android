@@ -1,9 +1,18 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
+  # Deliberately NO push arm since bl-7a68. On a push to `main` this workflow
+  # still runs, once, as the instance `release-plz.yml` CALLS inside its own
+  # run (`uses: ./.github/workflows/ci.yml`, and its release job `needs:` that
+  # instance). A push arm here would run these identical jobs a second time per
+  # push, at the cost of a full coverage build, for nothing. The consequence:
+  # this workflow has no runs of its own on `main`, so anything reading them —
+  # a status badge, say — must read `release-plz.yml`.
   pull_request:
+  # The reusable entry point. The release gate is `needs: ci` INSIDE the
+  # release run rather than a `workflow_run` watching this one from a
+  # distance, so what a release ships is a tree this exact run judged.
+  workflow_call:
   workflow_dispatch:
 
 # CI reads the tree and writes nothing back. Every action here is pinned to a
@@ -66,45 +75,16 @@ jobs:
         run: cargo test --doc
 
   # The shell's compile check (bl-c761): the host gate never compiles the
-  # cfg(target_os = "android") glue, so this leg cross-clippies it and builds
+  # `cfg(target_os = "android")` glue, so this leg cross-clippies it and builds
   # the full APK. Build-only — there is no device on a runner; on-device
-  # verification is operator-assisted (DESIGN §3). Gradle is the runner's
-  # system gradle and the JDK is the runner's 17 — deliberately no wrapper
-  # jar (the leak gate refuses binaries), see the Makefile `apk` target.
+  # verification is operator-assisted (DESIGN §3).
+  #
+  # **The steps are `apk.yml`'s, not this file's** (bl-7a68). The release path
+  # builds the same APK on the same runner with the same NDK pin and the same
+  # two ABIs, differing only in that it signs and attaches the result, so how
+  # an APK is built on a runner has one home and both callers spend it. No
+  # `tag` input here: this leg builds, it does not publish.
   android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          persist-credentials: false
-      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable branch @ 2026-08-05
-        with:
-          toolchain: stable
-          components: clippy
-          # Both APK ABIs — `make apk` cross-builds every one of them, so a
-          # single target here would red the leg the moment the Makefile's
-          # ABIS default grew its second entry.
-          targets: aarch64-linux-android,x86_64-linux-android
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-      - name: Cache cargo-ndk 4.1.2
-        id: ndk-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: ~/.cargo/bin/cargo-ndk
-          key: cargo-ndk-4.1.2-${{ runner.os }}
-      - name: Install cargo-ndk 4.1.2
-        if: steps.ndk-cache.outputs.cache-hit != 'true'
-        run: cargo install cargo-ndk --version 4.1.2 --locked
-      # The NDK pin — the same major the dev boxes carry. sdkmanager is
-      # idempotent and the runner image ships the cmdline-tools.
-      - name: Install NDK 28.2.13676358
-        run: |
-          yes 2>/dev/null | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.2.13676358" >/dev/null
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
-      # One ABI is enough here: what the host gate cannot see is the
-      # `target_os = "android"` cfg, and both ABIs share it. A defect that is
-      # genuinely x86_64-specific is a compile error the APK build below hits.
-      - name: Cross-clippy (the host gate cannot see this cfg)
-        run: cargo ndk -t arm64-v8a clippy -- -D warnings
-      - name: Build the APK
-        run: JAVA_HOME="$JAVA_HOME_17_X64" make apk
+    permissions:
+      contents: read
+    uses: ./.github/workflows/apk.yml

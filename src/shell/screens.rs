@@ -141,6 +141,11 @@ impl Shell {
         ui.weak("workspaces");
         ui.weak(self.identity());
         Self::hosting(ui);
+        // **The release channel's one affordance** (§20), beside the two
+        // other structural things this screen says about the device rather
+        // than about the world. It paints nothing when nothing is newer,
+        // which is every launch but the one after a release.
+        self.update_entry(ui);
         ui.separator();
         self.world_entries(ui, snap);
         ui.separator();

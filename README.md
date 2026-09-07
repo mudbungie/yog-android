@@ -54,6 +54,7 @@ make test           # cargo test
 make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
 make lint           # line-cap + leak-scan + clippy + ast-grep + cargo-deny
 make apk            # cargo-ndk (arm64-v8a + x86_64) + gradle assembleDebug
+make apk-release    # the release variant, signed with the permanent key
 make deploy-phone ADDR=<ip:port>   # that APK, arm64 only, onto a phone
 make screens-avd    # create the emulator the loop below boots, once
 make screens        # headless emulator: walk the screens, capture each one
@@ -102,6 +103,50 @@ comes from `scripts/gradle.sh` above — the same rule `make apk` spends, called
 rather than restated, so the two cannot answer differently again.
 `make deploy-phone ADDR=... GRADLE=/path/to/gradle` still wins over both
 probes, the same override `make apk` takes.
+
+## The release channel
+
+There is one publication event per version and the phone can read it, so the
+phone reconciles the way every other box in the fleet does — with the last rung
+replaced, because **Android will not let a process replace itself**. It detects
+and offers; a person taps.
+
+A push to `main` runs `release-plz.yml`: the whole gate, then the release PR
+kept fresh and merged when it is green, then — for any manifest version no tag
+yet names — the `v<version>` tag, the GitHub Release, and the **signed APK**
+attached to it. The feed the app reads is
+`GET /repos/<owner>/<repo>/releases/latest` and the artifact is one URL under
+it, anonymous and unauthenticated: a device holds no registry credential, which
+is the property that makes the channel possible rather than a place to park a
+token. Nothing is published to a registry — the crate is `publish = false`, so
+release-plz reads the last released version off the git tag instead.
+
+On launch the app asks that feed once, compares the tag with its own version,
+and paints **one row on the roster** when the tag is newer — never a modal, and
+nothing at all when it is not. Tapping the row downloads the asset and hands it
+to the system installer; the person taps install. `docs/DESIGN.md` §20 is the
+whole design, including what is deliberately not built (no silent install, no
+background download, no version list, no downgrade, and no offer at all over
+plaintext).
+
+**The signing key is permanent** (operator ruling 2026-09-05). An Android
+signing key is not rotatable, so there is one for this app's lifetime; it lives
+outside every checkout, is backed up offline, and reaches CI as the repository
+secrets `ANDROID_RELEASE_KEYSTORE` and `ANDROID_RELEASE_KEYSTORE_PASSWORD`. It
+may not live in this tree and cannot — the disclosure gate refuses a
+`.keystore` path outright. `scripts/sign-apk.sh` is the one recipe: zipalign,
+then apksigner with **APK Signature Scheme v3** named and asserted, then a
+verification the script fails on rather than merely printing.
+
+**The one-time uninstall.** A phone that already holds a debug-signed build
+cannot take a release-signed update: Android identifies an app by its signer as
+well as its package, so the platform refuses to replace it in place. Uninstall
+`dev.yog` on the phone once, then install again — the device's enrolment goes
+with it and has to be re-landed. That is once, for the lifetime of the signing
+key. `make deploy-phone` names that act when adb reports it, and it builds the
+**release-signed** APK whenever the key is present on the box, precisely so a
+phone deployed by hand is on the same signature as one that took an update.
+A box without the key builds the debug APK exactly as before.
 
 ## Looking at it without a phone
 

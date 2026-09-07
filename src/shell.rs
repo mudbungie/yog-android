@@ -47,3 +47,5 @@ mod screens;
 pub(crate) mod sys;
 #[cfg(target_os = "android")]
 mod transcript;
+#[cfg(target_os = "android")]
+mod update;

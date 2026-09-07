@@ -55,13 +55,31 @@ ADB="$SDK/platform-tools/adb"
 # only thing left here is to stop.
 gradle=$(scripts/gradle.sh) || exit 1
 
-# The build is `make apk`, not a second copy of it. That target is the one
-# definition of how this APK is assembled (cargo-ndk into jniLibs, then
-# assembleDebug, release profile load-bearing) and a phone needs exactly one of
-# its two ABIs.
-APK=${APK:-android/app/build/outputs/apk/debug/app-debug.apk}
+# **THE KEY DECIDES WHICH BUILD** (bl-7a68, DESIGN §20). A box that holds this
+# app's permanent signing key builds and installs the RELEASE-signed APK, so a
+# phone deployed by hand is on the same signature as one that took an update
+# off the release channel — a phone left on the debug key can never take one,
+# because Android refuses an update whose signer differs and there is no
+# in-place remedy. A box without the key builds the debug APK exactly as
+# before: severable, and it deletes a default rather than editing this script.
+KEYSTORE=${YOG_KEYSTORE:-$HOME/keys/yog-android/release.keystore}
+if [ -f "$KEYSTORE" ]; then
+  target=apk-release
+  built=android/app/build/outputs/apk/release/app-release-signed.apk
+  say "signing key present — building the release-signed APK"
+else
+  target=apk
+  built=android/app/build/outputs/apk/debug/app-debug.apk
+  say "no signing key at $KEYSTORE — building the debug APK"
+fi
+
+# The build is `make apk` / `make apk-release`, not a second copy of either.
+# Those targets are the one definition of how this APK is assembled (cargo-ndk
+# into jniLibs, then the Gradle assemble, release profile load-bearing) and a
+# phone needs exactly one of its two ABIs.
+APK=${APK:-$built}
 say "building the arm64 APK with $gradle"
-"${MAKE:-make}" apk ABIS=arm64-v8a GRADLE="$gradle" \
+"${MAKE:-make}" "$target" ABIS=arm64-v8a GRADLE="$gradle" \
   || die "the build failed — nothing was installed"
 [ -f "$APK" ] || die "the build answered success but there is no APK at $APK"
 
@@ -80,7 +98,24 @@ esac
 # is not enough — this is the step whose failure modes are loudest and most
 # survivable — so both are judged, and the device's own words are what a
 # failure reports.
-said=$("$ADB" -s "$addr" install -r "$APK" 2>&1) || die "install failed: $said"
+installed=0
+said=$("$ADB" -s "$addr" install -r "$APK" 2>&1) || installed=$?
+case "$said" in
+  # **The one-time uninstall** (bl-7a68, DESIGN §20), judged BEFORE the exit
+  # code because it is the one failure with a specific act behind it and adb
+  # reports it both ways. Android identifies an app by its signer as well as
+  # its package, so the first release-signed install over a debug-signed one
+  # is not an update at all — it is a different app wearing the same name, and
+  # the platform refuses it rather than replacing the signer. The remedy is
+  # destructive and is the operator's, so it is named rather than performed.
+  *INSTALL_FAILED_UPDATE_INCOMPATIBLE*|*"signatures do not match"*)
+    die "this phone holds a copy signed by another key — the debug key, if it \
+was deployed before the release channel existed. Android cannot replace a \
+signer in place: uninstall dev.yog on the phone and run this again. The \
+device's enrolment goes with it and has to be re-landed, and this is once for \
+the lifetime of the signing key." ;;
+esac
+[ "$installed" -eq 0 ] || die "install failed: $said"
 case "$said" in
   *Success*) ;;
   *) die "the install did not answer Success: $said" ;;

@@ -1,4 +1,35 @@
 plugins { id 'com.android.application' }
+
+// **THE VERSION HAS ONE HOME, AND IT IS `Cargo.toml`** (bl-7a68, DESIGN §20).
+// release-plz bumps that line and tags `v<version>`; the app compares its own
+// `CARGO_PKG_VERSION` against the tag the release feed answers with. A literal
+// spelled here as well would be a second authority for one fact, and it would
+// drift the first time somebody released without editing it — which is every
+// release, because nothing in the release path opens this file.
+//
+// The `[package]` section only: a `version = "0.23"` under `[dependencies]`
+// is not this app's version, and a regex over the whole file would eventually
+// find one.
+def cargoVersion = {
+    def manifest = file('../../Cargo.toml').text
+    def section = manifest.substring(manifest.indexOf('[package]'))
+    def next = section.indexOf('\n[', 1)
+    if (next > 0) { section = section.substring(0, next) }
+    def found = (section =~ /(?m)^version\s*=\s*"([^"]+)"/)
+    found ? found[0][1] : '0.0.0'
+}()
+
+// The platform's own ordering, derived from the same three numbers. Android
+// refuses a DOWNGRADE by this integer and by nothing else, so it has to move
+// the way the version does. Two digits per component: this app has never had
+// a hundred of anything, and a wider field would push the major past the
+// platform's signed-int ceiling for no version anybody will cut.
+def cargoCode = {
+    def parts = cargoVersion.tokenize('.')
+    def at = { int i -> parts.size() > i ? parts[i].toInteger() : 0 }
+    at(0) * 10000 + at(1) * 100 + at(2)
+}()
+
 android {
     namespace 'dev.yog'
     compileSdk 35
@@ -6,8 +37,29 @@ android {
         applicationId 'dev.yog'
         minSdk 28
         targetSdk 35
-        versionCode 1
-        versionName '0.0'
+        versionCode cargoCode
+        versionName cargoVersion
+    }
+    buildTypes {
+        // **THE RELEASE VARIANT IS UNSIGNED HERE ON PURPOSE**, and it is not
+        // an omission: `scripts/sign-apk.sh` signs the assembled artifact
+        // afterwards, so the key never enters the Gradle daemon's model and
+        // the signature schemes are named rather than inferred from `minSdk`.
+        // That script is the one recipe both the developer box and the runner
+        // spend.
+        release {
+            // **`minifyEnabled false` IS LOAD-BEARING** (DESIGN §15.7). Every
+            // call this crate makes into its own Java shell is resolved BY
+            // NAME at runtime through the app's class loader; R8 sees no
+            // reference to any of those classes from Java and would strip
+            // them, and the first tool invocation on a phone would answer
+            // `ClassNotFoundException`. `make apk-release` runs the same
+            // dex-against-source pin `make apk` does, so a shrink that ate a
+            // bridge would fail the build — but the correct setting is the
+            // one that never asks the question.
+            minifyEnabled false
+            shrinkResources false
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk deploy-phone screens screens-avd invoke parity
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity
 
 all: check
 
@@ -47,13 +47,45 @@ release:
 ABIS ?= arm64-v8a x86_64
 
 APK_OUT := android/app/build/outputs/apk/debug/app-debug.apk
+APK_UNSIGNED := android/app/build/outputs/apk/release/app-release-unsigned.apk
+APK_SIGNED := android/app/build/outputs/apk/release/app-release-signed.apk
+
+# The two stages both variants share, written once. `$(1)` is the Gradle
+# variant word — a canned recipe rather than a second copy of the cross-build,
+# because the ABI list, the jniLibs destination and the release profile are
+# facts about THIS app and not about which key signs it.
+define assemble
+cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
+gradle=$$(GRADLE='$(GRADLE)' scripts/gradle.sh) && cd android && "$$gradle" assemble$(1)
+endef
 
 apk:
-	cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
-	gradle=$$(GRADLE='$(GRADLE)' scripts/gradle.sh) && cd android && "$$gradle" assembleDebug
+	$(call assemble,Debug)
 	@python3 scripts/apk-bridges.py --self-test
 	@python3 scripts/apk-bridges.py $(APK_OUT)
 	@echo "apk: $(APK_OUT)"
+
+# **The release-signed APK** (bl-7a68, DESIGN §20) — the artifact the channel
+# publishes, and the one a phone that has ever taken an update must keep
+# taking. It is `apk` with two differences and no third: Gradle assembles the
+# `release` variant (unsigned, on purpose — see `android/app/build.gradle`),
+# and `scripts/sign-apk.sh` attaches this app's permanent signature with
+# APK Signature Scheme v3 and then verifies what it attached.
+#
+# **The dex pins run on the signed artifact, not on the debug one.** They are
+# the gate that says every JNI name this crate resolves is carried by the dex
+# in the APK, and the APK that ships is this one — running them on a different
+# build would be asserting about an artifact nobody installs.
+#
+# It needs the key. A box without it has no business building this target, and
+# the script says so and stops rather than falling back to a debug signature
+# that a phone would refuse as an update.
+apk-release:
+	$(call assemble,Release)
+	@scripts/sign-apk.sh $(APK_UNSIGNED) $(APK_SIGNED)
+	@python3 scripts/apk-bridges.py --self-test
+	@python3 scripts/apk-bridges.py $(APK_SIGNED)
+	@echo "apk-release: $(APK_SIGNED)"
 
 # Push this tree's APK to a phone over wireless debugging (bl-128f):
 #

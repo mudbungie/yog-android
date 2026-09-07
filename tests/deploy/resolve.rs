@@ -109,14 +109,26 @@ fn the_apk_target_resolves_gradle_through_the_one_script() -> Result<(), String>
     );
     let makefile = std::fs::read_to_string(root.join("Makefile"))
         .map_err(|why| format!("reading the Makefile: {why}"))?;
-    let assemble = makefile
+    // The canned recipe both APK targets spend (`define assemble`, bl-7a68):
+    // one Gradle line, parameterized by variant, so the debug build and the
+    // release-signed one cannot resolve a different gradle from each other
+    // either.
+    let assembles: Vec<&str> = makefile
         .lines()
-        .find(|line| line.contains("assembleDebug"))
-        .ok_or_else(|| "no assembleDebug recipe: nothing builds an APK".to_owned())?;
-    assert!(
-        assemble.contains("scripts/gradle.sh"),
-        "the apk recipe names a gradle of its own: {assemble}"
+        .filter(|line| line.contains("\"$$gradle\" assemble"))
+        .collect();
+    assert_eq!(
+        assembles.len(),
+        1,
+        "the Gradle assemble is spelled {} times; it must have one home",
+        assembles.len()
     );
+    for assemble in &assembles {
+        assert!(
+            assemble.contains("scripts/gradle.sh"),
+            "the apk recipe names a gradle of its own: {assemble}"
+        );
+    }
     for spelled in ["wrapper/dists", "GRADLE ?=", "GRADLE :=", "GRADLE="] {
         assert!(
             !makefile.contains(&format!("\n{spelled}")),

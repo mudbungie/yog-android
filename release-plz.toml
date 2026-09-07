@@ -1,0 +1,60 @@
+# **The release policy** (bl-7a68). `.github/workflows/release-plz.yml` is the
+# mechanism; this file is the decisions that mechanism reads, and nothing else.
+#
+# THIS CRATE IS NEVER PUBLISHED TO A REGISTRY and that is structural, not a
+# setting here: `Cargo.toml` carries `publish = false` because the deliverable
+# is an APK. release-plz reads that and skips the registry step, so what a
+# release IS in this repository is the `v<version>` tag, the GitHub Release
+# under it, and the signed APK the workflow attaches to that release. The
+# version therefore has to be derivable without asking a registry, which is
+# what the git tag is for — and it is the same tag the app compares its own
+# `CARGO_PKG_VERSION` against on the release feed (DESIGN §20).
+
+[workspace]
+
+# **GIT-ONLY MODE, and it is what makes any of this work here.** release-plz
+# normally asks the registry which versions exist; a crate that is never
+# published has no registry answer, so without this it can neither decide what
+# the last release was nor decide there is one to make. Verbatim from the
+# option: *"Enable git-only mode, which determines package versions from git
+# tags instead of the cargo registry."* `cargo publish` is skipped with it, so
+# this and `Cargo.toml`'s own `publish = false` say the same thing from the two
+# ends — the manifest makes a registry publication impossible, and this makes
+# the release path work without one.
+git_only = true
+
+# THE TAG SPELLING. `v0.0.1` — bare, no crate prefix. This is also
+# release-plz's default for a single-crate repository, and it is written out
+# anyway because two other places name the spelling in prose (the workflow's
+# header, DESIGN §20) and a fact three files state must be a fact one file
+# DECIDES. This repository holds exactly one crate and will never carry
+# another.
+git_tag_name = "v{{ version }}"
+
+# NO GENERATED CHANGELOG, and there is no hand-written one either — the record
+# of what changed is the git history and the balls behind it. Every commit here
+# is a prose subject plus a `[bl-xxxx]` trailer, not Conventional Commits, and
+# git-cliff strips a leading `word:` token from any subject that happens to
+# parse as a conventional type — which this tree's subjects do more often than
+# not. The consequence is stated so nobody later reads it as a bug: the GitHub
+# Release body is EMPTY, because release-plz fills it from the changelog only
+# when it manages the changelog. The tagged tree and the attached APK are the
+# record.
+changelog_update = false
+
+# THE BUMP POLICY. Non-conventional subjects take release-plz's default
+# increment, which is PATCH — the release PR should always propose the smallest
+# step, because a version is spent the moment it is tagged. A bigger bump is
+# opted into by putting `[minor]` or `[major]` as a standalone bracketed token
+# in any commit message landing in the release window: preceded by
+# start-of-string or whitespace, followed by end-of-string or whitespace. Prose
+# mentions like `[minor]/[major]` (slash-joined, no boundary whitespace) do not
+# match, which is what keeps a commit DESCRIBING this convention from bumping
+# itself.
+custom_minor_increment_regex = '(^|\s)\[minor\](\s|$)'
+custom_major_increment_regex = '(^|\s)\[major\](\s|$)'
+
+# No API to break and no registry to compare against: the deliverable is an
+# APK, and `cargo-semver-checks` would be asking a question about a library
+# surface nobody consumes.
+semver_check = false

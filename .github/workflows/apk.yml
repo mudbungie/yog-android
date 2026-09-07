@@ -1,0 +1,134 @@
+name: APK
+
+# **How an APK is built on a runner, defined once** (bl-7a68, DESIGN §20).
+#
+# Two callers spend this workflow and neither restates it: `ci.yml`'s android
+# leg, which builds the debug APK as the compile check for the
+# `cfg(target_os = "android")` glue the host gate never sees, and
+# `release-plz.yml`, which passes a `tag` and so gets the release-signed
+# artifact attached to that GitHub Release. Before this file existed there was
+# one copy of the toolchain setup and a release path would have made a second;
+# the NDK pin, the two ABIs and the JDK are facts about this app, not about
+# which of the two is asking.
+#
+# **`tag` is the whole of the difference.** Empty is a build (`make apk`).
+# Non-empty means: materialize the signing key from the repository secrets,
+# build `make apk-release` — Gradle's unsigned `release` variant plus
+# `scripts/sign-apk.sh` — and upload the result as an asset of that release.
+# One input rather than a `sign` flag beside a `tag`, because the two could
+# then disagree and there is no meaning for a signed build that goes nowhere.
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: The commit, branch or tag to build. Empty builds the caller's own ref.
+        type: string
+        default: ''
+      tag:
+        description: The release tag to sign for and attach to. Empty builds unsigned.
+        type: string
+        default: ''
+    secrets:
+      ANDROID_RELEASE_KEYSTORE:
+        description: The permanent signing keystore, base64. Required when `tag` is set.
+        required: false
+      ANDROID_RELEASE_KEYSTORE_PASSWORD:
+        description: That keystore's password. Required when `tag` is set.
+        required: false
+
+# **NO `permissions` BLOCK HERE, and that is load-bearing.** A called
+# workflow's own `permissions` are INTERSECTED with the calling job's, so a
+# `contents: read` written here would silently cap the release path's
+# `contents: write` and the upload below would 403. Omitting it lets each
+# caller state what this build is allowed to do: `ci.yml` grants read, the
+# release path grants write because it attaches an asset.
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.ref }}
+          # Nothing here pushes; the upload below is `gh`, not git.
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable branch @ 2026-08-05
+        with:
+          # The SHA pin erases the ref name this action reads the toolchain
+          # from, so name it; rust-toolchain.toml still pins the build version.
+          toolchain: stable
+          components: clippy
+          # Both APK ABIs — `make apk` cross-builds every one of them, so a
+          # single target here would red this leg the moment the Makefile's
+          # ABIS default grew its second entry.
+          targets: aarch64-linux-android,x86_64-linux-android
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - name: Cache cargo-ndk 4.1.2
+        id: ndk-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cargo/bin/cargo-ndk
+          key: cargo-ndk-4.1.2-${{ runner.os }}
+      - name: Install cargo-ndk 4.1.2
+        if: steps.ndk-cache.outputs.cache-hit != 'true'
+        run: cargo install cargo-ndk --version 4.1.2 --locked
+      # The NDK pin — the same major the dev boxes carry. sdkmanager is
+      # idempotent and the runner image ships the cmdline-tools.
+      - name: Install NDK 28.2.13676358
+        run: |
+          yes 2>/dev/null | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.2.13676358" >/dev/null
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+      # One ABI is enough here: what the host gate cannot see is the
+      # `target_os = "android"` cfg, and both ABIs share it. A defect that is
+      # genuinely x86_64-specific is a compile error the APK build below hits.
+      - name: Cross-clippy (the host gate cannot see this cfg)
+        run: cargo ndk -t arm64-v8a clippy -- -D warnings
+
+      # The unsigned build. Gradle is the runner's system gradle and the JDK is
+      # the runner's 17 — deliberately no wrapper jar (the leak gate refuses
+      # binaries), see the Makefile `apk` target.
+      - name: Build the APK
+        if: inputs.tag == ''
+        run: JAVA_HOME="$JAVA_HOME_17_X64" make apk
+
+      # **THE KEY LIVES FOR ONE STEP AND IN ONE FILE** (bl-7a68). It is
+      # written under `RUNNER_TEMP`, which is destroyed with the runner, and
+      # never into the checkout — a keystore inside the tree would be one
+      # `git add -A` away from a commit the disclosure gate refuses and the
+      # publication cannot recall. `base64 -d` reads the secret from an
+      # environment variable rather than from the command line, where every
+      # process on the box could read it.
+      - name: Materialize the signing key
+        if: inputs.tag != ''
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_RELEASE_KEYSTORE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "ANDROID_RELEASE_KEYSTORE is not set — a release cannot be signed" >&2
+            exit 1
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "YOG_KEYSTORE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      - name: Build and sign the release APK
+        if: inputs.tag != ''
+        env:
+          YOG_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+        run: JAVA_HOME="$JAVA_HOME_17_X64" make apk-release
+
+      # The asset name carries the version, because a GitHub Release asset is
+      # downloaded by a URL that outlives the page it sits on and
+      # `app-release-signed.apk` names no version at all. The app finds it by
+      # the `.apk` suffix (`crate::update`), never by this name.
+      - name: Attach the APK to the release
+        if: inputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          asset="$RUNNER_TEMP/yog-android-${TAG#v}.apk"
+          cp android/app/build/outputs/apk/release/app-release-signed.apk "$asset"
+          gh release upload "$TAG" "$asset" --clobber
+          echo "attached $(basename "$asset") to $TAG"
