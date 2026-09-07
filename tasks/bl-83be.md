@@ -2,6 +2,7 @@
 title = "restyle the conversation list, its connectors, the workspace bar and the admin surfaces onto the STYLE.md tokens"
 created = 1788753995
 updated = 1788753995
+claimant = "Cantaloups-D3"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
