@@ -33,7 +33,12 @@ git_only = true
 # says it where release-plz reads its own policy.
 publish = false
 
-# THE TAG SPELLING. `v0.0.1` — bare, no crate prefix. This is also
+# THE TAG SPELLING. `v0.0.1` — bare, no crate prefix. **The release job no
+# longer reads this key** (bl-abe9): release-plz drops a `publish = false`
+# crate before it consults any config, so the tag is cut by
+# `.github/workflows/release-plz.yml`'s own step, which spells `v<version>`
+# there. This stays because the PR half is still release-plz's and the two
+# spellings must agree. This is also
 # release-plz's default for a single-crate repository, and it is written out
 # anyway because two other places name the spelling in prose (the workflow's
 # header, DESIGN §20) and a fact three files state must be a fact one file

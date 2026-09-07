@@ -4785,12 +4785,25 @@ cuts a GitHub Release. `release-apk` then builds that tag, signs it, and
 attaches the APK to that release.
 
 **Nothing publishes to a registry, and that is structural.** `Cargo.toml`
-carries `publish = false` because the deliverable is an APK, so release-plz
-skips the registry step entirely and reads the last released version off the
-git tag (`release-plz.toml`'s `git_only`). None of the crates.io machinery the
-sibling repositories carry belongs here: no trusted publisher, no
-`id-token: write`, no registry token, and no constraint on the workflow's
-filename.
+carries `publish = false` because the deliverable is an APK. None of the
+crates.io machinery the sibling repositories carry belongs here: no trusted
+publisher, no `id-token: write`, no registry token, and no constraint on the
+workflow's filename.
+
+**And that same key is why the tag is cut by the workflow rather than by
+release-plz** (bl-abe9). release-plz's release command begins
+`project.publishable_packages()` and answers `nothing to release` when that
+list is empty; the filter is cargo metadata's reading of the MANIFEST's
+`publish` key, so a `publish = false` crate is dropped before any tag, version
+or config is consulted — `git_only` does not lift it, measured against
+release-plz 0.3.162 in four configurations. The channel published nothing
+between 0.0.1 and that measurement: `main` carried a bumped version, no tag
+named it, `releases_created` stayed false and the signing job never ran. So the
+release job's one step is now the workflow's own `gh release create`, writing
+the two outputs the jobs below already read; release-plz keeps the half it
+does correctly, which is the version-bump PR. The tag spelling lives in that
+step (`v<version>`); `release-plz.toml`'s `git_tag_name` states the same
+spelling for the PR half.
 
 **THE FIRST VERSION IS TAGGED BY HAND, AND EVERY ONE AFTER IT IS THE
 WORKFLOW'S** (bl-951a). Reading versions off tags means there is nothing to
@@ -4872,7 +4885,7 @@ removing the key deletes a default and edits no script.
 ### 20.3 The version has one home
 
 `Cargo.toml`'s `version` is the single authority. release-plz bumps that line
-and tags `v<version>`; `android/app/build.gradle` reads the same line for
+and the release job tags `v<version>` off it (§20.1); `android/app/build.gradle` reads the same line for
 `versionName` and derives `versionCode` from it (two digits per component,
 which is what Android orders a downgrade by); the app compares
 `CARGO_PKG_VERSION` against the tag the feed answers with. A literal spelled in
