@@ -1,7 +1,8 @@
 +++
 title = "the release gate reads the engine's PROTOCOL from a path the engine no longer declares it at: the hold on 18 would never clear"
 created = 1788754957
-updated = 1788754957
+updated = 1788754958
+claimant = "Cantaloups-G1"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
