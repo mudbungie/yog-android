@@ -341,6 +341,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/follow/window.rs` | the follow lane's tool window (REMOTE §5.5): one type for a transition and a call, the merge by `tool_use` that folds one into the other, and the status that is a field's presence rather than a verdict | landed (bl-ee21) |
 | `src/live.rs` + `src/rows/windowed.rs` | where the lane meets the record: the prose gated on the flight that opens it, and a window row minted only for a call no committed block names yet | landed (bl-e3d1, the window bl-ee21) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
+| `src/codec/pick/face.rs` | what each control on the row SAYS: the pick, then the workspace's assignment, then the control's own name — pure, host-tested | landed (bl-809d) |
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
@@ -1511,6 +1512,34 @@ here is a defect.
   credential fact keeps: the engine states it, this seat never derives it
   (§8). The gate is answered in covered code (`codec::pick::tunable`), not in
   the paint.
+
+  **Amended (bl-809d): they are always painted, and dark where the provider
+  will not take them.** *Shown only where* made the capability invisible — an
+  operator on a provider with no priority lane saw no control and no
+  sentence, which is indistinguishable from a seat that never built one. A
+  control that vanishes teaches nothing; the greyed provider row has said so
+  since bl-0267, and this is that rule applied one control along. Nothing
+  about WHO decides moves: `codec::pick::tunable` still answers it off the
+  engine's own row, and the answer now picks the control's *state* instead of
+  its existence. It also stops the walk needing a provider that takes both
+  before the parity gate can see either.
+
+  **Every control on the row wears its VALUE, not its verb** (bl-809d).
+  *Which model is this conversation on* is the question an operator glances
+  at the row to answer, and `model` is not an answer to it — the face carried
+  only what THIS device had just picked, so the settling read that drops the
+  optimistic pick (bl-e9f9) put the placeholder back over a workspace that
+  had a model assigned. `codec::pick::face` is the one home for those words
+  and it is under the coverage floor: an optimistic pick first, the
+  workspace's own assignment next, and the control's own NAME where neither
+  exists. That third arm is §8 — an engine that predates the assignments read
+  answers nothing, and a seat painting `effort: off` there would be inventing
+  the assignment to keep its face tidy. Two readings fall out of the same
+  rule: the model face shows the workspace's model only under the workspace's
+  own PROVIDER, because a model belongs to the provider that serves it and
+  the pair would otherwise name something that does not exist; and an
+  assignment with no level reads `effort: off`, because the absence carried
+  as a real null IS the value, while no assignment at all reads `effort`.
 
   **The effort face carries its own name** (bl-b191). Every other control in
   the block is named where it is read: a provider selector shows a provider,

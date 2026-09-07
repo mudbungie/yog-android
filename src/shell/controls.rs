@@ -110,16 +110,10 @@ impl Shell {
             // rather than wrapping — so the second row is allocated rather
             // than wrapped into, either way. It is the same controls block
             // under the composer, not a new place to look (§13.2).
-            if effort || priority {
-                band(ui, |ui| {
-                    if effort {
-                        self.effort(ui, set.as_ref(), area);
-                    }
-                    if priority {
-                        self.priority(ui, set.as_ref());
-                    }
-                });
-            }
+            band(ui, |ui| {
+                self.effort(ui, set.as_ref(), area, effort);
+                self.priority(ui, set.as_ref(), priority);
+            });
             // **A third band, and only where a call is parked** (§13.7,
             // bl-b39d). It is added last, so in this bottom-up block it stands
             // highest — directly under the composer, where what it says is

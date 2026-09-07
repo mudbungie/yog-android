@@ -3,12 +3,16 @@
 //! priority lane. Both are role config the engine switches at the next step,
 //! so they take mid-conversation and neither restarts anything.
 //!
-//! They paint only where the picked provider's own row says it will take them
-//! — the capability is the engine's statement about itself, read in covered
-//! code and never derived here — which is also why the `make screens` walk
-//! seeds a provider that takes both: a control gated off in every walked
-//! screen is a control the parity gate cannot see, and unproven is red
-//! (PARITY §5).
+//! **They paint always and go dark where the provider will not take them**
+//! (bl-809d, amending bl-dfbb's *shown only where*). The capability is still
+//! the engine's statement about itself, read in covered code and never
+//! derived here; only what an unavailable one LOOKS like has changed. A
+//! control that vanishes teaches nothing — the argument the greyed provider
+//! row already carries — while one that is there, readable and dark says
+//! *this provider has no such lane*, in the one place an operator would go
+//! looking for it. It also puts both on the glass on every walked screen
+//! rather than only on one seeded with a provider that takes them, which is
+//! the parity gate's own ask: unproven is red (PARITY §5).
 
 use eframe::egui;
 
@@ -28,7 +32,13 @@ impl Shell {
     /// **The effort selector**: the vocabulary is closed and no wire read
     /// backs it, so the options are the codec's own constant; `off` is one of
     /// them and rides as the real null the engine reads.
-    pub(super) fn effort(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>, area: Band) {
+    pub(super) fn effort(
+        &mut self,
+        ui: &mut egui::Ui,
+        set: Option<&RoleRow>,
+        area: Band,
+        taken: bool,
+    ) {
         // The read carries the FILE's own word, which may be one the gesture
         // vocabulary does not spell (bl-e9f9). It is shown as itself — an
         // operator seeing `extreme` is being told the truth, and the four
@@ -43,20 +53,20 @@ impl Shell {
         // bl-78c2 was *context size*. So the empty state's word stays on the
         // face once a level is standing, and the level is what follows it.
         // REMOTE §9.4's own word, spelled the same here as on the wire.
-        let shown = self
-            .effort
-            .clone()
-            .or_else(|| set.and_then(|row| row.effort.clone()))
-            .map_or_else(|| "effort".to_owned(), |level| format!("effort: {level}"));
+        let shown = crate::codec::pick::face::effort(self.effort.clone(), set);
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "effort", shown, EFFORT, |ui| {
-            for level in crate::codec::pick::LEVELS {
-                let label = crate::codec::Effort::label(level);
-                if ui.selectable_label(false, &label).clicked() {
-                    picked = Some((level, label));
-                }
-            }
-        });
+        let opened = ui
+            .add_enabled_ui(taken, |ui| {
+                super::drop::drop_down(ui, area, "effort", shown, EFFORT, |ui| {
+                    for level in crate::codec::pick::LEVELS {
+                        let label = crate::codec::Effort::label(level);
+                        if ui.selectable_label(false, &label).clicked() {
+                            picked = Some((level, label));
+                        }
+                    }
+                })
+            })
+            .inner;
         act::act(ui, &opened, "effort");
         if let Some((level, label)) = picked {
             self.effort = Some(label);
@@ -70,11 +80,11 @@ impl Shell {
     /// role's calls, or stop asking. A toggle and not a tri-state — `off`
     /// removes the line, and asking for the *standard* lane is a different
     /// intent no config key expresses (REMOTE §9.4).
-    pub(super) fn priority(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>) {
-        let mut on = self
-            .priority
-            .unwrap_or_else(|| set.is_some_and(|row| row.priority));
-        let control = ui.toggle_value(&mut on, "priority");
+    pub(super) fn priority(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>, taken: bool) {
+        let (mut on, shown) = crate::codec::pick::face::priority(self.priority, set);
+        let control = ui
+            .add_enabled_ui(taken, |ui| ui.toggle_value(&mut on, shown))
+            .inner;
         act::act(ui, &control, "priority");
         if control.clicked() {
             self.priority = Some(on);

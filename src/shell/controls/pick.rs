@@ -87,7 +87,15 @@ impl Shell {
             act::acts(ui, &control, &["models", "model"]);
             return;
         };
-        let shown = self.model.clone().unwrap_or_else(|| "model".to_owned());
+        // **What this conversation is actually ON** (bl-809d). The face used
+        // to carry only what THIS device had just picked, so the settling
+        // read — which drops the optimistic pick — put the word `model` back
+        // over a workspace that had one assigned. `codec::pick::face` is the
+        // reading, under the floor; it shows the workspace's model only under
+        // the workspace's own provider, because a model belongs to the
+        // provider that serves it.
+        let shown =
+            crate::codec::pick::face::model(self.model.clone(), set, Some(provider.as_str()));
         let mut picked = None;
         let opened = super::drop::drop_down(ui, area, "model", shown, wide, |ui| {
             for name in snap.models.get(&provider).into_iter().flatten() {

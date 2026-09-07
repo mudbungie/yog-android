@@ -24,6 +24,8 @@ use serde_json::{Map, Value, json};
 
 use super::fields::{bool_of, opt, str_of};
 
+pub mod face;
+
 /// One provider as the engine lists it — the name it is picked by, and the
 /// two facts a surface may state about it.
 #[derive(Debug, Clone, PartialEq, Eq)]
