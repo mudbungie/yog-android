@@ -53,35 +53,49 @@ pub(crate) fn install(ctx: &egui::Context) {
     // is what keeps a system theme flip from swapping in egui's own light
     // palette under these tokens.
     ctx.options_mut(|options| options.theme_preference = egui::ThemePreference::Dark);
-    let mut style = egui::Style::default();
-    style.text_styles = [
-        (
-            egui::TextStyle::Small,
-            egui::FontId::proportional(type_scale::SMALL),
-        ),
-        (
-            egui::TextStyle::Body,
-            egui::FontId::proportional(type_scale::BODY),
-        ),
-        (
-            egui::TextStyle::Button,
-            egui::FontId::proportional(type_scale::BODY),
-        ),
-        (
-            egui::TextStyle::Heading,
-            egui::FontId::proportional(type_scale::HEADING),
-        ),
-        (
-            egui::TextStyle::Monospace,
-            egui::FontId::monospace(type_scale::MONO),
-        ),
-    ]
-    .into();
-    style.spacing.item_spacing = egui::vec2(space::S, space::S);
-    style.spacing.button_padding = egui::vec2(space::M, space::S);
-    style.spacing.menu_margin = egui::Margin::same(space::S as i8);
-    style.spacing.window_margin = egui::Margin::same(space::M as i8);
-    style.visuals = visuals();
+    // **Built in ONE initializer, never assigned onto a default** (bl-3d34).
+    // `clippy::field_reassign_with_default` is `deny` through the manifest's
+    // pedantic tier and this module is android-only, so the host gate cannot
+    // see the site — the release workflow's cross-clippy step is the only
+    // thing that lints it, and it was red on every push from the moment this
+    // function landed, which stops the APK job before it builds anything.
+    // Struct-update for what the language does not state: egui's defaults are
+    // the rest of the style, and naming them here would be a second copy of
+    // egui's own answer.
+    let style = egui::Style {
+        text_styles: [
+            (
+                egui::TextStyle::Small,
+                egui::FontId::proportional(type_scale::SMALL),
+            ),
+            (
+                egui::TextStyle::Body,
+                egui::FontId::proportional(type_scale::BODY),
+            ),
+            (
+                egui::TextStyle::Button,
+                egui::FontId::proportional(type_scale::BODY),
+            ),
+            (
+                egui::TextStyle::Heading,
+                egui::FontId::proportional(type_scale::HEADING),
+            ),
+            (
+                egui::TextStyle::Monospace,
+                egui::FontId::monospace(type_scale::MONO),
+            ),
+        ]
+        .into(),
+        spacing: egui::style::Spacing {
+            item_spacing: egui::vec2(space::S, space::S),
+            button_padding: egui::vec2(space::M, space::S),
+            menu_margin: egui::Margin::same(space::S as i8),
+            window_margin: egui::Margin::same(space::M as i8),
+            ..Default::default()
+        },
+        visuals: visuals(),
+        ..Default::default()
+    };
     ctx.set_style_of(egui::Theme::Dark, style);
 }
 
