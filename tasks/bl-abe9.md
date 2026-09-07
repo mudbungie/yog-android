@@ -1,7 +1,8 @@
 +++
 title = "release-plz never releases this crate: is_publishable() reads the MANIFEST's publish key, so git_only cannot lift publish = false"
 created = 1788751280
-updated = 1788751280
+updated = 1788751281
+claimant = "Cantaloups-A4"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r1"]
