@@ -92,11 +92,10 @@ fn envelope(
     scanner: &mut Scanner,
 ) -> bool {
     ui.strong("or paste the envelope a seat minted");
-    ui.weak(format!(
-        "one line of JSON beginning {{\"{}\": {}",
-        crate::envelope::TAG,
-        crate::envelope::VERSION
-    ));
+    // The shape, said by the module that reads it (bl-1f21): what this screen
+    // asks for and what `crate::envelope::read` accepts are one sentence, and
+    // it is under the coverage floor where this file is not.
+    ui.weak(crate::envelope::hint());
     // The field is capped and scrolls INSIDE that cap. A full envelope is a
     // couple of kilobytes of PEM, and a text edit that grows to fit it pushes
     // the button that spends it off the bottom of the screen — under the

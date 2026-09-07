@@ -10,6 +10,13 @@
 //! {"yog-enroll":1,"grade":…,"name":…,"address":…,"ca":…,"cert":…,"key":…}
 //! ```
 //!
+//! **That is a field list, not a byte order** (bl-1f21). REMOTE §8.4 fixes
+//! which keys ride and fixes none of their order, and a minting seat that
+//! builds the object with `serde_json`'s own map prints them SORTED — so the
+//! marker lands last, and the line above is the same envelope written another
+//! way. [`hint`] is the sentence a paste screen says about the shape, kept
+//! here so that the screen and the reader cannot disagree about it.
+//!
 //! **REMOTE §1.4 is untouched, and it is worth saying exactly why.** The new
 //! device performs no channel act: an already-trusted operator-grade seat
 //! performs the mint over *its* authenticated channel, and the material travels
@@ -42,6 +49,27 @@ pub const TAG: &str = "yog-enroll";
 
 /// The envelope version this build speaks.
 pub const VERSION: u64 = 1;
+
+/// The six material fields, spelled once. [`hint`] says them out loud and
+/// [`write`] and [`read`] carry them; that they are one list is proved by a
+/// round trip rather than by three spellings agreeing.
+const FIELDS: [&str; 6] = ["grade", "name", "address", "ca", "cert", "key"];
+
+/// **What a paste field should ask for**: the shape, in one line an operator
+/// can hold a laptop screen up against.
+///
+/// It describes the object and not its bytes. The sentence this replaces said
+/// the line *begins* with the marker, which no authority promises and which a
+/// real seat contradicts — `serde_json`'s map is sorted, so `yog-enroll` is
+/// the LAST key an operator sees, and a correct envelope was being described
+/// as the wrong shape at the one screen that reads it (bl-1f21).
+#[must_use]
+pub fn hint() -> String {
+    format!(
+        "one line of JSON, keys in any order: {TAG:?}: {VERSION} and {}",
+        FIELDS.join(", ")
+    )
+}
 
 /// One minted enrollment, read and not yet landed.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -1,7 +1,7 @@
 //! The envelope, over real minted material — the grade check is the design,
 //! so it is proved against certificates rather than against a stated word.
 
-use super::{Envelope, TAG, VERSION, land, read};
+use super::{Envelope, TAG, VERSION, hint, land, read, write};
 use crate::leaf::Grade;
 use crate::test_support::{mint_ca, mint_foot, mint_leaf, scratch};
 use std::path::Path;
@@ -201,4 +201,55 @@ fn a_directory_that_will_not_take_the_material_is_named() {
     std::fs::write(&blocked, "in the way").unwrap();
     let e = land(&blocked, &envelope).unwrap_err();
     assert!(e.contains("blocked"), "{e}");
+}
+
+/// **The order a real seat prints, read back** (bl-1f21). lernie builds the
+/// envelope through `serde_json`'s map, which is sorted, so `yog-enroll` is
+/// the LAST key on the line an operator reads off a laptop screen. Written as
+/// a literal rather than through a map, because a map re-sorts whatever it is
+/// handed and would prove nothing about order.
+#[test]
+fn the_marker_may_land_last_because_a_seat_prints_its_keys_sorted() {
+    let dir = scratch();
+    mint_ca(&dir, "ca");
+    mint_foot(&dir, "ca", "phone");
+    let quoted = |file: String| {
+        serde_json::Value::from(std::fs::read_to_string(dir.join(file)).unwrap()).to_string()
+    };
+    let sorted = format!(
+        r#"{{"address":"engine.example.com:7737","ca":{},"cert":{},"grade":"foot","key":{},"name":"notreal-phone","{TAG}":{VERSION}}}"#,
+        quoted("ca.pem".to_owned()),
+        quoted("phone.pem".to_owned()),
+        quoted("phone.key".to_owned()),
+    );
+    assert!(
+        sorted.ends_with(&format!(r#""{TAG}":{VERSION}}}"#)),
+        "{sorted}"
+    );
+    let envelope = read(&sorted).unwrap();
+    assert_eq!(envelope.grade, Grade::Foot);
+    assert_eq!(envelope.name, "notreal-phone");
+    assert_eq!(envelope.address, "engine.example.com:7737");
+}
+
+/// The paste screen's sentence names exactly the keys the writer writes — the
+/// one list, checked against the envelope itself rather than against a second
+/// spelling of it — and it promises no order, because none is promised.
+#[test]
+fn the_hint_names_every_key_and_fixes_no_order() {
+    let said = hint();
+    let text = write(&Envelope {
+        grade: Grade::Foot,
+        name: "notreal-phone".to_owned(),
+        address: "engine.example.com:7737".to_owned(),
+        ca: "ca".to_owned(),
+        cert: "cert".to_owned(),
+        key: "key".to_owned(),
+    });
+    let value: serde_json::Value = serde_json::from_str(&text).unwrap();
+    for key in value.as_object().unwrap().keys() {
+        assert!(said.contains(key.as_str()), "{key} missing from {said}");
+    }
+    assert!(said.contains("any order"), "{said}");
+    assert!(!said.contains("beginning"), "{said}");
 }

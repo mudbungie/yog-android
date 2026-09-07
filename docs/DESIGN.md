@@ -1122,6 +1122,15 @@ front, and `src/envelope.rs` is this end of it:
 {"yog-enroll":1,"grade":…,"name":…,"address":…,"ca":…,"cert":…,"key":…}
 ```
 
+**That line is a field list and not a byte order** (bl-1f21). §8.4 fixes which
+keys ride and fixes none of their order; a minting seat that builds the object
+through `serde_json`'s map prints them sorted, which puts `yog-enroll` LAST.
+The reader is a JSON reader and never cared, but the paste screen's hint said
+the line *begins* with the marker — so an operator holding a correct envelope
+was told it was the wrong shape. `crate::envelope::hint` is that sentence now,
+built from the field list beside the reader that spends it, and it promises no
+order.
+
 **REMOTE §8.4's payload-contract paragraph is the authority, and it says so in
 those words** — *"The payload contract — this section is its authority"*. This
 file records what this device does with the envelope; the envelope's own shape
