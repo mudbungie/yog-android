@@ -1,7 +1,8 @@
 +++
 title = "the workspace buttons along the top are incoherent on the phone: a wrapped grid of seven unequal buttons — make them one coherent bar"
 created = 1788753120
-updated = 1788753120
+updated = 1788753462
+claimant = "Cantaloups-A5"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
