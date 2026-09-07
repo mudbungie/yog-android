@@ -71,8 +71,8 @@ about extra ones, which `codec::conv`'s own test pins — so an engine that
 grows a column does not break a seat that predates it. The §3 preface is what
 breaks it, fail-closed and on purpose. So a protocol bump upstream is a
 **re-vendor and a rebuild here**, not a compatibility shim: re-vendor
-`corpus/` from a yog checkout at the new number, raise `hello::PROTOCOL` to
-match, decode whatever the moved shapes gained, and let the §14 cache's own
+`corpus/` from a yog checkout at the new number, raise the repo-root
+`PROTOCOL` file to match, decode whatever the moved shapes gained, and let the §14 cache's own
 version stamp discard what the previous build stored.
 
 **Every connection opens with a version preface (bl-93e3).** REMOTE §3 is the
@@ -117,7 +117,7 @@ gesture that makes a conversation reported a failure over a conversation that
 was in fact running.
 
 **The number lives in two files and the suite asserts they agree**
-(bl-8553): `src/hello.rs` and `corpus/shapes.json`. So a corpus vendored from
+(bl-8553): the repo-root `PROTOCOL` file (bl-6fec) and `corpus/shapes.json`. So a corpus vendored from
 a yog that has moved on, and a preface bumped without re-vendoring, are each a
 red test rather than a skew discovered on a handshake. **What the standing
 number IS is `hello::PROTOCOL`'s own changelog and is not restated here** —
@@ -330,6 +330,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 |---|---|---|
 | `src/frame.rs` | REMOTE §3 framing, bytes only | landed (bl-c747) |
 | `src/hello.rs` | REMOTE §3's version preface: state, confirm, and the one fail-closed sentence | landed (bl-93e3) |
+| `src/hello/version.rs` | the ledger of every bump, and the re-export of the constant `build.rs` compiles out of the repo-root `PROTOCOL` file — split off (bl-5070) because the preface exchange and the changelog of what moved the number are edited for unrelated reasons and together sit in the ≥200 band | landed (bl-5070) |
 | `src/codec/request.rs` | the gesture codec's decode side — the inverse the corpus is replayed through | landed (bl-93e3) |
 | `corpus/` + `tests/conformance/` | the vendored wire conformance corpus and its replay: the decision table over every shape, in both directions | landed (bl-93e3) |
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
@@ -338,7 +339,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/pass/adopt.rs` | what a lane's frame means to the standing: the attention fold that replaces, the follow fold that appends, and the end of a stream | landed (bl-8e3c) |
 | `src/seat/pass/publish.rs` | the one builder every published snapshot goes through, whether a pass or a frame publishes it | landed (bl-8e3c, out of `pass.rs`) |
 | `src/rows/wounded.rs` | the settled-failure notice as a row (REMOTE §9.16): the class, the remedy on the refusal arm, and no row for `none` | landed (bl-8e3c) |
-| `src/codec/follow/window.rs` | the follow lane's tool window (REMOTE §5.5): one type for a transition and a call, the merge by `tool_use` that folds one into the other, and the status that is a field's presence rather than a verdict | landed (bl-ee21) |
+| `src/codec/follow/window.rs` | the follow lane's tool window (REMOTE §5.5): one type for a transition and a call, the merge by `tool_use` that folds one into the other, and the two statuses that are a field's presence rather than a verdict — the capture's exit code, and the hold (bl-5070) | landed (bl-ee21) |
+| `src/codec/proposals.rs` | the learning loop's veto (REMOTE §9.22): a staged config patch as a row, the reading beside the listing, and the two-word verdict read strictly | landed (bl-5070) |
 | `src/live.rs` + `src/rows/windowed.rs` | where the lane meets the record: the prose gated on the flight that opens it, and a window row minted only for a call no committed block names yet | landed (bl-e3d1, the window bl-ee21) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/codec/pick/face.rs` | what each control on the row SAYS: the pick, then the workspace's assignment, then the control's own name — pure, host-tested | landed (bl-809d) |
@@ -380,6 +382,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/admin.rs` + `admin/act.rs` | the admin family (§13.17): the three config destinations this seat spells and the refusal the other two earn, the two halves of `marks`, and the five acts whose address is inside the choice | landed (bl-f645) |
 | `src/seat/asks/admin.rs` + `src/seat/acts/admin.rs` | the two reads, each carrying the subject it was asked about because neither answer echoes one; and the five acts in the three receipt shapes they earn | landed (bl-f645) |
 | `src/shell/screens/world/admin.rs` + `admin/acts.rs` | android-only: the admin screen (§13.17) — the destinations as controls, the editor a read seeds once, and the unmaking on a band of its own | landed (bl-f645) |
+| `src/shell/app/running.rs` | android-only: what this launch IS — the reboot that re-reads the derivation, the material directory, the seat model and the identity line, split off (bl-5070) where `app/fields.rs` drew the same seam | landed (bl-5070) |
+| `src/shell/screens/world/admin/proposals.rs` | android-only: what a reviewer has staged (§13.17) — the listing under the destinations, the whole diff under the listing, and the settle band whose reject half is armed | landed (bl-5070) |
 | `src/codec/fork.rs` | the attempt's envelope (§13.16): its own shape rather than a `RowAct`, and the two narrowings inside it — no pinned skill, and a ref that is never empty | landed (bl-99fd) |
 | `src/seat/acts/fork.rs` | the attempt posted, and the read that settles a lost one: the spine the gesture was fired from | landed (bl-99fd) |
 | `src/shell/screens/records/points.rs` + `records/acts.rs` | android-only: the fork points as controls — the operable notches and the `config/<name>` heads — and the foot's two acts over the two picks | landed (bl-99fd) |
@@ -820,6 +824,36 @@ on this lane, and a hue read off the number would be this seat deciding what
 an exit code means. The name carries the machine already (§5.1 presents a
 routed tool as `<client>_<tool>`), so *where* a command ran needs no join.
 
+**And the one call the window exists for was the one it could not carry**
+(PROTOCOL 18, yog bl-58bb). The window's two entries come off the pair of files
+litany lands — `input.json` as a call is dispatched, `output.json` when the
+capture returns — and a call the capability control PARKS is parked before the
+executor is entered, so it lands neither. The lane therefore reported the
+conversation at rest and ended the stream at the exact moment the operator was
+the thing it was waiting for; on a foot lane every call to a non-shell tool is
+held, so that was most of the conversation. `held` is the control's own
+sentence about the call, and its **presence** is the status — the discipline
+`exit_code` already carries on the same entry.
+
+**A held row wears the attention accent, and it is the only tone this
+projection asks for that the wire never spells** (STYLE.md §3: *a parked call
+held for an answer*). `codec::Tone` gains a seventh variant no token maps to,
+rather than a second enum beside it: the wire's table is what a frame is read
+against and it still has six entries, so a frame cannot produce it, and one
+type is what keeps a locally derived hue and a decoded one meaning the same
+thing to the shell. The row reads `⚙ <tool> — held for you`, its payload is the
+control's sentence — carried unrewritten, REMOTE §8.1 — and the command it is
+about opens under the fold, one tap away. It auto-expands like a step in
+flight, because a row that is asking for you, folded shut, asks for an answer
+to something the operator cannot see.
+
+**The band answers it and this row accounts for it, and that is not two
+readings of one fact.** The capability band under the composer (§13.7) is the
+ACT, addressed at the focused conversation and painted off the QUEUE read; this
+row is the transcript's record of the same call, in the timeline, off the
+follow lane. One is where an operator decides; the other is where they were
+already looking.
+
 **And the prose half is gated on the flight that opens it, not on the step.**
 The lane's subject moved with the same bump: a follow read follows a STEP, so
 it stays open through the tool phase — with the settled call's words still in
@@ -935,8 +969,21 @@ body back with the goal and fires it.
 rather than re-derived: it is the engine's own statement about what was
 staged, and a client that recomputed one would be inventing world state it
 does not own and would drift the first time the engine's policy moved.
-`binding` and `lineage` cross as **real nulls** — the field is present and its
-absence is the value — so what came off the wire goes back on it unchanged.
+`binding`, `lineage` and `role` cross as **real nulls** — the field is present
+and its absence is the value — so what came off the wire goes back on it
+unchanged.
+
+**`role` is the one field of that body a SEAT is meant to write** (PROTOCOL
+18, yog bl-9ced): `prepare` answers null — litany's `worker`, spelled as an
+absence exactly as `lineage`'s default is — and a seat that wants a planning
+conversation deposits the same body back with `"role": "planner"`. This client
+carries the null and writes none, and the reason is not scope: **the honest
+list of roles a workspace declares is not a read on this wire.** `reply/roles`
+answers which roles are ASSIGNED a provider and a model, which is a different
+set from the ones the governing commit declares, so a chooser built from it
+would silently omit exactly the role somebody came here for — and a control
+that cannot name its options is worse than none. bl-045b is the exit and names
+what it needs first.
 
 **One rung, and the other two are not omissions.** The bare rung is the whole
 slice: a phone is not where a work directory is chosen or a ball is bound. The
@@ -1944,6 +1991,40 @@ call itself and the operator is reading it as they decide. Nothing here stops
 an agent: yog's own note is that a stop mid-tool-window wedges the branch
 permanently, so declining is in-band and parking is a park.
 
+**How far the answer stands is a chooser above the verdicts** (PROTOCOL 18,
+yog bl-94a5). `scope` rides beside the verdict in both directions over `call |
+conversation | workspace`: the held call alone, the class of that call for this
+conversation and its descent, or that class for every conversation here. An
+operator holding a conversation otherwise answers the same question for every
+call of a kind they had already decided about — the upstream ball measured
+eleven holds and eleven releases of one narrow routed tool in a single run.
+
+It is a chooser and not a fourth verdict because it is orthogonal to all three:
+a wide `refuse` is as real a decision as a wide `pass`. It sits **above** the
+verdicts, because reach is read before the verdict is tapped, which is the same
+ordering the engine's sentence above them already has. Three chips of a band
+(STYLE.md), narrowest first, the picked one in the brand — the one ink that
+says *the operator's own act* — exactly as the admin screen tells its picked
+destination.
+
+**The default is `call`, and it is reset whenever the parked call changes.**
+The band remembers which `tool_use` the reach was chosen for and drops it the
+moment the engine says a different call is held: a width carried from one call
+to the next would widen an answer nobody widened. That is the same use this
+seat already had for the id it never sends (`codec::hold`).
+
+**Nothing here decides whether a wide answer is allowed.** A destructive or
+credential-reaching call takes the bare scope only, and that refusal is the
+ENGINE's — it arrives in band, which is where every capability decision this
+seat does not own arrives. The class the wide scopes stand over is derived at
+the engine too, out of the sentence it wrote into the hold mark, so this seat
+spells a decision and never a key.
+
+**And the chat says a call is held, in the one hue that means *asking for
+you*** (PROTOCOL 18, yog bl-58bb; §7). The band is the ACT; the tool window's
+row is the transcript's account of the same call, in the place the operator is
+already reading — see §7 for why the lane could not say it before.
+
 **The one success that still owes a sentence.** A releasing verdict that did
 not advance the branch left the answer recorded and the conversation exactly
 where it was — nothing moves until something advances it — and that is the one
@@ -2314,6 +2395,31 @@ picked. That is §13.10's arrangement, and the reason it differs from the
 desktop's is width: a phone row has no room for a second rectangle beside the
 text it exists to show. The control is DISABLED with the reason stated beside
 it while nothing is picked, which is §13.10's rule verbatim.
+
+**A census row's ink is its framing** (STYLE.md §1: colour means state,
+PROTOCOL 18, yog bl-ab53). The census is where a person looks to see what a
+conversation has been DOING, and until `in_flight` the step being written right
+now was spelled `killed` — the one word that makes a real interrupt legible —
+so watching a working conversation showed a false interrupt on every step. The
+word stays the engine's; what the seat adds is the hue, read off one table
+(`theme::framing`): `complete` is `Rest`, `failed` is `Error`, `killed` is
+`Annotation` (STYLE.md's own *an interrupt*) and `in_flight` is `Working`
+(its own *a step in flight*).
+
+**And `framing` is now PICKED rather than carried as a string.** It rode as a
+bare token while this screen only printed it, and this module's own rule is
+that a token nothing branches on gets no table. A screen branches on it now, so
+an unknown word must refuse at the decode by name rather than paint as the
+nearest colour at a paint site — which would report a live step as a killed
+one, the exact defect the bump exists to end. `wound` keeps riding as a string,
+because nothing branches on that one.
+
+**The line a census row is labelled with lives beside the decode**
+(`StepRow::line`), not in the paint file that spends it — `roster::spoke`'s
+rule (§13.14): a derivation inside a paint file is one no host test can reach,
+and this one joins four fields and two optional ones. What the screen adds is
+the picked mark and the ink, which are facts about the screen and not about the
+step.
 
 **The answer says which row it belongs to, so nothing here remembers one.**
 `reply/step` echoes back the `seq` it was asked by, and the paint puts the
@@ -2905,6 +3011,55 @@ sets it, and the write's receipt is the branch the engine RE-READ — so nothing
 asks again after it. `codec::request` splits its ask and act tables on exactly
 that field.
 
+**The learning loop's veto is here too** (`proposals` / `proposal`, REMOTE
+§9.22, bl-5070). litany's reviewer stages what it learned as a real config
+patch on a branch of its own, and the whole loop turns on a person reading it
+and saying yes or no; before the two ops there was nothing on this wire that
+could, so the veto lived at a command on the engine's own box — an `ssh` and a
+container `exec` on a server install, which is the thing this boundary exists
+to make unnecessary. They are **new shapes, so `PROTOCOL` did not move for
+them**; what a client owes them is a re-vendor to gain them.
+
+**They are on THIS screen and not one of their own**, because a proposal is a
+candidate CONFIG commit: the same subject this screen reads and writes, one
+branch along. A surface of its own would be a second home for one subject, and
+the operator about to accept a config patch is the operator who wants the
+config it patches in front of them.
+
+**The listing is asked when the screen opens, beside the mark** — a read that
+needs no pick, which is the rule this screen already applies to `marks` and
+withholds from `config`. Tapping a row asks for that proposal WHOLE, which is
+the same op at its second depth (`files`' shape at a third site); tapping it
+again puts it down and re-reads the bare listing, because a reading of a
+proposal nobody has picked is a reading under no row. The whole diff paints
+under the LISTING rather than under its row: it is the tallest thing on this
+screen, and a row that grew by forty lines would move every row under it out
+from beneath the thumb that tapped.
+
+**`fresh` is read and never inferred.** An empty `lineages` would imply it, but
+the wire states the derivation so a seat need not own one (REMOTE §9.4) — only
+the engine can be sure the two were read in one pass, and this is the site where
+getting it wrong means accepting a patch written against a config that no
+longer governs anything. It paints as its own state: `fresh` at rest, `stale`
+in the annotation accent.
+
+**Which arming each verdict takes, and the rule is the one already drawn.**
+`accept` TAKES what the operator has just read, which is the `pass` case
+(§13.7) — the thing being read before the tap is the whole reason the control
+is there — so it is a plain tap. `reject` DISCARDS a durable record somebody
+else made, which is `clear-trail`'s case (§13.8), so it takes two taps on one
+label rather than a dialog a back gesture could answer. Neither is dark for
+want of a typed word and both are dark without a pick: the settle's parameter
+is a proposal, and a proposal is chosen from the listing rather than typed.
+
+**A settle is followed by the listing read again** — the trail acts' rule, one
+surface along. Accepting fast-forwards the lineage and deletes the staging
+branch and rejecting deletes it, so either way the row is gone and a screen
+standing on the old listing would still be offering it. A refusal is litany's
+own sentence, painted verbatim: a stale proposal, an ambiguous one and an
+unknown id come back in the engine's words, and this seat has no second opinion
+about any of them.
+
 **`scan` unmakes nothing** and is not armed: it delivers the mail that is there.
 
 **What the walk reaches.** One new step: `config`, tapped from the aimed band,
@@ -2912,6 +3067,15 @@ which is six entries now. The engine is not dialled, so it captures a screen
 that opened and said nothing was read, and four controls — three dark, each
 saying which word would light it. `act:delete-agent` rides the records screen,
 which the walk already visits.
+
+**The settle band rides that same step** (bl-5070), and the walk sees it for
+the reason the deletions are seen: both verdicts are painted whether or not a
+proposal is picked, dark and saying what would light them, so `act:proposal` is
+observed on a screen with no engine behind it. `act:proposals` rides the
+listing's rows, which a corpus-seeded walk carries; a walk that opened this
+screen against a dialled engine with nothing staged sees the read's own
+sentence and no rows, which is why the settle band and not the listing is what
+the parity inventory rests on.
 
 ### 13.18 The minting seat: the act, the symbol, and the forgetting (bl-2ee8)
 
@@ -3483,10 +3647,10 @@ Two seeds put the app on any screen with no server anywhere:
   navigations, which is the same fact §14 already keeps — rows are paintable
   only under the focus they were asked at.
 
-The cache's two version stamps are read out of `src/cache.rs` and
-`src/hello.rs` by the seeding script rather than restated in it. A stamp that
-outruns the script makes the app discard the file, which surfaces as the wrong
-screen name and reddens the walk — the failure is loud, and it is loud in the
+The cache's two version stamps are read out of `src/cache.rs` and the
+repo-root `PROTOCOL` file (bl-6fec) by the seeding script rather than restated
+in it. A stamp that outruns the script makes the app discard the file, which
+surfaces as the wrong screen name and reddens the walk — the failure is loud, and it is loud in the
 one place that already knows.
 
 ### 15.4 What gates

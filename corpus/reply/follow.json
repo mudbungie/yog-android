@@ -35,8 +35,20 @@
           "tool_use": "toolu_01"
         }
       ]
+    },
+    {
+      "kind": "follow",
+      "ok": true,
+      "stream": {},
+      "tools": [
+        {
+          "held": "box2_service_status {} classified opaque (not a tool this control implements and its input carries no command line)",
+          "tool": "box2_service_status",
+          "tool_use": "toolu_02"
+        }
+      ]
     }
   ],
-  "protocol": 14,
+  "protocol": 18,
   "shape": "follow"
 }

@@ -131,6 +131,13 @@ pub struct Snapshot {
     /// **Which task branch the focused workspace is marked with** (DESIGN
     /// §13.17), carrying the workspace it was read for (`Marks::about`).
     pub marks: Option<crate::codec::Marks>,
+    /// **What a reviewer has staged for the focused workspace** (REMOTE
+    /// §9.22, DESIGN §13.17), carrying the workspace it was read for
+    /// (`Staged::about`) — the answer echoes none, so a listing cannot paint
+    /// under another workspace's name. `None` is *nobody has opened the
+    /// surface*; an empty listing is *nothing is staged*, which is an answer
+    /// and not a refusal.
+    pub proposals: Option<crate::codec::Staged>,
     /// **The material this seat just minted** (REMOTE §8.4, DESIGN §13.18).
     /// `None` is the ordinary state and the one an operator should leave the
     /// app in: it holds a private key for a device that does not exist yet,

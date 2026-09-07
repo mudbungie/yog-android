@@ -25,6 +25,16 @@
 //! the second is a **merge by id** ([`window`]) rather than a second vocabulary
 //! with a conversion between them.
 //!
+//! **A third transition, and it is the one an operator is IN** (`held`,
+//! REMOTE §5.5 at PROTOCOL 18, yog bl-58bb). A call the capability control
+//! parks is parked *before* the executor is entered, so it lands neither file
+//! and the pair of existences above never happens: the lane reported the
+//! conversation at rest and ended the stream at the exact moment the operator
+//! was the thing it was waiting for. On a foot lane every call to a non-shell
+//! tool is held, so that was most of the conversation. The field is the
+//! control's own sentence about the call, and — like `exit_code` — its
+//! **presence** is the status and its words are not a verdict this seat forms.
+//!
 //! **`exit_code`'s presence is the status, and its value is not a verdict.**
 //! Absent is a call in flight, present is one whose capture landed; §5.5 states
 //! no third arm, so the two readings cannot disagree. What the number *means*
@@ -65,6 +75,11 @@ pub struct Call {
     /// The captured exit code. Its **presence** is the whole of "this call
     /// closed"; its value is the engine's record and not a verdict.
     pub exit_code: Option<i64>,
+    /// **Why the control parked this call**, in the control's own words. Its
+    /// presence is the whole of "this call is waiting on the operator"; the
+    /// sentence itself crosses unrewritten (REMOTE §8.1: rewriting it *"would
+    /// put a different call in front of the operator"*).
+    pub held: Option<String>,
 }
 
 impl Call {
@@ -77,6 +92,7 @@ impl Call {
         self.tool = later.tool.clone().or_else(|| self.tool.clone());
         self.input = later.input.clone().or_else(|| self.input.clone());
         self.exit_code = later.exit_code.or(self.exit_code);
+        self.held = later.held.clone().or_else(|| self.held.clone());
     }
 }
 
@@ -129,6 +145,7 @@ fn call_of(v: &Value) -> Result<Call, String> {
         tool: opt(o, "tool", str_of).map_err(named)?,
         input: opt(o, "input", str_of).map_err(named)?,
         exit_code: opt(o, "exit_code", i64_of).map_err(named)?,
+        held: opt(o, "held", str_of).map_err(named)?,
     })
 }
 

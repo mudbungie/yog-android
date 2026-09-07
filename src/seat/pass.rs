@@ -109,6 +109,11 @@ pub(super) struct Standing {
     /// subject it was asked about because neither answer echoes one.
     pub(super) config: Option<crate::codec::Config>,
     pub(super) marks: Option<crate::codec::Marks>,
+    /// **What a reviewer has staged for this workspace** (REMOTE §9.22),
+    /// on the same terms as the two above: written only by the admin screen's
+    /// own gesture, and carrying the workspace it was read for because the
+    /// answer echoes none.
+    pub(super) proposals: Option<crate::codec::Staged>,
     /// **The material a mint answered with** (DESIGN §13.18), held here and
     /// NOWHERE else — not the §14 cache, not a log line, not a file. It is a
     /// private key for a device that does not exist yet, and the surface that
@@ -157,6 +162,7 @@ impl Standing {
             work: None,
             config: None,
             marks: None,
+            proposals: None,
             minted: None,
             found: None,
             last: snap.clone(),

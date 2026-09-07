@@ -5,11 +5,21 @@
       "advanced": false,
       "kind": "answered",
       "ok": true,
-      "tool": "Bash",
-      "tool_use": "toolu_1",
+      "scope": "call",
+      "tool": "beta2_read_log",
+      "tool_use": "toolu_0",
       "verdict": "hold"
+    },
+    {
+      "advanced": true,
+      "kind": "answered",
+      "ok": true,
+      "scope": "conversation",
+      "tool": "beta2_read_log",
+      "tool_use": "toolu_1",
+      "verdict": "pass"
     }
   ],
-  "protocol": 1,
+  "protocol": 18,
   "shape": "answered"
 }

@@ -101,6 +101,21 @@
             "total": 99
           },
           "wound": "refused"
+        },
+        {
+          "attempts": 1,
+          "commit": "abc",
+          "framing": "in_flight",
+          "seq": "007",
+          "started_at": "t0",
+          "tokens": {
+            "cache_read": 33,
+            "cache_write": 44,
+            "input": 11,
+            "output": 22,
+            "total": 99
+          },
+          "wound": "none"
         }
       ]
     },

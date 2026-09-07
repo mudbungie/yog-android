@@ -75,7 +75,23 @@ pub enum Flight {
     Subagents,
 }
 
-/// The §11 row tone, in the words the seats share.
+/// The §11 row tone, in the words the seats share — **six of which the wire
+/// spells, and one of which it never will**.
+///
+/// [`TONES`] is the wire's whole table and it has six entries, so `pick`
+/// refuses any seventh word a frame could carry. [`Tone::Held`] is the seat's
+/// own: a call the capability control has parked (REMOTE §5.5's `held`, yog
+/// bl-58bb) is *asking for the operator*, which is the one state
+/// `docs/STYLE.md` §3 names that no conversation row ever asks for — a row
+/// tone says what a conversation is DOING, and a parked call is a thing inside
+/// one.
+///
+/// It is a seventh variant here rather than a second enum beside this one for
+/// the reason `crate::rows` re-exports this type at all: a locally derived hue
+/// and a decoded one mean the same thing to the shell, and two tone
+/// vocabularies in one crate drift within a week. The asymmetry is real and it
+/// is stated where it can be checked — the table, not the enum, is what the
+/// wire is read against.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tone {
     Plain,
@@ -84,6 +100,8 @@ pub enum Tone {
     Bad,
     Live,
     InFlight,
+    /// **Parked for the operator.** Never decoded: no wire token maps here.
+    Held,
 }
 
 pub(super) const STATES: [(&str, AgentState); 4] = [

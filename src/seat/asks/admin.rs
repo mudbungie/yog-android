@@ -1,5 +1,6 @@
-//! **The admin surface's two reads** (DESIGN §13.17): what one config file
-//! holds, and which task branch a workspace is marked with.
+//! **The admin surface's three reads** (DESIGN §13.17): what one config file
+//! holds, which task branch a workspace is marked with, and what a reviewer
+//! has staged for it.
 //!
 //! **Each is its write's own op token with the written half left out**, which
 //! is the engine's grammar rather than a convention here — so the two halves
@@ -12,7 +13,7 @@
 //! lets a screen paint a file under the destination it asked for.
 
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, Config, Destination, Marks};
+use crate::codec::{Ask, Config, Destination, Marks, Staged};
 use crate::seat::Focus;
 use crate::seat::pass::{answer, kind_err};
 use crate::transport::Seat;
@@ -39,5 +40,34 @@ pub(in crate::seat) fn marks(seat: &Seat, focus: &Focus) -> Result<Marks, String
     match answer(seat, &ask)? {
         (Reply::Marks(branch), _) => Ok(Marks { workspace, branch }),
         (other, _) => Err(kind_err("marks", &other)),
+    }
+}
+
+/// **What a reviewer has staged for this workspace** (REMOTE §9.22). Aimed
+/// like `marks` above and for its reason: a proposal is a candidate config
+/// commit of one workspace's policy, so a listing under another workspace's
+/// name would be the wrong claim.
+///
+/// **The reply echoes no workspace**, so the ask names it — this file's rule
+/// at its third site — and `id` rides through to the answer as nothing at all:
+/// what a named id buys is `whole` beside the listing, and whether one was
+/// asked for is said by that field's presence.
+pub(in crate::seat) fn proposals(
+    seat: &Seat,
+    focus: &Focus,
+    id: Option<String>,
+) -> Result<Staged, String> {
+    let workspace = super::super::acts::focused(focus)?;
+    let ask = Ask::Proposals {
+        workspace: workspace.clone(),
+        id,
+    };
+    match answer(seat, &ask)? {
+        (Reply::Proposals { rows, whole }, _) => Ok(Staged {
+            workspace,
+            rows,
+            whole,
+        }),
+        (other, _) => Err(kind_err("proposals", &other)),
     }
 }

@@ -14,7 +14,7 @@ use serde_json::{Value, json};
 use super::{
     REST, Turn, conv_reply, model_lanes, nothing_set, queue_quiet, settle, tr_reply, ws_reply,
 };
-use crate::codec::Verdict;
+use crate::codec::{Scope, Verdict};
 
 /// A model whose attention lane the test FEEDS (§14.1): the queue arrives as
 /// a frame the test sends, when the test sends it.
@@ -39,10 +39,17 @@ fn queue_held() -> Vec<u8> {
     .into_bytes()
 }
 
-/// The receipt, with `advanced` as the caller wants it.
+/// The receipt, with `advanced` as the caller wants it. The scope it echoes
+/// is the narrow one unless a test says otherwise (`answered_at`).
 fn answered(verdict: &str, advanced: bool) -> Vec<u8> {
+    answered_at(verdict, "call", advanced)
+}
+
+/// The same receipt at a stated reach (PROTOCOL 18).
+fn answered_at(verdict: &str, scope: &str, advanced: bool) -> Vec<u8> {
     json!({ "ok": true, "kind": "answered", "tool": "Bash",
-            "tool_use": "toolu_1", "verdict": verdict, "advanced": advanced })
+            "tool_use": "toolu_1", "verdict": verdict, "scope": scope,
+            "advanced": advanced })
     .to_string()
     .into_bytes()
 }
@@ -71,7 +78,7 @@ fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation()
         (held.tool.as_str(), held.reason.as_str()),
         ("Bash", "writes")
     );
-    model.answer(Verdict::Pass);
+    model.answer(Verdict::Pass, Scope::Call);
     // The answered call is gone from the lane's next frame, which is the
     // engine saying the answer changed (§14.1) — and the read that settles
     // this act.
@@ -81,7 +88,40 @@ fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation()
     let requests = served.join().unwrap();
     assert_eq!(
         serde_json::from_slice::<Value>(&requests[5]).unwrap(),
-        json!({ "op": "answer", "workspace": "home", "agent": "a1", "verdict": "pass" })
+        json!({ "op": "answer", "workspace": "home", "agent": "a1",
+                "verdict": "pass", "scope": "call" })
+    );
+}
+
+/// **A widened answer says how far it stands** (PROTOCOL 18, yog bl-94a5) —
+/// the scope crosses beside the verdict, and the receipt's own scope is what
+/// the seat reads back rather than the one it sent.
+#[test]
+fn a_widened_answer_carries_its_reach_and_the_receipt_states_one() {
+    let (mut model, served, feed) = fed(vec![
+        vec![ws_reply()],
+        vec![nothing_set()],
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![tr_reply()],
+        vec![answered_at("pass", "conversation", true)],
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![tr_reply()],
+    ]);
+    settle(&mut model, &|s| !s.workspaces.is_empty());
+    model.focus_conversation("home".into(), "a1".into());
+    feed.send(queue_held()).unwrap();
+    settle(&mut model, &|s| !s.queue.is_empty());
+    model.answer(Verdict::Pass, Scope::Conversation);
+    feed.send(queue_quiet()).unwrap();
+    settle(&mut model, &|s| s.queue.is_empty() && s.error.is_none());
+    drop(model);
+    let requests = served.join().unwrap();
+    assert_eq!(
+        serde_json::from_slice::<Value>(&requests[5]).unwrap(),
+        json!({ "op": "answer", "workspace": "home", "agent": "a1",
+                "verdict": "pass", "scope": "conversation" })
     );
 }
 
@@ -105,13 +145,13 @@ fn a_release_that_drove_nothing_says_so() {
     model.focus_conversation("home".into(), "a1".into());
     feed.send(queue_held()).unwrap();
     settle(&mut model, &|s| !s.queue.is_empty());
-    model.answer(Verdict::Pass);
+    model.answer(Verdict::Pass, Scope::Call);
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
         Some(
-            "answer pass: recorded on Bash, but the conversation was not driven on — \
-             nothing moves until it is"
+            "answer pass (call): recorded on Bash, but the conversation was not driven \
+             on — nothing moves until it is"
         )
     );
 }
@@ -135,7 +175,7 @@ fn keeping_it_parked_is_silent() {
     model.focus_conversation("home".into(), "a1".into());
     feed.send(queue_held()).unwrap();
     settle(&mut model, &|s| !s.queue.is_empty());
-    model.answer(Verdict::Hold);
+    model.answer(Verdict::Hold, Scope::Call);
     settle(&mut model, &|s| s.roles_read > 0 || s.error.is_none());
     assert_eq!(model.snapshot().error, None);
 }
@@ -146,7 +186,7 @@ fn keeping_it_parked_is_silent() {
 fn an_answer_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
     let (mut model, served) = super::model_against(vec![vec![ws_reply()]]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
-    model.answer(Verdict::Refuse);
+    model.answer(Verdict::Refuse, Scope::Call);
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
@@ -167,7 +207,7 @@ fn an_answer_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
     model.focus_conversation("home".into(), "a1".into());
     feed.send(queue_held()).unwrap();
     settle(&mut model, &|s| !s.queue.is_empty());
-    model.answer(Verdict::Refuse);
+    model.answer(Verdict::Refuse, Scope::Call);
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),

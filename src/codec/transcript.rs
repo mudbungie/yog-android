@@ -71,10 +71,14 @@ pub enum EntryKind {
     /// `exit_code` is carried as the engine's own number and read for its
     /// PRESENCE alone (§5.5): absent is a call in flight, present is one whose
     /// capture landed, and what the value means is not this lane's to say.
+    /// `held` is the same discipline one field over (PROTOCOL 18): present is
+    /// a call the capability control parked for the operator, and the sentence
+    /// is the control's own, carried unrewritten.
     Windowed {
         tool: String,
         input: String,
         exit_code: Option<i64>,
+        held: Option<String>,
     },
     /// A compaction marker: which entries it folded, and the summary.
     Compacted {

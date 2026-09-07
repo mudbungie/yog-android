@@ -265,27 +265,6 @@
           "verb": "unpin"
         },
         {
-          "detail": "Answers the invocation the capability boundary parked before it ran. `pass` lets that one call through, `refuse` declines it in band — the model reads why and carries on — and `hold` keeps it parked even if the policy later would have passed it. The answer is scoped to the exact call that is held, which is read from the conversation's own hold mark, so nothing is typed and nothing can be spent by a different call. Passing or refusing then drives the conversation on (`litany advance`), which is what actually lifts the hold: the control is asked again and now finds your answer. Nothing here stops the agent. Refuses when nothing is held there.",
-          "summary": "release, decline or keep parked the tool call held at this conversation",
-          "surface": "control",
-          "usage": "/answer pass | hold | refuse",
-          "verb": "answer"
-        },
-        {
-          "detail": "Stops letting the selected conversation act on its own: from its next tool call, everything but a read waits for you — the same park a held call already makes, applied to all of them. **A read is what the call does, not which tool it is**: every invocation is classified on what it reaches, so `bash` running `ls`, `cat` or `echo` is a read and still runs, while the same `bash` writing outside its worktree, reaching the network or touching credentials parks. It keeps running, keeps its branch and keeps reading, so nothing is lost and nothing is killed. It covers the conversation and everything below it, including children it has not spawned yet. Anything the policy already refuses stays refused, and a call you pass with `/answer` still goes through. `/restore` gives the approval back.",
-          "summary": "take away this conversation's tool auto-approval, and its descendants'",
-          "surface": "control",
-          "usage": "/revoke",
-          "verb": "revoke"
-        },
-        {
-          "detail": "Lifts a floor `/revoke` put on the selected conversation: its calls are adjudicated by the ordinary policy again, from its next one. It drives nothing — a conversation parked at a held call is released by answering that call (`/answer pass`), which is the thing you are looking at when it is waiting. If an ancestor is still revoked, the conversation stays floored under it, and the reply says so rather than claiming a restore it did not make.",
-          "summary": "give this conversation's tool auto-approval back",
-          "surface": "control",
-          "usage": "/restore",
-          "verb": "restore"
-        },
-        {
           "detail": "Starts a fresh `ops.jsonl`. The clear itself is logged as the new trail's first row, so the trail never lies about having been cut.",
           "summary": "truncate the ops trail; the clear is the new trail's first row",
           "surface": "control",
@@ -298,6 +277,27 @@
           "surface": "control",
           "usage": "/enroll <common-name> [foot] [--at <host>:<port>]",
           "verb": "enroll"
+        },
+        {
+          "detail": "Answers the invocation the capability boundary parked before it ran. `pass` lets it through, `refuse` declines it — the model is told the decision stands, and told not to retry it, rephrase it or reach the same outcome another way — and `hold` keeps it parked even if the policy later would have passed it. The call is read from the conversation's own hold mark, so nothing is typed and nothing can be spent by a different call. `--scope` says how far the answer stands. Left off it settles that one call, which is the safe reading and the one you get without thinking about it. `--scope conversation` settles the whole CLASS of the held call — the same tool at the same reach — for this conversation and everything below it; `--scope workspace` settles that class for every conversation here. A wider answer is how you stop being asked eleven times about one narrow tool. Answer the same scope again to change it, and `/revoke` suspends every standing answer, which is how you take one back. A destructive or credential-reaching call takes the bare form only: those are decided for the call in front of you, never for calls to come. Passing or refusing then drives the conversation on (`litany advance`), which is what actually lifts the hold: the control is asked again and now finds your answer. Nothing here stops the agent. Refuses when nothing is held there.",
+          "summary": "release, decline or keep parked the tool call held at this conversation",
+          "surface": "control",
+          "usage": "/answer pass | hold | refuse [--scope call | conversation | workspace]",
+          "verb": "answer"
+        },
+        {
+          "detail": "Stops letting the selected conversation act on its own: from its next tool call, everything but a read waits for you — the same park a held call already makes, applied to all of them. **A read is what the call does, not which tool it is**: every invocation is classified on what it reaches, so `bash` running `ls`, `cat` or `echo` is a read and still runs, while the same `bash` writing outside its worktree, reaching the network or touching credentials parks. It keeps running, keeps its branch and keeps reading, so nothing is lost and nothing is killed. It covers the conversation and everything below it, including children it has not spawned yet. Anything the policy already refuses stays refused, and a call you pass with `/answer` still goes through. It also **suspends every standing answer** (bl-94a5): a class you released for this conversation or this workspace comes back to you one call at a time, which is both the point of a revoke and the way to take a standing release back. `/restore` gives the approval back.",
+          "summary": "take away this conversation's tool auto-approval, and its descendants'",
+          "surface": "control",
+          "usage": "/revoke",
+          "verb": "revoke"
+        },
+        {
+          "detail": "Lifts a floor `/revoke` put on the selected conversation: its calls are adjudicated by the ordinary policy again, from its next one. It drives nothing — a conversation parked at a held call is released by answering that call (`/answer pass`), which is the thing you are looking at when it is waiting. If an ancestor is still revoked, the conversation stays floored under it, and the reply says so rather than claiming a restore it did not make.",
+          "summary": "give this conversation's tool auto-approval back",
+          "surface": "control",
+          "usage": "/restore",
+          "verb": "restore"
         },
         {
           "detail": "Every workspace yog can see, classified, with the attention count, the agent count and whether anything in it is running.",
@@ -384,6 +384,20 @@
           "verb": "lineages"
         },
         {
+          "detail": "A reviewer agent that learned something writes it as a real config patch and parks it on a branch of its own, waiting for you. This lists them: which reviewer staged each one, which lineage it would move, how many lines it changes, and what the reviewer called it. `fresh` means the lineage still stands where the reviewer read it, so the patch can be taken as it is; `stale` means somebody advanced that lineage since, and the answer is to reject it and let the next checkpoint re-derive from where things now stand — a stale patch was written against a config that no longer governs anything. Name one and you get it whole, message and diff, beside the listing. Nothing is staged is an empty answer, not a refusal.",
+          "summary": "what a reviewer has staged for this workspace's config, and how big it is",
+          "surface": "control",
+          "usage": "/proposals [<proposal-id>]",
+          "verb": "proposals"
+        },
+        {
+          "detail": "The decision the whole learning loop is built around: read what an agent concluded, then say yes or no. Accepting fast-forwards the patch's lineage onto it and deletes the staging branch, and every conversation on that lineage picks the change up at its next step with no act per conversation. Rejecting deletes the staging branch and nothing else — the reviewer's own conversation survives as the record of why it thought so. Both words are required: naming no proposal would mean something different the day a second one is staged, and a verdict that defaulted would make throwing work away the easy half. An accept whose lineage moved under it refuses and names where that lineage now stands, rather than merging somebody's memory forward.",
+          "summary": "take a reviewer's staged config patch, or throw it away",
+          "surface": "control",
+          "usage": "/proposal <proposal-id> <accept|reject>",
+          "verb": "proposal"
+        },
+        {
           "detail": "Asks the provider row what models it serves (`bz --list-models`) and answers the ids it listed, in its order — the same roster the model picker fills when you open it. Nothing is cached: the list belongs to the provider and can change without yog. Name the row, as `/providers` lists it; the sign-in it is listed against is the seat's workspace, so a row signed in elsewhere refuses here. Its answer is what `/model <role> <provider> <model-id>` then assigns — this says what exists, that says what a role uses. A provider that offers nothing, or cannot be asked, refuses with its own words rather than an empty list.",
           "summary": "the model ids one provider is offering right now",
           "surface": "control",
@@ -405,7 +419,7 @@
           "verb": "steps"
         },
         {
-          "detail": "The drill-in for a single step of the selected conversation, named by the sequence the list shows (`001`). Answers that step's `meta`, the wire request that was sent, the staged transcript entry, every event of the response stream, and every tool call's input and output — each as parsed data with the bytes it parsed from beside it. Records that are missing say so, and records that are not JSON come back verbatim and framed as unparseable rather than dropped.",
+          "detail": "The drill-in for a single step of the selected conversation. The seq is the number the list shows, however you spell it — `3`, `03` and `003` are one address — and a seq naming no step is refused, naming the ones that exist. Answers that step's `meta`, the wire request that was sent, the staged transcript entry, every event of the response stream, and every tool call's input and output — each as parsed data with the bytes it parsed from beside it. Records that are missing say so, and records that are not JSON come back verbatim and framed as unparseable rather than dropped.",
           "summary": "one step's records — request, response, staging, tools",
           "surface": "control",
           "usage": "/step <seq>",
@@ -440,7 +454,7 @@
           "verb": "inbox"
         },
         {
-          "detail": "One conversation's own facts, as any seat paints them: the id and the conversation it belongs to, the name it goes by — and whether that name is one peers can actually address it with — the commit its policy resolves from, whether it is running right now, the marks it wears (notified, over budget, in conflict, holding a tool call, abandoned), what kind of work is in flight anywhere beneath it, and whether Stop and its children cascade are offered. A conversation this workspace does not carry answers as its own root, stopped and unmarked, rather than refusing.",
+          "detail": "One conversation's own facts, as any seat paints them: the id and the conversation it belongs to, the name it goes by — and whether that name is one peers can actually address it with — the commit its policy resolves from, whether it is running right now, the marks it wears (notified, over budget, in conflict, holding a tool call, abandoned), what kind of work is in flight anywhere beneath it, whether Stop is offered, and whether stopping it would take a subtree down with it — which it always does when there is one. A conversation this workspace does not carry answers as its own root, stopped and unmarked, rather than refusing.",
           "summary": "the selected conversation itself: what it is called, what it is doing, what may be done to it",
           "surface": "control",
           "usage": "/agent",

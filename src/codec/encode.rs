@@ -83,6 +83,18 @@ fn asked(ask: &Ask) -> Value {
             Value::Object(map)
         }
         Ask::Lineages { workspace } => json!({ "op": "lineages", "workspace": workspace }),
+        // **The listing and the reading, one op** (REMOTE §9.22): the id is
+        // written only when there is one, for `files`' reason exactly — a key
+        // written as null would be a third thing to read.
+        Ask::Proposals { workspace, id } => {
+            let mut map = serde_json::Map::new();
+            map.insert("op".to_owned(), json!("proposals"));
+            map.insert("workspace".to_owned(), json!(workspace));
+            if let Some(id) = id {
+                map.insert("id".to_owned(), json!(id));
+            }
+            Value::Object(map)
+        }
         // **The records screen's six** (DESIGN §13.11). Five name a
         // conversation and nothing else; `step` names the row inside it.
         Ask::Agent { workspace, agent } => aimed("agent", workspace, agent),
@@ -152,7 +164,8 @@ fn acted(act: &Act) -> Value {
             workspace,
             agent,
             verdict,
-        } => hold::encode(workspace, agent, *verdict),
+            scope,
+        } => hold::encode(workspace, agent, *verdict, *scope),
         Act::Stop {
             workspace,
             agent,

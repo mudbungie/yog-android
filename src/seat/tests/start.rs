@@ -49,7 +49,8 @@ fn starting_a_conversation_stages_then_fires_carrying_the_body_whole() {
         firing,
         json!({ "op": "prompt",
                 "prepared": { "workspace": "home", "binding": null, "lineage": null,
-                              "goal": "look", "origin": "conversation" },
+                              "goal": "look", "origin": "conversation",
+                              "role": null },
                 "goal": "look", "seed": null })
     );
 }

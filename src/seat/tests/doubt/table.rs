@@ -92,7 +92,7 @@ fn aimed() -> Vec<Case> {
         Case(
             "answer",
             "The conversation's queue row says whether the call is still parked",
-            Box::new(|m: &Model| m.answer(crate::codec::Verdict::Pass)),
+            Box::new(|m: &Model| m.answer(crate::codec::Verdict::Pass, crate::codec::Scope::Call)),
         ),
         Case(
             "revoke",

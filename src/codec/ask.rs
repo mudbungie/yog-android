@@ -141,6 +141,16 @@ pub enum Ask {
     /// spends, without the branch — the engine reads a frame with none as the
     /// question.
     Marks { workspace: String },
+    /// **What a reviewer has staged for this workspace's config** (REMOTE
+    /// §9.22, DESIGN §13.17): the listing, and — when `id` names one — that
+    /// proposal whole beside it. `files`' shape at a third site: a listing and
+    /// one entry's bytes are one question asked at two depths, so the id is a
+    /// parameter and not a second op. It is **absent** and never null for the
+    /// bare listing, because absence is the fact.
+    Proposals {
+        workspace: String,
+        id: Option<String>,
+    },
     /// **The follow-class read**: this machine's next work, answered when
     /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
     /// only into a stream this device asked for — so a tool host waits here

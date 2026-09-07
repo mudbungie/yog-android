@@ -26,7 +26,7 @@
 
 use serde_json::{Map, Value};
 
-use super::fields::str_of;
+use super::fields::{opt, str_of};
 use super::{Ask, Gesture};
 
 mod acts;
@@ -77,6 +77,10 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
         },
         "lineages" => Ask::Lineages {
             workspace: str_of(o, "workspace")?,
+        },
+        "proposals" => Ask::Proposals {
+            workspace: str_of(o, "workspace")?,
+            id: opt(o, "id", str_of)?,
         },
         // The records screen's six (DESIGN §13.11). Five read alike and one
         // names the row it is about; `governing` refuses its anchored form

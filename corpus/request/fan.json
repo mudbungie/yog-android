@@ -10,6 +10,7 @@
         "goal": "Ball bl-1f2a: do it",
         "lineage": null,
         "origin": "balls",
+        "role": null,
         "workspace": "ws"
       },
       "project": "dev/proj"
@@ -22,6 +23,7 @@
         "goal": "Ball bl-1f2a: do it",
         "lineage": null,
         "origin": "balls",
+        "role": null,
         "workspace": "ws"
       },
       "project": "dev/proj"
@@ -35,6 +37,7 @@
         "goal": "Ball bl-1f2a: do it",
         "lineage": null,
         "origin": "balls",
+        "role": null,
         "workspace": "ws"
       },
       "project": "dev/proj"
@@ -48,11 +51,12 @@
         "goal": "Ball bl-1f2a: do it",
         "lineage": null,
         "origin": "balls",
+        "role": null,
         "workspace": "ws"
       },
       "project": "dev/proj"
     }
   ],
-  "protocol": 1,
+  "protocol": 18,
   "shape": "fan"
 }

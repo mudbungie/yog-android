@@ -192,7 +192,7 @@ fn role_hue(role: Role) -> egui::Color32 {
 }
 
 /// A tone's ink. `Plain` and `Weak` defer to the installed visuals' own text
-/// colours; the four states read the language's one table
+/// colours; the five states read the language's one table
 /// (`crate::theme::tone`).
 ///
 /// **Two surfaces spend it** (bl-ef9a): this transcript, and the conversation
@@ -211,7 +211,9 @@ pub(super) fn tone_hue(ui: &egui::Ui, tone: crate::codec::Tone) -> egui::Color32
     match tone {
         Tone::Plain => ui.visuals().text_color(),
         Tone::Weak => ui.visuals().weak_text_color(),
-        Tone::Good | Tone::Bad | Tone::Live | Tone::InFlight => super::theme::tone(tone),
+        Tone::Good | Tone::Bad | Tone::Live | Tone::InFlight | Tone::Held => {
+            super::theme::tone(tone)
+        }
     }
 }
 

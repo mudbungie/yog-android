@@ -46,6 +46,11 @@ pub(super) enum Cmd {
     Lane(super::lane::Framed),
     /// Acknowledge the trail's alarms.
     Ack,
+    /// **Read what a reviewer has staged** (§13.17, REMOTE §9.22) — the
+    /// listing, or, with an id, that proposal whole beside it. A gesture read
+    /// on the trail's terms: nothing paints it unless the admin screen is
+    /// open.
+    Proposals(Option<String>),
     /// **Read the ball pane at one of its three views** (§13.9). One command
     /// because the pane holds one answer: which view is open is the shell's,
     /// and which read answered is the pane's own.
@@ -139,7 +144,7 @@ pub(super) enum Cmd {
     Nudge,
     /// **Answer the tool call parked at the focused conversation** (§13.7):
     /// release it, decline it, or keep it parked.
-    Answer(crate::codec::Verdict),
+    Answer(crate::codec::Verdict, crate::codec::Scope),
     /// **One act on a NAMED conversation** (§13.5): the agent the row's menu
     /// was opened on, and which of the three it fired. One command for the
     /// group because they are one gesture — the roster has one home, and it

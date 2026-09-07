@@ -64,6 +64,15 @@ fn opened(tool_use: &str, tool: &str) -> Call {
         tool: Some(tool.to_owned()),
         input: Some("{\"command\":\"uptime\"}".to_owned()),
         exit_code: None,
+        held: None,
+    }
+}
+
+/// A transition for a call the capability control parked (PROTOCOL 18).
+fn parked(tool_use: &str, tool: &str, reason: &str) -> Call {
+    Call {
+        held: Some(reason.to_owned()),
+        ..opened(tool_use, tool)
     }
 }
 
@@ -74,6 +83,7 @@ fn closed(tool_use: &str, exit_code: i64) -> Call {
         tool: None,
         input: None,
         exit_code: Some(exit_code),
+        held: None,
     }
 }
 

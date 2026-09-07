@@ -1,6 +1,6 @@
-//! **The five acts of the admin surface** (DESIGN §13.17): write a config
-//! file, mark a workspace's task branch, flush its inbox, and the two
-//! deletions.
+//! **The six acts of the admin surface** (DESIGN §13.17): write a config
+//! file, mark a workspace's task branch, flush its inbox, settle a reviewer's
+//! staged config patch, and the two deletions.
 //!
 //! **One shape, and the address is INSIDE it** — which is the difference from
 //! [`BallAct`](super::super::BallAct) and is worth saying. The ball acts share
@@ -47,6 +47,21 @@ pub enum AdminAct {
     /// **Delete a workspace.** The engine refuses unless `typed` is its name,
     /// which is what makes the control an enablement rather than an arming.
     DeleteWorkspace { workspace: String, typed: String },
+    /// **Take a reviewer's staged config patch, or throw it away** (REMOTE
+    /// §9.22). It is an admin act and not a family of its own because a
+    /// proposal is a candidate CONFIG commit — the same subject `config`
+    /// writes and `lineages` browses — and the surface that reads a config is
+    /// where it belongs (DESIGN §13.17).
+    ///
+    /// **Both the id and the verdict are required** and neither defaults:
+    /// a settle that took *the only one* would do something different the day
+    /// a second patch was staged, and a verdict that defaulted would make the
+    /// destructive half the easy one.
+    Proposal {
+        workspace: String,
+        id: String,
+        verdict: super::super::proposals::Verdict,
+    },
 }
 
 impl AdminAct {
@@ -59,6 +74,7 @@ impl AdminAct {
             Self::Scan { .. } => "scan",
             Self::DeleteAgent { .. } => "delete-agent",
             Self::DeleteWorkspace { .. } => "delete-workspace",
+            Self::Proposal { .. } => "proposal",
         }
     }
 
@@ -75,7 +91,7 @@ impl AdminAct {
             Self::Config { .. } => Some("edit the file first"),
             Self::Marks { .. } => Some("type the branch first"),
             Self::DeleteWorkspace { .. } => Some("type this workspace's name"),
-            Self::Scan { .. } | Self::DeleteAgent { .. } => None,
+            Self::Scan { .. } | Self::DeleteAgent { .. } | Self::Proposal { .. } => None,
         }
     }
 }
@@ -100,6 +116,11 @@ pub(crate) fn encode(act: &AdminAct) -> Value {
         AdminAct::DeleteWorkspace { workspace, typed } => {
             json!({ "op": op, "workspace": workspace, "typed": typed })
         }
+        AdminAct::Proposal {
+            workspace,
+            id,
+            verdict,
+        } => json!({ "op": op, "workspace": workspace, "id": id, "verdict": verdict.word() }),
     }
 }
 
@@ -127,6 +148,11 @@ pub(crate) fn decode(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         "delete-workspace" => AdminAct::DeleteWorkspace {
             workspace: str_of(o, "workspace")?,
             typed: str_of(o, "typed")?,
+        },
+        "proposal" => AdminAct::Proposal {
+            workspace: str_of(o, "workspace")?,
+            id: str_of(o, "id")?,
+            verdict: super::super::proposals::verdict(o)?,
         },
         other => return Err(format!("admin: unknown op {other:?}")),
     };

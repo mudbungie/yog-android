@@ -43,6 +43,7 @@ impl Reply {
             Self::Inbox(_) => "inbox",
             Self::Clients(_) => "clients",
             Self::Lineages(_) => "lineages",
+            Self::Proposals { .. } => "proposals",
             Self::Science(_) => "science",
             Self::Enrolled(_) => "enrolled",
             Self::Config(_) => "config",

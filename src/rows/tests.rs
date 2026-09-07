@@ -134,12 +134,18 @@ fn streaming(name: &str, thinking: &str, text: &str) -> Entry {
 /// The follow window's own row: a call the record has not committed yet
 /// (REMOTE §5.5), which `crate::live` mints and nothing on the wire spells.
 fn windowed(tool: &str, input: &str, exit_code: Option<i64>) -> Entry {
+    parked(tool, input, exit_code, None)
+}
+
+/// The same row with the capability control's reason on it (PROTOCOL 18).
+fn parked(tool: &str, input: &str, exit_code: Option<i64>, held: Option<&str>) -> Entry {
     entry(
         &format!("window/{tool}"),
         EntryKind::Windowed {
             tool: tool.to_string(),
             input: input.to_string(),
             exit_code,
+            held: held.map(str::to_owned),
         },
     )
 }

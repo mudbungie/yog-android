@@ -1,0 +1,16 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "proposals",
+      "workspace": "ws"
+    },
+    {
+      "id": "20260906T090000Z-r001",
+      "op": "proposals",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 16,
+  "shape": "proposals"
+}

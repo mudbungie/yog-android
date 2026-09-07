@@ -20,8 +20,9 @@
 //!
 //! - the turn **ended by talking** — an unfinished turn keeps its steps on
 //!   screen, because that is the work in progress the operator came to watch;
-//! - **nothing in it is in flight** ([`super::in_flight`]) — a live tail or an
-//!   unretired tool call makes the whole turn the show;
+//! - **nothing in it is the show** ([`super::showing`]) — a live tail, an
+//!   unretired tool call or a call parked for the operator makes the whole turn
+//!   the show;
 //! - it holds **at least one inference call** — a run of stray entries with no
 //!   model output is not a turn, which is also why the aggregate line can
 //!   never come out empty.
@@ -29,7 +30,7 @@
 use std::collections::BTreeSet;
 
 use super::build::GEAR;
-use super::{AutoExpand, Fold, Row, RowClass, Tone, expanded_for, in_flight};
+use super::{AutoExpand, Fold, Row, RowClass, Tone, expanded_for, showing};
 
 mod counts;
 mod steps;
@@ -112,7 +113,7 @@ fn push_turn(
     let run_usage = span(usage, 0, run.len());
     let counts = Counts::of(run, run_steps, run_usage);
     let rolls_up =
-        answer.class == RowClass::Response && counts.inference > 0 && !rows.iter().any(in_flight);
+        answer.class == RowClass::Response && counts.inference > 0 && !rows.iter().any(showing);
     match run.first() {
         Some(first) if rolls_up => {
             let parent = aggregate(&first.key, &counts, auto, folds);

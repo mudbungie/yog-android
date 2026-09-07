@@ -9,6 +9,7 @@
 mod fields;
 mod pass;
 mod probe;
+mod running;
 
 pub(crate) use fields::{COMPOSER, ENVELOPE, NEEDLE};
 pub(crate) use pass::run;
@@ -20,7 +21,6 @@ use super::bridge::Bridge;
 use super::enroll::Scanner;
 use super::inset::InsetPx;
 use crate::rows::AutoExpand;
-use crate::seat::Model;
 
 pub(crate) struct Shell {
     pub(super) android: AndroidApp,
@@ -92,6 +92,20 @@ pub(crate) struct Shell {
     /// by the control that moves it: a cap of zero is a loop that spawns
     /// nothing and still reaps, which upstream refuses to spell as a cap.
     pub(crate) cap: usize,
+    /// **How far the next capability answer stands** (§13.7, PROTOCOL 18).
+    /// Navigation like the picks above and no more durable than a scroll
+    /// position: it is reset to the narrow reading by the band that offers it
+    /// the moment the parked call changes, because a scope carried from one
+    /// call to the next would widen an answer nobody widened.
+    pub(crate) scope: crate::codec::Scope,
+    /// Which parked call the scope above was chosen for. The band compares it
+    /// to the call the engine now says is held, and a change resets the reach
+    /// — so a width chosen for one call cannot be spent on the next.
+    pub(crate) picked_for: Option<String>,
+    /// **Which proposal the admin screen's settle addresses** (§13.17) — the
+    /// id off the row that was tapped. `ball`'s twin, and navigation for its
+    /// reason exactly.
+    pub(crate) proposal: Option<String>,
     /// **Which step the records screen's one act addresses** (§13.11) — the
     /// sequence off the census row that was tapped. `ball`'s twin, and
     /// navigation for its reason exactly.
@@ -191,6 +205,9 @@ impl Shell {
             records: false,
             files: false,
             step: None,
+            scope: crate::codec::Scope::default(),
+            picked_for: None,
+            proposal: None,
             from: None,
             destination: None,
             seeded: None,
@@ -236,52 +253,5 @@ impl Shell {
         // thread; leaving the screen is the last moment anything here knows
         // to close them.
         self.scanner.shut();
-    }
-
-    /// Re-read what is provisioned and start whatever it now names. A read of
-    /// this app's own storage — never a dial — and the act that makes material
-    /// pushed over a cable land without relaunching the process.
-    pub(crate) fn reboot(&mut self) {
-        self.running = boot(&self.android);
-        self.chose = None;
-        // A recheck is the configuration's exit: whatever the derivation now
-        // says is the screen the operator asked to see.
-        self.settings = false;
-    }
-
-    /// Where material goes — the same directory the boot derivation reads.
-    /// The configuration surface paints it when it is opened over a running
-    /// component, where no `Running::Cold` carries it along (bl-387f).
-    pub(crate) fn material_dir(&self) -> String {
-        super::boot::wire_dir(&self.android).display().to_string()
-    }
-
-    /// The seat model, when this launch is running one.
-    pub(crate) fn model(&self) -> Option<&Model> {
-        match &self.running {
-            Running::Seat { model, .. } => Some(model.as_ref()),
-            _ => None,
-        }
-    }
-
-    pub(crate) fn model_mut(&mut self) -> Option<&mut Model> {
-        match &mut self.running {
-            Running::Seat { model, .. } => Some(model.as_mut()),
-            _ => None,
-        }
-    }
-
-    /// Who this device is on the wire, and as what: the leaf's own common
-    /// name and the component its grade enrolled it as (REMOTE §2, §4.2).
-    /// Painted rather than logged, because a seat showing an empty roster and
-    /// a seat registered in no workspace look identical until this line says
-    /// which client the engine was answering.
-    pub(crate) fn identity(&self) -> String {
-        use crate::bootstrap::Component;
-        match &self.running {
-            Running::Seat { client, .. } => format!("{client} · {}", Component::Seat.brand()),
-            Running::Foot { client, .. } => format!("{client} · {}", Component::Foot.brand()),
-            Running::Cold { .. } => String::new(),
-        }
     }
 }

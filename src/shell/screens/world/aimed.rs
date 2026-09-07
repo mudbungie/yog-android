@@ -21,23 +21,32 @@ const PAD: f32 = 2.0;
 /// first — its obligations, what its attempts cost, what they changed — then
 /// the machinery that runs them, then the wiring underneath.
 ///
-/// Each row is the op token the wire and the parity gate know it by, and the
+/// Each row is the op tokens the wire and the parity gate know it by, and the
 /// short noun a person reads. The two are separate on purpose: the token is
 /// the one name (`act:<op>`, the harness's rectangle, the screen it opens) and
 /// the label is prose, so `workspace-balls` reads as *balls* on a surface
 /// where every entry is already this workspace's and the prefix says nothing.
-const AIMED: [(&str, &str, World); 7] = [
+///
+/// **The FIRST token is the screen and the rest ride along** — a chip is one
+/// gesture to a thumb and may be more than one op on the wire, which is the
+/// transcript's records entry at a second site (six ops, one control): where
+/// opening IS the ask, the control that opens it is the only honest place for
+/// the read's tag, because the surface it fills paints nothing until an engine
+/// answers. `config` opens the admin screen and asks `marks` and `proposals`
+/// with it (§13.17); `marks` has a write control of its own down there, and
+/// `proposals` has only its listing, which is empty until something is staged.
+const AIMED: [(&[&str], &str, World); 7] = [
     (
-        crate::codec::View::Here.screen(),
+        &[crate::codec::View::Here.screen()],
         "balls",
         World::Balls(crate::codec::View::Here),
     ),
-    (candidates::SCREEN, "science", World::Candidates),
-    (work::SCREEN, "diff", World::Work),
-    (fleet::SCREEN, "fleet", World::Fleet),
-    (clients::SCREEN, "clients", World::Clients),
-    (admin::SCREEN, "config", World::Admin),
-    (signin::SCREEN, "login", World::SignIn),
+    (&[candidates::SCREEN], "science", World::Candidates),
+    (&[work::SCREEN], "diff", World::Work),
+    (&[fleet::SCREEN], "fleet", World::Fleet),
+    (&[clients::SCREEN], "clients", World::Clients),
+    (&[admin::SCREEN, "proposals"], "config", World::Admin),
+    (&[signin::SCREEN], "login", World::SignIn),
 ];
 
 impl Shell {
@@ -71,8 +80,8 @@ impl Shell {
                 band,
                 egui::Layout::left_to_right(egui::Align::Center),
                 |ui| {
-                    for (op, label, world) in AIMED {
-                        self.chip(ui, op, label, world, wide);
+                    for (ops, label, world) in AIMED {
+                        self.chip(ui, ops, label, world, wide);
                     }
                 },
             );
@@ -85,13 +94,16 @@ impl Shell {
     fn chip(
         &mut self,
         ui: &mut egui::Ui,
-        op: &'static str,
+        ops: &'static [&'static str],
         label: &'static str,
         world: World,
         wide: f32,
     ) {
         let control = crate::shell::theme::chip(ui, label.into(), wide, true);
-        crate::shell::act::act(ui, &control, op);
+        crate::shell::act::acts(ui, &control, ops);
+        // The rectangle the harness taps is named by the SCREEN, which is the
+        // first token: an entry that asks two ops is still one place to tap.
+        let op = ops.first().copied().unwrap_or_default();
         self.note_control(op, ui, control.rect);
         if control.clicked() {
             self.open_world(world);

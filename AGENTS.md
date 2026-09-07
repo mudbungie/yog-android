@@ -84,8 +84,8 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
 - **A PROTOCOL bump is a four-repository act** (bl-5b19; yog bl-bca2). yog
   mints the wire protocol version. This app, the seat (`lernie`) and the foot
   (`thrall`) each **vendor** a copy of the number in a **repo-root `PROTOCOL`
-  file** — one line, the integer, compiled into `src/hello.rs`'s constant by
-  `build.rs` (bl-6fec) — and the
+  file** — one line, the integer, compiled into the `hello::PROTOCOL` constant
+  by `build.rs` (bl-6fec) — and the
   wire is fail-closed on a mismatch with no negotiation (yog `docs/REMOTE.md`
   §3 — the authority, and the one place the two-direction rule is written out).
   So each direction of the skew is gated where it can be decided: **yog does

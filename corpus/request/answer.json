@@ -4,22 +4,67 @@
     {
       "agent": "c-1",
       "op": "answer",
+      "scope": "call",
       "verdict": "pass",
       "workspace": "ws"
     },
     {
       "agent": "c-1",
       "op": "answer",
+      "scope": "conversation",
+      "verdict": "pass",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "scope": "workspace",
+      "verdict": "pass",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "scope": "call",
       "verdict": "hold",
       "workspace": "ws"
     },
     {
       "agent": "c-1",
       "op": "answer",
+      "scope": "conversation",
+      "verdict": "hold",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "scope": "workspace",
+      "verdict": "hold",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "scope": "call",
+      "verdict": "refuse",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "scope": "conversation",
+      "verdict": "refuse",
+      "workspace": "ws"
+    },
+    {
+      "agent": "c-1",
+      "op": "answer",
+      "scope": "workspace",
       "verdict": "refuse",
       "workspace": "ws"
     }
   ],
-  "protocol": 1,
+  "protocol": 18,
   "shape": "answer"
 }

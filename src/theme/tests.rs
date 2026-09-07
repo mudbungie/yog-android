@@ -89,6 +89,24 @@ fn tones_read_as_states() {
     assert_eq!(tone(Tone::Bad), accent(State::Error));
     assert_eq!(tone(Tone::Live), accent(State::Inference));
     assert_eq!(tone(Tone::InFlight), accent(State::Working));
+    // **The seventh tone the wire never spells** (PROTOCOL 18): a call the
+    // capability control parked is asking for the operator, which is the one
+    // hue §3 names for exactly that.
+    assert_eq!(tone(Tone::Held), accent(State::Attention));
+}
+
+/// **A step's framing is a state** (PROTOCOL 18, yog bl-ab53). The two
+/// readings that had to be told apart are the last two: a step still being
+/// written is work, and one an interrupt cut is an annotation — high salience,
+/// neither working nor failed.
+#[test]
+fn framings_read_as_states() {
+    use crate::codec::Framing;
+    assert_eq!(framing(Framing::Complete), accent(State::Rest));
+    assert_eq!(framing(Framing::Failed), accent(State::Error));
+    assert_eq!(framing(Framing::Killed), accent(State::Annotation));
+    assert_eq!(framing(Framing::InFlight), accent(State::Working));
+    assert_ne!(framing(Framing::InFlight), framing(Framing::Killed));
 }
 
 #[test]

@@ -36,6 +36,7 @@ pub mod hold;
 pub mod lineages;
 pub mod login;
 pub mod pick;
+pub mod proposals;
 pub mod queue;
 pub mod records;
 pub mod reply;
@@ -62,14 +63,15 @@ pub use encode::encode;
 pub use files::{FileRow, Files, Listing, Preview};
 pub use fleet::FleetAct;
 pub use follow::{Call, Stream};
-pub use hold::{Answered, Verdict};
+pub use hold::{Answered, Scope, Verdict};
 pub use lineages::Lineage;
 pub use login::{LoginLine, LoginView};
 pub use pick::{Effort, ProviderRow, RoleRow};
+pub use proposals::{Proposal, Staged};
 pub use queue::{Held, QueueRow};
 pub use records::{
-    Agent, Card, Context, Governing, Log, Mail, Notch, Orphan, Rail, Record, Records, SeatRow,
-    Step, StepRow, Steps, ToolRecord,
+    Agent, Card, Context, Framing, Governing, Log, Mail, Notch, Orphan, Rail, Record, Records,
+    SeatRow, Step, StepRow, Steps, ToolRecord,
 };
 pub use request::decode;
 pub use row::RowAct;
@@ -139,6 +141,10 @@ pub enum Act {
         workspace: String,
         agent: String,
         verdict: Verdict,
+        /// How far this answer stands (PROTOCOL 18, `codec::hold`): the held
+        /// call, its class for this conversation and its descent, or that
+        /// class for the workspace.
+        scope: Scope,
     },
     /// **Set a role's reasoning level** (REMOTE §9.4, bl-dfbb) — how much
     /// reasoning its model calls request. `None` is `off`: the absence of a

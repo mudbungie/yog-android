@@ -9,10 +9,11 @@
         "goal": "g",
         "lineage": null,
         "origin": "balls",
+        "role": null,
         "workspace": "ws"
       }
     }
   ],
-  "protocol": 1,
+  "protocol": 18,
   "shape": "prepared"
 }

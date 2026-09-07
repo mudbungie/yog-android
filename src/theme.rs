@@ -17,7 +17,7 @@
 //! six, not a seventh: the working blue, which the focus ring and the
 //! operator's own words carry.
 
-use crate::codec::Tone;
+use crate::codec::{Framing, Tone};
 use crate::rows::Role;
 
 /// Straight RGB, no alpha: a tint is a fill and never a blend, so what a
@@ -104,8 +104,9 @@ pub fn accent(state: State) -> Rgb {
 
 /// The wire's row tone (REMOTE §11) read as a state. `Good` is a result that
 /// came back and is done, which is rest; `Live` is the streaming tail, which
-/// is inference; `InFlight` is a tool running, which is work. The two ink
-/// tones are the ink scale, not a state at all.
+/// is inference; `InFlight` is a tool running, which is work; `Held` is a call
+/// parked for an answer, which is the one thing on this glass that is asking
+/// for you. The two ink tones are the ink scale, not a state at all.
 pub fn tone(tone: Tone) -> Rgb {
     match tone {
         Tone::Plain => INK,
@@ -114,7 +115,28 @@ pub fn tone(tone: Tone) -> Rgb {
         Tone::Bad => accent(State::Error),
         Tone::Live => accent(State::Inference),
         Tone::InFlight => accent(State::Working),
+        Tone::Held => accent(State::Attention),
     }
+}
+
+/// **A step's §4.4 framing read as a state** (REMOTE §3, PROTOCOL 18), the
+/// same shape [`tone`] has one surface along: the engine states the word and
+/// this table says what colour that word IS, so no screen decides.
+///
+/// The four readings are `docs/STYLE.md` §3's own sentences. A step still
+/// being written is *a step in flight*, which is `Working`; one an interrupt
+/// cut is *an interrupt*, which is `Annotation` — high salience, and neither
+/// working nor failed; one that failed is `Error`; and a complete step is done
+/// and so `Rest`. Telling the first two apart is the whole of what PROTOCOL 18
+/// bought here (yog bl-ab53): before `in_flight`, every live step wore the one
+/// word that makes a real interrupt legible.
+pub fn framing(framing: Framing) -> Rgb {
+    accent(match framing {
+        Framing::Complete => State::Rest,
+        Framing::Failed => State::Error,
+        Framing::Killed => State::Annotation,
+        Framing::InFlight => State::Working,
+    })
 }
 
 /// **A speaker's rule.** Who said a row is told by the WEIGHT of the rule

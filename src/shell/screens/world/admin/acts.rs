@@ -51,6 +51,11 @@ impl Shell {
                 );
             },
         );
+        // **The settle band** (§13.17, REMOTE §9.22), between the ordinary
+        // acts and the unmaking: taking a reviewer's patch is not an unmaking,
+        // and throwing one away is not one of the three either — it discards
+        // somebody else's durable record, which is why its half is armed.
+        self.settling(ui, workspace);
         self.unmaking(ui, workspace);
         self.minting(ui);
         self.editor(ui);

@@ -99,25 +99,12 @@ pub(super) fn governed(governing: &crate::codec::Governing) -> String {
     format!("governed by {} · {follows}", governing.short_oid)
 }
 
-/// One census row, as its control's label.
+/// One census row, as its control's label. The words are the row's own
+/// (`StepRow::line`, host-tested); what this file adds is the picked mark,
+/// which is a fact about the screen and not about the step.
 pub(super) fn step_line(row: &StepRow, picked: bool) -> String {
     let mark = if picked { "▸ " } else { "" };
-    let wound = match &row.wound_reason {
-        Some(why) => format!("{} — {why}", row.wound),
-        None => row.wound.clone(),
-    };
-    format!(
-        "{mark}{} · {} · {wound}\n{} tokens · {} attempt(s){}",
-        row.seq,
-        row.framing,
-        row.tokens,
-        row.attempts,
-        if row.commit.is_empty() {
-            String::new()
-        } else {
-            format!(" · {}", row.commit)
-        }
-    )
+    format!("{mark}{}", row.line())
 }
 
 /// **One step's records, under the row they belong to.** The answer states

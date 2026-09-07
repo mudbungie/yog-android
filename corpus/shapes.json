@@ -1,5 +1,5 @@
 {
-  "protocol": 17,
+  "protocol": 18,
   "shapes": {
     "reply/acked": {
       "signature": [
@@ -112,12 +112,13 @@
         "/advanced:bool",
         "/kind:string",
         "/ok:bool",
+        "/scope:string",
         "/tool:string",
         "/tool_use:string",
         "/verdict:string",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "reply/applied": {
       "signature": [
@@ -390,12 +391,13 @@
         "/rows/[]/goal:string",
         "/rows/[]/lineage:null",
         "/rows/[]/origin:string",
+        "/rows/[]/role:null",
         "/rows/[]/workspace:string",
         "/rows/[]:object",
         "/rows:array",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "reply/files": {
       "signature": [
@@ -443,6 +445,7 @@
         "/stream/thinking:string",
         "/stream:object",
         "/tools/[]/exit_code:number",
+        "/tools/[]/held:string",
         "/tools/[]/input:string",
         "/tools/[]/tool:string",
         "/tools/[]/tool_use:string",
@@ -450,7 +453,7 @@
         "/tools:array",
         ":object"
       ],
-      "since": 14
+      "since": 18
     },
     "reply/governing": {
       "signature": [
@@ -614,11 +617,30 @@
         "/prepared/goal:string",
         "/prepared/lineage:null",
         "/prepared/origin:string",
+        "/prepared/role:null",
         "/prepared/workspace:string",
         "/prepared:object",
         ":object"
       ],
-      "since": 1
+      "since": 18
+    },
+    "reply/proposals": {
+      "signature": [
+        "/kind:string",
+        "/ok:bool",
+        "/rows/[]/diffstat:string",
+        "/rows/[]/fresh:bool",
+        "/rows/[]/id:string",
+        "/rows/[]/lineages/[]:string",
+        "/rows/[]/lineages:array",
+        "/rows/[]/parent:string",
+        "/rows/[]/subject:string",
+        "/rows/[]:object",
+        "/rows:array",
+        "/whole:string",
+        ":object"
+      ],
+      "since": 16
     },
     "reply/providers": {
       "signature": [
@@ -1021,11 +1043,12 @@
       "signature": [
         "/agent:string",
         "/op:string",
+        "/scope:string",
         "/verdict:string",
         "/workspace:string",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "request/arm": {
       "signature": [
@@ -1240,12 +1263,13 @@
         "/prepared/goal:string",
         "/prepared/lineage:null",
         "/prepared/origin:string",
+        "/prepared/role:null",
         "/prepared/workspace:string",
         "/prepared:object",
         "/project:string",
         ":object"
       ],
-      "since": 1
+      "since": 18
     },
     "request/files": {
       "signature": [
@@ -1484,14 +1508,36 @@
         "/prepared/binding:string",
         "/prepared/goal:string",
         "/prepared/lineage:null",
+        "/prepared/lineage:string",
         "/prepared/origin:string",
+        "/prepared/role:null",
+        "/prepared/role:string",
         "/prepared/workspace:string",
         "/prepared:object",
         "/seed:null",
         "/seed:number",
         ":object"
       ],
-      "since": 1
+      "since": 18
+    },
+    "request/proposal": {
+      "signature": [
+        "/id:string",
+        "/op:string",
+        "/verdict:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 16
+    },
+    "request/proposals": {
+      "signature": [
+        "/id:string",
+        "/op:string",
+        "/workspace:string",
+        ":object"
+      ],
+      "since": 16
     },
     "request/providers": {
       "signature": [

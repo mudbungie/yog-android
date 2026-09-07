@@ -69,6 +69,10 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "inbox" => Reply::Inbox(records::mail(o)?),
         "clients" => Reply::Clients(clients::rows(o)?),
         "lineages" => Reply::Lineages(lineages::rows(o)?),
+        "proposals" => {
+            let (rows, whole) = crate::codec::proposals::staged(o)?;
+            Reply::Proposals { rows, whole }
+        }
         "science" => Reply::Science(candidates::science(o)?),
         "enrolled" => Reply::Enrolled(enroll::enrolled(o)?),
         "config" => Reply::Config(admin::config(o)?),

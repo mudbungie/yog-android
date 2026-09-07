@@ -68,12 +68,16 @@ fn repane(seat: &Seat, focus: &Focus, standing: &mut Standing) {
 }
 
 /// **One admin act, and the branch a `marks` write answers with** (§13.17).
-/// Four of the five need no read after them — what a config write did is read
+/// Four of the six need no read after them — what a config write did is read
 /// by tapping the destination again, and what a deletion did is that its
-/// subject is gone, which the next pass re-reads — and the fifth answers with
-/// the engine's own re-read, so there is nothing to ask twice.
+/// subject is gone, which the next pass re-reads — `marks` answers with the
+/// engine's own re-read, so there is nothing to ask twice, and `proposal` is
+/// the one that needs one: a settle takes the staging branch with it, so the
+/// listing an operator is looking at still carries a row that no longer
+/// exists (the trail acts' rule, one surface along).
 pub(super) fn administered(
     seat: &Seat,
+    focus: &Focus,
     standing: &mut Standing,
     act: crate::codec::AdminAct,
 ) -> Option<String> {
@@ -81,9 +85,16 @@ pub(super) fn administered(
         crate::codec::AdminAct::Marks { workspace, .. } => Some(workspace.clone()),
         _ => None,
     };
+    let settled = matches!(act, crate::codec::AdminAct::Proposal { .. });
     let (posted, landed) = super::super::acts::admin(seat, act);
     if let (Some(workspace), Some(branch)) = (workspace, landed) {
         standing.marks = Some(crate::codec::Marks { workspace, branch });
+    }
+    if settled && let Ok(staged) = asks::proposals(seat, focus, None) {
+        // The whole reading goes with the row it was of: what a settle leaves
+        // is a listing, and a diff of a proposal that is gone is not a reading
+        // anybody asked for.
+        standing.proposals = Some(staged);
     }
     posted.note()
 }

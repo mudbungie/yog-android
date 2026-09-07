@@ -103,7 +103,8 @@ pub(super) fn spend(
         }
         Cmd::Config(at) => fold::configured(asks::config(seat, at), standing),
         Cmd::Marks => fold::marked(asks::marks(seat, focus), standing),
-        Cmd::Admin(act) => after::administered(seat, standing, act),
+        Cmd::Proposals(id) => fold::staged(asks::proposals(seat, focus, id), standing),
+        Cmd::Admin(act) => after::administered(seat, focus, standing, act),
         Cmd::Files(path) => fold::filed(asks::files(seat, focus, path), standing),
         Cmd::Work(file) => fold::worked(asks::work(seat, focus, file), standing),
         // **Both trail acts are followed by the read that says what they
@@ -135,7 +136,7 @@ pub(super) fn spend(
         // re-asking for — the transcript, the row's flight, the row's
         // attention mark, the queue row that stops carrying the parked call.
         // So the gesture wakes the pass and the pass is the recovery.
-        Cmd::Answer(verdict) => acts::answer(seat, focus, verdict).note(),
+        Cmd::Answer(verdict, scope) => acts::answer(seat, focus, verdict, scope).note(),
         Cmd::Row(agent, act) => acts::row(seat, focus, agent, act).note(),
         Cmd::Start(goal) => acts::started(seat, focus, goal).note(),
         // The two aimed screens whose acts ARE invisible until re-read.

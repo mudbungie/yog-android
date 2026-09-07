@@ -108,6 +108,10 @@ impl Shell {
         // offering to write bytes nobody had just looked at.
         self.destination = None;
         self.seeded = None;
+        // A proposal picked on one visit is not still picked on the next, for
+        // the ball's reason: the settle addresses a row, and a row nobody can
+        // see is not one.
+        self.proposal = None;
         let Some(model) = self.model() else { return };
         // **A tail followed on one visit is not still followed on the next**
         // (§13.19), and it is the WORKER that holds which one — so leaving
@@ -125,10 +129,14 @@ impl Shell {
             World::Candidates => model.list_candidates(),
             World::Clients => model.list_clients(),
             World::Work => model.open_work(None),
-            // The admin screen opens on the mark it can read with no pick at
-            // all; a config file is read by tapping its destination, because
-            // opening a screen is not a request for three files.
-            World::Admin => model.read_marks(),
+            // The admin screen opens on the two reads it can make with no
+            // pick at all — the mark, and what a reviewer has staged; a config
+            // file is read by tapping its destination, because opening a
+            // screen is not a request for three files.
+            World::Admin => {
+                model.read_marks();
+                model.list_proposals(None);
+            }
             // **Opening IS the `providers` ask** (§13.19). The tail is not
             // asked for here: which run is followed is a row's own tap, and
             // a lane on a provider nobody has picked would be a held socket
@@ -199,5 +207,6 @@ impl Shell {
         self.candidate = None;
         self.destination = None;
         self.seeded = None;
+        self.proposal = None;
     }
 }

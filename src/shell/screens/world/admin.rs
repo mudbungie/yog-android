@@ -21,6 +21,12 @@
 //! would be a tap nobody dares make), and switching destinations loads the new
 //! file, which is also how a bad draft is thrown away.
 //!
+//! **The staged proposals read beside the config files** (REMOTE §9.22): a
+//! proposal is a candidate config commit, which is the same subject this
+//! screen already reads and writes. Opening the screen asks for the listing,
+//! exactly as it asks for the mark; tapping a row asks for that proposal
+//! whole, which is the same op at its second depth.
+//!
 //! **`delete-workspace` is an ENABLEMENT, not an arming, and the wire is what
 //! says so** (lernie DESIGN §4.20). The engine refuses unless the typed name
 //! matches the workspace's own, so the control is dark until the field holds
@@ -35,6 +41,7 @@ use eframe::egui;
 
 mod acts;
 mod minted;
+mod proposals;
 
 use crate::codec::Destination;
 use crate::seat::Snapshot;
@@ -104,6 +111,10 @@ impl Shell {
         if let Some(config) = snap.config.as_ref() {
             ui.weak(format!("{} · read", config.at.file()));
         }
+        // **What a reviewer has staged** (§13.17, REMOTE §9.22): the same
+        // subject one branch along, so it reads under the destinations rather
+        // than on a screen of its own.
+        self.staged(ui, snap, workspace);
     }
 
     /// **The read seeds the editor, once per destination.** The answer carries

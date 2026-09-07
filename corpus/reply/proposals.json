@@ -1,0 +1,48 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "proposals",
+      "ok": true,
+      "rows": [
+        {
+          "diffstat": "1 file changed, 6 insertions(+)",
+          "fresh": true,
+          "id": "20260906T090000Z-r001",
+          "lineages": [
+            "default"
+          ],
+          "parent": "9f2c1ab4",
+          "subject": "notes: record what the span taught"
+        },
+        {
+          "diffstat": "2 files changed, 9 insertions(+), 1 deletion(-)",
+          "fresh": false,
+          "id": "20260906T091500Z-r002",
+          "lineages": [],
+          "parent": "3ac70e11",
+          "subject": "skills: the apk cache is worth keeping"
+        }
+      ]
+    },
+    {
+      "kind": "proposals",
+      "ok": true,
+      "rows": [
+        {
+          "diffstat": "1 file changed, 6 insertions(+)",
+          "fresh": true,
+          "id": "20260906T090000Z-r001",
+          "lineages": [
+            "default"
+          ],
+          "parent": "9f2c1ab4",
+          "subject": "notes: record what the span taught"
+        }
+      ],
+      "whole": "commit 71011c3d\n\n    notes: …\n\n+ a line\n"
+    }
+  ],
+  "protocol": 16,
+  "shape": "proposals"
+}

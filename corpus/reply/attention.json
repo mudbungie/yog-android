@@ -21,7 +21,7 @@
           },
           "pending": 2,
           "preview": "p",
-          "says": "parked a tool invocation for your answer; has mail queued and no driver taking it; was flagged for a look, with a reason",
+          "says": "parked a tool invocation for your answer — /answer pass|refuse; has mail queued and no driver taking it; was flagged for a look, with a reason",
           "signals": [
             "held",
             "mail",

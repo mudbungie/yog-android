@@ -41,11 +41,12 @@ mod turns;
 mod windowed;
 mod wounded;
 
-/// The six-value §11 tone vocabulary, re-exported rather than restated: the
-/// wire already spells it for a conversation row ([`crate::codec::Tone`]) and
-/// two identical enums in one crate drift within a week. A locally derived
+/// The tone vocabulary, re-exported rather than restated: the wire already
+/// spells six of these for a conversation row ([`crate::codec::Tone`]) and two
+/// near-identical enums in one crate drift within a week. A locally derived
 /// hue and a decoded one mean the same thing to the shell, so they are the
-/// same type.
+/// same type — including `Held`, the seventh, which no wire token spells and
+/// which only this projection ever asks for.
 pub use crate::codec::Tone;
 
 /// The two auto-state knobs: whether a class expands on its own. The defaults
@@ -180,7 +181,7 @@ pub fn rows(
 /// is happening it is the show, and completion returns it to its class
 /// auto-state with no event to notice and nothing to store.
 fn expanded_for(row: &Row, auto: AutoExpand, overridden: bool) -> bool {
-    let auto_on = in_flight(row)
+    let auto_on = showing(row)
         || match row.class {
             RowClass::Response => auto.responses,
             RowClass::Other => auto.others,
@@ -188,11 +189,17 @@ fn expanded_for(row: &Row, auto: AutoExpand, overridden: bool) -> bool {
     auto_on != overridden
 }
 
-/// Is this row a step happening **right now** — the live tail, or a tool call
-/// no result has retired yet? Already said by the tone the projection gave it,
-/// so in-flightness stays the query it always was rather than becoming a field.
-fn in_flight(row: &Row) -> bool {
-    matches!(row.tone, Tone::Live | Tone::InFlight)
+/// Is this row **the show right now** — the live tail, a tool call no result
+/// has retired yet, or (since PROTOCOL 18) a call parked for the operator?
+/// Already said by the tone the projection gave it, so this stays the query it
+/// always was rather than becoming a field.
+///
+/// A held call joins the two in-flight tones rather than sitting with the
+/// resting rows because the fold is where the command it wants an answer about
+/// is: a row that is asking for you, folded shut, asks for an answer to
+/// something the operator cannot see.
+fn showing(row: &Row) -> bool {
+    matches!(row.tone, Tone::Live | Tone::InFlight | Tone::Held)
 }
 
 #[cfg(test)]

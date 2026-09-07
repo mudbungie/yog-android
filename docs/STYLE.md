@@ -80,6 +80,18 @@ picture and not a state.
 tail and so `Inference`; `in-flight` is a tool running and so `Working`;
 `plain` and `weak` are the ink scale, not a state.
 
+**One row tone is the seat's own and no wire token spells it**: a tool call
+the capability control has PARKED is `Attention`, because it is asking for you
+(DESIGN §7, PROTOCOL 18). A conversation row never asks for it — a row tone
+says what a conversation is doing, and a parked call is a thing inside one —
+so it lives beside the six rather than in the wire's table.
+
+**A step's framing reads onto them too** (`theme::framing`, REMOTE §4.4): a
+step still being written is *a step in flight* and so `Working`; one an
+interrupt cut is *an interrupt* and so `Annotation`; a failed step is `Error`
+and a complete one is `Rest`. The word beside the hue is the engine's own, and
+this seat never spells a second one for it.
+
 **A speaker is told by weight, not hue** (`theme::speaker`). The rule beside
 a transcript block is the brand for the operator's words, full ink for the
 model's, weak ink for a peer agent's, faint for an ended one. Four speakers

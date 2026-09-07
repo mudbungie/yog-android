@@ -77,7 +77,10 @@ seed_cache() {         # seed_cache <depth: roster|conversations|transcript>
   local d="$OUT/cache"; rm -rf "$d"; mkdir -p "$d"
   local version protocol
   version=$(sed -n 's/^const VERSION: u64 = \([0-9]*\);/\1/p' src/cache.rs)
-  protocol=$(sed -n 's/^pub const PROTOCOL: u32 = \([0-9]*\);/\1/p' src/hello.rs)
+  # The repo-root file, not a Rust path (bl-6fec): the number moved out of
+  # `src/` and this read moved with it, or a seeded cache would carry an empty
+  # stamp and the app would discard the file — which reads as the wrong screen.
+  protocol=$(cat PROTOCOL)
   [ -n "$version" ] && [ -n "$protocol" ] || die "cannot read the cache/protocol versions from src/"
   python3 - "$d/seat.json" "$version" "$protocol" "$1" <<'PY'
 import json, sys

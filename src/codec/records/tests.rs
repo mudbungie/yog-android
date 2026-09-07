@@ -96,6 +96,64 @@ fn a_step_row_states_its_total_and_refuses_when_it_states_no_counters() {
     );
 }
 
+/// **The four framing words, and the line each one labels a row with**
+/// (PROTOCOL 18). The word is the engine's own — a second wording here would
+/// be a second vocabulary for one that already has an authority — and the line
+/// lives beside the decode because it joins six fields and two optional ones.
+#[test]
+fn every_framing_word_reads_back_and_labels_its_row() {
+    use crate::codec::Framing;
+    for (word, framing) in [
+        ("complete", Framing::Complete),
+        ("failed", Framing::Failed),
+        ("killed", Framing::Killed),
+        ("in_flight", Framing::InFlight),
+    ] {
+        let rows = json!({ "rows": [{ "seq": "007", "framing": word, "wound": "none",
+                                      "attempts": 1, "commit": "abc",
+                                      "tokens": { "total": 99 } }],
+                           "orphan": "none" });
+        let read = super::steps_of(&object(&rows)).unwrap();
+        let row = read.rows.first().unwrap();
+        assert_eq!(row.framing, framing);
+        assert_eq!(row.framing.word(), word);
+        assert_eq!(
+            row.line(),
+            format!("007 · {word} · none\n99 tokens · 1 attempt(s) · abc")
+        );
+    }
+}
+
+/// A wound with words says them, and a step that recorded no commit says
+/// nothing about one rather than an empty separator.
+#[test]
+fn a_line_carries_the_wounds_reason_and_omits_a_commit_it_has_not_got() {
+    let rows = json!({ "rows": [{ "seq": "003", "framing": "failed",
+                                  "wound": "refused", "wound_reason": "no credential",
+                                  "attempts": 2, "tokens": { "total": 4 } }],
+                       "orphan": "none" });
+    let read = super::steps_of(&object(&rows)).unwrap();
+    assert_eq!(
+        read.rows.first().unwrap().line(),
+        "003 · failed · refused — no credential\n4 tokens · 2 attempt(s)"
+    );
+}
+
+/// **A framing word this build has not heard of refuses by name.** It rode as
+/// a bare string while nothing branched on it; a screen branches on it now, so
+/// reading an unknown word as the nearest known one would paint a live step as
+/// a killed one — which is the defect PROTOCOL 18 exists to end.
+#[test]
+fn a_framing_token_this_build_has_not_heard_of_refuses_by_name() {
+    let rows = json!({ "rows": [{ "seq": "001", "framing": "dawdling", "wound": "none",
+                                  "attempts": 1, "tokens": { "total": 1 } }],
+                       "orphan": "none" });
+    assert_eq!(
+        super::steps_of(&object(&rows)).unwrap_err(),
+        "field \"framing\": unknown token \"dawdling\""
+    );
+}
+
 #[test]
 fn an_orphan_token_this_build_has_not_heard_of_refuses_by_name() {
     let said = json!({ "rows": [], "orphan": "sideways" });

@@ -32,11 +32,12 @@ pub(super) fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
             agent: str_of(o, "agent")?,
         },
         "answer" => {
-            let (workspace, agent, verdict) = super::super::hold::decode(o)?;
+            let (workspace, agent, verdict, scope) = super::super::hold::decode(o)?;
             Act::Answer {
                 workspace,
                 agent,
                 verdict,
+                scope,
             }
         }
         "stop" => Act::Stop {
@@ -59,15 +60,16 @@ pub(super) fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         // rather than the conversation, so it has a shape of its own — and
         // it refuses a pinned skill inside itself.
         "fork" => super::super::fork::decode(o)?,
-        // The five the admin surface fires (DESIGN §13.17). One arm again:
+        // The six the admin surface fires (DESIGN §13.17). One arm again:
         // one surface, one roster, and the choice is `AdminAct`. `config` and
         // `marks` reach here only in their WRITTEN form — the read half of
-        // each op is an ask, and the ask table takes it first.
+        // each op is an ask, and the ask table takes it first; `proposal` is
+        // the settle beside `proposals`, which is that read.
         // **The mint** (DESIGN §13.18): its own shape, because its subject is
         // a device that does not exist yet and its answer is material rather
         // than a receipt.
         "enroll" => super::super::enroll::decode(o)?,
-        "config" | "marks" | "scan" | "delete-agent" | "delete-workspace" => {
+        "config" | "marks" | "scan" | "delete-agent" | "delete-workspace" | "proposal" => {
             super::super::admin::act::decode(op, o)?
         }
         // The five the ball pane fires (DESIGN §13.9). One arm for the same

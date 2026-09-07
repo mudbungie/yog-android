@@ -74,8 +74,8 @@ impl Model {
     ///
     /// Not idempotent and never re-sent: the queue read that no longer carries
     /// the call is what settles a lost one (`seat::acts::held`).
-    pub fn answer(&self, verdict: crate::codec::Verdict) {
-        let _ = self.cmds.send(Cmd::Answer(verdict));
+    pub fn answer(&self, verdict: crate::codec::Verdict, scope: crate::codec::Scope) {
+        let _ = self.cmds.send(Cmd::Answer(verdict, scope));
     }
 
     /// **Mint the next device's material** (REMOTE §8.4, §13.18) in the

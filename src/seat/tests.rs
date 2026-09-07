@@ -157,7 +157,8 @@ pub(super) fn queue_quiet() -> Vec<u8> {
 pub(super) fn prepared() -> Vec<u8> {
     json!({ "ok": true, "kind": "prepared",
             "prepared": { "workspace": "home", "binding": null, "lineage": null,
-                          "goal": "look", "origin": "conversation" } })
+                          "goal": "look", "origin": "conversation",
+                          "role": null } })
     .to_string()
     .into_bytes()
 }
@@ -203,6 +204,7 @@ mod held;
 mod live;
 mod loaded;
 mod pick;
+mod proposals;
 mod queue;
 mod reads;
 mod records;

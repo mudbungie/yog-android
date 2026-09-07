@@ -2,7 +2,9 @@
 //! flight paints which half, what the window adds to the record, and what it
 //! must never paint twice.
 
-use super::{RUNNING, calling, closed, delivered, kinds, opened, settled, stream, tail, windowing};
+use super::{
+    RUNNING, calling, closed, delivered, kinds, opened, parked, settled, stream, tail, windowing,
+};
 use crate::codec::EntryKind;
 
 /// **The prose is the streaming call's, not the step's** (REMOTE §5.5,
@@ -63,6 +65,44 @@ fn a_nameless_call_is_labelled_by_its_own_id() {
     let held = windowing(vec![closed("toolu_09", 2)]);
     let out = settled(vec![delivered("001")], Some(&held), RUNNING);
     assert_eq!(kinds(&out), ["delivered", "window:toolu_09:Some(2)"]);
+}
+
+/// **A held call lands neither of the two files** the window's pair of
+/// transitions is made of, so before PROTOCOL 18 the lane carried nothing at
+/// all for the one call the operator is the blocker on. It rides as an
+/// ordinary windowed entry, and the control's sentence rides with it.
+#[test]
+fn a_held_call_is_a_window_row_carrying_the_controls_sentence() {
+    let window = windowing(vec![parked("toolu_01", "box2_Bash", "classified loss")]);
+    let out = settled(vec![delivered("001")], Some(&window), RUNNING);
+    assert_eq!(kinds(&out), ["delivered", "window:box2_Bash:None"]);
+    assert!(
+        matches!(
+            &out.last().unwrap().kind,
+            EntryKind::Windowed { held: Some(why), .. } if why == "classified loss"
+        ),
+        "the control's own words cross unrewritten (REMOTE §8.1)"
+    );
+}
+
+/// The hold is stated once, on the opening transition, and every later
+/// transition of the same call folds onto the row it made — so a capture that
+/// lands after the operator passed the call does not un-say what was held.
+#[test]
+fn a_hold_survives_a_later_transition_of_the_same_call() {
+    let window = windowing(vec![
+        parked("toolu_01", "box2_Bash", "classified loss"),
+        closed("toolu_01", 0),
+    ]);
+    let out = settled(vec![delivered("001")], Some(&window), RUNNING);
+    assert!(matches!(
+        &out.last().unwrap().kind,
+        EntryKind::Windowed {
+            held: Some(_),
+            exit_code: Some(0),
+            ..
+        }
+    ));
 }
 
 /// At rest there is neither half, whatever the fold still holds.

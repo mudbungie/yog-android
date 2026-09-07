@@ -11,9 +11,21 @@
 //! own statement about a staged conversation, and every field is carried
 //! rather than re-derived: a client that recomputed one would be inventing
 //! world state it does not own, and the two would drift the first time the
-//! engine's policy moved. `binding` and `lineage` are **real nulls** — the
-//! field is present and its absence is the value — so a reply deposits back
-//! as the gesture it came from.
+//! engine's policy moved. `binding`, `lineage` and `role` are **real nulls** —
+//! the field is present and its absence is the value — so a reply deposits
+//! back as the gesture it came from.
+//!
+//! **`role` is the one field a SEAT is meant to write** (PROTOCOL 18, yog
+//! bl-9ced): `prepare` answers `null` — litany's `worker`, spelled as an
+//! absence exactly as `lineage`'s default is — and a seat that wants a
+//! planning conversation deposits the same body back with `"role":
+//! "planner"`. This client carries the null through faithfully and offers no
+//! chooser: the honest list of roles a workspace declares is not a read on
+//! this wire — `reply/roles` answers which roles are ASSIGNED a provider and
+//! model, which is a different set from the ones the governing commit
+//! declares — so a chooser built from it would silently omit exactly the role
+//! somebody came here for. The follow-up is bl-045b; until it lands, plan mode
+//! is started from a seat that has the list.
 //!
 //! **One rung, and the others are not omissions.** A phone is not where a
 //! work directory is chosen or a ball is bound, so the bare rung is the whole
@@ -37,6 +49,9 @@ pub struct Prepared {
     /// client never branches on it, and a token it cannot spell would
     /// otherwise refuse a staging it has no quarrel with.
     pub origin: String,
+    /// The role the conversation is born on (PROTOCOL 18); `None` is
+    /// litany's `worker`, spelled as the absence the engine writes.
+    pub role: Option<String>,
 }
 
 /// The staging gesture, on the one rung this device spends.
@@ -58,7 +73,8 @@ pub(crate) fn encode_prompt(prepared: &Prepared, goal: &str) -> Value {
 /// from the body read.
 pub(super) fn body(p: &Prepared) -> Value {
     json!({ "workspace": p.workspace, "binding": p.binding,
-            "lineage": p.lineage, "goal": p.goal, "origin": p.origin })
+            "lineage": p.lineage, "goal": p.goal, "origin": p.origin,
+            "role": p.role })
 }
 
 /// Read a prepared body back, strictly — every field required, the two
@@ -71,6 +87,7 @@ pub(crate) fn prepared_of(v: &Value) -> Result<Prepared, String> {
         lineage: opt(o, "lineage", str_of)?,
         goal: str_of(o, "goal")?,
         origin: str_of(o, "origin")?,
+        role: opt(o, "role", str_of)?,
     })
 }
 

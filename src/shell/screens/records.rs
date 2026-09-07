@@ -99,10 +99,18 @@ impl Shell {
     /// **One step, as a control** (§13.10's row): tapping it makes it what the
     /// foot's act addresses, and tapping it again puts it down. A pick is
     /// navigation and carries no `act:` tag, because it fires no op.
+    /// **The row's ink is its framing** (STYLE.md §1: colour means state,
+    /// PROTOCOL 18). The census is where a person looks to see what a
+    /// conversation has been doing, and until `in_flight` the step being
+    /// written right now was spelled `killed` — the one word that makes a real
+    /// interrupt legible. The word says which; the hue is what makes a live
+    /// step and a cut one different at a glance, and it is read off the one
+    /// table (`theme::framing`) rather than decided here.
     fn picking_step(&mut self, ui: &mut egui::Ui, row: &StepRow) {
         let picked = self.step.as_deref() == Some(row.seq.as_str());
+        let ink = crate::shell::theme::rgb(crate::theme::framing(row.framing));
         let control = ui.add(
-            egui::Button::new(step_line(row, picked))
+            egui::Button::new(egui::RichText::new(step_line(row, picked)).color(ink))
                 .min_size(egui::vec2(ui.available_width(), TOUCH)),
         );
         if control.clicked() {

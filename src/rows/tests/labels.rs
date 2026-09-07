@@ -3,8 +3,8 @@
 //! painting one record.
 
 use super::{
-    SPEAKER, call, delivered, ended, go, model, named, prefixes, raw, result, streaming, text,
-    thought, windowed,
+    SPEAKER, call, delivered, ended, go, model, named, parked, prefixes, raw, result, streaming,
+    text, thought, windowed,
 };
 use crate::rows::{Fold, Role, RowClass, Tone};
 
@@ -199,6 +199,55 @@ fn a_windowed_call_in_flight_reads_as_the_committed_block_does() {
     assert_eq!(rows[0].tone, Tone::InFlight);
     assert_eq!(rows[0].role, None);
     assert!(rows[0].expanded, "a step happening is the show");
+}
+
+/// **A parked call wears the one hue that means *asking for you***
+/// (PROTOCOL 18, yog bl-58bb; STYLE.md §3). It is the only tone this
+/// projection asks for that no wire token spells — a row tone says what a
+/// conversation is doing, and a held call is a thing inside one.
+///
+/// The control's sentence is the row's PAYLOAD and goes first, because it is
+/// what decides an answer; the command it is about opens under the fold, one
+/// tap away.
+#[test]
+fn a_parked_call_asks_for_the_operator_and_says_why() {
+    let rows = go(&[parked(
+        "box2_Bash",
+        "{\"command\":\"rm -rf build\"}",
+        None,
+        Some("classified loss — the control holds anything that destroys work"),
+    )]);
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].prefix, "⚙ box2_Bash — held for you");
+    assert_eq!(
+        rows[0].preview,
+        "classified loss — the control holds anything that destroys work"
+    );
+    assert!(
+        rows[0].body.contains("rm -rf build"),
+        "the command opens under the fold"
+    );
+    assert_eq!(rows[0].tone, Tone::Held);
+    assert!(rows[0].expanded, "a row asking for you is the show");
+}
+
+/// A hold with nothing to say about the input still says the control's
+/// sentence, and shows no fold: an empty body IS the fact.
+#[test]
+fn a_parked_call_with_no_input_is_the_sentence_alone() {
+    let rows = go(&[parked("box2_ping", "", None, Some("classified opaque"))]);
+    assert_eq!(rows[0].preview, "classified opaque");
+    assert_eq!(rows[0].body, "");
+}
+
+/// **A hold outranks a capture that landed after it.** The status is the
+/// field's presence, the discipline `exit_code` already carries, and the two
+/// cannot disagree because the hold is read first.
+#[test]
+fn a_hold_outranks_an_exit_code_on_the_same_row() {
+    let rows = go(&[parked("box2_Bash", "{}", Some(0), Some("classified loss"))]);
+    assert_eq!(rows[0].prefix, "⚙ box2_Bash — held for you");
+    assert_eq!(rows[0].tone, Tone::Held);
 }
 
 /// **A closed call states the number and claims nothing about it.** REMOTE

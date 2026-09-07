@@ -57,6 +57,7 @@ fn every_answer_names_its_own_kind() {
                 lineage: None,
                 goal: "g".into(),
                 origin: "world".into(),
+                role: None,
             }),
             "prepared",
         ),
@@ -74,6 +75,7 @@ fn every_answer_names_its_own_kind() {
                 tool_use: "toolu_1".into(),
                 tool: "Bash".into(),
                 verdict: crate::codec::Verdict::Hold,
+                scope: crate::codec::Scope::Call,
                 advanced: false,
             }),
             "answered",
@@ -120,6 +122,7 @@ fn the_machinery_answers_name_the_kind_they_were_read_from() {
         json!({ "ok": true, "kind": "armed", "armed": true }),
         json!({ "ok": true, "kind": "clients", "rows": [] }),
         json!({ "ok": true, "kind": "lineages", "rows": [] }),
+        json!({ "ok": true, "kind": "proposals", "rows": [] }),
     ] {
         let named = body["kind"].as_str().unwrap_or_default().to_owned();
         let read = super::super::decode(&body).unwrap().unwrap();

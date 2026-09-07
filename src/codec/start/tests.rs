@@ -13,6 +13,7 @@ fn staged() -> Prepared {
         lineage: None,
         goal: "look into the flake".into(),
         origin: "conversation".into(),
+        role: None,
     }
 }
 
@@ -33,7 +34,7 @@ fn firing_carries_the_body_whole_with_real_nulls() {
         json!({ "op": "prompt",
                 "prepared": { "workspace": "home", "binding": null,
                               "lineage": null, "goal": "look into the flake",
-                              "origin": "conversation" },
+                              "origin": "conversation", "role": null },
                 "goal": "look into the flake", "seed": null })
     );
     // The absences are FIELDS whose value is null, not omissions: the server
@@ -41,19 +42,24 @@ fn firing_carries_the_body_whole_with_real_nulls() {
     let prepared = &v["prepared"];
     assert!(prepared.get("binding").is_some());
     assert!(prepared.get("lineage").is_some());
+    assert!(prepared.get("role").is_some());
     assert!(v.get("seed").is_some());
 }
 
 #[test]
-fn a_stated_binding_and_lineage_ride_through_untouched() {
+fn a_stated_binding_lineage_and_role_ride_through_untouched() {
     let rich = Prepared {
         binding: Some("/w/x".into()),
         lineage: Some("some-lineage".into()),
+        role: Some("planner".into()),
         ..staged()
     };
     let v = encode_prompt(&rich, "go");
     assert_eq!(v["prepared"]["binding"], "/w/x");
     assert_eq!(v["prepared"]["lineage"], "some-lineage");
+    // **The one field a seat is meant to write** (PROTOCOL 18): a body that
+    // came back naming a role fires as that role, unread and unrewritten.
+    assert_eq!(v["prepared"]["role"], "planner");
     // Whole means whole: what came off the wire goes back on it unchanged.
     assert_eq!(prepared_of(&v["prepared"]).unwrap(), rich);
 }
@@ -63,12 +69,15 @@ fn a_prepared_reply_reads_back() {
     let envelope = json!({ "ok": true, "kind": "prepared",
                            "prepared": { "workspace": "home", "binding": null,
                                          "lineage": null, "goal": "g",
-                                         "origin": "world" } });
+                                         "origin": "world",
+                                         "role": null } });
     let o = envelope.as_object().unwrap();
     let read = reply_of(o).unwrap();
     assert_eq!(read.workspace, "home");
     assert_eq!(read.origin, "world");
-    assert_eq!((read.binding, read.lineage), (None, None));
+    // `prepare` answers a null role — litany's `worker`, spelled as the
+    // absence the engine writes.
+    assert_eq!((read.binding, read.lineage, read.role), (None, None, None));
 }
 
 #[test]
@@ -79,7 +88,7 @@ fn a_malformed_prepared_body_refuses_by_name() {
     );
     assert_eq!(
         prepared_of(&json!({ "binding": null, "lineage": null,
-                             "goal": "g", "origin": "world" }))
+                             "goal": "g", "origin": "world", "role": null }))
         .unwrap_err(),
         "missing or non-string field \"workspace\""
     );
@@ -96,6 +105,6 @@ fn an_origin_token_this_client_cannot_spell_still_rides_through() {
     // branches on it, and refusing an unknown one would refuse a staging it
     // has no quarrel with.
     let v = json!({ "workspace": "home", "binding": null, "lineage": null,
-                    "goal": "g", "origin": "something-new" });
+                    "goal": "g", "origin": "something-new", "role": null });
     assert_eq!(prepared_of(&v).unwrap().origin, "something-new");
 }

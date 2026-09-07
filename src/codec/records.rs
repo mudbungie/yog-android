@@ -48,7 +48,7 @@ pub use agent::{Agent, Context, SeatRow};
 pub use inbox::Mail;
 pub use spine::{Card, Governing, Notch, Rail};
 pub use step::{Log, Record, Step, ToolRecord};
-pub use steps::{Orphan, StepRow, Steps};
+pub use steps::{Framing, Orphan, StepRow, Steps};
 
 pub(super) use agent::agent_of;
 pub(in crate::codec) use agent::words;

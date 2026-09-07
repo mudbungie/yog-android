@@ -123,10 +123,12 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     (
         "prompt",
         Partial {
-            reads: 6,
+            reads: 7,
             reason: NO_SEED,
         },
     ),
+    ("proposal", Reads),
+    ("proposals", Reads),
     ("providers", Reads),
     ("rail", Reads),
     ("release", Reads),

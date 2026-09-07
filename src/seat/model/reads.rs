@@ -62,6 +62,13 @@ impl Model {
         let _ = self.cmds.send(Cmd::Ops);
     }
 
+    /// **Read what a reviewer has staged** (§13.17). A bare call is the
+    /// listing; one naming an id asks for that proposal whole beside it,
+    /// which is the same op at its second depth (`Ask::Proposals`).
+    pub fn list_proposals(&self, id: Option<String>) {
+        let _ = self.cmds.send(Cmd::Proposals(id));
+    }
+
     /// **Read the ball pane** (§13.9) at `view`. The rows arrive in the next
     /// snapshot like every other read's, and what was already there keeps
     /// painting meanwhile — under its own view, never under this one.

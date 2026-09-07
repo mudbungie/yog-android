@@ -218,6 +218,21 @@ pub(super) fn marked(
     }
 }
 
+/// **The staged proposals, folded** — `marked`'s terms one read along: the
+/// answer replaces what it answers and a failure keeps what was there.
+pub(super) fn staged(
+    read: Result<crate::codec::Staged, String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok(staged) => {
+            standing.proposals = Some(staged);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
 /// **The machines roster, folded** — `paned`'s terms again: the answer
 /// replaces what was held and a failure keeps what was there.
 pub(super) fn machined(

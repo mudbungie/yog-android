@@ -35,6 +35,15 @@
 //! shows no growing text and no window — whatever the response file still
 //! holds.
 //!
+//! **A held call is the one the window exists for** (PROTOCOL 18, yog
+//! bl-58bb). It lands neither of the two files the pair of transitions above
+//! is made of, so before the field the lane simply had nothing to carry — and
+//! since the lane's subject is the STEP, what it reported was a conversation
+//! at rest at the exact moment the operator was the thing it was waiting for.
+//! It is a windowed entry like any other, and the row it becomes wears the
+//! attention accent (`rows::windowed`), which is the one state on this glass
+//! that means *asking for you*.
+//!
 //! **The window paints only what the record does not carry yet.** A call whose
 //! `tool_use` a committed block already names is the transcript's to paint —
 //! it is there with its input and its running mark — so the lane adds a row
@@ -119,6 +128,7 @@ fn window_entry(call: &Call) -> Entry {
             tool: call.tool.clone().unwrap_or_else(|| call.tool_use.clone()),
             input: call.input.clone().unwrap_or_default(),
             exit_code: call.exit_code,
+            held: call.held.clone(),
         },
     }
 }

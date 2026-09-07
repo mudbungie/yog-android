@@ -37,6 +37,33 @@ const ERR_RESULT: &str = "✖ tool result — error";
 /// Rows for one entry: one per model content block, else one for the entry.
 /// `entries` is the whole list because a tool call's in-flightness is a
 /// question about the *rest* of the transcript, not about the call.
+/// **One delivered message as its row** — lifted out of the match (bl-5070)
+/// where the tool window's own arm grew: an arm with a body is a spelling, and
+/// this file's job is the exhaustive choice between spellings. An empty body
+/// is said in words rather than left blank, because a message that arrived
+/// carrying nothing is a fact and an empty row is a gap.
+fn delivered_row(
+    name: &str,
+    sender: &str,
+    sender_name: Option<&str>,
+    epitaph: Option<&str>,
+    body: &str,
+) -> Row {
+    let (payload, tone) = if body.is_empty() {
+        (NO_BODY, Tone::Weak)
+    } else {
+        (body, Tone::Plain)
+    };
+    row(
+        key(name, 0),
+        delivered_prefix(sender_name.unwrap_or(sender), epitaph),
+        payload,
+        RowClass::Response,
+        tone,
+        Some(message_role(sender, epitaph.is_some())),
+    )
+}
+
 pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &mut Vec<Row>) {
     match &entry.kind {
         EntryKind::Delivered {
@@ -44,21 +71,13 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             sender_name,
             epitaph,
             body,
-        } => {
-            let (payload, tone) = if body.is_empty() {
-                (NO_BODY, Tone::Weak)
-            } else {
-                (body.as_str(), Tone::Plain)
-            };
-            out.push(row(
-                key(&entry.name, 0),
-                delivered_prefix(sender_name.as_deref().unwrap_or(sender), epitaph.as_deref()),
-                payload,
-                RowClass::Response,
-                tone,
-                Some(message_role(sender, epitaph.is_some())),
-            ));
-        }
+        } => out.push(delivered_row(
+            &entry.name,
+            sender,
+            sender_name.as_deref(),
+            epitaph.as_deref(),
+            body,
+        )),
         EntryKind::Model {
             model_id, blocks, ..
         } if blocks.is_empty() => out.push(Row {
@@ -114,7 +133,14 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             tool,
             input,
             exit_code,
-        } => out.push(windowed_row(&entry.name, tool, input, *exit_code)),
+            held,
+        } => out.push(windowed_row(
+            &entry.name,
+            tool,
+            input,
+            *exit_code,
+            held.as_deref(),
+        )),
         EntryKind::Compacted {
             first,
             last,

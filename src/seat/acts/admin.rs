@@ -1,7 +1,8 @@
-//! **The admin surface's five acts** (DESIGN §13.17): write a config file,
-//! mark a workspace's task branch, flush its inbox, and the two deletions.
+//! **The admin surface's six acts** (DESIGN §13.17): write a config file, mark
+//! a workspace's task branch, flush its inbox, settle a reviewer's staged
+//! config patch, and the two deletions.
 //!
-//! **Three receipts for five acts**, read off the act rather than guessed at
+//! **Three receipts for six acts**, read off the act rather than guessed at
 //! the reply — `acts::row`'s rule at a second site, so an engine answering the
 //! other shape is a named refusal instead of a silent success. A config write
 //! answers the bare `applied`; `marks` answers the branch it landed on, which
@@ -23,7 +24,11 @@ use crate::transport::Seat;
 use super::super::posted::{Posted, faulted};
 
 /// Post one admin act, and hand back the branch a `marks` write landed on —
-/// the one receipt of the five that carries a fact this seat paints.
+/// the one receipt of the six that carries a fact this seat paints. A
+/// `proposal` settle answers the ordinary `outcome` every §8.2 verb earns
+/// (REMOTE §9.22), which the `Outcome` arms below already read: litany's own
+/// words for a stale proposal, an ambiguous one and an unknown id arrive as
+/// the refusal's `stderr` and are painted verbatim.
 pub(crate) fn admin(seat: &Seat, act: AdminAct) -> (Posted, Option<String>) {
     let op = act.op();
     let settles = settles(&act);
@@ -42,7 +47,7 @@ pub(crate) fn admin(seat: &Seat, act: AdminAct) -> (Posted, Option<String>) {
 }
 
 /// **The read that settles a doubted admin act** — the world is the durable
-/// record (REMOTE §9.8), and each of these five has a read that shows what
+/// record (REMOTE §9.8), and each of these six has a read that shows what
 /// became of it.
 fn settles(act: &AdminAct) -> &'static str {
     match act {
@@ -61,6 +66,12 @@ fn settles(act: &AdminAct) -> &'static str {
         }
         AdminAct::DeleteWorkspace { .. } => {
             "The workspace roster says whether it is gone, and the next pass re-reads it."
+        }
+        AdminAct::Proposal { .. } => {
+            "The proposals listing says whether it is still staged. A settle that \
+             landed took the branch with it, so a repeat would refuse — and an \
+             accept whose lineage moved under it refuses naming where that lineage \
+             now stands."
         }
     }
 }

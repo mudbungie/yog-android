@@ -147,6 +147,14 @@ pub enum Reply {
     Clients(Vec<clients::ClientRow>),
     /// **The config lineages it holds**, one row apiece.
     Lineages(Vec<lineages::Lineage>),
+    /// **What a reviewer has staged** (REMOTE §9.22): the listing, and the
+    /// whole reading when the ask named one. The workspace is not on the
+    /// wire — the ask names it (`codec::proposals`), and the seat pairs the
+    /// two.
+    Proposals {
+        rows: Vec<crate::codec::Proposal>,
+        whole: Option<String>,
+    },
     /// **What each attempt cost** (DESIGN §13.12), one row apiece.
     Science(Vec<candidates::Attempt>),
     /// **The material a mint answered with** (REMOTE §8.4): §8.4's six
