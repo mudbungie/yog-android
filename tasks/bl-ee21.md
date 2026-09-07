@@ -1,7 +1,7 @@
 +++
 title = "re-vendor the wire corpus: reply/follow gained the tool window and reply/ops gained the client that asked"
 created = 1788675545
-updated = 1788675545
+updated = 1788745442
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r1"]
