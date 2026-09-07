@@ -25,8 +25,10 @@ use super::app::Shell;
 use crate::icon::Shape;
 
 /// The §13.2 touch floor, in points: every navigation row and action
-/// control stands at least this tall. The mark's own tap target too.
-pub(crate) const TOUCH: f32 = 44.0;
+/// control stands at least this tall. The mark's own tap target too. The
+/// number is the language's (`crate::theme`, docs/STYLE.md); this is the
+/// name every paint site already spends it by.
+pub(crate) const TOUCH: f32 = crate::theme::TOUCH;
 
 /// What a screen's back control is, if it has one — and, where the depth it
 /// walks to is a screen the engine populates, which read that is.
@@ -102,9 +104,10 @@ impl Shell {
     }
 }
 
-/// The walk's straight-alpha RGBA as an egui colour.
+/// The walk's straight-alpha RGBA as an egui colour — read through the one
+/// adapter that constructs one (`shell::theme`).
 fn hue(fill: [u8; 4]) -> egui::Color32 {
-    egui::Color32::from_rgba_unmultiplied(fill[0], fill[1], fill[2], fill[3])
+    super::theme::rgba(fill)
 }
 
 /// Paint the mark into `rect`. The unit square the walk works in maps to the

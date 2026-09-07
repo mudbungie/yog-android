@@ -34,6 +34,7 @@ pub mod seat;
 pub mod shell;
 pub mod state;
 pub mod symbol;
+pub mod theme;
 pub mod tools;
 pub mod transport;
 pub mod update;

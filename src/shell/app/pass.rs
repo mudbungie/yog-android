@@ -33,7 +33,12 @@ pub(crate) fn run(app: AndroidApp) {
     if let Err(e) = eframe::run_native(
         "yog",
         options,
-        Box::new(move |_| Ok(Box::new(Shell::new(handle)))),
+        Box::new(move |cc| {
+            // The language, installed once and before the first frame
+            // (`shell::theme`, docs/STYLE.md).
+            super::super::theme::install(&cc.egui_ctx);
+            Ok(Box::new(Shell::new(handle)))
+        }),
     ) {
         // The process is over either way; logcat is the only witness.
         log::error!("eframe: {e}");

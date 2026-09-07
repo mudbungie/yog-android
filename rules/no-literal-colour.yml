@@ -1,0 +1,33 @@
+# The visual language has one home (docs/STYLE.md): `src/theme.rs` holds the
+# palette as bytes, and `src/shell/theme.rs` is the one adapter that turns a
+# token into an egui `Color32` — at app start into `Visuals`, and at a paint
+# site by the name of the STATE a thing is in. A screen that constructs a
+# colour of its own is a second vocabulary: the same red meant "failed" on one
+# screen and "stopped" on another, and the roster's yellow was nobody's
+# accent at all. So no paint file may spell one.
+#
+# What is matched is a construction or a named palette constant on `Color32`
+# — `from_rgb`, `from_rgba_*`, `from_gray`, the alpha builders, and the named
+# hues. Two constants are deliberately NOT in the list: `WHITE` and `BLACK`,
+# which the minted-material screen paints a QR symbol's modules with
+# (`screens/world/admin/minted.rs`) — a symbol is bytes a decoder reads, not a
+# thing the language colours — and `PLACEHOLDER`/`TRANSPARENT`, which name no
+# hue.
+#
+# The `ignores` list is the one location authority: the two theme files, and
+# tests. Add a colour to the theme rather than a path here.
+id: no-literal-colour
+language: rust
+severity: error
+message: "a colour literal outside the theme — colour means state, and the state's accent is crate::theme's (docs/STYLE.md); read it through shell::theme; see rules/no-literal-colour.yml"
+ignores:
+  - "**/theme.rs"
+  - "**/theme/**"
+  - "**/test_support.rs"
+  - "**/test_support/**"
+  - "**/tests/**"
+  - "**/tests.rs"
+  - "**/*tests.rs"
+rule:
+  kind: scoped_identifier
+  regex: "Color32::(from_rgb|from_rgba_unmultiplied|from_rgba_premultiplied|from_gray|from_black_alpha|from_white_alpha|from_additive_luminance|from_hex|LIGHT_RED|LIGHT_YELLOW|LIGHT_BLUE|LIGHT_GREEN|LIGHT_GRAY|DARK_GRAY|DARK_RED|DARK_GREEN|DARK_BLUE|GRAY|RED|GREEN|BLUE|YELLOW|BROWN|GOLD|KHAKI|ORANGE|PURPLE|MAGENTA|CYAN)$"

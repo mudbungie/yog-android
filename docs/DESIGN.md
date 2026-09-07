@@ -467,6 +467,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/camera.rs` | android-only: the five static calls into `dev.yog.Camera`, activity passed in | landed (bl-d815) |
 | `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
+| `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
+| `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, a `Color32` by a state's name at a paint site, and the outline-free list row every navigation list paints through | landed (bl-549b) |
+| `rules/no-literal-colour.yml` | the rule that keeps it one home: no paint file constructs a `Color32` or names a palette constant of its own | landed (bl-549b) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE + FOREGROUND_SERVICE_SPECIAL_USE), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App`, and the two lanes armed on resume | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9, bl-fcc5, bl-8bd0) |
 
 ## 5. The trust model and new-device bootstrap (bl-ae9d)
@@ -1639,10 +1642,21 @@ here is a defect.
   are correct (the ui's mode is `Wrap` there) and are what every screen's
   prose uses, so the rule does not touch them.
 - **Touch targets:** every navigation row and action control stands at
-  least 44 points tall, full width where it lists — `shell/mark.rs` holds
-  the one constant and `screens.rs`'s row helper spends it. In-content
-  affordances (a transcript row's fold toggle) read at text size; a row an
-  adult thumb misses is a defect, not a style.
+  least 48 points tall, full width where it lists — `crate::theme::TOUCH`
+  is the one constant (raised from 44 under bl-549b, the ball's floor being
+  48dp), `shell/mark.rs` re-exports it by the name every paint site spends,
+  and `shell::theme::row` is the row helper. In-content affordances (a
+  transcript row's fold toggle) read at text size; a row an adult thumb
+  misses is a defect, not a style.
+- **One visual language, and `docs/STYLE.md` is its home** (bl-549b). Colour
+  means state — six states, six soft-neon accents, no seventh — nothing on
+  the glass is outlined, and hierarchy is spacing, type and alignment. The
+  tokens are `src/theme.rs`, installed into egui once at app start by
+  `src/shell/theme.rs`, which is the only file that constructs a colour
+  (`rules/no-literal-colour.yml`). A screen that wants a colour names the
+  state it is painting. What each token is, what each state covers and what
+  a row, a block, a control and a banner are made of is STYLE.md's and is
+  not restated here.
 - **Status where it happened:** a connection error is a banner under the
   bar; an enrollment refusal paints on the enrollment screen, verbatim from
   the one place the sentence is made. No toast, no dialog — nothing in this

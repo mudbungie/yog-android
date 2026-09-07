@@ -44,7 +44,7 @@ impl Shell {
         let rows = match crate::help::rows(crate::help::TABLE) {
             Ok(rows) => rows,
             Err(why) => {
-                ui.colored_label(egui::Color32::LIGHT_RED, why);
+                ui.colored_label(crate::shell::theme::ink(crate::theme::State::Error), why);
                 return;
             }
         };

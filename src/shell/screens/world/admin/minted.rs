@@ -47,7 +47,7 @@ impl Shell {
             // this seat's problem to state, not to hide: the operator can
             // still mint again, and a blank square would say nothing.
             Err(why) => {
-                ui.colored_label(egui::Color32::LIGHT_RED, why);
+                ui.colored_label(crate::shell::theme::ink(crate::theme::State::Error), why);
             }
         }
     }

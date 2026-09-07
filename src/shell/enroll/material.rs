@@ -51,7 +51,7 @@ pub(super) fn screen(
     let landed = envelope(ui, landing, text, said, scanner);
     ui.separator();
     if let Some(why) = &landing.refusal {
-        ui.colored_label(egui::Color32::LIGHT_RED, why);
+        ui.colored_label(crate::shell::theme::ink(crate::theme::State::Error), why);
     } else {
         ui.weak("nothing has arrived yet.");
     }
@@ -123,7 +123,7 @@ fn envelope(
     if let Some(running) = &landing.replacing {
         ui.add_space(4.0);
         ui.colored_label(
-            egui::Color32::LIGHT_YELLOW,
+            crate::shell::theme::ink(crate::theme::State::Annotation),
             format!(
                 "this device is {running}. Landing an envelope replaces that \
                  identity: this device's certificate and its private key are \
@@ -147,7 +147,7 @@ fn envelope(
         }
     });
     if let Some(why) = said.as_ref() {
-        ui.colored_label(egui::Color32::LIGHT_RED, why);
+        ui.colored_label(crate::shell::theme::ink(crate::theme::State::Error), why);
     }
     landed
 }

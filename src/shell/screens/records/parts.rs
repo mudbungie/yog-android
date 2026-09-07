@@ -21,7 +21,10 @@ pub(super) fn head(ui: &mut egui::Ui, records: &Records) {
     ui.label(&head.display);
     ui.weak(format!("{} · under {}", state(records), head.root));
     if let Some(failure) = &head.failure {
-        ui.colored_label(egui::Color32::LIGHT_RED, failure);
+        ui.colored_label(
+            crate::shell::theme::ink(crate::theme::State::Error),
+            failure,
+        );
     }
     if let Some(strip) = &head.strip {
         ui.weak(strip);

@@ -13,6 +13,7 @@ use super::app::Shell;
 use super::boot::Running;
 
 use super::mark::Back;
+use super::theme::{self, ink};
 use crate::host::Health;
 /// **The attention mark**, re-exported from where it lives (`crate::roster`,
 /// bl-4d17). It moved because the conversation row's words are composed in
@@ -20,6 +21,7 @@ use crate::host::Health;
 /// reasoning for the glyph itself travelled with it.
 pub(super) use crate::roster::ATTENTION_MARK;
 use crate::seat::Snapshot;
+use crate::theme::State;
 
 mod files;
 mod preview;
@@ -147,12 +149,18 @@ impl Shell {
         ui.separator();
         egui::ScrollArea::vertical().show(ui, |ui| {
             for row in &snap.workspaces {
-                let mark = if row.attention > 0 {
-                    ATTENTION_MARK
-                } else {
-                    ""
-                };
-                let label = format!("{}{mark} · {} agents", row.workspace, row.agents);
+                // The name in ink, the count in weak ink, and the mark — when
+                // there is one — in the attention accent: one line, three
+                // inks, and the hierarchy is the ink (STYLE.md).
+                let mut parts = vec![(row.workspace.clone(), ui.visuals().text_color())];
+                if row.attention > 0 {
+                    parts.push((ATTENTION_MARK.to_owned(), ink(State::Attention)));
+                }
+                parts.push((
+                    format!("  {} agents", row.agents),
+                    ui.visuals().weak_text_color(),
+                ));
+                let label = theme::line(ui, &parts);
                 // Tapping a workspace focuses it, and the focus is what the
                 // worker asks `conversations` at.
                 if tap(ui, label.into(), "conversations").clicked() {
@@ -189,10 +197,11 @@ impl Shell {
             }
             (Health::Serving, None) => "tools: presenting…".to_owned(),
         };
-        // Red is for the one that will not mend itself. A redial is ordinary
-        // on a phone and reads as ordinary; the word carries it.
+        // The error accent is for the one that will not mend itself. A
+        // redial is ordinary on a phone and reads as ordinary; the word
+        // carries it.
         if matches!(standing.health, Health::Stopped(_)) {
-            ui.colored_label(egui::Color32::LIGHT_RED, line);
+            ui.colored_label(ink(State::Error), line);
         } else {
             ui.weak(line);
         }
@@ -205,7 +214,7 @@ impl Shell {
         // `host::RESTORED`'s; this line only says how many times.
         if standing.restored > 0 {
             ui.colored_label(
-                egui::Color32::LIGHT_YELLOW,
+                ink(State::Annotation),
                 format!("{} (×{})", crate::host::RESTORED, standing.restored),
             );
         }
@@ -253,7 +262,7 @@ impl Shell {
 /// above whatever screen it interrupted (§13.2).
 pub(super) fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
     if let Some(error) = &snap.error {
-        ui.colored_label(egui::Color32::LIGHT_RED, error);
+        ui.colored_label(ink(State::Error), error);
     }
 }
 
@@ -262,11 +271,11 @@ pub(super) fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
 /// than a discipline at each site — and so is the parity tag: `op` is the read
 /// this row's tap reaches (PARITY §2, *"the owed interactable for a read is
 /// the affordance that reaches the view it populates"*), which is the one
-/// thing that differs between the two lists.
-pub(super) fn tap(ui: &mut egui::Ui, label: egui::RichText, op: &str) -> egui::Response {
-    let control =
-        egui::Button::new(label).min_size(egui::vec2(ui.available_width(), super::mark::TOUCH));
-    let response = ui.add(control);
+/// thing that differs between the two lists. The row itself is the
+/// language's (`shell::theme::row`): left-aligned, outline-free, a tint only
+/// under a thumb.
+pub(super) fn tap(ui: &mut egui::Ui, label: egui::WidgetText, op: &str) -> egui::Response {
+    let response = theme::row(ui, label);
     super::act::act(ui, &response, op);
     response
 }

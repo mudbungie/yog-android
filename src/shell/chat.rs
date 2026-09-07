@@ -75,8 +75,9 @@ const GLYPH_COLLAPSED: &str = "▶";
 const GLYPH_EXPANDED: &str = "▼";
 const NO_FOLD_MARK: &str = "·";
 
-/// The stripe's width in points, and the gap after it.
-const STRIPE: f32 = 3.0;
+/// The speaker's rule, in points (STYLE.md: a block is aligned and ruled,
+/// never boxed).
+const STRIPE: f32 = crate::theme::RULE;
 
 /// How dim an abridged preview paints — the desktop's own solidity for a
 /// payload that is not all there, so "there is more" is visible before the
@@ -182,19 +183,17 @@ fn preview(ui: &mut egui::Ui, text: &str, abridged: bool) {
     ui.add(egui::Label::new(rich).truncate());
 }
 
-/// A role's hue. The values are the desktop's own, so a transcript read on
-/// the phone and on the laptop is the same colour vocabulary.
+/// A speaker's rule (STYLE.md): told by weight, not hue, because on this
+/// glass a hue means a state. The desktop seat ports the same table
+/// (lernie bl-73d2), so a transcript read on the phone and on the laptop is
+/// one vocabulary still.
 fn role_hue(role: Role) -> egui::Color32 {
-    match role {
-        Role::User => egui::Color32::from_rgb(160, 112, 240),
-        Role::Model => egui::Color32::from_rgb(118, 188, 242),
-        Role::Peer => egui::Color32::from_rgb(232, 176, 96),
-        Role::Ended => egui::Color32::from_rgb(184, 152, 104),
-    }
+    super::theme::speaker(role)
 }
 
-/// A tone's ink. `Plain` and `Weak` defer to the theme's own text colours;
-/// the other four are the desktop's constants.
+/// A tone's ink. `Plain` and `Weak` defer to the installed visuals' own text
+/// colours; the four states read the language's one table
+/// (`crate::theme::tone`).
 ///
 /// **Two surfaces spend it** (bl-ef9a): this transcript, and the conversation
 /// list in `super::screens`. One map rather than two, because a hue that meant
@@ -203,17 +202,16 @@ fn role_hue(role: Role) -> egui::Color32 {
 /// the operator's only passive sighting of a conversation refused at the
 /// provider rung (yog bl-b43b), which is a fact worth painting the same way
 /// wherever it appears.
+///
+/// A live row and an in-flight one share the one live accent; the desktop
+/// pulses the second, which a phone's repaint budget does not buy back — the
+/// word "running" in the label already says it.
 pub(super) fn tone_hue(ui: &egui::Ui, tone: crate::codec::Tone) -> egui::Color32 {
     use crate::codec::Tone;
     match tone {
         Tone::Plain => ui.visuals().text_color(),
         Tone::Weak => ui.visuals().weak_text_color(),
-        Tone::Good => egui::Color32::from_rgb(110, 222, 148),
-        Tone::Bad => egui::Color32::from_rgb(242, 108, 120),
-        // A live row and an in-flight one share the spectral blue; the
-        // desktop pulses the second, which a phone's repaint budget does not
-        // buy back — the word "running" in the label already says it.
-        Tone::Live | Tone::InFlight => egui::Color32::from_rgb(118, 188, 242),
+        Tone::Good | Tone::Bad | Tone::Live | Tone::InFlight => super::theme::tone(tone),
     }
 }
 

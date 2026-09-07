@@ -213,6 +213,15 @@
 # offered over plaintext are all `crate::update`, asserted by host tests. What
 # is left here is the JNI call and which widget shows the answer.
 #
+# `src/shell/theme.rs` is the language's one adapter into egui (bl-549b,
+# docs/STYLE.md), the same class again: a `Visuals` built once at app start,
+# a `Color32` per token, and one allocated row, `cfg(target_os = "android")`
+# to the last line. Everything it decides is somewhere else and under the
+# floor — WHAT the palette is, which accent each state wears, that every ink
+# is legible on every surface and every accent is soft, are all `crate::theme`,
+# asserted by host tests. What is left here is which egui field takes which of
+# them.
+#
 # `src/shell/app/fields.rs` is the three `Field` constants split out of
 # `app.rs` (bl-5a56) and inherits its entry exactly: it is `cfg(target_os =
 # "android")` data with no behaviour at all.
@@ -272,6 +281,7 @@ exclude-files = [
     "src/shell/transcript.rs",
     "src/shell/update.rs",
     "src/shell/sys.rs",
+    "src/shell/theme.rs",
     "src/tools/bridged/door.rs",
     "src/tools/paper/bridge.rs",
     "src/tools/shade/bridge.rs",

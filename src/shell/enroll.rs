@@ -150,7 +150,7 @@ impl Shell {
         // asker, one identity on two connections (REMOTE §5).
         if open == Component::Foot && matches!(self.running, Running::Seat { .. }) {
             ui.colored_label(
-                egui::Color32::LIGHT_YELLOW,
+                super::theme::ink(crate::theme::State::Annotation),
                 format!(
                     "this device already offers its tools — it runs {}, and a \
                      Lernie seat hosts tools beside the asker. Thrall is for a \
@@ -198,7 +198,7 @@ fn chooser(
     // that is missing at once.
     if let Some(why) = refusal {
         ui.add_space(4.0);
-        ui.colored_label(egui::Color32::LIGHT_RED, why);
+        ui.colored_label(super::theme::ink(crate::theme::State::Error), why);
     }
     ui.separator();
     ui.add_space(4.0);
