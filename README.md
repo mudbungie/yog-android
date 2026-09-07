@@ -121,6 +121,14 @@ is the property that makes the channel possible rather than a place to park a
 token. Nothing is published to a registry — the crate is `publish = false`, so
 release-plz reads the last released version off the git tag instead.
 
+**The first version is tagged by hand**, once per repository, because reading
+versions off tags leaves nothing to read when there are no tags: on the push
+that armed this pipeline every job ran green and released nothing, which is the
+honest answer rather than a guess. The seed is `git tag v<version>`, a GitHub
+Release, and an APK from `make apk-release` — the workflow's own recipe, run on
+the box that holds the key. Everything after it is the workflow's (DESIGN
+§20.1).
+
 **A protocol bump waits for the engine** (bl-5b19). yog mints the wire protocol
 version and this app *vendors* a copy of the constant; the wire is fail-closed
 on a mismatch and does not negotiate (yog `docs/REMOTE.md` §3). So

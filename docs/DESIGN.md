@@ -4713,9 +4713,28 @@ attaches the APK to that release.
 **Nothing publishes to a registry, and that is structural.** `Cargo.toml`
 carries `publish = false` because the deliverable is an APK, so release-plz
 skips the registry step entirely and reads the last released version off the
-git tag. None of the crates.io machinery the sibling repositories carry belongs
-here: no trusted publisher, no `id-token: write`, no registry token, and no
-constraint on the workflow's filename.
+git tag (`release-plz.toml`'s `git_only`). None of the crates.io machinery the
+sibling repositories carry belongs here: no trusted publisher, no
+`id-token: write`, no registry token, and no constraint on the workflow's
+filename.
+
+**THE FIRST VERSION IS TAGGED BY HAND, AND EVERY ONE AFTER IT IS THE
+WORKFLOW'S** (bl-951a). Reading versions off tags means there is nothing to
+read when there are no tags, and the pipeline says so rather than guessing: on
+the push that armed it every job ran green and released nothing — the release-PR
+job answered *"yog-android: next version is 0.0.1"* and then *"the repository is
+already up-to-date"* (the manifest already carried 0.0.1, so there was no bump
+to open a PR for), and the release job answered *"nothing to release"* with an
+empty `releases` output, on which `read the released tag` and `sign and attach
+the APK` correctly skipped.
+
+So the seed is an operator act, performed once per repository: tag the tip
+`v<version>`, cut the GitHub Release, and attach an APK from `make apk-release`
+— the same recipe the workflow spends, run on the box that holds the key. Both
+sibling repositories paid the same bootstrap for the same reason. It is not a
+gap in the pipeline and there is nothing to fix: a release path that invented a
+first version out of an empty tag list would be guessing at the one number
+nobody can take back.
 
 **`apk.yml` is how an APK is built on a runner, and there is one of it.** Both
 `ci.yml`'s android leg and the release path call it; the only difference is a
