@@ -142,7 +142,11 @@ app *behind* the engine is the mirror-image defect and its release is the fix.
 Between the two gates — yog holds a bump until the consumers' mains carry it,
 each consumer holds a release until yog has published it — the ordering a bump
 requires is: **the consumers' mains first, then yog publishes, then the
-consumers publish.**
+consumers publish.** A hold clears when the engine publishes, which is an event
+this repository never sees, so `merge-release-pr` runs on a
+`workflow_dispatch` of Release-plz as well as on a push (bl-de23): that
+dispatch is the door for re-judging a held release, and without it the release
+waited for an unrelated landing on `main`.
 
 On launch the app asks that feed once, compares the tag with its own version,
 and paints **one row on the roster** when the tag is newer — never a modal, and

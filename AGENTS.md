@@ -99,6 +99,11 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   then yog publishes, then the consumers publish.** Landing the constant on
   `main` is held by neither gate. `make protocol-gate` proves the decision both
   ways in `lint`, because the workflow that spends it cannot run locally.
+  **A held release is re-judged by a `workflow_dispatch` of Release-plz**
+  (bl-de23): guard 6 clears when the ENGINE publishes, an event this repository
+  never sees, so without a hand-wakeable door a held release waits for an
+  unrelated landing on `main`. `merge-release-pr` therefore runs on a dispatch
+  as well as on a push.
   **Bump it by editing `PROTOCOL`**: both gates read that path at the root of
   whatever tree, tag or main they judge, and no gate, workflow or roster in any
   of the four repositories names a Rust path for the number (bl-6fec). It used
