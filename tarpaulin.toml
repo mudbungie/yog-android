@@ -222,6 +222,20 @@
 # asserted by host tests. What is left here is which egui field takes which of
 # them.
 #
+# `src/shell/screens/banner.rs` is the connection banner split out of
+# `screens.rs` at the cap (bl-7781) and inherits its parent's entry exactly:
+# two `Label`s and no reading at all — WHICH of the two states stands, and
+# whether they can both be about the wire, is `seat::pass::publish`, asserted
+# by host tests.
+#
+# `src/shell/clip.rs` is the long press that copies a prose surface (bl-7781),
+# the same class again: one `ui.add`, one `Response::secondary_clicked` and a
+# drain of egui's output commands into the door the interface corpus already
+# owns, `cfg(target_os = "android")` to the last line. There is no reading of
+# the world in it at all — WHAT the platform does with a clip and the sentence
+# it answers with are `tools::paper`'s and `tools::bridged::answer`'s, which
+# are pure and asserted by host tests.
+#
 # `src/shell/app/fields.rs` is the three `Field` constants split out of
 # `app.rs` (bl-5a56) and inherits its entry exactly: it is `cfg(target_os =
 # "android")` data with no behaviour at all.
@@ -240,6 +254,7 @@ exclude-files = [
     "src/shell/camera.rs",
     "src/shell/bridge.rs",
     "src/shell/chat.rs",
+    "src/shell/clip.rs",
     "src/shell/composer.rs",
     "src/shell/controls.rs",
     "src/shell/controls/drop.rs",
@@ -253,6 +268,7 @@ exclude-files = [
     "src/shell/inset.rs",
     "src/shell/jvm.rs",
     "src/shell/screens.rs",
+    "src/shell/screens/banner.rs",
     "src/shell/screens/files.rs",
     "src/shell/screens/preview.rs",
     "src/shell/screens/records.rs",

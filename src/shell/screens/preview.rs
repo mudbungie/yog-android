@@ -23,17 +23,17 @@ pub(super) fn bytes(ui: &mut egui::Ui, preview: &Preview) {
     match preview {
         Preview::Text(text) => fenced(ui, text),
         Preview::Truncated { text, size } => {
-            ui.weak(format!("cut short — {size} bytes in all"));
+            crate::shell::clip::weak(ui, format!("cut short — {size} bytes in all"));
             fenced(ui, text);
         }
         Preview::Binary { size } => {
-            ui.weak(format!("binary — {size} bytes, nothing to read"));
+            crate::shell::clip::weak(ui, format!("binary — {size} bytes, nothing to read"));
         }
         // **A class this build cannot read** (REMOTE §3.2). The class token is
         // what says which keys are under it, so there is nothing to show and
         // the word is the whole of the honest answer.
         Preview::Unknown(word) => {
-            ui.weak(crate::codec::unknown_label("preview", word));
+            crate::shell::clip::weak(ui, crate::codec::unknown_label("preview", word));
         }
     }
 }
@@ -43,9 +43,11 @@ fn fenced(ui: &mut egui::Ui, text: &str) {
     egui::ScrollArea::horizontal()
         .id_salt("preview")
         .show(ui, |ui| {
-            ui.add(
+            crate::shell::clip::copyable(
+                ui,
                 egui::Label::new(egui::RichText::new(text).monospace())
                     .wrap_mode(egui::TextWrapMode::Extend),
+                text,
             );
         });
 }

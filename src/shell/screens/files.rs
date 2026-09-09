@@ -58,7 +58,7 @@ impl Shell {
             .min_scrolled_height(0.0)
             .show(ui, |ui| match held {
                 None => {
-                    ui.weak("nothing read yet");
+                    crate::shell::clip::weak(ui, "nothing read yet");
                 }
                 Some(files) => self.walked(ui, &files),
             });
@@ -69,23 +69,26 @@ impl Shell {
     /// whether the walk was cut short.
     fn walked(&mut self, ui: &mut egui::Ui, files: &Files) {
         if !files.listing.worktree {
-            ui.weak("the worktree is gone — nothing to list");
+            crate::shell::clip::weak(ui, "the worktree is gone — nothing to list");
             return;
         }
         if !files.listing.working_dir.is_empty() {
-            ui.weak(format!(
-                "work lands at {} — not in this listing",
-                files.listing.working_dir
-            ));
+            crate::shell::clip::weak(
+                ui,
+                format!(
+                    "work lands at {} — not in this listing",
+                    files.listing.working_dir
+                ),
+            );
         }
         if files.listing.rows.is_empty() {
-            ui.weak("the worktree holds nothing");
+            crate::shell::clip::weak(ui, "the worktree holds nothing");
         }
         for row in &files.listing.rows {
             self.file_row(ui, files, row);
         }
         if files.listing.truncated {
-            ui.weak("the listing was cut short");
+            crate::shell::clip::weak(ui, "the listing was cut short");
         }
     }
 
@@ -94,7 +97,7 @@ impl Shell {
     fn file_row(&mut self, ui: &mut egui::Ui, files: &Files, row: &FileRow) {
         let label = line(row);
         if row.dir {
-            ui.weak(label);
+            crate::shell::clip::weak(ui, label);
         } else {
             let control =
                 ui.add(egui::Button::new(label).min_size(egui::vec2(ui.available_width(), TOUCH)));

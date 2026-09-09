@@ -61,7 +61,7 @@ impl Shell {
                     .min_scrolled_height(0.0)
                     .show(ui, |ui| match held {
                         None => {
-                            ui.weak("nothing read yet");
+                            crate::shell::clip::weak(ui, "nothing read yet");
                         }
                         Some(records) => self.body(ui, &records),
                     });
@@ -90,7 +90,7 @@ impl Shell {
             }
         }
         if records.steps.rows.is_empty() {
-            ui.weak("no steps here");
+            crate::shell::clip::weak(ui, "no steps here");
         }
         ui.separator();
         mail(ui, records);

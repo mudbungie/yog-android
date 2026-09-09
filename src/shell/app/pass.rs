@@ -108,6 +108,12 @@ impl eframe::App for Shell {
         if std::mem::take(&mut self.back) {
             crate::shell::back::leave(&self.android);
         }
+        // **Every copy this pass asked for, handed to the platform**
+        // (`shell::clip`, bl-7781). Before the probe and after the screens,
+        // because it is the screens that ask: eframe's own clipboard is a
+        // desktop one and does nothing here, so a command left in the output
+        // would be a copy an operator watched fail silently.
+        crate::shell::clip::copied(&ctx);
         // What this pass painted, said once per change (`app/probe.rs`): the
         // seam a headless-emulator harness reads reachability out of, because
         // the platform's accessibility tree carries nothing about an egui

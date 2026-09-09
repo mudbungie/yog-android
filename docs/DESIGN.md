@@ -540,7 +540,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/place.rs` | the second host-tested sliver: which side of a control its list opens on and how tall it may be, so an opened popup lands inside the tappable area — pure, and the only half of §13.2's geometry a test can reach | landed (bl-78c2) |
 | `src/shell/controls/drop.rs` | android-only: the drop-down that spends it — `Popup` over a button, because `ComboBox` places its list against the display | landed (bl-78c2) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
-| `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, the banner and the one list-row helper every navigation list paints through | landed (bl-5a98) |
+| `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, and the one list-row helper every navigation list paints through | landed (bl-5a98) |
+| `src/shell/screens/banner.rs` | android-only: the one sentence that is about the WIRE rather than the screen it interrupts — the re-dial in the working accent, the failure in the error one | landed (bl-eec1, out of `screens.rs` at the cap bl-7781) |
+| `src/shell/clip.rs` | android-only: the long press that copies a prose surface, and the one seam every copy in this app leaves by | landed (bl-7781) |
 | `src/shell/screens/rows.rs` | android-only: the conversation list (§13.5) — its rows at their own depth under their root, their words, and the field that starts one | landed (bl-f97c, out of `screens.rs`; menu split out bl-06d3) |
 | `src/shell/screens/rows/menu.rs` | android-only: the long press a row carries — the act roster, its items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-06d3, out of `rows.rs` at the cap) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where each control the harness must reach was painted, one named rectangle apiece, said to logcat once per change | landed (bl-243b, named controls bl-35bd) |
@@ -1810,6 +1812,32 @@ here is a defect.
   bar; an enrollment refusal paints on the enrollment screen, verbatim from
   the one place the sentence is made. No toast, no dialog — nothing in this
   app is modal except the scan screen, which is a camera.
+- **Prose is copyable, and the unit is the block** (bl-7781, operator request
+  2026-09-08). A long press on anything this app paints as prose puts the
+  whole of what it says on the Android clipboard: a transcript row and its
+  payload, a tool's output, a records line, a file preview, a machine's id, a
+  banner's sentence.
+
+  **There is no selection, and pretending otherwise would be the defect.**
+  This app paints into one GPU surface, so there is no platform text view
+  under a transcript row and therefore no platform selection handles to have.
+  egui does not synthesize them either: it disables drag-to-select on a touch
+  screen outright, because a drag over prose inside a `ScrollArea` is how a
+  phone SCROLLS — and a transcript that could not be scrolled by dragging its
+  own text would be a worse app than one that cannot select a range inside
+  it. So the gesture is the one §13.5's row menu already uses (the secondary
+  click egui synthesizes from a held touch), it senses CLICK and never drag,
+  and the unit it copies is the block rather than a hand-adjusted range.
+
+  **One door out.** A surface asks egui to copy and `shell::clip::copied`
+  hands what egui collected to the platform, so a copy this app never wrote —
+  one of egui's own, out of a `TextEdit` — reaches the clipboard the same
+  way; eframe's own clipboard is a desktop one and does nothing here. The
+  write is `tools::paper`'s existing door (`dev.yog.Paper.clipboardSet`), so
+  there is one clipboard in this app and not two. **The confirmation is the
+  platform's**: Android 13 and later show a preview of the clip whenever an
+  app writes one, and a second sentence from this app would be the same fact
+  said twice.
 - **A failure is not an error until it persists** (bl-3202). Swapping back
   into the app raced the network coming back: the first refresh after a
   resume failed on a name lookup and the frame painted a red banner over

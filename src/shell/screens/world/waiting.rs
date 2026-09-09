@@ -44,7 +44,7 @@ impl Shell {
             .min_scrolled_height(0.0)
             .show(ui, |ui| {
                 if snap.queue.is_empty() {
-                    ui.weak("nothing is waiting on you");
+                    crate::shell::clip::weak(ui, "nothing is waiting on you");
                 }
                 for row in snap.queue.clone() {
                     self.row(ui, &row);
@@ -73,18 +73,18 @@ impl Shell {
         // re-worded here; the tokens beside it are what a row with no words
         // still says.
         if !row.says.is_empty() {
-            ui.weak(&row.says);
+            crate::shell::clip::weak(ui, &row.says);
         } else if !row.signals.is_empty() {
-            ui.weak(row.signals.join(" · "));
+            crate::shell::clip::weak(ui, row.signals.join(" · "));
         }
         if let Some(held) = &row.held {
-            ui.weak(format!("held · {} · {}", held.tool, held.reason));
+            crate::shell::clip::weak(ui, format!("held · {} · {}", held.tool, held.reason));
         }
         if let Some(flag) = &row.flag {
-            ui.weak(format!("flagged · {}", flag.reason));
+            crate::shell::clip::weak(ui, format!("flagged · {}", flag.reason));
         }
         if let Some(failure) = &row.failure {
-            ui.weak(format!("failed · {failure}"));
+            crate::shell::clip::weak(ui, format!("failed · {failure}"));
         }
         self.answer(ui, row);
         ui.add_space(4.0);

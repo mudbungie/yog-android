@@ -44,18 +44,24 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, fate: Fate) {
     };
     ui.horizontal(|ui| {
         stripe(ui, Some(Role::User));
-        ui.add(egui::Label::new(egui::RichText::new(text).color(ink)).wrap());
+        super::clip::copyable(
+            ui,
+            egui::Label::new(egui::RichText::new(text).color(ink)).wrap(),
+            text,
+        );
     });
     if fate == Fate::InDoubt {
         ui.horizontal(|ui| {
             stripe(ui, None);
-            ui.add(
+            super::clip::copyable(
+                ui,
                 egui::Label::new(
                     egui::RichText::new(IN_DOUBT)
                         .small()
                         .color(ui.visuals().warn_fg_color),
                 )
                 .wrap(),
+                IN_DOUBT,
             );
         });
     }
@@ -129,7 +135,10 @@ pub(crate) fn row(ui: &mut egui::Ui, row: &Row) -> bool {
 /// person reads; a horizontal scroller under a paragraph is a paragraph
 /// nobody finishes.
 fn body(ui: &mut egui::Ui, text: &str) {
-    ui.add(egui::Label::new(text).wrap());
+    // Copyable (bl-7781): an expanded payload — a model's answer, a tool's
+    // whole output — is the surface an operator most wants off the glass, and
+    // the long press that takes it is `shell::clip`'s.
+    super::clip::copyable(ui, egui::Label::new(text).wrap(), text);
 }
 
 /// **A row's label, bounded** (bl-e86c). A bare label inside a horizontal
@@ -143,7 +152,11 @@ fn body(ui: &mut egui::Ui, text: &str) {
 /// them: nothing in a horizontal row may extend, or nothing below it can be
 /// bounded.
 fn prefix(ui: &mut egui::Ui, text: &str, ink: egui::Color32) {
-    ui.add(egui::Label::new(egui::RichText::new(text).color(ink)).wrap());
+    super::clip::copyable(
+        ui,
+        egui::Label::new(egui::RichText::new(text).color(ink)).wrap(),
+        text,
+    );
 }
 
 /// The role stripe, or the blank seat of the same width that keeps every
@@ -180,7 +193,10 @@ fn preview(ui: &mut egui::Ui, text: &str, abridged: bool) {
     if abridged {
         rich = rich.color(ui.visuals().text_color().gamma_multiply(ABRIDGED));
     }
-    ui.add(egui::Label::new(rich).truncate());
+    // **What is copied is the whole line, not the ellipsis** (bl-7781): a
+    // contracted row shows a clip of its payload, and a copy of the clip is
+    // the one thing nobody wants. The caller hands the untruncated text.
+    super::clip::copyable(ui, egui::Label::new(rich).truncate(), text);
 }
 
 /// A speaker's rule (STYLE.md): told by weight, not hue, because on this

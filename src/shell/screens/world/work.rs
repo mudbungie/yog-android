@@ -49,7 +49,7 @@ impl Shell {
             .min_scrolled_height(0.0)
             .show(ui, |ui| match held {
                 None => {
-                    ui.weak("nothing read yet");
+                    crate::shell::clip::weak(ui, "nothing read yet");
                 }
                 Some(work) => self.churned(ui, &work),
             });
@@ -58,15 +58,15 @@ impl Shell {
     /// The rows, or the sentence saying the engine answered with none.
     fn churned(&mut self, ui: &mut egui::Ui, work: &Work) {
         if work.rows.is_empty() {
-            ui.weak("nothing changed here");
+            crate::shell::clip::weak(ui, "nothing changed here");
         }
         for row in &work.rows {
-            ui.weak(head(row));
+            crate::shell::clip::weak(ui, head(row));
             for file in &row.files {
                 self.changed(ui, work, row, file);
             }
             if row.truncated {
-                ui.weak("the churn was cut short");
+                crate::shell::clip::weak(ui, "the churn was cut short");
             }
             ui.separator();
         }

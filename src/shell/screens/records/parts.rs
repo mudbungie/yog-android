@@ -18,34 +18,35 @@ use crate::codec::{Orphan, Records, Step, StepRow};
 /// on purpose (§13.9's rule, at a second site).
 pub(super) fn head(ui: &mut egui::Ui, records: &Records) {
     let head = &records.head;
-    ui.label(&head.display);
-    ui.weak(format!("{} · under {}", state(records), head.root));
+    crate::shell::clip::said(ui, &head.display);
+    crate::shell::clip::weak(ui, format!("{} · under {}", state(records), head.root));
     if let Some(failure) = &head.failure {
-        ui.colored_label(
+        crate::shell::clip::tinted(
+            ui,
             crate::shell::theme::ink(crate::theme::State::Error),
             failure,
         );
     }
     if let Some(strip) = &head.strip {
-        ui.weak(strip);
+        crate::shell::clip::weak(ui, strip);
     }
     if let Some(context) = &head.context {
-        ui.weak(format!(
-            "{} · {}% of the window",
-            context.model, context.percent
-        ));
+        crate::shell::clip::weak(
+            ui,
+            format!("{} · {}% of the window", context.model, context.percent),
+        );
     }
     if !head.usd.is_empty() {
-        ui.weak(&head.usd);
+        crate::shell::clip::weak(ui, &head.usd);
     }
     if !head.marks.is_empty() {
-        ui.weak(head.marks.join(" · "));
+        crate::shell::clip::weak(ui, head.marks.join(" · "));
     }
     if !head.tip.is_empty() {
-        ui.weak(format!("tip {}", head.tip));
+        crate::shell::clip::weak(ui, format!("tip {}", head.tip));
     }
     for seat in &head.seats {
-        ui.weak(format!("{} · {}", seat.name, seat.doing));
+        crate::shell::clip::weak(ui, format!("{} · {}", seat.name, seat.doing));
     }
 }
 
@@ -72,17 +73,20 @@ fn state(records: &Records) -> String {
 /// and a fork point is a control (§13.16) — so they paint in the screen file
 /// beside the lineages, which are the other kind of one.
 pub(super) fn spine(ui: &mut egui::Ui, records: &Records) {
-    ui.weak(governed(&records.governing));
+    crate::shell::clip::weak(ui, governed(&records.governing));
     if !records.governing.files.is_empty() {
-        ui.weak(records.governing.files.join(" · "));
+        crate::shell::clip::weak(ui, records.governing.files.join(" · "));
     }
     for card in &records.rail.cards {
-        ui.weak(format!(
-            "{} · {} · {} · at notch {} · {} tokens",
-            card.name, card.state, card.fork, card.notch, card.tokens
-        ));
+        crate::shell::clip::weak(
+            ui,
+            format!(
+                "{} · {} · {} · at notch {} · {} tokens",
+                card.name, card.state, card.fork, card.notch, card.tokens
+            ),
+        );
         if !card.tail.is_empty() {
-            ui.weak(&card.tail);
+            crate::shell::clip::weak(ui, &card.tail);
         }
     }
 }
@@ -117,22 +121,22 @@ pub(super) fn drilled(ui: &mut egui::Ui, step: &Step) {
         ("request", &step.request),
         ("staging", &step.staging),
     ] {
-        ui.weak(format!("{name} · {}", record.kind));
+        crate::shell::clip::weak(ui, format!("{name} · {}", record.kind));
         said(ui, &record.note);
         said(ui, &record.raw);
     }
     for event in &step.response {
-        ui.weak(format!("response · {}", event.kind));
+        crate::shell::clip::weak(ui, format!("response · {}", event.kind));
         said(ui, &event.raw);
     }
     for tool in &step.tools {
         let mark = if tool.is_error { " · error" } else { "" };
-        ui.weak(format!("{}{mark}", tool.tool_id));
+        crate::shell::clip::weak(ui, format!("{}{mark}", tool.tool_id));
         said(ui, &tool.input.raw);
         said(ui, &tool.output.raw);
     }
     for log in [&step.stderr, &step.driver].into_iter().flatten() {
-        ui.weak(format!("{} · {}", log.kind, log.text));
+        crate::shell::clip::weak(ui, format!("{} · {}", log.kind, log.text));
     }
 }
 
@@ -140,15 +144,15 @@ pub(super) fn drilled(ui: &mut egui::Ui, step: &Step) {
 /// there is nothing, which is not the same sentence as nobody having asked.
 pub(super) fn mail(ui: &mut egui::Ui, records: &Records) {
     if records.inbox.is_empty() {
-        ui.weak("no mail waiting");
+        crate::shell::clip::weak(ui, "no mail waiting");
     }
     for row in &records.inbox {
         let from = row.speaker();
         let when = row.deposited_at.clone().unwrap_or_default();
-        ui.label(format!("{from} · {when}"));
+        crate::shell::clip::said(ui, format!("{from} · {when}"));
         said(ui, &row.body);
         if let Some(epitaph) = &row.epitaph {
-            ui.weak(epitaph);
+            crate::shell::clip::weak(ui, epitaph);
         }
     }
 }
@@ -157,7 +161,7 @@ pub(super) fn mail(ui: &mut egui::Ui, records: &Records) {
 /// absent field is a fact and paints as nothing (`codec::balls`' rule).
 fn said(ui: &mut egui::Ui, text: &str) {
     if !text.is_empty() {
-        ui.weak(text);
+        crate::shell::clip::weak(ui, text);
     }
 }
 
@@ -177,7 +181,7 @@ pub(super) fn orphan(ui: &mut egui::Ui, records: &Records) {
         Orphan::Unknown(word) => crate::codec::unknown_label("orphan", word),
     };
     match &records.steps.orphan_reason {
-        Some(why) => ui.weak(format!("{said} — {why}")),
-        None => ui.weak(said),
+        Some(why) => crate::shell::clip::weak(ui, format!("{said} — {why}")),
+        None => crate::shell::clip::weak(ui, said),
     };
 }

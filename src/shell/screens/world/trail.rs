@@ -52,7 +52,7 @@ impl Shell {
                     .min_scrolled_height(0.0)
                     .show(ui, |ui| {
                         if snap.trail.is_empty() {
-                            ui.weak("the engine has said nothing here yet");
+                            crate::shell::clip::weak(ui, "the engine has said nothing here yet");
                         }
                         // Newest first: the engine answers its tail in the
                         // order it happened, and a thumb arrives at the top.
@@ -105,19 +105,23 @@ impl Shell {
 /// row says so and says where it stands, so an operator can tell the alarm
 /// (`live`) from one a newer clean run retired or an ack covered.
 fn line(ui: &mut egui::Ui, row: &OpRow) {
-    ui.weak(format!(
-        "{} · {} · {} · {}",
-        row.ts, row.origin, row.client, row.exit_label
-    ));
-    ui.label(&row.argv);
+    crate::shell::clip::weak(
+        ui,
+        format!(
+            "{} · {} · {} · {}",
+            row.ts, row.origin, row.client, row.exit_label
+        ),
+    );
+    crate::shell::clip::said(ui, &row.argv);
     if row.failed {
-        ui.colored_label(
+        crate::shell::clip::tinted(
+            ui,
             crate::shell::chat::tone_hue(ui, &crate::codec::Tone::Bad),
             format!("failed · {}", row.standing.word()),
         );
     }
     if !row.stderr.is_empty() {
-        ui.weak(&row.stderr);
+        crate::shell::clip::weak(ui, &row.stderr);
     }
     ui.add_space(4.0);
 }

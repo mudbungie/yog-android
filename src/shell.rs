@@ -30,6 +30,8 @@ mod camera;
 #[cfg(target_os = "android")]
 mod chat;
 #[cfg(target_os = "android")]
+mod clip;
+#[cfg(target_os = "android")]
 mod composer;
 #[cfg(target_os = "android")]
 mod controls;

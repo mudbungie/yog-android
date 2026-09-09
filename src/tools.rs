@@ -28,7 +28,10 @@ use crate::codec::{Capture, Tool};
 
 mod bridged;
 mod files;
-mod paper;
+/// `pub(crate)` for one caller outside this module: the glass's own long-press
+/// copy reaches the clipboard door through it (`shell::clip`, bl-7781), rather
+/// than opening a second door onto the same Java static.
+pub(crate) mod paper;
 mod shade;
 mod shell;
 mod sighted;

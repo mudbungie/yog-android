@@ -67,11 +67,11 @@ impl Shell {
 /// read-only surface in this app paints (§13.9).
 fn listed(ui: &mut egui::Ui, held: Option<&Machines>) {
     let Some(machines) = held else {
-        ui.weak("nothing read yet");
+        crate::shell::clip::weak(ui, "nothing read yet");
         return;
     };
     if machines.rows.is_empty() {
-        ui.weak("no machines here");
+        crate::shell::clip::weak(ui, "no machines here");
     }
     for row in &machines.rows {
         machine(ui, row);
@@ -86,13 +86,13 @@ fn machine(ui: &mut egui::Ui, row: &ClientRow) {
     } else {
         "not connected — a busy host holds no connection either"
     };
-    ui.label(format!("{} · {seen}", row.client));
-    ui.weak(crate::roster::spoke(
-        row.last_seen,
-        crate::roster::now_unix(),
-    ));
+    crate::shell::clip::said(ui, format!("{} · {seen}", row.client));
+    crate::shell::clip::weak(
+        ui,
+        crate::roster::spoke(row.last_seen, crate::roster::now_unix()),
+    );
     if row.tools.is_empty() {
-        ui.weak("offers nothing");
+        crate::shell::clip::weak(ui, "offers nothing");
     }
     for tool in &row.tools {
         let consent = if tool.subject_cwd {
@@ -100,9 +100,9 @@ fn machine(ui: &mut egui::Ui, row: &ClientRow) {
         } else {
             "runs where this machine runs things"
         };
-        ui.weak(format!("{} · {consent}", tool.name));
+        crate::shell::clip::weak(ui, format!("{} · {consent}", tool.name));
         if !tool.description.is_empty() {
-            ui.weak(&tool.description);
+            crate::shell::clip::weak(ui, &tool.description);
         }
     }
     ui.add_space(4.0);

@@ -34,26 +34,30 @@ pub(super) fn screen(
 ) -> bool {
     ui.strong("this device needs");
     for file in crate::material::WANTED {
-        ui.label(format!("  · {file}"));
+        crate::shell::clip::said(ui, format!("  · {file}"));
     }
     ui.add_space(4.0);
     ui.strong("put them at");
-    ui.label(format!("  {}", landing.dir));
+    crate::shell::clip::said(ui, format!("  {}", landing.dir));
     ui.add_space(8.0);
-    ui.label(&offer.how);
+    crate::shell::clip::said(ui, &offer.how);
     ui.add_space(8.0);
     ui.strong("how it gets here");
     for channel in crate::bootstrap::channels() {
-        ui.label(format!("  · {channel}"));
+        crate::shell::clip::said(ui, format!("  · {channel}"));
     }
     ui.add_space(12.0);
     ui.separator();
     let landed = envelope(ui, landing, text, said, scanner);
     ui.separator();
     if let Some(why) = &landing.refusal {
-        ui.colored_label(crate::shell::theme::ink(crate::theme::State::Error), why);
+        crate::shell::clip::tinted(
+            ui,
+            crate::shell::theme::ink(crate::theme::State::Error),
+            why,
+        );
     } else {
-        ui.weak("nothing has arrived yet.");
+        crate::shell::clip::weak(ui, "nothing has arrived yet.");
     }
     ui.add_space(4.0);
     // A read of this app's own storage, not a dial: it is the act that makes a
@@ -95,7 +99,7 @@ fn envelope(
     // The shape, said by the module that reads it (bl-1f21): what this screen
     // asks for and what `crate::envelope::read` accepts are one sentence, and
     // it is under the coverage floor where this file is not.
-    ui.weak(crate::envelope::hint());
+    crate::shell::clip::weak(ui, crate::envelope::hint());
     // The field is capped and scrolls INSIDE that cap. A full envelope is a
     // couple of kilobytes of PEM, and a text edit that grows to fit it pushes
     // the button that spends it off the bottom of the screen — under the
@@ -122,7 +126,8 @@ fn envelope(
     // beside the button is worth more than one they dismiss to reach it.
     if let Some(running) = &landing.replacing {
         ui.add_space(4.0);
-        ui.colored_label(
+        crate::shell::clip::tinted(
+            ui,
             crate::shell::theme::ink(crate::theme::State::Annotation),
             format!(
                 "this device is {running}. Landing an envelope replaces that \
@@ -147,7 +152,11 @@ fn envelope(
         }
     });
     if let Some(why) = said.as_ref() {
-        ui.colored_label(crate::shell::theme::ink(crate::theme::State::Error), why);
+        crate::shell::clip::tinted(
+            ui,
+            crate::shell::theme::ink(crate::theme::State::Error),
+            why,
+        );
     }
     landed
 }

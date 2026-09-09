@@ -186,3 +186,13 @@ fn bridge_open(_kind: &str, _value: &str) -> String {
 
 #[cfg(target_os = "android")]
 use bridge::{bridge_clipboard, bridge_device, bridge_notify, bridge_open};
+
+/// **The clipboard write, reached from the GLASS** (bl-7781) as well as from
+/// the tool. One door and one clipboard: a second bridge to the same Java
+/// static would be two spellings of one capability, and the one that drifted
+/// would be the one nobody tested. Android-only because its caller is
+/// (`shell::clip`), and because a host build has no clipboard to be about.
+#[cfg(target_os = "android")]
+pub(crate) fn to_clipboard(text: &str) -> String {
+    bridge_clipboard(text)
+}
