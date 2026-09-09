@@ -153,5 +153,20 @@ fn an_engine_that_refused_the_act_is_definite_and_says_only_what_it_said() {
     let said = settle(&mut model, &|s| s.error.is_some())
         .error
         .unwrap_or_default();
-    assert_eq!(said, "this leaf may not assign models");
+    // The head, and the absence, are the two halves of what this test says.
+    // The head is the refusal, whole and undecorated; the absence is the
+    // doubt contract, which belongs to a reply that was LOST and would spend
+    // the word on the one case where the answer is known.
+    //
+    // Not an equality, since bl-eec1: the script ends after the refresh this
+    // gesture wakes, and a refresh past the end of a script is this fixture
+    // running dry rather than anything the test is about. It used to be
+    // invisible because every refresh failure waited a grace out; a reply of
+    // the wrong KIND now paints at once, because the engine answered and the
+    // next ask gets the same answer.
+    assert!(
+        said.starts_with("this leaf may not assign models"),
+        "banner: {said}"
+    );
+    assert!(!said.contains("may have run"), "banner: {said}");
 }

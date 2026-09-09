@@ -15,21 +15,34 @@ use super::lane::Lanes;
 use super::options::Options;
 use super::{Focus, Snapshot};
 use crate::cache::Envelopes;
-use crate::codec::reply::Reply;
-use crate::codec::{Ask, Gesture, encode};
-use crate::transport::Seat;
+use crate::transport::{Seat, Wire};
 use fill::fill;
 
+pub(super) use ask::{answer, kind_err, wired};
+
 mod adopt;
+mod ask;
 mod fill;
 pub(super) mod login;
 mod publish;
 
 /// **How many consecutive failed passes an error waits for.** The cadence is
-/// the clock (bl-3202): passes are one rest apart, so a second consecutive
-/// failure is exactly *"it did not clear within one rest"* — no timestamp to
-/// keep, none to inject, and one clock rather than two.
-const GRACE: u32 = 1;
+/// the clock (bl-3202): passes are one rest apart, so counting them is
+/// counting rests — no timestamp to keep, none to inject, and one clock
+/// rather than two.
+///
+/// **Five, since bl-eec1, and the wait is now SAID rather than silent.** One
+/// rest was still short enough to redden the glass on a resume: a phone taken
+/// out of a pocket wakes its radio while this loop is already asking, and a
+/// name lookup that fails twice in four seconds is an ordinary resume rather
+/// than an engine that is down. The grace could not simply be lengthened
+/// while it was silence — an app that says nothing for ten seconds is an app
+/// that has hung — so the passes inside it now say *reconnecting* in the
+/// working accent ([`Snapshot::reconnecting`]), and a wait that is honest can
+/// afford to be long. Five rests is ten seconds and change, which is longer
+/// than a radio takes to come back and shorter than an operator waits before
+/// asking what is wrong.
+pub(in crate::seat) const GRACE: u32 = 5;
 
 /// What the worker carries between passes: the last answer the engine
 /// actually gave, and how many passes have failed since one did.
@@ -58,8 +71,11 @@ pub(super) struct Standing {
     /// The attention lane's last frame, verbatim — what the §14 cache stores
     /// for the queue, the way `fill` keeps the pass's own envelopes.
     queue_envelope: Option<Value>,
-    /// The last pass's failure sentence, held for the grace below.
-    failure: Option<String>,
+    /// The last pass's failure, held for the grace below. **Classed and not
+    /// flattened to its sentence** (bl-eec1): only a CHANNEL failure is a
+    /// redial worth waiting out, and an answer this end cannot use never
+    /// mends itself however long it is given.
+    failure: Option<Wire>,
     /// **The sentence a gesture earned, carried for one pass.** A note is
     /// set by the pass a gesture wakes (or by a lane frame this build could
     /// not read) and stands on every snapshot until the next pass replaces
@@ -255,28 +271,4 @@ impl Standing {
         self.note = note;
         self.publish(focus)
     }
-}
-
-/// One standing question, and **the engine's own envelope beside the rows it
-/// decoded to** (bl-de96). The raw value is what the cache stores, so the
-/// file holds the wire's spelling rather than a second one this client would
-/// have to keep in step — see `crate::cache`.
-pub(super) fn answer(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), String> {
-    // The transport's two classes collapse to the sentence here, and rightly:
-    // this model opens a connection per ask, so a broken channel is already
-    // re-dialled by the next pass and there is nothing for it to decide
-    // (bl-8641). The tool host, which holds one channel, is the caller that
-    // reads the class.
-    let stream = seat.ask(&encode(&Gesture::Ask(ask.clone())))?;
-    let last = stream
-        .last()
-        .ok_or("the engine ended the stream without answering")?;
-    let reply = crate::codec::reply::decode(last).unwrap_or_else(Err)?;
-    Ok((reply, last.clone()))
-}
-
-/// The wrong-kind sentence names the kind, never the rows it carried. Shared
-/// with `seat::acts`, which asks the same question of a receipt.
-pub(super) fn kind_err(asked: &str, got: &Reply) -> String {
-    format!("{asked}: the engine answered {} instead", got.kind())
 }

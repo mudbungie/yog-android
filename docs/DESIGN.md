@@ -527,6 +527,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the lanes' frames adopted inside it | landed (bl-dfbb, out of `model.rs`; the tick replaced by the lanes bl-8e3c) |
 | `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
+| `src/seat/pass/ask.rs` | the single standing question underneath a pass — the ask, the envelope beside its rows, the CLASS a failure keeps, and the sentence a reply of the wrong kind earns | landed (bl-eec1, out of `pass.rs` at the cap) |
 | `src/seat/acts.rs` | the acts the seat posts: the message deposit, the §8.1 start pair, the turn's stop and nudge, and the worker's tuning — none of them ever sent twice (§19.2) | landed (bl-de96, out of `pass.rs`) |
 | `src/seat/acts/row.rs` | the three acts addressed to a conversation ROW rather than to the focus (§13.5), and the read that settles each in doubt — including the one that says out loud that none does | landed (bl-f97c) |
 | `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three, the search and the trail (§13.8); the two follow-class reads are the lanes' (§14.1). Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, split out bl-07b1, world reads bl-35bd) |
@@ -1818,12 +1819,32 @@ here is a defect.
   timer of its own. A failed pass **republishes the last answer the engine
   gave**, under the focus it was asked at (a moved focus gets the empty lists
   it honestly has — pairing one focus's rows with another's is the one thing
-  a snapshot promises never to do), and its **sentence waits one pass**: the
-  cadence is the clock, so a second consecutive failure is exactly "it did
-  not clear within one rest". A pass that answers clears the banner at once,
-  because a standing success is never in doubt. **A gesture's own answer
-  never waits** — a refused deposit, a start the engine would not run — since
-  the operator just acted, and silence there is a message that vanished.
+  a snapshot promises never to do), and its **sentence waits**: the cadence
+  is the clock, so counting consecutive failures is counting rests. A pass
+  that answers clears the banner at once, because a standing success is never
+  in doubt. **A gesture's own answer never waits** — a refused deposit, a
+  start the engine would not run — since the operator just acted, and silence
+  there is a message that vanished.
+- **And the wait is SAID, in the working accent** (bl-eec1). One rest was not
+  enough: the operator went on seeing a red name-lookup banner that cleared
+  itself every time the app came back from a pocket, because a radio takes
+  longer than four seconds to wake and the model had no way to say so. It
+  could not simply wait longer while the wait was silence — an app that says
+  nothing for ten seconds is an app that has hung. So a pass whose CHANNEL
+  failed and is still inside the grace publishes `reconnecting`, which the
+  banner paints as *reconnecting…* in the `Working` accent (STYLE.md §3:
+  re-dialling is work, not failure), and a wait that is honest can afford to
+  be long — five rests, ten seconds and change. The error accent arrives only
+  when the redial has spent that, and the sentence names what failed: the
+  address and the reason the socket gave.
+
+  **The grace is the channel's alone.** A reply of a kind this build cannot
+  use is the engine ANSWERING, not the radio — the sixth ask gets the same
+  answer as the first — so it paints on the pass that met it and never reads
+  as a reconnection. That is why the failure a pass carries keeps its
+  `transport::Wire` class instead of being flattened to a sentence
+  (`seat/pass/ask.rs`), and why the two banner fields cannot both be about
+  the wire: one reading decides both.
 
 ### 13.3 The vocabulary rule
 

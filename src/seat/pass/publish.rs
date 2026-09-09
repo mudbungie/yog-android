@@ -7,6 +7,7 @@
 use super::{Focus, GRACE, Snapshot, Standing};
 use crate::seat::lane::Subject;
 use crate::seat::posted::Posted;
+use crate::transport::Wire;
 
 impl Standing {
     /// The lanes a pass wants standing (§14.1): the queue's always, the tail's
@@ -35,6 +36,19 @@ impl Standing {
     /// gesture's own answer — a refused deposit, a start the engine would not
     /// run, a lane's frame this build could not read — and the operator just
     /// acted. Silence there is a message that vanished.
+    ///
+    /// **And the wait is said, not silent** (bl-eec1). A pass whose CHANNEL
+    /// failed and is still inside the grace is a redial that has not failed,
+    /// so it publishes `reconnecting` — the working state, because
+    /// re-dialling is work — and the wire's sentence stays out of `error`
+    /// until the grace is spent. One reading decides both fields, which is
+    /// what makes *the wire is either re-dialling or failed, never both* a
+    /// shape rather than a promise.
+    ///
+    /// **The grace is the channel's alone.** A reply of a kind this build
+    /// cannot use is `Wire::Unusable` and paints at once: it is the engine
+    /// answering, not the radio, and the sixth ask gets the same answer as
+    /// the first.
     pub(in crate::seat) fn publish(&self, focus: &Focus) -> Snapshot {
         let mut out = self.last.clone();
         (out.landed, out.refused, out.doubted) = self.posted;
@@ -49,7 +63,16 @@ impl Standing {
         // pass that failed republishes last-good rows, and the selectors'
         // offerings are not the pass's to lose (bl-0267).
         self.options.paint(focus, &mut out);
-        let failed = self.failure.clone().filter(|_| self.failed > GRACE);
+        // **Hushed is a CHANNEL failure still inside its grace**, and nothing
+        // else: an answer this end cannot use will read the same on the sixth
+        // pass as on the first, so waiting for it is waiting for nothing.
+        let hushed = self.failure.as_ref().is_some_and(Wire::transport) && self.failed <= GRACE;
+        out.reconnecting = hushed;
+        let failed = self
+            .failure
+            .as_ref()
+            .filter(|_| !hushed)
+            .map(Wire::sentence);
         out.error = match (self.note.clone(), failed) {
             (Some(note), Some(failed)) => Some(format!("{note}; {failed}")),
             (note, failed) => note.or(failed),

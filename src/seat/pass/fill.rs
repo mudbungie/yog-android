@@ -14,22 +14,28 @@
 use crate::cache::Envelopes;
 use crate::codec::Ask;
 use crate::codec::reply::Reply;
-use crate::transport::Seat;
+use crate::transport::{Seat, Wire};
 
-use super::{Focus, Snapshot, answer, kind_err};
+use super::{Focus, Snapshot, kind_err, wired};
 
 /// The standing questions, as deep as the focus goes. The first failure
 /// stops the walk: an unreachable engine is one sentence, not three.
+///
+/// **The failure keeps its class** (bl-eec1). The pass's grace waits out a
+/// channel and never an answer, so what it needs back is a [`Wire`] and not a
+/// sentence — and a reply of the wrong kind is `Unusable` here for the reason
+/// that variant already states: *"asking again asks the same question and
+/// gets the same answer"*.
 pub(super) fn fill(
     seat: &Seat,
     focus: &Focus,
     snap: &mut Snapshot,
     kept: &mut Envelopes,
-) -> Result<(), String> {
-    let (reply, envelope) = answer(seat, &Ask::Workspaces)?;
+) -> Result<(), Wire> {
+    let (reply, envelope) = wired(seat, &Ask::Workspaces)?;
     snap.workspaces = match reply {
         Reply::Workspaces { rows, .. } => rows,
-        other => return Err(kind_err("workspaces", &other)),
+        other => return Err(Wire::Unusable(kind_err("workspaces", &other))),
     };
     kept.workspaces = Some(envelope);
     let Some(workspace) = focus.workspace.clone() else {
@@ -38,19 +44,19 @@ pub(super) fn fill(
     let ask = Ask::Conversations {
         workspace: workspace.clone(),
     };
-    let (reply, envelope) = answer(seat, &ask)?;
+    let (reply, envelope) = wired(seat, &ask)?;
     snap.conversations = match reply {
         Reply::Conversations(rows) => rows,
-        other => return Err(kind_err("conversations", &other)),
+        other => return Err(Wire::Unusable(kind_err("conversations", &other))),
     };
     kept.conversations = Some(envelope);
     let Some(agent) = focus.agent.clone() else {
         return Ok(());
     };
-    let (reply, envelope) = answer(seat, &Ask::Transcript { workspace, agent })?;
+    let (reply, envelope) = wired(seat, &Ask::Transcript { workspace, agent })?;
     snap.transcript = match reply {
         Reply::Transcript(rows) => rows,
-        other => return Err(kind_err("transcript", &other)),
+        other => return Err(Wire::Unusable(kind_err("transcript", &other))),
     };
     kept.transcript = Some(envelope);
     Ok(())

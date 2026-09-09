@@ -160,7 +160,20 @@ pub struct Snapshot {
     pub login: Option<Signing>,
     /// The last refresh's failure or a refused deposit, one sentence for
     /// the banner. `None` is "the engine answered".
+    ///
+    /// **A wire that is being re-dialled is not in here** (bl-eec1) — that is
+    /// [`Snapshot::reconnecting`] below. This field is the Error state: what
+    /// failed and will not mend itself.
     pub error: Option<String>,
+    /// **The wire is down and the redial has not given up** (bl-eec1,
+    /// STYLE.md §3: *Working*). A pass that failed is a redial in progress,
+    /// not a fault — returning to a pocketed app races the radio waking, and
+    /// what the operator saw was a red name-lookup banner that cleared
+    /// itself. It is true for exactly the passes the failure is inside its
+    /// grace, so it and the wire's half of `error` are mutually exclusive by
+    /// construction; a gesture's own refusal rides `error` beside it, because
+    /// that is a different thing failing.
+    pub reconnecting: bool,
 }
 
 /// **One sign-in, and whose it is** (DESIGN §13.19): the provider the run

@@ -34,6 +34,12 @@ use std::time::Duration;
 /// How long a seat waits on one answer before giving up on the connection.
 const ASK_TIMEOUT: Duration = Duration::from_mins(2);
 
+/// **What a stream that carried no frame at all says.** One home, because two
+/// readers ask the same question of one shape: `Seat::answered` here, and
+/// `seat::pass::ask::wired`, which wants the envelope beside the reply and so
+/// cannot go through it (bl-eec1).
+pub(crate) const NO_ANSWER: &str = "the engine ended the stream without answering";
+
 /// A seat's end of the wire.
 pub struct Seat {
     config: Arc<rustls::ClientConfig>,
@@ -77,9 +83,9 @@ impl Seat {
     /// of it.
     pub fn answered(&self, request: &Value) -> Result<Reply, Wire> {
         let stream = self.ask(request)?;
-        let last = stream.last().ok_or_else(|| {
-            Wire::Unusable("the engine ended the stream without answering".to_owned())
-        })?;
+        let last = stream
+            .last()
+            .ok_or_else(|| Wire::Unusable(NO_ANSWER.to_owned()))?;
         // **The decoder already draws this line and it was being collapsed**
         // (bl-8bd0): its OUTER error is a reply this end cannot read, its
         // INNER one is the engine's own `ok: false` sentence. They are two
