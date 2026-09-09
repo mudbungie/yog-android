@@ -24,6 +24,10 @@
 
 use serde_json::Value;
 
+mod sentence;
+
+pub use sentence::{Folded, folded};
+
 use super::conv::{AgentState, STATES};
 use super::fields::{arr_of, bool_of, i64_of, opt, opt_val, pick, str_of, usize_of};
 

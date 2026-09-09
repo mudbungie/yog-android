@@ -34,6 +34,12 @@
 //! one tap away, which is the preview/body split doing what it is for. The
 //! band under the composer answers the call (§13.7); this row is the
 //! transcript's account of it, in the place the operator is already reading.
+//!
+//! **The held row itself is [`super::held`]**, and is not spelled twice
+//! (bl-8c94). The same call is parked on this lane and on the committed
+//! transcript, and one call must read one way on either side of the commit —
+//! the label, the accent and the split of the control's sentence are all
+//! decided there, and this arm only says which key and which input.
 
 use super::build::{GEAR, key, row};
 use super::{Row, RowClass, Tone};
@@ -45,15 +51,12 @@ pub(super) fn windowed_row(
     exit_code: Option<i64>,
     held: Option<&str>,
 ) -> Row {
-    let (prefix, tone) = match (held, exit_code) {
-        (Some(_), _) => (format!("{GEAR} {tool} — held for you"), Tone::Held),
-        (None, None) => (format!("{GEAR} {tool} — running"), Tone::InFlight),
-        (None, Some(code)) => (format!("{GEAR} {tool} — exit {code}"), Tone::Plain),
+    if let Some(reason) = held {
+        return super::held::held_row(key(name, 0), tool, reason, input);
+    }
+    let (prefix, tone) = match exit_code {
+        None => (format!("{GEAR} {tool} — running"), Tone::InFlight),
+        Some(code) => (format!("{GEAR} {tool} — exit {code}"), Tone::Plain),
     };
-    let payload = match held {
-        Some(reason) if input.is_empty() => reason.to_owned(),
-        Some(reason) => format!("{reason}\n{input}"),
-        None => input.to_owned(),
-    };
-    row(key(name, 0), prefix, &payload, RowClass::Other, tone, None)
+    row(key(name, 0), prefix, input, RowClass::Other, tone, None)
 }

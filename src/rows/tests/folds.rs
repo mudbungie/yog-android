@@ -9,7 +9,7 @@ use crate::rows::{AutoExpand, Row, rows};
 
 fn under(entries: &[Entry], auto: AutoExpand, folds: &[&str]) -> Vec<Row> {
     let folds: BTreeSet<String> = folds.iter().map(|key| (*key).to_string()).collect();
-    rows(entries, SPEAKER, auto, &folds)
+    rows(entries, SPEAKER, None, auto, &folds)
 }
 
 fn shut_others() -> AutoExpand {

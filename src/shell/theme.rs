@@ -202,6 +202,32 @@ pub(crate) fn line(ui: &egui::Ui, parts: &[(String, egui::Color32)]) -> egui::te
     job
 }
 
+/// **A word and a fold mark, as one line.** The word takes the body face and
+/// the MARK takes the monospace one, which is not a style choice: the
+/// proportional face egui installs has no glyph for `▼` and paints a tofu box
+/// where the fold's open state should be (measured on the emulator, bl-8c94),
+/// while the monospace face the transcript's own toggle already uses has
+/// both. One home for that fact, rather than each screen that wants a fold
+/// mark discovering it again.
+pub(crate) fn marked(
+    ui: &egui::Ui,
+    word: &str,
+    mark: &str,
+    ink: egui::Color32,
+) -> egui::text::LayoutJob {
+    let mut job = line(ui, &[(format!("{word} "), ink)]);
+    job.append(
+        mark,
+        0.0,
+        egui::TextFormat {
+            font_id: egui::TextStyle::Monospace.resolve(ui.style()),
+            color: ink,
+            ..Default::default()
+        },
+    );
+    job
+}
+
 /// **A chip** (STYLE.md, *a band of chips*): one control of a band that
 /// divides its width equally, so the COUNT of controls is a fact the layout
 /// cannot lose (bl-6e8a's argument) — laid out inside a child of exactly its

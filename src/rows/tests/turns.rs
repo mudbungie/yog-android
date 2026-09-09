@@ -52,7 +52,7 @@ fn an_open_aggregate_re_emits_every_step_after_it() {
 #[test]
 fn an_override_opens_one_turn_without_touching_the_knob() {
     let folds: BTreeSet<String> = ["tx/002#turn".to_string()].into_iter().collect();
-    let out = rows(&a_turn(), SPEAKER, AutoExpand::default(), &folds);
+    let out = rows(&a_turn(), SPEAKER, None, AutoExpand::default(), &folds);
     assert_eq!(prefixes(&out).len(), 6);
     assert!(out[1].expanded);
 }

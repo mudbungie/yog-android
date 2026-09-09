@@ -13,6 +13,7 @@ use crate::codec::{Block, Entry, EntryKind};
 mod census;
 mod compaction;
 mod folds;
+mod held;
 mod labels;
 mod split;
 mod turns;
@@ -23,7 +24,13 @@ const SPEAKER: &str = "yog";
 
 /// Project under the shipped defaults: the conversation open, machinery shut.
 fn go(entries: &[Entry]) -> Vec<Row> {
-    rows(entries, SPEAKER, AutoExpand::default(), &BTreeSet::new())
+    rows(
+        entries,
+        SPEAKER,
+        None,
+        AutoExpand::default(),
+        &BTreeSet::new(),
+    )
 }
 
 /// Project with both knobs open — every step row on screen, aggregates too.
@@ -32,7 +39,7 @@ fn go_open(entries: &[Entry]) -> Vec<Row> {
         responses: true,
         others: true,
     };
-    rows(entries, SPEAKER, auto, &BTreeSet::new())
+    rows(entries, SPEAKER, None, auto, &BTreeSet::new())
 }
 
 /// The always-visible labels, in order — what the operator actually reads.

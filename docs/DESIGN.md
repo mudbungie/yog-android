@@ -2084,13 +2084,37 @@ focus: it rides the §14 cache beside the depths rather than inside them, and
 pairs with nothing.
 
 **The band paints only where a call is parked**, as a third band in the
-controls block (§13.2) — the engine's sentence with the three verdicts under
-it, directly beneath the composer where what it says is read before what it
-offers is tapped. `pass` releases the call, `refuse` declines it in band and
-`hold` keeps it parked; none is armed, because the destructive thing is the
-call itself and the operator is reading it as they decide. Nothing here stops
-an agent: yog's own note is that a stop mid-tool-window wedges the branch
-permanently, so declining is in-band and parking is a park.
+controls block (§13.2) — one line about the hold with the scope chips and the
+three verdicts under it, directly beneath the composer where what it says is
+read before what it offers is tapped. `pass` releases the call, `refuse`
+declines it in band and `hold` keeps it parked; none is armed, because the
+destructive thing is the call itself and the operator is reading it as they
+decide. Nothing here stops an agent: yog's own note is that a stop
+mid-tool-window wedges the branch permanently, so declining is in-band and
+parking is a park.
+
+**The band is three rows and the sentence is folded** (bl-8c94, operator
+screenshot 2026-09-08). It printed the control's sentence entire, and the
+engine writes that sentence as `<tool> <the call's JSON input, clipped to 160
+chars> classified <class> (<the evidence>)` — so what stood between the
+message field and the answers was ten wrapped lines of
+`{"execution":"parallel","invocations":[…`. The composer's floor is where an
+operator types; it is not where a call is read.
+
+So the sentence is SPLIT at the engine's own clause
+(`codec::queue::folded`), never rewritten — the same seam yog reads its own
+class back out of (`control::reason::class_of`), which is why no new field was
+asked for. The line says `held: <tool> · <class>`; a `why` control opens the
+decision paragraph above it; and **the call's input is not in this band at
+all**, because the transcript row that carries the call already holds it whole
+(below), one screen-length up and on the glass. A sentence carrying no clause
+of the engine's is kept entire behind the fold: this seat cannot tell a call
+from prose in a sentence it does not recognise, and dropping the engine's
+words is worse than a fold onto an input.
+
+The verdicts are a band of chips like the scopes above them (STYLE.md §5),
+rather than three buttons at their natural widths: a row whose count of
+controls the layout cannot lose is the same rule both rows already answer to.
 
 **How far the answer stands is a chooser above the verdicts** (PROTOCOL 18,
 yog bl-94a5). `scope` rides beside the verdict in both directions over `call |
@@ -2122,9 +2146,23 @@ the engine too, out of the sentence it wrote into the hold mark, so this seat
 spells a decision and never a key.
 
 **And the chat says a call is held, in the one hue that means *asking for
-you*** (PROTOCOL 18, yog bl-58bb; §7). The band is the ACT; the tool window's
-row is the transcript's account of the same call, in the place the operator is
-already reading — see §7 for why the lane could not say it before.
+you*** (PROTOCOL 18, yog bl-58bb; §7). The band is the ACT; the transcript's
+row for the same call is its account, in the place the operator is already
+reading — see §7 for why the follow lane could not say it before.
+
+**The committed row says it too, and it is the SAME row** (bl-8c94). The
+follow window's held row was the only one that did: a call the record had
+already committed went on reading `⚙ <tool> — running` in the working accent
+while the band under the composer asked for an answer about it, so one call
+wore two readings and the one an operator was looking at was the wrong one.
+The projection now takes the parked call as a parameter — the queue's
+statement, threaded in, never a reading taken from an unresolved call — and
+MARKS the row that block already became (`rows::held`): the label, the accent
+and the payload of the follow window's row, spelled once and spent on both
+sides of the commit (§13.3). The decision leads the payload because it is what
+decides an answer; the call's own input opens under the fold beneath it. The
+mark lands before the turn rollup, so a turn holding a parked call is the show
+and keeps its steps on screen.
 
 **The one success that still owes a sentence.** A releasing verdict that did
 not advance the branch left the answer recorded and the conversation exactly

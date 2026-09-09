@@ -161,6 +161,15 @@ words are `INK_FAINT` and it stays on the glass.
 state's accent as ink, no fill, no box. An error is `Error` ink; a note is
 `Annotation` ink; nothing about the shape changes with the state.
 
+**The held band** (DESIGN §13.7): the three rows a parked call stands on,
+directly under the composer. One line in the attention accent saying what is
+held and which class the control put it in, with a `why` chip beside it that
+opens the control's own decision above the line; then the scope chips; then
+the verdict chips. Both control rows are bands of chips (below), so neither
+can lose a control off the glass. **The call's input is never in this band** —
+a tool's JSON belongs on the transcript row that carries the call, not between
+the message field and the answers.
+
 **A band of chips** (the workspace bar, the admin foot, the controls under
 the composer; `shell::theme::chip`): a band `TOUCH` tall divided EQUALLY
 among its controls, so the count of controls is a fact the layout cannot

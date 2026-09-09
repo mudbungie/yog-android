@@ -32,10 +32,11 @@
 
 use std::collections::BTreeSet;
 
-use crate::codec::Entry;
+use crate::codec::{Entry, Held};
 
 mod build;
 mod compacted;
+mod held;
 mod project;
 mod turns;
 mod windowed;
@@ -149,12 +150,21 @@ pub struct Row {
 /// the caller's override set, where membership *flips* a row's auto-state, so
 /// an empty set means "everything as configured".
 ///
+/// `parked` is the call the capability boundary is holding at this
+/// conversation, when it is holding one (`codec::queue::held_at`). It is a
+/// PARAMETER and not a reading taken here, for §8's reason at the one site
+/// where getting it wrong authorises an action: a tool call with no result is
+/// either a parked call or a driver that died, and this seat must never guess
+/// between them. The mark happens before the rollup, so a turn holding a
+/// parked call is the show and keeps its steps on screen ([`turns`]).
+///
 /// A [`BTreeSet`] and not a hash set: the projection is re-run every frame and
 /// its output is asserted line for line by the suite, so a deterministic
 /// iteration order costs nothing and buys a test that cannot flake.
 pub fn rows(
     entries: &[Entry],
     speaker: &str,
+    parked: Option<&Held>,
     auto: AutoExpand,
     folds: &BTreeSet<String>,
 ) -> Vec<Row> {
@@ -168,6 +178,9 @@ pub fn rows(
             steps.push(turns::step_of(&entry.kind, block));
             usage.push(turns::usage_of(&entry.kind));
         }
+    }
+    if let Some(parked) = parked {
+        held::mark(entries, &mut flat, parked);
     }
     let mut out = turns::group(&flat, &steps, &usage, auto, folds);
     for row in &mut out {

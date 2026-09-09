@@ -80,7 +80,7 @@ pub use lineages::Lineage;
 pub use login::{LoginLine, LoginView};
 pub use pick::{Effort, ProviderRow, RoleRow};
 pub use proposals::{Proposal, Staged};
-pub use queue::{Held, QueueRow};
+pub use queue::{Folded, Held, QueueRow, folded};
 pub use records::{
     Agent, Card, Context, Framing, Governing, Log, Mail, Notch, Orphan, Rail, Record, Records,
     SeatRow, Step, StepRow, Steps, ToolRecord,

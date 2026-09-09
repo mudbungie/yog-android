@@ -71,8 +71,8 @@ const IN_DOUBT: &str = "the reply was lost — this may or may not have been tak
 
 /// The fold triangles, and the mark a row with nothing to fold shows in their
 /// place so every payload starts at the same x.
-const GLYPH_COLLAPSED: &str = "▶";
-const GLYPH_EXPANDED: &str = "▼";
+pub(super) const GLYPH_COLLAPSED: &str = "▶";
+pub(super) const GLYPH_EXPANDED: &str = "▼";
 const NO_FOLD_MARK: &str = "·";
 
 /// The speaker's rule, in points (STYLE.md: a block is aligned and ruled,

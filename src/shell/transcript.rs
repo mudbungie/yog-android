@@ -26,7 +26,18 @@ impl Shell {
         agent: &str,
     ) {
         let speaker = super::chat::speaker_of(snap, agent);
-        let painted = rows(&snap.transcript, &speaker, self.auto, &self.folds);
+        // **Which call is parked is the engine's answer, never a reading
+        // taken here** (§13.7): the queue read names it, and the projection
+        // marks the row it already committed rather than guessing from a
+        // tool call with no result.
+        let parked = crate::codec::queue::held_at(&snap.queue, workspace, agent);
+        let painted = rows(
+            &snap.transcript,
+            &speaker,
+            parked.as_ref(),
+            self.auto,
+            &self.folds,
+        );
         let mut flipped = None;
         // **The floor's order** (bl-192c): what is anchored to the platform's
         // floor claims its space FIRST, and the chrome and the transcript
