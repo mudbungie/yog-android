@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit line-cap leak-scan protocol-gate deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit cross-clippy line-cap leak-scan protocol-gate deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity
 
 all: check
 
@@ -188,8 +188,45 @@ lint:
 	$(MAKE) protocol-gate
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
+	$(MAKE) cross-clippy
 	$(MAKE) rules-audit
 	$(MAKE) deny
+
+# **The android-only half of the crate, linted where a landing can still be
+# stopped** (bl-5a74). Everything under `src/shell` is
+# `#[cfg(target_os = "android")]`, so the host `clippy` above compiles none of
+# it and every lint it would deny is invisible to `make check`. The only run
+# that DOES lint it is `.github/workflows/apk.yml`, and `ci.yml` has no `push`
+# arm by design (bl-7a68) — so that verdict arrives on the release run, after
+# `bl close` has squashed the tree onto `main`. Twice an android-only pedantic
+# denial has therefore been found by the release it broke (bl-3d34, then
+# bl-5a74, each holding the §20 channel until someone read a workflow log):
+# the gate that decides a landing could not see the code it was landing.
+#
+# **This target is the one definition of that command** — `apk.yml` calls it
+# rather than restating it, so the ABI and the flags cannot drift between the
+# box and the runner. `--lib` is deliberately not passed and `--all-targets`
+# deliberately is not either: the default target set is what the workflow has
+# always linted, and widening it does not compile (the `tools/*/tests` modules
+# import host-only items behind `cfg(not(target_os = "android"))`, bl-3d34).
+# It is a check, not a build; against a warm target dir it is seconds.
+#
+# **A box without cargo-ndk says so and passes.** CI's linux leg installs no
+# cargo-ndk and no pinned NDK, and neither does a checkout that only ever runs
+# the host gate — failing there would gate the wrong boxes. Nothing is lost by
+# the skip: `apk.yml` runs this same target on a runner that has both, and on
+# that runner a missing cargo-ndk reds the APK build two steps later anyway,
+# so no path can reach a green apk job without this lint having run.
+CROSS_ABI ?= arm64-v8a
+cross-clippy:
+	@if ! command -v cargo-ndk >/dev/null 2>&1; then \
+	  echo "cross-clippy: skipped — no cargo-ndk on this box, so the"; \
+	  echo "  target_os=\"android\" half cannot be linted here; the apk"; \
+	  echo "  workflow lints it on every push."; \
+	  exit 0; \
+	fi; \
+	echo "cross-clippy: cargo ndk -t $(CROSS_ABI) clippy -- -D warnings"; \
+	cargo ndk -t $(CROSS_ABI) clippy -- -D warnings
 
 # The release-ordering gate's logic, proved both ways (bl-5b19; yog bl-bca2 is
 # the other direction). yog mints the wire protocol version and this app

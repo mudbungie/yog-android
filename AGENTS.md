@@ -77,8 +77,11 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   can't be tested, it mustn't be built. Coverage exclusions are added with
   reasoning, never to make a number.
 - **`make check` is the complete local gate and mirrors CI exactly:**
-  fmt-check → lint (line-cap + protocol-gate + leak-scan + clippy + rules-audit
-  + cargo-deny) → coverage. The pre-commit hook (`make install-hooks`, once) runs the same
+  fmt-check → lint (line-cap + protocol-gate + leak-scan + clippy +
+  cross-clippy + rules-audit + cargo-deny) → coverage. `cross-clippy` is the
+  `target_os = "android"` half — the whole of `src/shell` — which the host
+  clippy never compiles; it runs where cargo-ndk exists and says it skipped
+  where it does not, and `.github/workflows/apk.yml` calls the same target. The pre-commit hook (`make install-hooks`, once) runs the same
   scripts. Tool pins: rustc 1.95.0, ast-grep 0.44.1, cargo-deny 0.20.2,
   tarpaulin 0.35.2 — bump only deliberately, and in lockstep with CI.
 - **A PROTOCOL bump is a four-repository act** (bl-5b19; yog bl-bca2). yog

@@ -100,7 +100,7 @@ impl Shell {
                 } else {
                     ui.visuals().text_color()
                 };
-                let label = crate::shell::theme::line(ui, &[(scope.word().to_owned(), ink)]);
+                let label = crate::shell::theme::line(ui, &[(scope.word(), ink)]);
                 let control = crate::shell::theme::chip(ui, label.into(), wide, true);
                 crate::shell::act::act(ui, &control, "answer");
                 if control.clicked() {

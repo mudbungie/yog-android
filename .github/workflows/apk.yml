@@ -80,8 +80,15 @@ jobs:
       # One ABI is enough here: what the host gate cannot see is the
       # `target_os = "android"` cfg, and both ABIs share it. A defect that is
       # genuinely x86_64-specific is a compile error the APK build below hits.
+      #
+      # **The command lives in the Makefile, not here** (bl-5a74). `make lint`
+      # runs this same target on any box that has cargo-ndk, so an android-only
+      # lint denial is refused at `bl close` instead of on the release run it
+      # would otherwise break; the two must be one command or the box and the
+      # runner drift. The Makefile's skip-without-cargo-ndk arm cannot hide a
+      # failure here — the APK build two steps down runs cargo ndk too.
       - name: Cross-clippy (the host gate cannot see this cfg)
-        run: cargo ndk -t arm64-v8a clippy -- -D warnings
+        run: make cross-clippy
 
       # The unsigned build. Gradle is the runner's system gradle and the JDK is
       # the runner's 17 — deliberately no wrapper jar (the leak gate refuses
