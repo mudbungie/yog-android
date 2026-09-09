@@ -1,7 +1,8 @@
 +++
 title = "grows-only reader and the edition replay: PROTOCOL 19 as a major, every pick gains an Unknown arm rendered honestly, projection + mutation in the conformance suite, edition in the hello greys what the engine cannot spell"
 created = 1788926011
-updated = 1788926011
+updated = 1788926095
+claimant = "Cantaloups-P4"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
