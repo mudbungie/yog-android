@@ -1,7 +1,8 @@
 +++
 title = "returning to the app flashes a DNS failure banner that clears itself: a redial that has not failed is not a failure"
 created = 1788934192
-updated = 1788934192
+updated = 1788934640
+claimant = "Cantaloups-A8"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
