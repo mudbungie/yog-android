@@ -32,13 +32,16 @@ fn an_answer_with_no_patch_says_so_rather_than_carrying_an_empty_one() {
     assert_eq!((bare.rows.len(), bare.patch), (0, None));
 }
 
+/// **A state this codec cannot read keeps the row and says the word** (REMOTE
+/// §3.2). Which fields a row carries is exactly what its state token says, so
+/// an unknown one reads none of them — the same shape `unreadable` already is
+/// — and the screen paints the word the engine wrote.
 #[test]
-fn a_state_this_codec_cannot_read_refuses_naming_it() {
+fn a_state_this_codec_cannot_read_keeps_the_row_and_says_the_word() {
     let stray = json!({ "ball_id": "bl-1", "project": "p", "state": "renamed" });
-    assert_eq!(
-        super::diff(&stray).unwrap_err(),
-        "work-diff: unknown state \"renamed\""
-    );
+    let row = super::diff(&stray).unwrap();
+    assert_eq!((row.state.as_str(), row.ball.as_str()), ("renamed", "bl-1"));
+    assert_eq!((row.target.as_str(), row.files.len()), ("", 0));
     assert_eq!(
         super::diff(&json!("bl-1")).unwrap_err(),
         "work-diff: a row is not an object"

@@ -49,6 +49,6 @@
       ]
     }
   ],
-  "protocol": 12,
+  "protocol": 19,
   "shape": "attention"
 }

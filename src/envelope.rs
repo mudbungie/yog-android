@@ -107,7 +107,7 @@ pub struct Envelope {
 pub fn write(envelope: &Envelope) -> String {
     let mut map = Map::new();
     map.insert(TAG.to_owned(), Value::from(VERSION));
-    map.insert("grade".to_owned(), Value::from(word(envelope.grade)));
+    map.insert("grade".to_owned(), Value::from(word(&envelope.grade)));
     for (key, said) in [
         ("name", &envelope.name),
         ("address", &envelope.address),
@@ -142,6 +142,11 @@ pub fn read(text: &str) -> Result<Envelope, String> {
             "enroll envelope version {stated}; this build reads version {VERSION}"
         ));
     }
+    // **Strict here, and grows-only on the wire** (REMOTE §3.2). This is not a
+    // wire read: it is a payload a camera saw, with no provenance at all, and
+    // the very next act is installing the material it carries. A word this
+    // build cannot check against a leaf is material it must not install, so
+    // the refusal is the whole point rather than a reader falling over.
     let grade = match field(obj, "grade")?.as_str() {
         "foot" => Grade::Foot,
         "operator" => Grade::Operator,
@@ -174,8 +179,8 @@ fn agrees(envelope: &Envelope) -> Result<(), String> {
         return Err(format!(
             "envelope says {} but the certificate is {}; the certificate is the authority \
              (REMOTE §4.2), so this material was minted wrong",
-            word(envelope.grade),
-            word(carried)
+            word(&envelope.grade),
+            word(&carried)
         ));
     }
     // The name is the leaf's too, and a mismatch is the same defect one field
@@ -204,12 +209,15 @@ fn certificate(pem: &str) -> Result<Vec<u8>, String> {
 }
 
 /// The word a grade wears in an envelope and in a refusal.
-fn word(grade: Grade) -> String {
+fn word(grade: &Grade) -> String {
     match grade {
-        Grade::Foot => "foot",
-        Grade::Operator => "operator",
+        Grade::Foot => "foot".to_owned(),
+        Grade::Operator => "operator".to_owned(),
+        // Unreachable from [`read`], which refuses a third word above; it is
+        // reachable from a leaf's stated grade only, and saying the word back
+        // is what makes the refusal legible.
+        Grade::Unknown(word) => word.clone(),
     }
-    .to_owned()
 }
 
 /// A required, non-empty string field. Empty is refused rather than landed: a

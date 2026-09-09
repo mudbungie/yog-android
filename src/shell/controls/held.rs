@@ -68,7 +68,7 @@ impl Shell {
                 if control.clicked()
                     && let Some(model) = self.model()
                 {
-                    model.answer(verdict, self.scope);
+                    model.answer(verdict, self.scope.clone());
                 }
             }
         });

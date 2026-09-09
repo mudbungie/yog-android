@@ -167,10 +167,14 @@ fn said(ui: &mut egui::Ui, text: &str) {
 /// beside it when the class left any. Nothing is said at all for the ordinary
 /// conversation, which is what `none` means.
 pub(super) fn orphan(ui: &mut egui::Ui, records: &Records) {
-    let said = match records.steps.orphan {
+    let said = match &records.steps.orphan {
         Orphan::None => return,
-        Orphan::Mail => "a deposit was left undelivered",
-        Orphan::ToolWindow => "a tool call was left unpaired",
+        Orphan::Mail => "a deposit was left undelivered".to_owned(),
+        Orphan::ToolWindow => "a tool call was left unpaired".to_owned(),
+        // A class a newer engine of this major names (REMOTE §3.2): the tail
+        // IS orphaned, so the banner still stands, and it says the word rather
+        // than one of the two readings this build happens to know.
+        Orphan::Unknown(word) => crate::codec::unknown_label("orphan", word),
     };
     match &records.steps.orphan_reason {
         Some(why) => ui.weak(format!("{said} — {why}")),

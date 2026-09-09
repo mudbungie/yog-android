@@ -11,6 +11,6 @@
       "workspace": "ws"
     }
   ],
-  "protocol": 16,
+  "protocol": 19,
   "shape": "proposals"
 }

@@ -253,3 +253,29 @@ fn the_hint_names_every_key_and_fixes_no_order() {
     assert!(said.contains("any order"), "{said}");
     assert!(!said.contains("beginning"), "{said}");
 }
+
+/// **The mint carries a grade word this build cannot spell** (REMOTE §3.2).
+/// `codec::enroll` reads the `enrolled` answer grows-only, so an `Envelope`
+/// this seat displays can hold `Grade::Unknown` — and the QR it writes says
+/// the engine's own word back, because the certificate is §4.2's authority and
+/// the NEXT device is the one that checks the two against each other.
+///
+/// The reader here stays strict on purpose: a photographed payload has no
+/// provenance, and the very next act is installing material off it.
+#[test]
+fn a_grade_word_this_build_cannot_spell_is_written_back_and_refused_on_the_way_in() {
+    let text = write(&Envelope {
+        grade: Grade::Unknown("admin".to_owned()),
+        name: "notreal-phone".to_owned(),
+        address: "engine.example.com:7737".to_owned(),
+        ca: "ca".to_owned(),
+        cert: "cert".to_owned(),
+        key: "key".to_owned(),
+    });
+    let value: serde_json::Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(value["grade"], "admin");
+    assert_eq!(
+        read(&text).unwrap_err(),
+        "unknown grade \"admin\"; expected foot or operator"
+    );
+}

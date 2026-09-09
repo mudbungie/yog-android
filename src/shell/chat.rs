@@ -100,7 +100,7 @@ pub(crate) fn row(ui: &mut egui::Ui, row: &Row) -> bool {
         stripe(ui, None);
         toggled = toggle(ui, row);
         if row.role.is_none() {
-            let ink = tone_hue(ui, row.tone);
+            let ink = tone_hue(ui, &row.tone);
             prefix(ui, &row.prefix, ink);
         }
         if inline && !row.preview.is_empty() {
@@ -206,11 +206,16 @@ fn role_hue(role: Role) -> egui::Color32 {
 /// A live row and an in-flight one share the one live accent; the desktop
 /// pulses the second, which a phone's repaint budget does not buy back — the
 /// word "running" in the label already says it.
-pub(super) fn tone_hue(ui: &egui::Ui, tone: crate::codec::Tone) -> egui::Color32 {
+pub(super) fn tone_hue(ui: &egui::Ui, tone: &crate::codec::Tone) -> egui::Color32 {
     use crate::codec::Tone;
     match tone {
         Tone::Plain => ui.visuals().text_color(),
-        Tone::Weak => ui.visuals().weak_text_color(),
+        // **A hue word this build has not heard of reads as the weak ink**
+        // (REMOTE §3.2), which is what `crate::theme::tone` already answers
+        // for it — said here as `Weak`'s own case, because the two ARE one
+        // reading and a second accent would claim a knowledge this build has
+        // not got.
+        Tone::Weak | Tone::Unknown(_) => ui.visuals().weak_text_color(),
         Tone::Good | Tone::Bad | Tone::Live | Tone::InFlight | Tone::Held => {
             super::theme::tone(tone)
         }

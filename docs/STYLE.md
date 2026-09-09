@@ -92,6 +92,15 @@ interrupt cut is *an interrupt* and so `Annotation`; a failed step is `Error`
 and a complete one is `Rest`. The word beside the hue is the engine's own, and
 this seat never spells a second one for it.
 
+**A word this build has not heard of wears RESTING ink** (REMOTE §3.2, DESIGN
+§2.1). The protocol is a major now and additions ship inside one, so any of
+those vocabularies can carry a word a newer engine spells and this build does
+not. It is never painted as the nearest known hue — that is the lie the rule
+exists to stop — and never costs the row. It rests, because rest is the one
+accent that claims nothing, and the label says *unknown `<noun>`: `<word>`* so
+the operator reads the engine's own word rather than a colour standing in for
+it.
+
 **A speaker is told by weight, not hue** (`theme::speaker`). The rule beside
 a transcript block is the brand for the operator's words, full ink for the
 model's, weak ink for a peer agent's, faint for an ended one. Four speakers

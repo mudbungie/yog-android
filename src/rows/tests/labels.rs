@@ -3,9 +3,10 @@
 //! painting one record.
 
 use super::{
-    SPEAKER, call, delivered, ended, go, model, named, parked, prefixes, raw, result, streaming,
-    text, thought, windowed,
+    SPEAKER, call, delivered, ended, go, go_open, model, named, parked, prefixes, raw, result,
+    streaming, text, thought, windowed,
 };
+use crate::codec::{Block, Entry, EntryKind};
 use crate::rows::{Fold, Role, RowClass, Tone};
 
 #[test]
@@ -261,4 +262,27 @@ fn a_windowed_call_that_closed_states_the_number_and_no_verdict() {
         assert_eq!(rows[0].prefix, format!("⚙ box2_Bash — exit {code}"));
         assert_eq!(rows[0].tone, Tone::Plain, "no hue reads the number");
     }
+}
+
+/// **An entry kind, and a block kind, this build has not heard of still paint**
+/// (REMOTE §3.2). The entry says *unknown entry: `<word>`* over its own bytes —
+/// `raw` rides beside the kind, so the transcript shows what the entry SAYS
+/// even where it cannot say what it MEANS — and a stray block says its word in
+/// resting ink. Refusing either would blank the whole transcript for one word
+/// an engine added.
+#[test]
+fn a_kind_this_build_has_not_heard_of_paints_as_unknown() {
+    let stray = Entry {
+        name: "013-mystery.json".to_owned(),
+        raw: "{ some newer shape".to_owned(),
+        kind: EntryKind::Unknown("recital".to_owned()),
+    };
+    let rows = go(&[stray]);
+    assert_eq!(rows[0].prefix, "unknown entry: recital");
+    assert_eq!(rows[0].preview, "{ some newer shape");
+    assert_eq!(rows[0].tone, Tone::Weak);
+
+    let rows = go_open(&[model("001", vec![Block::Unknown("chorus".to_owned())])]);
+    let said: Vec<&str> = rows.iter().map(|r| r.prefix.as_str()).collect();
+    assert!(said.contains(&"unknown block: chorus"), "{said:?}");
 }

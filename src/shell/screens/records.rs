@@ -108,7 +108,7 @@ impl Shell {
     /// table (`theme::framing`) rather than decided here.
     fn picking_step(&mut self, ui: &mut egui::Ui, row: &StepRow) {
         let picked = self.step.as_deref() == Some(row.seq.as_str());
-        let ink = crate::shell::theme::rgb(crate::theme::framing(row.framing));
+        let ink = crate::shell::theme::rgb(crate::theme::framing(&row.framing));
         let control = ui.add(
             egui::Button::new(egui::RichText::new(step_line(row, picked)).color(ink))
                 .min_size(egui::vec2(ui.available_width(), TOUCH)),

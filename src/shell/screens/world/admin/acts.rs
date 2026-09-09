@@ -107,7 +107,7 @@ impl Shell {
             |ui| {
                 let wide = crate::shell::theme::share(ui, 2);
                 for grade in [crate::leaf::Grade::Operator, crate::leaf::Grade::Foot] {
-                    let word = crate::codec::enroll::word(grade);
+                    let word = crate::codec::enroll::word(&grade);
                     let label = if typed.is_empty() {
                         format!("enroll {word} — name the device")
                     } else {

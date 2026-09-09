@@ -63,3 +63,28 @@ fn a_reader_that_answers_false_ends_the_read_where_it_stands() {
     .unwrap();
     assert_eq!(seen, vec![first]);
 }
+
+/// **The engine's edition rides on the connection** (REMOTE §3.2, DESIGN
+/// §2.1). It is read off the §3 preface and kept on the open read, so whatever
+/// asks `crate::ledger::spells` asks it of the engine actually being spoken
+/// to — never of a process-wide slot whose value depends on what else has been
+/// dialled since.
+///
+/// The fake engine here states no edition, which is not a gap in the test: an
+/// engine that predates the field IS at the floor, and that is the case a
+/// phone in the field actually meets first.
+#[test]
+fn a_held_read_carries_the_edition_the_engine_stated() {
+    let dir = pki();
+    let frame = json!({ "ok": true, "kind": "attention", "rows": [] });
+    let (address, _served) = serve_turns(
+        &dir,
+        "ca",
+        "server",
+        vec![Turn::Hold(vec![frame.to_string().into_bytes()])],
+    );
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let (open, hangup) = seat.hold(&json!({ "op": "attention" })).unwrap();
+    assert_eq!(open.edition(), crate::ledger::FLOOR);
+    hangup.hang_up();
+}

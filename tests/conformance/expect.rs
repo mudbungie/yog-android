@@ -9,6 +9,17 @@
 //! are one decision, and fifty copies of it would be fifty places to edit.
 
 /// This client's decision about one shape.
+///
+/// **A REPLY is refused only on its `kind`** (REMOTE §3.2, DESIGN §2.1). The
+/// grows-only reader replaced every refusal that reached INSIDE a reply
+/// envelope with a catch-all, so what is left on this side is exactly the two
+/// shapes whose kind this codec does not spell — and each of those is a fact
+/// about what this client does not RENDER, with the ball that builds the
+/// surface, not a claim that the frame is unreadable. `parity.toml` is the
+/// ledger of the same fact one layer up. The [`Refuses`] and [`Partial`] rows
+/// that remain are REQUESTS: a gesture this seat cannot compose is one it must
+/// not half-decode, and the encoder's `match` is the compile gate that keeps
+/// it honest.
 #[derive(Debug, Clone, Copy)]
 pub enum Expect {
     /// Every frame of this shape decodes, and — for a request — re-encodes to

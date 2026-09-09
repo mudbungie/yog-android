@@ -121,14 +121,27 @@ fn refusals_name_the_offender() {
         "conversation row: not an object"
     );
     assert_eq!(
-        row(&with(base(), "tone", json!("shiny"))).unwrap_err(),
-        "field \"tone\": unknown token \"shiny\""
-    );
-    assert_eq!(
         row(&with(base(), "ball", json!("bl-1"))).unwrap_err(),
         "ball chip: not an object"
     );
-    assert!(row(&with(base(), "flight", json!("walking"))).is_err());
+}
+
+/// **The three word vocabularies of a conversation row grow** (REMOTE §3.2):
+/// a state, a flight or a tone a newer engine of this major spells becomes the
+/// catch-all carrying it, and every other field of the row still reads. The
+/// tone's catch-all is the one with a paint consequence, and
+/// `crate::theme::tone` gives it resting ink.
+#[test]
+fn a_word_this_build_has_not_heard_of_rides_as_the_catch_all() {
+    let v = with(base(), "tone", json!("shiny"));
+    let v = with(v, "state", json!("wandering"));
+    let v = with(v, "flight", json!("walking"));
+    let r = row(&v).unwrap();
+    assert_eq!(r.tone, Tone::Unknown("shiny".to_owned()));
+    assert_eq!(r.state, AgentState::Unknown("wandering".to_owned()));
+    assert_eq!(r.flight, Some(Flight::Unknown("walking".to_owned())));
+    // The row survives whole, which is the whole point of the rule.
+    assert_eq!(r.preview, base()["preview"]);
 }
 
 /// **The compat fact this whole re-vendor turned on** (bl-e837): a field this

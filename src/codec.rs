@@ -8,16 +8,27 @@
 //! **This is a slice, not the surface.** The server's vocabulary is large;
 //! this codec spells exactly what the phone seat spends — the chat loop:
 //! enumerate workspaces, list a workspace's conversations, read a transcript,
-//! deposit a message — and grows per consumer, never speculatively. Decode is
-//! strict the way the parent is strict (an unknown `kind`, a missing field, a
-//! mistyped value, an unknown token each refuse naming the offender), with
-//! three recorded narrowings: a conversation row's `alignment` verdict and a
-//! ball chip's `state` token ride through untyped (`Value` / `String`) until
-//! a surface here paints them, and the records screen carries the engine's
-//! state and flight WORDS rather than picking them, because nothing there
-//! branches on either (`codec::records`). A diff row's `state` is the
-//! counter-example and says why the rule is not "carry every token": it
-//! DECIDES which fields the row has, so it is read (`codec::workdiff`).
+//! deposit a message — and grows per consumer, never speculatively.
+//!
+//! **Decode is strict about SHAPE and grows-only about VOCABULARY** (REMOTE
+//! §3.2, DESIGN §2.1). A missing field and a mistyped value still refuse
+//! naming the offender: the frame is wrong, and a guess is worse than none. An
+//! unknown WORD does not, since bl-93cd — it becomes that vocabulary's named
+//! catch-all carrying the word, because `PROTOCOL` is a major now and an
+//! engine of the same major may spell words this build has never heard of.
+//! The two exceptions are the reply `kind` and the request `op`, which refuse
+//! by name: *the engine refuses what it cannot act on; a reader tolerates what
+//! it cannot render.*
+//!
+//! Three recorded narrowings sit beside that: a conversation row's `alignment`
+//! verdict and a ball chip's `state` token ride through untyped (`Value` /
+//! `String`) until a surface here paints them, and the records screen carries
+//! the engine's state and flight WORDS rather than picking them, because
+//! nothing there branches on either (`codec::records`). A diff row's `state`
+//! is the counter-example and says why the rule is not "carry every token": it
+//! DECIDES which fields the row has, so it is read (`codec::workdiff`) — and a
+//! state it cannot read reads none of them, which is the catch-all in the one
+//! shape that needed no new type.
 
 pub mod admin;
 mod ask;
@@ -60,6 +71,7 @@ pub use candidates::{Attempt, Delivered, Judgement, Spread};
 pub use clients::{ClientRow, Machines};
 pub use conv::{AgentState, ConvBall, ConvRow, Flight, Tone};
 pub use encode::encode;
+pub(crate) use fields::unknown as unknown_label;
 pub use files::{FileRow, Files, Listing, Preview};
 pub use fleet::FleetAct;
 pub use follow::{Call, Stream};

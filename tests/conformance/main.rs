@@ -33,8 +33,17 @@
 //! A shape with no recorded decision is a vocabulary that grew upstream, and
 //! the remedy is a row in `requests.rs`/`replies.rs`, decided rather than
 //! defaulted.
+//!
+//! **And the corpus is only ONE engine's** — the one it was cut from. Since
+//! REMOTE §3.2 (bl-e598) `PROTOCOL` is a major and additions ship inside one,
+//! so an engine older or newer than this corpus is one this seat must still
+//! read. [`editions`] is that half: the same fixtures projected back to every
+//! edition of this major, and every word in them replaced with one no build
+//! has heard of.
 
+mod editions;
 mod expect;
+mod ledger;
 mod replies;
 mod requests;
 
@@ -45,7 +54,7 @@ use yog_android::codec::{self, reply};
 use yog_android::hello::PROTOCOL;
 
 /// The vendored corpus, beside the manifest that vendored it.
-fn corpus() -> PathBuf {
+pub fn corpus() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("corpus")
 }
 
@@ -57,7 +66,7 @@ fn corpus() -> PathBuf {
 /// Every failure comes back as an `Err` rather than a panic so the helpers are
 /// ordinary total functions — the panic vocabulary belongs to the `#[test]`
 /// items below, which is also the only place this crate's lints allow it.
-fn frames(direction: &str, shape: &str) -> Result<Vec<Value>, String> {
+pub fn frames(direction: &str, shape: &str) -> Result<Vec<Value>, String> {
     let path = corpus().join(direction).join(format!("{shape}.json"));
     let at = |e: &dyn std::fmt::Display| format!("{}: {e}", path.display());
     let text = std::fs::read_to_string(&path).map_err(|e| at(&e))?;
@@ -101,11 +110,13 @@ fn recorded(table: &[(&str, Expect)]) -> Vec<String> {
     listed
 }
 
-/// The vendored copy is for the protocol this build speaks. REMOTE §3:
-/// *"`corpus/shapes.json` is the standing record: per shape, its field
-/// signature and that version, plus the version the corpus as a whole is
-/// for."* A newer corpus vendored in, or a `PROTOCOL` bumped here without
-/// re-vendoring, fails here rather than one frame at a time downstream.
+/// The vendored copy is for the protocol this build speaks. `corpus/
+/// shapes.json` is the standing record: per shape, every field path with the
+/// EDITION it appeared at (REMOTE §3.2 — it carried a per-shape `since` until
+/// bl-e598), plus the major the corpus as a whole is for and the `floor` that
+/// major was cut at. A newer corpus vendored in, or a `PROTOCOL` bumped here
+/// without re-vendoring, fails here rather than one frame at a time
+/// downstream.
 #[test]
 fn the_vendored_corpus_is_the_protocol_this_build_speaks() {
     let text = std::fs::read_to_string(corpus().join("shapes.json")).unwrap();

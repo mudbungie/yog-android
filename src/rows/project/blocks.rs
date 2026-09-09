@@ -52,6 +52,17 @@ pub(super) fn block_row(
             let tone = if running { Tone::InFlight } else { Tone::Plain };
             row(key, prefix, input, RowClass::Other, tone, None)
         }
+        // A block kind a newer engine of this major spells (REMOTE §3.2). The
+        // word is the whole of what this build knows about it, and it is said
+        // rather than dropped: a turn missing a row is a turn misread.
+        Block::Unknown(word) => row(
+            key,
+            crate::codec::unknown_label("block", word),
+            "",
+            RowClass::Other,
+            Tone::Weak,
+            None,
+        ),
     }
 }
 

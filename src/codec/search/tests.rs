@@ -79,7 +79,7 @@ fn what_could_not_be_read_rides_back_with_the_hits() {
 #[test]
 fn every_tier_answers_the_word_it_is_read_by() {
     assert_eq!(
-        HitField::ALL.map(HitField::word),
+        HitField::ALL.map(|tier| tier.word()),
         ["name", "summary", "text"]
     );
 }
@@ -88,15 +88,6 @@ fn every_tier_answers_the_word_it_is_read_by() {
 fn refusals_name_the_shape() {
     let sentence = |rows: Value| found_of(&envelope(rows, json!([]))).unwrap_err();
     assert_eq!(sentence(json!([3])), "search: hit is not an object");
-    assert_eq!(
-        sentence(json!([{ "at": "elsewhere" }])),
-        "search: hit at unknown address \"elsewhere\""
-    );
-    assert_eq!(
-        sentence(json!([{ "at": "workspace", "workspace": "ws",
-                          "field": "shouted", "offset": 0, "excerpt": "x" }])),
-        "search: hit in unknown field \"shouted\""
-    );
     assert_eq!(
         sentence(json!([{ "at": "workspace", "workspace": "ws",
                           "field": "name", "offset": -1, "excerpt": "x" }])),
@@ -136,4 +127,24 @@ fn refusals_name_the_shape() {
         found_of(no_unreadable.as_object().unwrap()).unwrap_err(),
         "search: missing or non-array field \"unreadable\""
     );
+}
+
+/// **A hit at an address, or in a field, this build has not heard of still
+/// lists** (REMOTE §3.2). The flat keys under an unknown `at` are exactly what
+/// the token would have said, so none is read and the row is untappable — the
+/// `Ball` arm's standing already — while the excerpt, the offset and the tier
+/// word all still reach the glass.
+#[test]
+fn an_address_or_a_tier_this_build_has_not_heard_of_still_lists() {
+    let found = found_of(&envelope(
+        json!([{ "at": "elsewhere", "field": "shouted", "offset": 4,
+                 "excerpt": "x" }]),
+        json!([]),
+    ))
+    .unwrap();
+    let hit = found.hits.first().unwrap();
+    assert_eq!(hit.at, Address::Unknown("elsewhere".to_owned()));
+    assert_eq!(hit.field, HitField::Unknown("shouted".to_owned()));
+    assert_eq!(hit.field.word(), "unknown field: shouted");
+    assert_eq!((hit.offset, hit.excerpt.as_str()), (4, "x"));
 }

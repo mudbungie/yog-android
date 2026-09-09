@@ -50,17 +50,23 @@ fn replay_kind_reads() {
 #[test]
 fn refusals_name_the_offender() {
     assert_eq!(row(&json!(3)).unwrap_err(), "workspace row: not an object");
-    let bad_kind = json!({
-        "workspace": "w", "kind": "weird", "attention": 0, "agents": 0,
-        "running": false,
-    });
-    assert_eq!(
-        row(&bad_kind).unwrap_err(),
-        "workspace row: unknown kind \"weird\""
-    );
     let bad_tip = json!({
         "workspace": "w", "kind": "named", "attention": 0, "agents": 0,
         "running": false, "config_tip": 7,
     });
     assert_eq!(row(&bad_tip).unwrap_err(), "config_tip: not an object");
+}
+
+/// **A fourth classification is an edition, not a bump** (REMOTE §3.2): the
+/// workspace still lists, with its counts and its pin, and the kind says the
+/// word this build has not heard of.
+#[test]
+fn a_kind_this_build_has_not_heard_of_still_lists_the_workspace() {
+    let v = json!({
+        "workspace": "w", "kind": "weird", "attention": 2, "agents": 1,
+        "running": true,
+    });
+    let read = row(&v).unwrap();
+    assert_eq!(read.kind, WsKind::Unknown("weird".to_owned()));
+    assert_eq!((read.workspace.as_str(), read.attention), ("w", 2));
 }

@@ -53,14 +53,23 @@ pub(in crate::rows) fn step_of(kind: &EntryKind, block: usize) -> Step {
         EntryKind::Model { blocks, .. } => match blocks.get(block) {
             Some(Block::Thinking(_)) => Step::Thinking,
             Some(Block::ToolUse { .. }) => Step::ToolCall,
-            Some(Block::Text(_)) | None => Step::Model,
+            // A block kind this build has not heard of (REMOTE §3.2) counts
+            // as model-authored prose, which is what every block that is
+            // neither a thought nor a call has ever been.
+            Some(Block::Text(_) | Block::Unknown(_)) | None => Step::Model,
         },
         // The follow window's own row is a tool call — it is the same call
         // the block will be once the record catches up (REMOTE §5.5), and a
         // census that counted it as anything else would say a different number
         // about one turn depending on which side of the commit the read landed.
         EntryKind::Windowed { .. } => Step::ToolCall,
-        EntryKind::ToolResult { .. } | EntryKind::Streaming { .. } | EntryKind::Raw => Step::Plain,
+        // `Unknown` sits with `Raw` for the reason the two are one shape: an
+        // entry whose kind this build cannot read is not something the agent
+        // is known to have DONE, so it counts as nothing in a turn's census.
+        EntryKind::ToolResult { .. }
+        | EntryKind::Streaming { .. }
+        | EntryKind::Raw
+        | EntryKind::Unknown(_) => Step::Plain,
     }
 }
 
@@ -78,7 +87,8 @@ pub(in crate::rows) fn usage_of(kind: &EntryKind) -> Usage {
         | EntryKind::Windowed { .. }
         | EntryKind::Compacted { .. }
         | EntryKind::Wounded { .. }
-        | EntryKind::Raw => Usage::new(),
+        | EntryKind::Raw
+        | EntryKind::Unknown(_) => Usage::new(),
     }
 }
 

@@ -13,21 +13,56 @@ fn framed(body: &[u8]) -> Vec<u8> {
     buf
 }
 
-/// A peer stating `protocol`, framed.
+/// A peer stating `protocol` and no edition, framed — which REMOTE §3.2 reads
+/// as the floor, and which is every engine older than the field.
 fn peer(protocol: u64) -> Vec<u8> {
     framed(json!({ "protocol": protocol }).to_string().as_bytes())
+}
+
+/// A peer stating both numbers.
+fn peer_at(protocol: u64, edition: u64) -> Vec<u8> {
+    framed(
+        json!({ "protocol": protocol, "edition": edition })
+            .to_string()
+            .as_bytes(),
+    )
 }
 
 #[test]
 fn this_build_states_one_framed_object_and_nothing_else() {
     let mut buf = Vec::new();
     state(&mut buf).unwrap();
-    assert_eq!(buf, peer(u64::from(PROTOCOL)));
+    assert_eq!(
+        buf,
+        peer_at(u64::from(PROTOCOL), u64::from(crate::ledger::EDITION))
+    );
+}
+
+/// **The edition is read and kept, and it never refuses** (REMOTE §3.2). A
+/// peer of this major that states a newer edition is one this build goes on
+/// talking to — the number's whole use is a control that can grey itself — and
+/// a peer that states none is at the floor, which is what every engine older
+/// than the field is.
+#[test]
+fn the_edition_a_peer_states_is_kept_and_an_absent_one_is_the_floor() {
+    let mine = u64::from(PROTOCOL);
+    let newer = crate::ledger::FLOOR + 7;
+    assert_eq!(
+        confirm(&mut Cursor::new(peer_at(mine, u64::from(newer)))),
+        Ok(newer)
+    );
+    assert_eq!(
+        confirm(&mut Cursor::new(peer(mine))),
+        Ok(crate::ledger::FLOOR)
+    );
 }
 
 #[test]
 fn an_engine_of_this_version_is_confirmed() {
-    assert_eq!(confirm(&mut Cursor::new(peer(u64::from(PROTOCOL)))), Ok(()));
+    assert_eq!(
+        confirm(&mut Cursor::new(peer(u64::from(PROTOCOL)))),
+        Ok(crate::ledger::FLOOR)
+    );
 }
 
 /// The sentence is the upgrade prompt: it names this end's version, the

@@ -45,6 +45,20 @@ server's own codec, vendored here as `corpus/`, and replayed by
 round-trips, and every shape outside its slice is a recorded decision that
 refuses by name.
 
+**The version is a MAJOR and an addition is an edition** (REMOTE §3.2, DESIGN
+§2.1). `PROTOCOL` moves only on a breaking change; every field, word, op and
+reply kind added inside one ships with no bump and is stamped with an edition
+in `corpus/shapes.json`. So the reader is **grows-only**: an unknown key is
+ignored, an absent post-floor key reads as the fact before the field existed,
+and an unknown WORD becomes that vocabulary's catch-all — painted as *unknown
+`<noun>`: `<word>`* in resting ink, never the nearest known word and never a
+lost row. Only the reply `kind` and the request `op` stay strict. The preface
+states an `edition` beside the version, which refuses nothing: what it buys is
+a control that can grey itself rather than a reader that falls over. Two
+replays hold it — every reply shape decoded at every edition of this major with
+the newer keys deleted, and every string a reply carries replaced with a token
+no build has heard of.
+
 ## Dev loop
 
 ```

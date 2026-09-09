@@ -114,8 +114,8 @@ impl Seat {
         let (mut tls, hangup) = self.dial(request)?;
         // The engine's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
-        hello::confirm(&mut tls).map_err(Wire::Unusable)?;
-        Ok((Open { tls }, hangup))
+        let edition = hello::confirm(&mut tls).map_err(Wire::Unusable)?;
+        Ok((Open { tls, edition }, hangup))
     }
 
     /// The connection with the request written, and the hang-up handle on it
@@ -158,6 +158,12 @@ impl Seat {
 /// answer's frames are what is left on it.
 pub struct Open {
     tls: StreamOwned<ClientConnection, TcpStream>,
+    /// **What the engine on the other end can spell** (REMOTE §3.2): the
+    /// edition its preface stated, or `ledger::FLOOR` where it stated none.
+    /// Kept on the connection rather than in a process-wide slot, because a
+    /// capability question must not depend on what else has been dialled
+    /// since — see `crate::ledger`.
+    edition: u32,
 }
 
 /// **The way to end a held read from another thread.** A reader parked on
@@ -169,6 +175,15 @@ pub struct Hangup {
 }
 
 impl Open {
+    /// **The edition the engine stated**, for whoever asks
+    /// `crate::ledger::spells` — the one question a control has that no
+    /// protocol bump ever answered: *could this engine have said that field
+    /// at all* (REMOTE §3.2).
+    #[must_use]
+    pub fn edition(&self) -> u32 {
+        self.edition
+    }
+
     /// Read every frame up to the terminator, handing each to `adopt` as it
     /// lands. `adopt` answering `false` ends the read here — the connection
     /// is dropped, which is how the engine learns its answer has no reader.

@@ -171,10 +171,6 @@ fn refusals_name_the_offender() {
         entry(&json!(0)).unwrap_err(),
         "transcript entry: not an object"
     );
-    assert_eq!(
-        entry(&json!({ "name": "x", "raw": "", "kind": "poem" })).unwrap_err(),
-        "transcript entry: unknown kind \"poem\""
-    );
     let no_usage = json!({
         "name": "x", "raw": "", "kind": "model", "model_id": "m",
         "blocks": [],
@@ -191,12 +187,26 @@ fn refusals_name_the_offender() {
         entry(&bad_block).unwrap_err(),
         "content block: not an object"
     );
+}
+
+/// **Both kind vocabularies grow** (REMOTE §3.2). An entry kind or a block
+/// kind a newer engine of this major spells becomes the catch-all carrying the
+/// word; nothing under the word is read, because the word says which keys are
+/// there — but `raw` rides beside the kind, so the entry still shows its own
+/// bytes. Refusing either would blank the whole transcript for one added word.
+#[test]
+fn a_kind_this_build_has_not_heard_of_rides_as_the_catch_all() {
+    let stray = entry(&json!({ "name": "x", "raw": "bytes", "kind": "poem" })).unwrap();
+    assert_eq!(stray.kind, EntryKind::Unknown("poem".to_owned()));
+    assert_eq!(stray.raw, "bytes");
     let stray_block = json!({
         "name": "x", "raw": "", "kind": "model", "model_id": "m",
         "blocks": [{ "kind": "song", "text": "la" }], "usage": {},
     });
-    assert_eq!(
-        entry(&stray_block).unwrap_err(),
-        "content block: unknown kind \"song\""
+    let read = entry(&stray_block).unwrap();
+    assert!(
+        matches!(&read.kind, EntryKind::Model { blocks, .. }
+            if blocks == &[Block::Unknown("song".to_owned())]),
+        "{read:?}"
     );
 }

@@ -181,8 +181,9 @@ fn scripted(
             let stated = crate::frame::read_frame(&mut tls).unwrap().unwrap();
             assert_eq!(
                 serde_json::from_slice::<serde_json::Value>(&stated).unwrap(),
-                serde_json::json!({ "protocol": crate::hello::PROTOCOL }),
-                "the seat opened a connection without stating its version"
+                serde_json::json!({ "protocol": crate::hello::PROTOCOL,
+                                    "edition": crate::ledger::EDITION }),
+                "the seat opened a connection without stating its version and edition"
             );
             let request = crate::frame::read_frame(&mut tls).unwrap().unwrap();
             let asked: serde_json::Value = serde_json::from_slice(&request).unwrap();

@@ -82,7 +82,7 @@ pub(crate) fn row(v: &Value) -> Result<QueueRow, String> {
         workspace: str_of(o, "workspace")?,
         agent: str_of(o, "agent")?,
         display: str_of(o, "display")?,
-        state: pick(o, "state", &STATES)?,
+        state: pick(o, "state", &STATES, AgentState::Unknown)?,
         uncertain: bool_of(o, "uncertain")?,
         signals: arr_of(o, "signals")?
             .iter()

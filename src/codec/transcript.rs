@@ -4,6 +4,11 @@
 //! stays distinguishable from a parsed one on the wire exactly as it does on
 //! screen. `usage` is an open vocabulary by the parent's own ruling (the
 //! provider's counters, unpinned), so it rides as raw JSON here too.
+//!
+//! **Both kind vocabularies are grows-only** (REMOTE §3.2): a word this build
+//! has not heard of becomes the catch-all arm carrying it, never a refusal of
+//! the whole transcript. An entry is the strongest case in the codec for the
+//! rule — refusing one row would blank every other row of the answer.
 
 use serde_json::Value;
 
@@ -100,6 +105,13 @@ pub enum EntryKind {
     },
     /// An entry the parser could not read — surfaced, never dropped.
     Raw,
+    /// **A kind a newer engine of this major spells** (REMOTE §3.2's
+    /// catch-all). Nothing under the word is read, because the word is what
+    /// says which keys are there — but `raw` is beside the kind, not inside
+    /// it, so the entry still paints its own bytes. That is the same answer
+    /// [`EntryKind::Raw`] already gives to an entry NOTHING could parse, one
+    /// end of the wire along.
+    Unknown(String),
 }
 
 /// One canonical content block. A tool call carries the summary the chip
@@ -113,6 +125,9 @@ pub enum Block {
         name: String,
         input: String,
     },
+    /// A block kind a newer engine of this major spells (REMOTE §3.2). The
+    /// word only, for [`EntryKind::Unknown`]'s reason.
+    Unknown(String),
 }
 
 /// Read one entry row, strictly.
@@ -156,7 +171,7 @@ pub(crate) fn entry(v: &Value) -> Result<Entry, String> {
             auth_row: opt(o, "auth_row", str_of)?,
         },
         "raw" => EntryKind::Raw,
-        other => return Err(format!("transcript entry: unknown kind {other:?}")),
+        other => EntryKind::Unknown(other.to_owned()),
     };
     Ok(Entry {
         name: str_of(o, "name")?,
@@ -176,7 +191,7 @@ fn block(v: &Value) -> Result<Block, String> {
             name: str_of(o, "name")?,
             input: str_of(o, "input")?,
         }),
-        other => Err(format!("content block: unknown kind {other:?}")),
+        other => Ok(Block::Unknown(other.to_owned())),
     }
 }
 

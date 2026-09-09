@@ -37,6 +37,11 @@ pub enum Preview {
     /// Bytes nothing could read as text. There is no text field at all: an
     /// empty string would read as *an empty file*.
     Binary { size: u64 },
+    /// REMOTE §3.2's catch-all: a fourth class a newer engine of this major
+    /// bounds a file into. Nothing under the word is read, because which keys
+    /// it carries is exactly what the word says — so the screen states the
+    /// class and shows no bytes, rather than guessing at either.
+    Unknown(String),
 }
 
 /// One walked entry: its path relative to the worktree, its size, and whether
@@ -122,9 +127,10 @@ fn entry(v: &Value) -> Result<FileRow, String> {
     })
 }
 
-/// A bounded file, in the engine's own three classes. An unknown class
-/// refuses naming it: a preview whose class this codec cannot read is bytes
-/// it would have to guess at, and a guess is worse than none.
+/// A bounded file, in the engine's own three classes, and the catch-all for a
+/// fourth (REMOTE §3.2). An unknown class reads NO field beside the word: the
+/// word is what says which keys are there, so guessing at them is the misread
+/// the rule exists to stop — but the listing row it hangs under is kept.
 pub(super) fn preview(v: &Value) -> Result<Preview, String> {
     let o = v.as_object().ok_or("preview: not an object")?;
     match str_of(o, "kind")?.as_str() {
@@ -136,7 +142,7 @@ pub(super) fn preview(v: &Value) -> Result<Preview, String> {
         "binary" => Ok(Preview::Binary {
             size: u64_of(o, "size")?,
         }),
-        other => Err(format!("preview: unknown kind {other:?}")),
+        other => Ok(Preview::Unknown(other.to_owned())),
     }
 }
 

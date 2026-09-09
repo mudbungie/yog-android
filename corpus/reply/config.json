@@ -83,6 +83,6 @@
       "text": "# yog's clock: watcher-cycle periods, in milliseconds.\n# Delete this file to restore the defaults below.\ncadence:\n  watcher:\n    debounce_ms: 100\n    cheap_sweep_ms: 2000\n    full_sweep_ms: 15000\n"
     }
   ],
-  "protocol": 13,
+  "protocol": 19,
   "shape": "config"
 }

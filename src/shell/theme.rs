@@ -36,7 +36,7 @@ pub(crate) fn ink(state: State) -> egui::Color32 {
 }
 
 /// A row tone's ink (REMOTE §11), one map for the transcript and the list.
-pub(crate) fn tone(tone: Tone) -> egui::Color32 {
+pub(crate) fn tone(tone: &Tone) -> egui::Color32 {
     rgb(theme::tone(tone))
 }
 

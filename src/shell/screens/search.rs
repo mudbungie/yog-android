@@ -161,6 +161,14 @@ impl Shell {
                     model.focus_conversation(workspace.clone(), agent.clone());
                 }
             }
+            // **An address a newer engine of this major searches** (REMOTE
+            // §3.2). The flat keys under an unknown token are what the token
+            // would have said, so none is read and the hit is painted, not
+            // tapped — the `Ball` arm's standing exactly.
+            Address::Unknown(word) => {
+                let at = crate::codec::unknown_label("address", word);
+                ui.weak(format!("{at} · {tier} · {excerpt}"));
+            }
         }
     }
 }

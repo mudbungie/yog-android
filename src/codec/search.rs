@@ -58,11 +58,17 @@ pub enum Address {
     Workspace { name: String },
     /// A conversation in a workspace: the deeper focus, also taken.
     Conversation { workspace: String, agent: String },
+    /// **A fourth kind of address** a newer engine of this major searches
+    /// (REMOTE §3.2's catch-all). The flat keys under an unknown token are
+    /// exactly what the token would have said, so none is read: the hit still
+    /// lists, with its field, its offset and its excerpt, and it is not
+    /// tappable — which is the `Ball` arm's standing already.
+    Unknown(String),
 }
 
 /// Which field matched — and, by the engine's own ranking, the tier: what a
 /// thing **is** beats what it is **for** beats what it **says**.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HitField {
     /// A ball id, a workspace name, a conversation name or agent id.
     Name,
@@ -70,6 +76,8 @@ pub enum HitField {
     Summary,
     /// The bulk: a ball body, a transcript entry's bytes.
     Text,
+    /// A fourth tier a newer engine of this major ranks by (REMOTE §3.2).
+    Unknown(String),
 }
 
 impl HitField {
@@ -82,11 +90,12 @@ impl HitField {
     /// called, and the shell paints the same word beside the hit — so a row
     /// whose excerpt repeats its own subject (a name matching a name) says
     /// why it is there rather than looking like a duplicate.
-    pub(crate) fn word(self) -> &'static str {
+    pub(crate) fn word(&self) -> String {
         match self {
-            Self::Name => "name",
-            Self::Summary => "summary",
-            Self::Text => "text",
+            Self::Name => "name".to_owned(),
+            Self::Summary => "summary".to_owned(),
+            Self::Text => "text".to_owned(),
+            Self::Unknown(word) => super::fields::unknown("field", word),
         }
     }
 }
@@ -128,13 +137,13 @@ fn hit(v: &Value) -> Result<Hit, String> {
             workspace: str_of(o, "workspace").map_err(named)?,
             agent: str_of(o, "agent").map_err(named)?,
         },
-        other => return Err(named(format!("hit at unknown address {other:?}"))),
+        other => Address::Unknown(other.to_owned()),
     };
     let word = str_of(o, "field").map_err(named)?;
     let field = HitField::ALL
         .into_iter()
         .find(|tier| tier.word() == word)
-        .ok_or_else(|| named(format!("hit in unknown field {word:?}")))?;
+        .unwrap_or(HitField::Unknown(word));
     Ok(Hit {
         at,
         field,

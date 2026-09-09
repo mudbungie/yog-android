@@ -15,6 +15,12 @@
 //! release gates that read it are other repositories fetching one path out of
 //! a tree they do not build.
 //!
+//! **The preface carries a second number since REMOTE §3.2** (bl-e598): the
+//! `edition`, which is the ADDITIVE line inside a major. It is not matched and
+//! it can never refuse a connection — a newer engine of this major is one this
+//! build must go on talking to, and what the number buys is a control that can
+//! grey itself rather than a reader that falls over (`crate::ledger`).
+//!
 //! Three properties this end must keep, each the refusal of something easier:
 //!
 //! - **Write before reading.** This seat writes its preface and its request in
@@ -45,8 +51,12 @@ use crate::frame;
 mod version;
 pub use version::PROTOCOL;
 
-/// The preface's one key, and the whole of its shape.
+/// The preface's two keys. `protocol` is the major and is matched exactly;
+/// `edition` is the additive line inside it (REMOTE §3.2, `crate::ledger`) and
+/// is never matched at all — it is read, kept, and spent by a control deciding
+/// whether the engine could have said a field.
 const KEY: &str = "protocol";
+const EDITION_KEY: &str = "edition";
 
 /// What a peer that stated no version is called in the sentence.
 const UNSTATED: &str = "no version";
@@ -54,26 +64,40 @@ const UNSTATED: &str = "no version";
 /// Write this build's preface. Called before this end reads anything, which is
 /// what makes the exchange deadlock-free without an ordering rule to remember.
 pub(crate) fn state(w: &mut dyn Write) -> io::Result<()> {
-    frame::write_frame(w, json!({ KEY: PROTOCOL }).to_string().as_bytes())
+    let said = json!({ KEY: PROTOCOL, EDITION_KEY: crate::ledger::EDITION });
+    frame::write_frame(w, said.to_string().as_bytes())
 }
 
 /// The version the peer stated, or `None` when it stated none — a frame that
 /// never arrived, the terminator, bytes that are not JSON, a value that is not
 /// an object and an object without the key collapsing to the one answer a
 /// reader can act on.
-fn stated(r: &mut dyn Read) -> Option<u64> {
+fn stated(r: &mut dyn Read) -> Option<(u64, u64)> {
     let body = frame::read_frame(r).ok().flatten()?;
     let value: Value = serde_json::from_slice(&body).ok()?;
-    value.get(KEY)?.as_u64()
+    let protocol = value.get(KEY)?.as_u64()?;
+    // **An absent edition is the FLOOR, not a refusal** (REMOTE §3.2). Every
+    // engine of this major that predates the field is exactly an engine at the
+    // edition the major was cut at, so the absence says precisely that — and
+    // an engine that never grows a field never has to state one.
+    let edition = value
+        .get(EDITION_KEY)
+        .and_then(Value::as_u64)
+        .unwrap_or_else(|| u64::from(crate::ledger::FLOOR));
+    Some((protocol, edition))
 }
 
-/// Read the engine's preface and refuse a mismatch to the caller.
-pub(crate) fn confirm(r: &mut dyn Read) -> Result<(), String> {
-    let peer = stated(r);
-    if peer == Some(u64::from(PROTOCOL)) {
-        return Ok(());
+/// Read the engine's preface, refuse a MAJOR mismatch to the caller, and hand
+/// back the edition it stated — a capability fact, never a refusal, which the
+/// held read keeps for whatever asks `crate::ledger::spells`.
+pub(crate) fn confirm(r: &mut dyn Read) -> Result<u32, String> {
+    let Some((protocol, edition)) = stated(r) else {
+        return Err(mismatch(None));
+    };
+    if protocol != u64::from(PROTOCOL) {
+        return Err(mismatch(Some(protocol)));
     }
-    Err(mismatch(peer))
+    Ok(u32::try_from(edition).unwrap_or(u32::MAX))
 }
 
 /// The refusal, said the same way at both ends: both versions, and what to do

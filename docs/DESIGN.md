@@ -75,6 +75,12 @@ breaks it, fail-closed and on purpose. So a protocol bump upstream is a
 `PROTOCOL` file to match, decode whatever the moved shapes gained, and let the §14 cache's own
 version stamp discard what the previous build stored.
 
+**But a bump is now RARE, and §2.1 is what changed** (REMOTE §3.2, bl-e598,
+landed here bl-93cd). `PROTOCOL` is a major-compatibility number: it moves only
+on a breaking change, and every addition inside one ships with no bump at all.
+The paragraph above is still the whole procedure *for a major* — it is simply
+no longer the answer to "the engine grew a field".
+
 **Every connection opens with a version preface (bl-93e3).** REMOTE §3 is the
 authority and this file cites rather than restates it: each end writes one
 frame, `{"protocol": <integer>}`, before it reads the peer's; a mismatch is
@@ -102,14 +108,18 @@ artifact and no endpoint that serves it) and replayed by
   directions: a shape with no row and a row with no shape are each a red test,
   so a vocabulary that grows upstream arrives as a question rather than as
   silence. A skipped shape must still be refused **naming itself**.
-- **Rule 3 reaches inside an envelope, not only across shapes.** This codec
-  spells one staging rung and predicts no conversation name (§8), so a frame
-  stating another rung or a real seed is refused rather than flattened into
-  the shape this codec has — the same misread the rule forbids, one level
-  down. `enroll`'s optional `address` (REMOTE §8.4, PROTOCOL 14) is the same
-  refusal for a different reason: the route the enrolled device will dial is a
-  fact about a box this seat cannot see, so the bare form is the only honest
-  gesture and a frame stating a route is refused by name.
+- **Rule 3 reaches inside an envelope, not only across shapes — and it reaches
+  REQUESTS only** (amended bl-93cd). This codec spells one staging rung and
+  predicts no conversation name (§8), so a request frame stating another rung
+  or a real seed is refused rather than flattened into the shape this codec
+  has — the same misread the rule forbids, one level down. `enroll`'s optional
+  `address` (REMOTE §8.4) is the same refusal for a different reason: the route
+  the enrolled device will dial is a fact about a box this seat cannot see, so
+  the bare form is the only honest gesture and a frame stating a route is
+  refused by name. **A REPLY is never refused for what is inside it**: §2.1's
+  grows-only rule replaced every such refusal with a catch-all. What a client
+  does not paint is a parity fact, not an unreadability, and the ledger that
+  records it is `parity.toml`.
 
 The corpus caught one live defect on its first replay: firing a conversation
 answers `{"kind": "started"}`, which this client had no arm for, so the one
@@ -126,13 +136,16 @@ while every sentence around it stayed true.
 
 Two kinds of move stand behind it, and only one of them is mechanical:
 
-- **The ledger catches a signature.** A field gained or withdrawn moves a
-  shape's `since` and the drift check refuses it at the standing version —
+- **The ledger catches a signature.** A field gained or withdrawn used to move
+  a shape's `since` and the drift check refused it at the standing version —
   which is what forced 2 (the worktree lane's `subject_cwd`/`cwd`), 3 and 4
   (the roster's `failure`, the queue's `flag`), 5 (`reply/governing`'s
   rewrite) and 6 (the tuning pair and the providers row's capability
-  booleans). A field this codec did not carry would be one dropped on the way
-  out, which is what the request round trip is for.
+  booleans). **`since` is gone** (bl-e598): the ledger now stamps every field
+  PATH with the EDITION it appeared at, a gain takes the next edition and no
+  bump, and only a loss or a re-type still demands the major. A field this
+  codec did not carry would be one dropped on the way out, which is what the
+  request round trip is for.
 - **The ledger cannot see a meaning.** REMOTE §5.5 made the follow lane's
   frame an **append** — *"absorb every frame of a read, in order, onto an
   empty fold"* — under a wire spelling that did not change. A signature ledger
@@ -140,6 +153,92 @@ Two kinds of move stand behind it, and only one of them is mechanical:
   fail. A client of that lane must read the section rather than re-vendor the
   fixtures and call it consumed (§14.1 — this seat holds the lane and folds
   with the engine's own `absorb`).
+
+### 2.1 The major, the edition, and the grows-only reader (bl-93cd)
+
+**Two numbers now, and they answer different questions** (yog REMOTE §3.2 is
+the authority; this section is the consumer's half). `PROTOCOL` is a
+**major**: it moves only on a breaking change — a field removed or re-typed, a
+meaning changed under a spelling still in use, a field the engine newly
+*requires* on a request — and the §3 preface is unchanged, strict equality,
+fail-closed, no negotiation. The **edition** is the additive line inside one
+major: a field, a word, an op or a reply kind ships with no bump and is stamped
+in `corpus/shapes.json` with the edition it appeared at. `floor` is the edition
+the current major was cut at (18, for major 19).
+
+**So a newer engine of this major is one this seat must go on talking to**, and
+that is the whole reason the reader changed. Four obligations, each landed:
+
+1. **An unknown key is ignored** — structural, and it must stay so. Every
+   decoder here indexes by key and none enumerates an object.
+2. **An absent post-floor key reads as its DEFAULT**, and the default is the
+   fact before the field existed. Such a key is optional to read
+   (`fields::opt`/`opt_val`); no field in the vendored corpus is post-floor
+   today, so this is the rule every future one is added under.
+3. **An unknown WORD becomes that vocabulary's named catch-all**, carrying the
+   word, rendered as *unknown `<noun>`: `<word>`* in the theme's resting ink —
+   never the nearest known word, never a refusal of the row it sits in. Every
+   reply vocabulary took an `Unknown(String)` arm: `conv`'s state, flight and
+   tone; `records::steps`' orphan and framing; `trail`'s standing; `ws`' kind;
+   `transcript`'s entry and block kinds; `files`' preview class; `search`'s
+   address and tier; `hold`'s verdict and scope; and `leaf::Grade`.
+   `workdiff`'s state needed no type at all — it already rode as the engine's
+   own word, and an unknown one reads no ref exactly as `unreadable` does.
+   `fields::pick` is where the rule lives and `fields::unknown` is the one home
+   for the sentence, so no vocabulary can invent a second phrasing of
+   *unknown*.
+4. **The reply `kind` and the request `op` stay strict**, refusing by name, in
+   band. *The engine refuses what it cannot act on; a reader tolerates what it
+   cannot render.*
+
+**Two deliberate exceptions, both request-side, both recorded here rather than
+left to be re-derived.** `codec::proposals`' verdict is read out of a REQUEST
+envelope only — nothing answers it — so it keeps its refusal and its compile
+gate. And `crate::envelope::read`, the QR payload, refuses a third grade word
+outright: it is not a wire read at all but a photograph with no provenance,
+and the very next act is installing the material it carries, so a word this
+build cannot check against a leaf is material it must not install (REMOTE §4.2
+makes the certificate the authority, and `envelope::agrees` is the check).
+The `enrolled` REPLY reads the same word grows-only, and writes it back
+verbatim — the catch-all says *unknown* on a glass, never on a wire.
+
+**The hello states the edition** (`src/hello.rs`): `{"protocol": …, "edition":
+…}`, the edition computed by `build.rs` as the newest stamp in the vendored
+`corpus/shapes.json`. It is never matched and can never refuse a connection. A
+peer that states none is read as the floor, which is exactly what every engine
+older than the field is. `hello::confirm` hands the peer's edition back and
+`transport::Open::edition` keeps it on the connection — not in a process-wide
+slot, because a capability question must not depend on what else has been
+dialled since.
+
+**`src/ledger.rs` is the reading a control spends**: `spells(shape, path,
+engine)` — is this path stamped at or below the engine's edition? — over a
+table `build.rs` compiles from the vendored corpus, holding the **post-floor
+paths only**. That table is EMPTY at a major's own cut and is empty today: a
+path at or below the floor is on every engine of this major and can never
+answer anything but yes. The first field an engine adds inside major 19 is its
+first row, and the control that would have shown that field greys itself
+instead of rendering the reassuring default.
+
+**What is deliberately NOT built: the hop from the connection to the
+`Snapshot`.** A control paints off a snapshot, and the edition today stops at
+`transport::Open`. That is not an oversight — with the stamp table empty,
+`spells` answers *yes* for every path this seat reads, so a snapshot field
+would be an integer nothing could ever branch on, threaded through the pass,
+the standing and the publish. The first post-floor field is what pulls it up,
+and it is the ball that adds that field's control that should carry it: it
+will know which screen greys, which is the only thing that decides where the
+number has to arrive.
+
+**Two conformance replays hold all of it** (`tests/conformance/editions.rs`).
+Projection: every reply shape, at every edition from the floor to the corpus's
+own, with every post-`e` key deleted — nothing refuses. Mutation: every
+string-typed path in a reply other than `kind`, replaced with a token no build
+has heard of — nothing refuses; free text passes trivially and a vocabulary
+passes only through its catch-all. The projection loop is vacuous at a
+freshly cut major (floor == edition, so nothing is deleted), which is stated in
+the module and answered by a test of the projector itself against a ledger that
+HAS grown — a replay that can only pass proves nothing.
 
 ## 3. The stack ruling
 
@@ -332,6 +431,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/hello.rs` | REMOTE §3's version preface: state, confirm, and the one fail-closed sentence | landed (bl-93e3) |
 | `src/hello/version.rs` | the ledger of every bump, and the re-export of the constant `build.rs` compiles out of the repo-root `PROTOCOL` file — split off (bl-5070) because the preface exchange and the changelog of what moved the number are edited for unrelated reasons and together sit in the ≥200 band | landed (bl-5070) |
 | `src/codec/request.rs` | the gesture codec's decode side — the inverse the corpus is replayed through | landed (bl-93e3) |
+| `src/ledger.rs` | §2.1's edition ledger: the floor, this build's edition and the post-floor stamps `build.rs` compiles out of the vendored corpus, and the one reading a control spends — *could this engine have said that field at all* | landed (bl-93cd) |
+| `tests/conformance/ledger.rs` + `conformance/editions.rs` | the same ledger read as data, and REMOTE §3.2's two replays over it: projection to every edition of this major, and word mutation over every string a reply carries | landed (bl-93cd) |
 | `corpus/` + `tests/conformance/` | the vendored wire conformance corpus and its replay: the decision table over every shape, in both directions | landed (bl-93e3) |
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
 | `src/codec/follow.rs` | REMOTE §5.5's frame — what landed since the frame before — and the engine's own fold that reassembles a held read from them | landed (bl-4822, the fold bl-8e3c) |

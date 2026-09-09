@@ -21,6 +21,20 @@
 /// changes meaning: the framing, the envelope, or what a spelling already in
 /// use is taken to say.
 ///
+/// **19, and the ledger below is now HISTORY** (yog REMOTE §3.2, bl-e598;
+/// landed here bl-93cd). The number went 13 → 18 in one week, and four of
+/// those five bumps carried nothing but additions — each costing three
+/// consumer repositories a re-vendor and a window in which no published suite
+/// composed. So `PROTOCOL` became a **major**: it moves only on a breaking
+/// change — a field removed or re-typed, a meaning changed under a spelling
+/// still in use, a field the engine newly *requires* on a request — and 18 →
+/// 19 is the last bump of the old kind and the first of the new. Every
+/// ADDITION now ships with no bump at all and is stamped an **edition** per
+/// field path in `corpus/shapes.json`; the reader is grows-only, the preface
+/// states the edition beside the version, and `crate::ledger` is where all of
+/// that lives (DESIGN §2.1). Every entry from here down describes a bump that
+/// would not be one today, which is exactly why they are kept.
+///
 /// **18 since the re-vendor of bl-5070.** Seventeen moves stand behind it and
 /// every one is recorded below — as a shape this seat reads, or as one whose
 /// move cost it the integer and nothing else. 2 was the tool-host pair
@@ -177,6 +191,9 @@
 /// on purpose.** An unknown FIELD is tolerated — this codec reads the fields
 /// it spells and ignores the rest, which `codec::conv`'s own test pins. What
 /// ends an old build is this preface: fail-closed, both ways, by §3's design.
+/// Since 19 an unknown WORD is tolerated too, and an absent post-floor field
+/// with it, so what the preface now ends is only a build of the wrong MAJOR —
+/// which is the whole of the change.
 pub use protocol::PROTOCOL;
 
 /// The generated constant: `build.rs` writes it from the repo-root `PROTOCOL`

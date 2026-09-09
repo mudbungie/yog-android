@@ -6,6 +6,7 @@
 //! what is asserted here is the readings those frames do not reach and the
 //! refusals nobody would otherwise see.
 
+use super::{Framing, Orphan};
 use serde_json::{Value, json};
 
 fn object(v: &Value) -> serde_json::Map<String, Value> {
@@ -139,28 +140,29 @@ fn a_line_carries_the_wounds_reason_and_omits_a_commit_it_has_not_got() {
     );
 }
 
-/// **A framing word this build has not heard of refuses by name.** It rode as
-/// a bare string while nothing branched on it; a screen branches on it now, so
-/// reading an unknown word as the nearest known one would paint a live step as
-/// a killed one — which is the defect PROTOCOL 18 exists to end.
+/// **A framing word this build has not heard of is said as unknown** (REMOTE
+/// §3.2). It rode as a bare string while nothing branched on it; a screen
+/// branches on it now, so reading an unknown word as the nearest known one
+/// would paint a live step as a killed one — the defect PROTOCOL 18 exists to
+/// end. The third answer keeps the census: the row reads, the label says the
+/// word, and `crate::theme::framing` gives it resting ink.
 #[test]
-fn a_framing_token_this_build_has_not_heard_of_refuses_by_name() {
+fn a_framing_token_this_build_has_not_heard_of_is_said_as_unknown() {
     let rows = json!({ "rows": [{ "seq": "001", "framing": "dawdling", "wound": "none",
                                   "attempts": 1, "tokens": { "total": 1 } }],
                        "orphan": "none" });
-    assert_eq!(
-        super::steps_of(&object(&rows)).unwrap_err(),
-        "field \"framing\": unknown token \"dawdling\""
-    );
+    let steps = super::steps_of(&object(&rows)).unwrap();
+    let row = steps.rows.first().unwrap();
+    assert_eq!(row.framing, Framing::Unknown("dawdling".to_owned()));
+    assert_eq!(row.framing.word(), "unknown framing: dawdling");
+    assert_eq!(row.seq, "001");
 }
 
 #[test]
-fn an_orphan_token_this_build_has_not_heard_of_refuses_by_name() {
+fn an_orphan_token_this_build_has_not_heard_of_is_carried() {
     let said = json!({ "rows": [], "orphan": "sideways" });
-    assert_eq!(
-        super::steps_of(&object(&said)).unwrap_err(),
-        "field \"orphan\": unknown token \"sideways\""
-    );
+    let steps = super::steps_of(&object(&said)).unwrap();
+    assert_eq!(steps.orphan, Orphan::Unknown("sideways".to_owned()));
 }
 
 #[test]

@@ -5,16 +5,21 @@
 //! and `wound` as discriminants with an optional reason beside each, because
 //! the pair *(bool, Option<reason>)* stopped being a bijection the moment a
 //! third arm arrived. They are read here as the same discriminants — a table,
-//! never a derivation — so a token this build has not heard of refuses by
-//! name rather than folding into the nearest one it knows.
+//! never a derivation — so a token this build has not heard of rides as
+//! itself (REMOTE §3.2's catch-all) rather than folding into the nearest one
+//! it knows.
 //!
 //! **`framing` is the third, since PROTOCOL 18** (yog bl-ab53). It rode as a
 //! bare string while the screen only ever printed it; the fourth word,
 //! `in_flight`, is the one a surface has to BRANCH on — a step being written
 //! right now against one an interrupt cut — and `crate::theme::framing` is
 //! where that branch lives. A table here rather than a `match` on a `&str`
-//! there, for this module's own reason: an unknown word must refuse by name at
-//! the decode, not paint as the nearest colour at a paint site.
+//! there, for this module's own reason: an unknown word must not paint as the
+//! nearest colour at a paint site. It used to refuse by name at the decode
+//! instead; REMOTE §3.2 replaced that with the third answer — the catch-all
+//! arm, painted in resting ink and labelled with the word — because refusing
+//! throws away every other field of a census one added word would otherwise
+//! cost nothing.
 //!
 //! **The two timestamps are not read.** A census answers *what happened and
 //! how it ended*; `started_at` and `ended_at` are a ledger whose only use
@@ -36,12 +41,15 @@ pub struct Steps {
     pub orphan_reason: Option<String>,
 }
 
-/// The orphaned-tail classes. `None` is the ordinary conversation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The orphaned-tail classes. `None` is the ordinary conversation, and
+/// `Unknown` is REMOTE §3.2's catch-all: a class a newer engine names rides as
+/// itself, because a tail this build cannot classify is still a tail.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Orphan {
     None,
     Mail,
     ToolWindow,
+    Unknown(String),
 }
 
 const ORPHANS: [(&str, Orphan); 3] = [
@@ -51,14 +59,21 @@ const ORPHANS: [(&str, Orphan); 3] = [
 ];
 
 /// **The §4.4 terminal classification, in the engine's four words** (yog
-/// `steps_view::wire::framing_token`). `InFlight` is PROTOCOL 18's addition:
+/// `steps_view::wire::framing_token`). `InFlight` was PROTOCOL 18's addition:
 /// the step being written right now, which `killed` used to have to cover.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+///
+/// **A fifth word is now an edition, not a bump** (REMOTE §3.2): it arrives as
+/// `Unknown`, the theme paints it in resting ink, and the census row says
+/// *unknown framing: `<word>`* — the third answer, neither the nearest colour
+/// nor a lost row. This module's doc used to demand a refusal here; that
+/// sentence is retired with the ruling that replaced it.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Framing {
     Complete,
     Failed,
     Killed,
     InFlight,
+    Unknown(String),
 }
 
 impl Framing {
@@ -71,11 +86,14 @@ impl Framing {
     /// table the wire is picked against is also the table the glass is
     /// labelled from — one home. `pub(crate)` for `Destination::file`'s reason
     /// exactly: it hands back a borrow (bootstrap rule 2's honest demotion).
-    pub(crate) fn word(self) -> &'static str {
+    pub(crate) fn word(&self) -> String {
+        if let Self::Unknown(word) = self {
+            return super::super::fields::unknown("framing", word);
+        }
         FRAMINGS
             .iter()
-            .find(|(_, framing)| *framing == self)
-            .map_or("", |(word, _)| word)
+            .find(|(_, framing)| framing == self)
+            .map_or_else(String::new, |(word, _)| (*word).to_owned())
     }
 }
 
@@ -143,7 +161,7 @@ pub(in super::super) fn steps_of(o: &Map<String, Value>) -> Result<Steps, String
             .iter()
             .map(row)
             .collect::<Result<Vec<StepRow>, String>>()?,
-        orphan: pick(o, "orphan", &ORPHANS)?,
+        orphan: pick(o, "orphan", &ORPHANS, Orphan::Unknown)?,
         orphan_reason: opt(o, "orphan_reason", str_of)?,
     })
 }
@@ -156,7 +174,7 @@ fn row(v: &Value) -> Result<StepRow, String> {
     let o = object(v, "steps")?;
     Ok(StepRow {
         seq: str_of(&o, "seq")?,
-        framing: pick(&o, "framing", &FRAMINGS)?,
+        framing: pick(&o, "framing", &FRAMINGS, Framing::Unknown)?,
         wound: str_of(&o, "wound")?,
         wound_reason: opt(&o, "wound_reason", str_of)?,
         attempts: u64_of(&o, "attempts")?,

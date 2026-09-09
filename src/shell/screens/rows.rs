@@ -92,7 +92,7 @@ impl Shell {
         let rails = crate::roster::threads(&listed);
         let mut first = true;
         for (row, rails) in listed.iter().zip(rails) {
-            let ink = crate::shell::chat::tone_hue(ui, row.tone);
+            let ink = crate::shell::chat::tone_hue(ui, &row.tone);
             let control = threaded(ui, &rails, &crate::roster::lines(row, now), ink);
             // **Where the harness finds a row** (§15.2). Only the first: the
             // walk needs one row to press, and a rectangle per row would be a

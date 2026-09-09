@@ -29,6 +29,12 @@ pub(super) fn bytes(ui: &mut egui::Ui, preview: &Preview) {
         Preview::Binary { size } => {
             ui.weak(format!("binary — {size} bytes, nothing to read"));
         }
+        // **A class this build cannot read** (REMOTE §3.2). The class token is
+        // what says which keys are under it, so there is nothing to show and
+        // the word is the whole of the honest answer.
+        Preview::Unknown(word) => {
+            ui.weak(crate::codec::unknown_label("preview", word));
+        }
     }
 }
 

@@ -56,8 +56,8 @@ fn a_mint_names_the_pair_and_the_material_rides_back_with_it() {
     let snap = settle(&mut model, &|s| s.minted.is_some());
     let held = snap.minted.unwrap_or_else(|| unreachable!());
     assert_eq!(
-        (held.name.as_str(), held.grade),
-        ("phone-2", crate::leaf::Grade::Foot)
+        (held.name.as_str(), &held.grade),
+        ("phone-2", &crate::leaf::Grade::Foot)
     );
     // The envelope it displays is the one the NEXT device reads: one shape,
     // proved by the round trip rather than by two spellings agreeing.

@@ -112,7 +112,7 @@ fn line(ui: &mut egui::Ui, row: &OpRow) {
     ui.label(&row.argv);
     if row.failed {
         ui.colored_label(
-            crate::shell::chat::tone_hue(ui, crate::codec::Tone::Bad),
+            crate::shell::chat::tone_hue(ui, &crate::codec::Tone::Bad),
             format!("failed · {}", row.standing.word()),
         );
     }

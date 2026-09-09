@@ -33,7 +33,7 @@
 //! that refusal is the engine's too: it arrives in band, which is where every
 //! other capability decision this seat does not own arrives.
 //!
-//! **Three verdicts and no fourth.** `pass` lets this one call through,
+//! **Three verdicts this seat sends, and a fourth it can be told about.** `pass` lets this one call through,
 //! `refuse` declines it in band — the model reads why and carries on — and
 //! `hold` keeps it parked even where the policy would now let it by. Nothing
 //! here stops an agent: yog's own note is that `litany stop` mid-tool-window
@@ -49,8 +49,10 @@ use serde_json::{Map, Value, json};
 
 use super::fields::str_of;
 
-/// What an answer says about the parked call.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// What an answer says about the parked call. A fourth word a newer engine of
+/// this major spells arrives as `Unknown` on the receipt (REMOTE §3.2) — never
+/// on a control, which offers [`Verdict::ALL`] and nothing else.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Verdict {
     /// Let this one call through, and drive the conversation on.
     Pass,
@@ -60,6 +62,8 @@ pub enum Verdict {
     /// saying *stay where you are*, and a driver launched to re-park would
     /// spend a process reaching the state it is already in.
     Hold,
+    /// A verdict word this build has not heard of, off a receipt.
+    Unknown(String),
 }
 
 impl Verdict {
@@ -70,11 +74,12 @@ impl Verdict {
     /// The engine's own word for this verdict — the wire token, the control's
     /// label and its `act:` reading all at once, so a control cannot say one
     /// thing and send another.
-    pub(crate) fn word(self) -> &'static str {
+    pub(crate) fn word(&self) -> String {
         match self {
-            Self::Pass => "pass",
-            Self::Refuse => "refuse",
-            Self::Hold => "hold",
+            Self::Pass => "pass".to_owned(),
+            Self::Refuse => "refuse".to_owned(),
+            Self::Hold => "hold".to_owned(),
+            Self::Unknown(word) => super::fields::unknown("verdict", word),
         }
     }
 
@@ -82,14 +87,14 @@ impl Verdict {
     /// move it on (one executes, one declines in band); `hold` moves nothing.
     /// Read here rather than at the paint because it is what decides whether
     /// an unadvanced receipt is worth a sentence.
-    pub(crate) fn releases(self) -> bool {
+    pub(crate) fn releases(&self) -> bool {
         !matches!(self, Self::Hold)
     }
 }
 
 /// **How far one answer stands** (PROTOCOL 18). The module doc says why it is
 /// required rather than defaulted; this is the vocabulary.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Scope {
     /// The held call, and nothing else. The safe reading, and the one a
     /// control gives without being asked.
@@ -99,6 +104,12 @@ pub enum Scope {
     Conversation,
     /// That class for every conversation in the workspace.
     Workspace,
+    /// A scope word this build has not heard of, off a receipt (REMOTE §3.2).
+    /// It is never wider than what was asked: this seat only ever sends one of
+    /// [`Scope::ALL`], so an unknown word on a receipt is the engine naming
+    /// the standing in a spelling this build cannot render, and it is said as
+    /// itself.
+    Unknown(String),
 }
 
 impl Scope {
@@ -108,11 +119,12 @@ impl Scope {
     pub(crate) const ALL: [Self; 3] = [Self::Call, Self::Conversation, Self::Workspace];
 
     /// The engine's own word — the wire token and the control's label at once.
-    pub(crate) fn word(self) -> &'static str {
+    pub(crate) fn word(&self) -> String {
         match self {
-            Self::Call => "call",
-            Self::Conversation => "conversation",
-            Self::Workspace => "workspace",
+            Self::Call => "call".to_owned(),
+            Self::Conversation => "conversation".to_owned(),
+            Self::Workspace => "workspace".to_owned(),
+            Self::Unknown(word) => super::fields::unknown("scope", word),
         }
     }
 }
@@ -133,36 +145,36 @@ pub(crate) fn encode(workspace: &str, agent: &str, verdict: Verdict, scope: Scop
 }
 
 /// Read one back. The verdict and the scope are each found among the words
-/// their own type owns, so the tokens have one home and an unknown one refuses
-/// by name.
+/// their own type owns, so the tokens have one home and an unknown one becomes
+/// that type's catch-all (REMOTE §3.2) rather than costing the frame.
 pub(crate) fn decode(o: &Map<String, Value>) -> Result<(String, String, Verdict, Scope), String> {
     Ok((
         str_of(o, "workspace")?,
         str_of(o, "agent")?,
-        verdict_of(o, "answer")?,
-        scope_of(o, "answer")?,
+        verdict_of(o)?,
+        scope_of(o)?,
     ))
 }
 
 /// The scope token, read for whoever is asking — the gesture on the way out
 /// and the receipt on the way back, `verdict_of`'s shape one field along.
-fn scope_of(o: &Map<String, Value>, whose: &str) -> Result<Scope, String> {
+fn scope_of(o: &Map<String, Value>) -> Result<Scope, String> {
     let word = str_of(o, "scope")?;
-    Scope::ALL
+    Ok(Scope::ALL
         .into_iter()
         .find(|s| s.word() == word)
-        .ok_or_else(|| format!("{whose}: unknown scope {word:?}"))
+        .unwrap_or(Scope::Unknown(word)))
 }
 
 /// The verdict token, read for whoever is asking — the gesture on the way out
 /// and the receipt on the way back, which carries a verdict and no address and
 /// so cannot go through the gesture's reader.
-fn verdict_of(o: &Map<String, Value>, whose: &str) -> Result<Verdict, String> {
+fn verdict_of(o: &Map<String, Value>) -> Result<Verdict, String> {
     let word = str_of(o, "verdict")?;
-    Verdict::ALL
+    Ok(Verdict::ALL
         .into_iter()
         .find(|v| v.word() == word)
-        .ok_or_else(|| format!("{whose}: unknown verdict {word:?}"))
+        .unwrap_or(Verdict::Unknown(word)))
 }
 
 /// **What an answer earns**: the call it landed on, and whether the branch was
@@ -189,8 +201,8 @@ pub(crate) fn answered_of(o: &Map<String, Value>) -> Result<Answered, String> {
     Ok(Answered {
         tool_use: str_of(o, "tool_use")?,
         tool: str_of(o, "tool")?,
-        verdict: verdict_of(o, "answered")?,
-        scope: scope_of(o, "answered")?,
+        verdict: verdict_of(o)?,
+        scope: scope_of(o)?,
         advanced: super::fields::bool_of(o, "advanced")?,
     })
 }

@@ -121,6 +121,6 @@ impl Standing {
             .conversations
             .iter()
             .find(|row| row.root_id == agent)
-            .and_then(|row| row.flight)
+            .and_then(|row| row.flight.clone())
     }
 }

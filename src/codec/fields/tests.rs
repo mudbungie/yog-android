@@ -1,7 +1,7 @@
 //! Every reader, both directions: the named value comes back, and every
 //! refusal names its offender — the strictness the whole codec leans on.
 
-use super::{arr_of, bool_of, i64_of, opt, opt_val, pick, str_of, u64_of, usize_of};
+use super::{arr_of, bool_of, i64_of, opt, opt_val, pick, str_of, u64_of, unknown, usize_of};
 use serde_json::{Map, Value, json};
 
 fn obj(v: Value) -> Map<String, Value> {
@@ -89,13 +89,33 @@ fn opt_val_reads_absent_null_present_and_mismatch() {
     assert!(opt_val(&o, "n", s).is_err());
 }
 
+/// **The grows-only pick** (REMOTE §3.2): the table's answer for a word this
+/// build knows, the vocabulary's own catch-all carrying the word for anything
+/// else, and still a refusal for a field that is missing or is not a string —
+/// a word this build cannot spell is an engine that grew, a field that is not
+/// there at all is a frame that is wrong.
 #[test]
-fn pick_matches_its_table_and_names_a_stray() {
-    const T: [(&str, u8); 2] = [("one", 1), ("two", 2)];
-    let o = obj(json!({ "k": "two", "bad": "three" }));
-    assert_eq!(pick(&o, "k", &T).unwrap(), 2);
+fn pick_matches_its_table_and_carries_a_stray_word() {
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    enum Word {
+        Two,
+        Unknown(String),
+    }
+    const T: [(&str, Word); 1] = [("two", Word::Two)];
+    let o = obj(json!({ "k": "two", "bad": "three", "n": 3 }));
+    assert_eq!(pick(&o, "k", &T, Word::Unknown).unwrap(), Word::Two);
     assert_eq!(
-        pick(&o, "bad", &T).unwrap_err(),
-        "field \"bad\": unknown token \"three\""
+        pick(&o, "bad", &T, Word::Unknown).unwrap(),
+        Word::Unknown("three".to_owned())
     );
+    assert_eq!(
+        pick(&o, "n", &T, Word::Unknown).unwrap_err(),
+        "missing or non-string field \"n\""
+    );
+}
+
+/// One home for the sentence, so eleven vocabularies say *unknown* alike.
+#[test]
+fn a_catch_all_reads_as_the_noun_and_the_word() {
+    assert_eq!(unknown("framing", "cindered"), "unknown framing: cindered");
 }

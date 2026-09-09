@@ -15,8 +15,10 @@
 //! narrowing). A conversation's state and flight are words nothing branches
 //! on; this one DECIDES which fields the row has — an unreadable project
 //! states no refs at all, an absent one states no oids — so a decoder that
-//! carried it whole would have to guess at every field under it. An unknown
-//! state refuses naming it.
+//! carried it whole would have to guess at every field under it. A state this
+//! build has not heard of reads none of them and keeps the word (REMOTE
+//! §3.2's catch-all, which here costs no new type at all) — `unreadable` is
+//! already exactly that row, and the screen paints the word it carries.
 //!
 //! **Binary is read off the SHAPE and not off a token.** Upstream writes
 //! counts or it writes `binary`, never both, so there is nothing here to
@@ -141,7 +143,6 @@ pub(super) fn diff(v: &Value) -> Result<Diff, String> {
         truncated: false,
     };
     match row.state.as_str() {
-        "unreadable" => {}
         "absent" => {
             row.target = str_of(&o, "target")?;
             row.source = str_of(&o, "source")?;
@@ -158,7 +159,10 @@ pub(super) fn diff(v: &Value) -> Result<Diff, String> {
                 .collect::<Result<Vec<Churn>, String>>()?;
             row.truncated = bool_of(&o, "truncated")?;
         }
-        other => return Err(format!("work-diff: unknown state {other:?}")),
+        // `unreadable`, and REMOTE §3.2's catch-all with it: neither states a
+        // ref, so neither reads one, and the word the row already carries is
+        // the whole of what the screen has to say.
+        _ => {}
     }
     Ok(row)
 }

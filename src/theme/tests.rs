@@ -83,16 +83,25 @@ fn six_states_six_accents_and_the_brand_is_one_of_them() {
 
 #[test]
 fn tones_read_as_states() {
-    assert_eq!(tone(Tone::Plain), INK);
-    assert_eq!(tone(Tone::Weak), INK_WEAK);
-    assert_eq!(tone(Tone::Good), accent(State::Rest));
-    assert_eq!(tone(Tone::Bad), accent(State::Error));
-    assert_eq!(tone(Tone::Live), accent(State::Inference));
-    assert_eq!(tone(Tone::InFlight), accent(State::Working));
+    assert_eq!(tone(&Tone::Plain), INK);
+    assert_eq!(tone(&Tone::Weak), INK_WEAK);
+    assert_eq!(tone(&Tone::Good), accent(State::Rest));
+    assert_eq!(tone(&Tone::Bad), accent(State::Error));
+    assert_eq!(tone(&Tone::Live), accent(State::Inference));
+    assert_eq!(tone(&Tone::InFlight), accent(State::Working));
     // **The seventh tone the wire never spells** (PROTOCOL 18): a call the
     // capability control parked is asking for the operator, which is the one
     // hue §3 names for exactly that.
-    assert_eq!(tone(Tone::Held), accent(State::Attention));
+    assert_eq!(tone(&Tone::Held), accent(State::Attention));
+    // **REMOTE §3.2's catch-all wears resting ink.** A hue word a newer engine
+    // of this major spells cannot be shown as any of the six without claiming
+    // this build knows what the row is doing; rest is the one that claims
+    // nothing, and it is the accent the ink scale already carries.
+    let stray = tone(&Tone::Unknown("shiny".to_owned()));
+    assert_eq!(stray, accent(State::Rest));
+    for said in [Tone::Live, Tone::InFlight, Tone::Held, Tone::Bad] {
+        assert_ne!(stray, tone(&said));
+    }
 }
 
 /// **A step's framing is a state** (PROTOCOL 18, yog bl-ab53). The two
@@ -102,11 +111,16 @@ fn tones_read_as_states() {
 #[test]
 fn framings_read_as_states() {
     use crate::codec::Framing;
-    assert_eq!(framing(Framing::Complete), accent(State::Rest));
-    assert_eq!(framing(Framing::Failed), accent(State::Error));
-    assert_eq!(framing(Framing::Killed), accent(State::Annotation));
-    assert_eq!(framing(Framing::InFlight), accent(State::Working));
-    assert_ne!(framing(Framing::InFlight), framing(Framing::Killed));
+    assert_eq!(framing(&Framing::Complete), accent(State::Rest));
+    assert_eq!(framing(&Framing::Failed), accent(State::Error));
+    assert_eq!(framing(&Framing::Killed), accent(State::Annotation));
+    assert_eq!(framing(&Framing::InFlight), accent(State::Working));
+    assert_ne!(framing(&Framing::InFlight), framing(&Framing::Killed));
+    // A fifth word is an edition now (REMOTE §3.2), and it rests for
+    // [`tones_read_as_states`]'s reason exactly.
+    let stray = framing(&Framing::Unknown("cindered".to_owned()));
+    assert_eq!(stray, accent(State::Rest));
+    assert_ne!(stray, framing(&Framing::Failed));
 }
 
 #[test]

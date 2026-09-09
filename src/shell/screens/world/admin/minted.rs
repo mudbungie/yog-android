@@ -36,7 +36,7 @@ impl Shell {
         ui.weak(format!(
             "{} · {} · {}",
             envelope.name,
-            crate::codec::enroll::word(envelope.grade),
+            crate::codec::enroll::word(&envelope.grade),
             envelope.address
         ));
         ui.weak(SAID);

@@ -107,11 +107,16 @@ pub fn accent(state: State) -> Rgb {
 /// is inference; `InFlight` is a tool running, which is work; `Held` is a call
 /// parked for an answer, which is the one thing on this glass that is asking
 /// for you. The two ink tones are the ink scale, not a state at all.
-pub fn tone(tone: Tone) -> Rgb {
+pub fn tone(tone: &Tone) -> Rgb {
     match tone {
         Tone::Plain => INK,
         Tone::Weak => INK_WEAK,
-        Tone::Good => accent(State::Rest),
+        // `Good` is a result that came back and is done. **`Unknown` is
+        // REMOTE §3.2's catch-all** — a hue word a newer engine of this major
+        // spells — and it rests for a different reason: every other accent
+        // would claim this build knows what the row is doing. One arm, because
+        // rest is the answer that claims nothing and there is only one of it.
+        Tone::Good | Tone::Unknown(_) => accent(State::Rest),
         Tone::Bad => accent(State::Error),
         Tone::Live => accent(State::Inference),
         Tone::InFlight => accent(State::Working),
@@ -130,9 +135,12 @@ pub fn tone(tone: Tone) -> Rgb {
 /// and so `Rest`. Telling the first two apart is the whole of what PROTOCOL 18
 /// bought here (yog bl-ab53): before `in_flight`, every live step wore the one
 /// word that makes a real interrupt legible.
-pub fn framing(framing: Framing) -> Rgb {
+pub fn framing(framing: &Framing) -> Rgb {
     accent(match framing {
-        Framing::Complete => State::Rest,
+        // A complete step is done. A word this build has not heard of
+        // (REMOTE §3.2) rests for [`tone`]'s reason, which is not the same
+        // reason and is the same colour.
+        Framing::Complete | Framing::Unknown(_) => State::Rest,
         Framing::Failed => State::Error,
         Framing::Killed => State::Annotation,
         Framing::InFlight => State::Working,

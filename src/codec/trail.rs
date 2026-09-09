@@ -88,7 +88,7 @@ pub struct OpRow {
 /// with §4.2's ack watermark, so a banner is *the rows standing `live`*, and
 /// a seat can say why an alarm is down — retirement and the ack are told
 /// apart.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Standing {
     /// Ran clean, or was never an attempted action.
     Clean,
@@ -100,6 +100,9 @@ pub enum Standing {
     Retired,
     /// Failed, and the operator's watermark covers it.
     Acked,
+    /// A standing a newer engine of this major spells and this build does not
+    /// (REMOTE §3.2). The row is kept and the word is said.
+    Unknown(String),
 }
 
 impl Standing {
@@ -107,10 +110,13 @@ impl Standing {
     /// for `queue::held_at`'s reason: a reading the ANDROID paint spends,
     /// which a `pub(crate)` would leave dead on a host build.
     #[must_use]
-    pub fn word(self) -> String {
+    pub fn word(&self) -> String {
+        if let Self::Unknown(word) = self {
+            return super::fields::unknown("standing", word);
+        }
         STANDINGS
             .iter()
-            .find(|(_, standing)| *standing == self)
+            .find(|(_, standing)| standing == self)
             .map_or_else(String::new, |(word, _)| (*word).to_owned())
     }
 }
@@ -136,7 +142,7 @@ pub(crate) fn row(v: &Value) -> Result<OpRow, String> {
         stderr: str_of(o, "stderr")?,
         failed: bool_of(o, "failed")?,
         exit_label: str_of(o, "exit_label")?,
-        standing: pick(o, "standing", &STANDINGS)?,
+        standing: pick(o, "standing", &STANDINGS, Standing::Unknown)?,
         client: str_of(o, "client")?,
     })
 }

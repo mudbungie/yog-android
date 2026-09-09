@@ -85,10 +85,6 @@ fn refusals_name_the_offender() {
         row(&v).unwrap_err()
     };
     assert_eq!(
-        bad("state", json!("wandering")),
-        "field \"state\": unknown token \"wandering\""
-    );
-    assert_eq!(
         bad("signals", json!([7])),
         "attention row: non-string signal"
     );

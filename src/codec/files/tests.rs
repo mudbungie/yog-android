@@ -67,15 +67,19 @@ fn a_malformed_row_refuses_naming_the_shape_it_was_in() {
     );
 }
 
+/// A preview whose class this build cannot read keeps the listing row and
+/// shows no bytes (REMOTE §3.2): the class token is what says which keys are
+/// under it, so an unknown one reads none — which is the difference between
+/// carrying a word and guessing at a payload.
 #[test]
-fn a_preview_this_codec_cannot_class_refuses_rather_than_guessing() {
+fn a_preview_this_codec_cannot_class_carries_the_word_and_no_bytes() {
     assert_eq!(
         super::preview(&json!("body")).unwrap_err(),
         "preview: not an object"
     );
     assert_eq!(
-        super::preview(&json!({ "kind": "sparse" })).unwrap_err(),
-        "preview: unknown kind \"sparse\""
+        super::preview(&json!({ "kind": "sparse", "text": "x" })).unwrap(),
+        Preview::Unknown("sparse".to_owned())
     );
 }
 

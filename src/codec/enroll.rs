@@ -10,10 +10,13 @@
 //! mint displays and what the next device reads are the same six fields said
 //! once.
 //!
-//! **The grade is a closed vocabulary and an unknown one refuses.** REMOTE
-//! §4.2 has two grades and the certificate is the authority for which was
-//! minted; a third word on the wire is a build this one cannot talk to, and
-//! reading it as either would be the silent misread §3's third rule forbids.
+//! **A third grade word is carried, not guessed at and not refused** (REMOTE
+//! §3.2). §4.2 has two grades and the CERTIFICATE is the authority for which
+//! was minted, so reading an unknown word as either would be the silent
+//! misread §3's third rule forbids — but refusing it is not this reader's
+//! call either. It rides as `Grade::Unknown`, and the check that matters fires
+//! where it always did: `crate::envelope::agrees` holds the stated grade
+//! against the leaf, and no unknown word can equal a leaf's own.
 
 use serde_json::{Map, Value, json};
 
@@ -25,7 +28,7 @@ use crate::leaf::Grade;
 /// Encode the mint.
 pub(crate) fn encode(workspace: &str, name: &str, grade: Grade) -> Value {
     json!({ "op": "enroll", "workspace": workspace, "name": name,
-            "grade": word(grade) })
+            "grade": word(&grade) })
 }
 
 /// Read one back.
@@ -67,19 +70,22 @@ fn unrouted(address: Option<&Value>) -> Result<(), String> {
     }
 }
 
-/// The §4.2 grade, in the engine's own two words.
+/// The §4.2 grade, in the engine's own two words, or the catch-all.
 fn grade(o: &Map<String, Value>) -> Result<Grade, String> {
-    match str_of(o, "grade")?.as_str() {
-        "foot" => Ok(Grade::Foot),
-        "operator" => Ok(Grade::Operator),
-        other => Err(format!("enroll: unknown grade {other:?}")),
-    }
+    Ok(match str_of(o, "grade")?.as_str() {
+        "foot" => Grade::Foot,
+        "operator" => Grade::Operator,
+        other => Grade::Unknown(other.to_owned()),
+    })
 }
 
-/// The same two words on the way out. One table, both directions.
-pub(crate) fn word(grade: Grade) -> &'static str {
+/// The same words on the way out. One table, both directions — an unknown one
+/// round-trips as itself, which is what keeps a frame this build carried
+/// byte-identical to the frame it read.
+pub(crate) fn word(grade: &Grade) -> String {
     match grade {
-        Grade::Foot => "foot",
-        Grade::Operator => "operator",
+        Grade::Foot => "foot".to_owned(),
+        Grade::Operator => "operator".to_owned(),
+        Grade::Unknown(word) => word.clone(),
     }
 }

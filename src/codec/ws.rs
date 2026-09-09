@@ -21,11 +21,14 @@ pub struct WsRow {
 
 /// The §3.1 classification token. The server's `Named` carries the name; here
 /// the row's `workspace` **is** that name, so the kind carries no second copy.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WsKind {
     Named,
     Foreign,
     Replay,
+    /// REMOTE §3.2's catch-all: a fourth classification a newer engine of this
+    /// major spells. The workspace still lists, with its counts and its pin.
+    Unknown(String),
 }
 
 /// A workspace's config-lineage tip, both oids: short is a label, full is
@@ -43,7 +46,7 @@ pub(crate) fn row(v: &Value) -> Result<WsRow, String> {
         "named" => WsKind::Named,
         "foreign" => WsKind::Foreign,
         "replay" => WsKind::Replay,
-        other => return Err(format!("workspace row: unknown kind {other:?}")),
+        other => WsKind::Unknown(other.to_owned()),
     };
     Ok(WsRow {
         workspace: str_of(o, "workspace")?,

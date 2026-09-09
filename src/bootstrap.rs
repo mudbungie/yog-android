@@ -114,7 +114,10 @@ pub fn standing(dir: &Path) -> Result<Standing, String> {
     Ok(Standing::Enrolled(Enrollment {
         component: match crate::leaf::grade(&der) {
             Grade::Foot => Component::Foot,
-            Grade::Operator => Component::Seat,
+            // Operator, and — unreachably from a certificate — the word-only
+            // catch-all: `leaf::grade` answers one of the two, and
+            // default-operator is total here rather than defaulted per caller.
+            _ => Component::Seat,
         },
         client: crate::leaf::common_name(&der).unwrap_or_default(),
         material,

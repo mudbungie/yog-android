@@ -14,7 +14,7 @@ fn body(v: &Value) -> serde_json::Map<String, Value> {
 fn every_verdict_round_trips_through_its_own_word_at_every_scope() {
     for verdict in Verdict::ALL {
         for scope in Scope::ALL {
-            let frame = encode("ws", "c-1", verdict, scope);
+            let frame = encode("ws", "c-1", verdict.clone(), scope.clone());
             assert_eq!(
                 frame,
                 json!({ "op": "answer", "workspace": "ws", "agent": "c-1",
@@ -22,7 +22,12 @@ fn every_verdict_round_trips_through_its_own_word_at_every_scope() {
             );
             assert_eq!(
                 decode(&body(&frame)).unwrap(),
-                ("ws".to_owned(), "c-1".to_owned(), verdict, scope)
+                (
+                    "ws".to_owned(),
+                    "c-1".to_owned(),
+                    verdict.clone(),
+                    scope.clone()
+                )
             );
         }
     }
@@ -34,7 +39,7 @@ fn every_verdict_round_trips_through_its_own_word_at_every_scope() {
 #[test]
 fn an_unchosen_scope_is_the_held_call_alone() {
     assert_eq!(Scope::default(), Scope::Call);
-    assert_eq!(Scope::ALL.first().copied(), Some(Scope::Call));
+    assert_eq!(Scope::ALL.first(), Some(&Scope::Call));
 }
 
 /// **Which verdicts release the branch** — the reading that decides whether an
@@ -60,43 +65,45 @@ fn the_receipt_reads_back_whole() {
     assert!(!read.advanced);
 }
 
-/// A stray token refuses naming who was reading it — the gesture and the
-/// receipt say different words for the same miss, which is what tells an
-/// author which side of the wire drifted.
+/// **A stray token is carried, not refused** (REMOTE §3.2): a fourth verdict
+/// word a newer engine of this major spells arrives on the receipt as the
+/// catch-all, and the receipt still says which call it landed on and whether
+/// the branch advanced. Refusing it would throw those away to say nothing.
 #[test]
-fn an_unknown_verdict_refuses_by_name() {
+fn an_unknown_verdict_rides_as_the_catch_all() {
     let gesture = json!({ "op": "answer", "workspace": "ws", "agent": "c-1",
                           "verdict": "maybe", "scope": "call" });
-    assert_eq!(
-        decode(&body(&gesture)).unwrap_err(),
-        "answer: unknown verdict \"maybe\""
-    );
+    let (_, _, verdict, _) = decode(&body(&gesture)).unwrap();
+    assert_eq!(verdict, Verdict::Unknown("maybe".to_owned()));
     let receipt = json!({ "ok": true, "kind": "answered", "tool": "Bash",
                           "tool_use": "toolu_1", "verdict": "maybe",
                           "scope": "call", "advanced": true });
-    assert_eq!(
-        answered_of(&body(&receipt)).unwrap_err(),
-        "answered: unknown verdict \"maybe\""
-    );
+    let answered = answered_of(&body(&receipt)).unwrap();
+    assert_eq!(answered.verdict, Verdict::Unknown("maybe".to_owned()));
+    assert_eq!(answered.tool_use, "toolu_1");
+    // Said as unknown, never as a word an operator could read as a decision.
+    assert_eq!(answered.verdict.word(), "unknown verdict: maybe");
 }
 
-/// **A scope this build has not heard of refuses by name**, on both sides, for
-/// the verdict's reason exactly: reading an unknown reach as the nearest one
-/// this seat knows is the silent misread REMOTE §3's third rule forbids, and
-/// here it would authorize an action wider than anybody said.
+/// **A scope this build has not heard of is said, never widened.** It rides as
+/// the catch-all for the verdict's reason exactly, and the danger the old
+/// refusal was guarding against is not reachable from here: this seat only
+/// ever SENDS a scope out of [`Scope::ALL`], so an unknown word is the engine
+/// naming a standing in a spelling this build cannot render — and rendering it
+/// as any known reach, narrow or wide, would be the lie.
 #[test]
-fn an_unknown_scope_refuses_by_name() {
+fn an_unknown_scope_is_said_rather_than_read_as_a_reach() {
     let gesture = json!({ "op": "answer", "workspace": "ws", "agent": "c-1",
                           "verdict": "pass", "scope": "world" });
-    assert_eq!(
-        decode(&body(&gesture)).unwrap_err(),
-        "answer: unknown scope \"world\""
-    );
+    let (_, _, _, scope) = decode(&body(&gesture)).unwrap();
+    assert_eq!(scope, Scope::Unknown("world".to_owned()));
     let receipt = json!({ "ok": true, "kind": "answered", "tool": "Bash",
                           "tool_use": "toolu_1", "verdict": "pass",
                           "scope": "world", "advanced": true });
-    assert_eq!(
-        answered_of(&body(&receipt)).unwrap_err(),
-        "answered: unknown scope \"world\""
-    );
+    let answered = answered_of(&body(&receipt)).unwrap();
+    assert_eq!(answered.scope, Scope::Unknown("world".to_owned()));
+    assert_eq!(answered.scope.word(), "unknown scope: world");
+    for known in Scope::ALL {
+        assert_ne!(answered.scope, known);
+    }
 }

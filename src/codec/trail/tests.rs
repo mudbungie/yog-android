@@ -49,10 +49,12 @@ fn every_standing_is_read_and_says_its_own_word() {
         let row = super::row(&line(0, false, "exit 0", word)).unwrap();
         assert_eq!(row.standing.word(), word);
     }
-    assert_eq!(
-        super::row(&line(0, false, "exit 0", "sleeping")).unwrap_err(),
-        "field \"standing\": unknown token \"sleeping\""
-    );
+    // **A sixth word is an edition, not a bump** (REMOTE §3.2): it rides as
+    // the catch-all and the trail says so, rather than costing the whole
+    // listing the one row that grew.
+    let row = super::row(&line(0, false, "exit 0", "sleeping")).unwrap();
+    assert_eq!(row.standing, Standing::Unknown("sleeping".to_owned()));
+    assert_eq!(row.standing.word(), "unknown standing: sleeping");
 }
 
 #[test]

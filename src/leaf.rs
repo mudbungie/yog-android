@@ -44,14 +44,25 @@
 //! certainly present, and `subject` is four constructed values past it, so a
 //! version-1 certificate and a version-3 one take one path rather than two.
 
-/// The two grades REMOTE §4.2 mints, and there are exactly two.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The two grades REMOTE §4.2 mints, and the catch-all a WORD can be
+/// (REMOTE §3.2).
+///
+/// **A certificate is never `Unknown`**: [`grade`] below reads an organizational
+/// unit and answers operator for anything that is not `foot`, which is what
+/// makes default-operator total. `Unknown` is reachable only from a stated
+/// word — the `enrolled` reply's `grade`, or an envelope's — and it is exactly
+/// what `crate::envelope::agrees` exists to catch, because the certificate is
+/// the authority and a word that matches no certificate is material minted
+/// wrong.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Grade {
     /// The whole boundary, within the registrations §4 scopes.
     Operator,
     /// *"The tool-host gestures and nothing else: `advertise`, `invocations`
     /// and `complete`. No other `Query`, no other `Action`."*
     Foot,
+    /// A grade word this build has not heard of.
+    Unknown(String),
 }
 
 /// The organizational unit that says foot. §4.2: it is *"presence-shaped …

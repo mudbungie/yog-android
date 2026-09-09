@@ -58,33 +58,38 @@ pub struct ConvBall {
     pub badge: Option<String>,
 }
 
-/// The §5.1 agent-state tokens.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// The §5.1 agent-state tokens, and the catch-all every wire vocabulary here
+/// carries (REMOTE §3.2, `fields::pick`): a word this build has not heard of
+/// rides as itself rather than costing the row.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AgentState {
     Live,
     InFlight,
     Quiescent,
     Stopped,
+    Unknown(String),
 }
 
 /// What kind of work is in flight; `None` is a conversation at rest.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Flight {
     Inference,
     Tools,
     Subagents,
+    Unknown(String),
 }
 
 /// The §11 row tone, in the words the seats share — **six of which the wire
 /// spells, and one of which it never will**.
 ///
-/// [`TONES`] is the wire's whole table and it has six entries, so `pick`
-/// refuses any seventh word a frame could carry. [`Tone::Held`] is the seat's
-/// own: a call the capability control has parked (REMOTE §5.5's `held`, yog
-/// bl-58bb) is *asking for the operator*, which is the one state
-/// `docs/STYLE.md` §3 names that no conversation row ever asks for — a row
-/// tone says what a conversation is DOING, and a parked call is a thing inside
-/// one.
+/// [`TONES`] is the wire's whole table and it has six entries; a seventh word
+/// a frame carries becomes [`Tone::Unknown`], which the theme paints in
+/// resting ink — the one reading that is neither the nearest hue nor a lost
+/// row. [`Tone::Held`] is the seat's own: a call the capability control has
+/// parked (REMOTE §5.5's `held`, yog bl-58bb) is *asking for the operator*,
+/// which is the one state `docs/STYLE.md` §3 names that no conversation row
+/// ever asks for — a row tone says what a conversation is DOING, and a parked
+/// call is a thing inside one.
 ///
 /// It is a seventh variant here rather than a second enum beside this one for
 /// the reason `crate::rows` re-exports this type at all: a locally derived hue
@@ -92,7 +97,7 @@ pub enum Flight {
 /// vocabularies in one crate drift within a week. The asymmetry is real and it
 /// is stated where it can be checked — the table, not the enum, is what the
 /// wire is read against.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Tone {
     Plain,
     Weak,
@@ -102,6 +107,8 @@ pub enum Tone {
     InFlight,
     /// **Parked for the operator.** Never decoded: no wire token maps here.
     Held,
+    /// A hue word a newer engine spells and this build does not.
+    Unknown(String),
 }
 
 pub(super) const STATES: [(&str, AgentState); 4] = [
@@ -131,14 +138,14 @@ pub(crate) fn row(v: &Value) -> Result<ConvRow, String> {
     let o = v.as_object().ok_or("conversation row: not an object")?;
     let flight = match o.get("flight") {
         None | Some(Value::Null) => None,
-        Some(_) => Some(pick(o, "flight", &FLIGHTS)?),
+        Some(_) => Some(pick(o, "flight", &FLIGHTS, Flight::Unknown)?),
     };
     Ok(ConvRow {
         root_id: str_of(o, "root_id")?,
         display: str_of(o, "display")?,
         name: opt(o, "name", str_of)?,
         display_only: bool_of(o, "display_only")?,
-        state: pick(o, "state", &STATES)?,
+        state: pick(o, "state", &STATES, AgentState::Unknown)?,
         uncertain: bool_of(o, "uncertain")?,
         preview: str_of(o, "preview")?,
         age_secs: i64_of(o, "age_secs")?,
@@ -150,7 +157,7 @@ pub(crate) fn row(v: &Value) -> Result<ConvRow, String> {
         stoppable: bool_of(o, "stoppable")?,
         stop_children: bool_of(o, "stop_children")?,
         depth: usize_of(o, "depth")?,
-        tone: pick(o, "tone", &TONES)?,
+        tone: pick(o, "tone", &TONES, Tone::Unknown)?,
         failure: opt(o, "failure", str_of)?,
         alignment: o.get("alignment").cloned(),
         ball: match o.get("ball") {

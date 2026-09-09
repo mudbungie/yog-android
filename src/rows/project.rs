@@ -156,15 +156,31 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             reason.as_deref(),
             auth_row.as_deref(),
         )),
-        EntryKind::Raw => out.push(row(
-            key(&entry.name, 0),
-            entry.name.clone(),
-            &entry.raw,
-            RowClass::Other,
-            Tone::Weak,
-            None,
-        )),
+        // **The bytes, in resting ink** — an entry nothing could parse, and
+        // an entry kind a newer engine of this major spells (REMOTE §3.2),
+        // which is the same row said twice: `raw` rides BESIDE the kind, so
+        // this seat can show what an entry SAYS even where it cannot say what
+        // the entry MEANS. Only the header differs, so only the header is
+        // chosen.
+        EntryKind::Raw | EntryKind::Unknown(_) => out.push(unread_row(entry)),
     }
+}
+
+/// The header an unparsed entry wears: its own filename where the parser is
+/// what failed, and the kind word where this BUILD is.
+fn unread_row(entry: &Entry) -> Row {
+    let head = match &entry.kind {
+        EntryKind::Unknown(word) => crate::codec::unknown_label("entry", word),
+        _ => entry.name.clone(),
+    };
+    row(
+        key(&entry.name, 0),
+        head,
+        &entry.raw,
+        RowClass::Other,
+        Tone::Weak,
+        None,
+    )
 }
 
 /// The prefix seat of a delivered message: **the sender's name where it wears

@@ -165,7 +165,7 @@ fn acted(act: &Act) -> Value {
             agent,
             verdict,
             scope,
-        } => hold::encode(workspace, agent, *verdict, *scope),
+        } => hold::encode(workspace, agent, verdict.clone(), scope.clone()),
         Act::Stop {
             workspace,
             agent,
@@ -194,7 +194,7 @@ fn acted(act: &Act) -> Value {
             workspace,
             name,
             grade,
-        } => enroll::encode(workspace, name, *grade),
+        } => enroll::encode(workspace, name, grade.clone()),
         Act::Fork {
             workspace,
             parent,
