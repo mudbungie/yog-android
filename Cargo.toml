@@ -1,6 +1,6 @@
 [package]
 name = "yog-android"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2024"
 description = "Android seat for yog: a wire client of the remote boundary"
 license = "MIT"
