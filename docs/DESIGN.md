@@ -287,6 +287,17 @@ Four findings the shell module must carry, each learned the hard way:
    might ever write and then run, and the failure it produces reads as a
    permission problem an operator could grant. There is none to grant.
 
+**The composer is no longer one of the mirror's fields (bl-8bbb).** Everything
+in the two paragraphs below still stands, and still governs the search field,
+the enroll envelope and the five single-purpose fields that borrow the
+composer's widget id — but the MESSAGE field is a platform `EditText` overlaid
+at the rectangle egui lays out for it (§13.2), because the mirror's one
+mechanism is the defect an operator reported: it adopts the IME's committed
+buffer *wholesale*, which is what makes a suggestion tap work and is also
+exactly why a letter typed with the cursor mid-draft arrived at the end. There
+was no cursor to place, nothing to select and no paste menu, and none of the
+three is something a mirror over a buffer can grow.
+
 **The input mechanism is settled (bl-014e, closed with the spike's full
 trap ledger in its comments).** The shell is GameActivity behind a minimal
 Gradle shell, with a **two-way mirror bridge**: the GameTextInput buffer is
@@ -554,7 +565,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/icon/drawable.rs` | the same walk emitted as Android `VectorDrawable` XML — the launcher icon as a derivation, pinned byte-for-byte against the committed assets | landed (bl-0b31) |
 | `android/…/res/drawable/ic_launcher_{foreground,background}.xml` + `res/mipmap-anydpi-v26/ic_launcher.xml` | the generated layers and the five lines of adaptive-icon wiring that name them | landed (bl-0b31) |
 | `src/shell/chat.rs` | android-only: painting one projected row — the stripe, the toggle, the two-line speaking shape, and the live fold under them | landed (bl-0ed6, bl-4822) |
-| `src/shell/composer.rs` | android-only: the composer row — the field's band and presence, and the send that is THE send | landed (bl-9196, split bl-4822) |
+| `src/shell/composer.rs` | android-only: the composer ROW — where the field stands, how tall it may grow, and the send that is THE send. The field itself is the platform's (bl-8bbb) | landed (bl-9196, split bl-4822) |
+| `src/draft.rs` | the native composer field's two pure decisions: how its answer reads, and which side of the mirror moved — the field's text is the one home of the draft, and this is the rule that agrees the two — pure, host-tested | landed (bl-8bbb) |
+| `src/shell/field.rs` + `android/…/dev/yog/{Field,Face}.java` | android-only: the composer's native `EditText` overlaid at the rectangle egui lays out — the three static calls that place, read and hand it a draft, and the visual language applied to a platform view | landed (bl-8bbb) |
 | `src/roster.rs` | what the conversation list makes of the row fields the engine carries: newest-**subtree**-first order with the engine's descent kept inside each, how far a row hangs under its root, and how long ago each says it is — pure, host-tested | landed (bl-e837, subtree order + indent bl-06d3) |
 | `src/roster/thread.rs` | which indent columns a row's connector carries a rule through, read off §2.3's descent because the wire carries no parent id — pure, host-tested | landed (bl-4d17) |
 | `src/roster/words.rs` | what one row SAYS: the three lines, each folded to one line so a provider's clause cannot take four of them — pure, host-tested | landed (bl-4d17, out of `roster.rs`) |
@@ -1569,6 +1582,46 @@ here is a defect.
   multi-line and declares no action, because GameActivity writes an action
   where the enter key does not read it), which is also what every phone chat
   app does with enter anyway.
+- **And the field in it is the platform's own** (bl-8bbb, operator report
+  2026-09-09: *typing with the cursor mid-text still goes to the end, and
+  nothing is selectable — just make it a normal text field*). It is a native
+  `EditText` in the activity's view hierarchy, overlaid at the rectangle this
+  row lays out for it and synced through the JNI bridge each frame; **its text
+  and cursor are the one home of the draft**, `send` is its contents, and egui
+  paints nothing underneath it. Cursor placement, selection handles, the
+  copy/paste menu, autocorrect and the IME's own behaviour then come from the
+  platform rather than from a mirror over a committed buffer — which is what
+  the complaint was, and what closes the standing paste question (bl-0df9) at
+  the same time: an `EditText` has the long-press menu every Android field
+  has. Four consequences are structural and each is written where it bites:
+
+  * **The band is a measurement, not a guess.** The row is still allocated its
+    own height (bl-193c) between the touch floor and the cap, but the number
+    is the field's own laid-out content height read back through the bridge —
+    the platform lays the text out now, so only the platform knows how tall it
+    came out. Last frame's, for the reason the egui version's was: a height is
+    not knowable before it is laid out.
+  * **A platform view is drawn over the GL surface by the window compositor**,
+    so it knows nothing of egui's areas and would paint OVER an opened list —
+    and the controls band's selectors open upward, directly across the
+    composer (the §13.2 rule above). The field steps off the glass for any
+    frame in which a popup is open, which is the one arrangement where the
+    topmost thing on the screen is the thing the operator opened.
+  * **It has to be told to leave.** A screen that stops painting a composer
+    does not paint the view out of existence, so the placement is frame-scoped
+    like `Shell::back` and a field nothing placed is hidden at the end of the
+    pass — keeping its text, because the draft outlives a screen change.
+  * **A native view's edits wake no egui frame**, so the read-back rides the
+    same focus-gated fast repaint §3 rules for the IME bridge, for the same
+    reason and at the same cadence.
+
+  The five single-purpose fields that borrow the composer's widget id — the
+  fleet's name, the ball title, the admin editor, the fork goal, the
+  candidate subject — are still egui `TextEdit`s served by the mirror, and so
+  is the search field and the enroll envelope. They are one-line parameters an
+  operator types once, not prose an operator edits, and widening this to them
+  is a separate question with a separate cost (a second overlaid view, or one
+  view that has to be told which of six things it currently is).
 - **What is anchored to the floor claims its space first** (bl-192c). A
   bound rect is not a clip: `app::pass` bounds what a screen is GIVEN, and a
   screen whose content exceeds it simply paints past it — with the keyboard
@@ -3799,6 +3852,13 @@ that fact honestly lives. It carries **two kinds of thing and no more**:
   two world entries, which are the only way to the trail and the queue
   (§13.8). The app says where it put each; the harness taps there and still has
   no say in what the tap means.
+
+  **The composer is on that list, and it is the walk's typing door**
+  (bl-8bbb). The field is a platform `EditText` now, but that buys the harness
+  nothing: it is one view inside an app whose accessibility tree is a single
+  opaque surface (§15.1), so it can no more be found by name than an egui
+  widget can. What reaches it is the rectangle the app states — `tap_control
+  composer`, then `adb shell input text` — and that is the whole of the door.
 
   **The vocabulary is the APP's, never the world's.** One rectangle per control
   the app HAS is a channel that grows when a surface is built; one per row on

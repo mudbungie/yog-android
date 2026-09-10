@@ -30,6 +30,40 @@ pub(crate) fn rgba(fill: [u8; 4]) -> egui::Color32 {
     egui::Color32::from_rgba_unmultiplied(fill[0], fill[1], fill[2], fill[3])
 }
 
+/// A token as the platform's own packed ARGB. `from_be_bytes` rather than a
+/// cast: `0xFF00_0000` does not fit a positive `i32`, and a `u32 as i32` is
+/// exactly the wrap `clippy::pedantic` refuses.
+fn argb(rgb: theme::Rgb) -> i32 {
+    i32::from_be_bytes([255, rgb[0], rgb[1], rgb[2]])
+}
+
+/// **The composer's native field, dressed in the language** (bl-8bbb;
+/// STYLE.md, *the composer*): a `SURFACE` ground with no stroke at rest and
+/// the brand ring when it holds the caret, its words in `INK` and its hint in
+/// `INK_FAINT`. This file is the one adapter for a platform view exactly as
+/// it is for egui — the difference is only that the platform takes packed
+/// ARGB and device pixels where egui takes a `Color32` and points.
+///
+/// **The ring's width is one point**, the most a boundary may be on this
+/// glass (STYLE.md §2): what a focused field changes is the brand, never the
+/// weight. `pad` is the composer's own derived padding, so the native field
+/// rests at the touch floor for the same reason every egui field does.
+pub(crate) fn skin(pad: egui::Margin, ppp: f32) -> super::field::Skin {
+    let px = |v: f32| (v * ppp).round().max(1.0) as i32;
+    super::field::Skin {
+        ground: argb(theme::SURFACE),
+        ink: argb(theme::INK),
+        faint: argb(theme::INK_FAINT),
+        ring: argb(theme::BRAND),
+        radius: px(f32::from(theme::RADIUS)),
+        pad_x: px(f32::from(pad.left)),
+        pad_y: px(f32::from(pad.top)),
+        text: px(type_scale::BODY),
+        ring_px: px(1.0),
+        scale: ppp,
+    }
+}
+
 /// A state's accent, for ink or a rule.
 pub(crate) fn ink(state: State) -> egui::Color32 {
     rgb(theme::accent(state))

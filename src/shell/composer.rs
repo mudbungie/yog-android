@@ -2,18 +2,23 @@
 //! both depths (DESIGN §8). Split from `chat` on the seam between saying and
 //! showing — that file paints what the engine wrote down, this one is the
 //! control an operator writes with.
+//!
+//! **The field itself is not egui's** (bl-8bbb). It is a native Android
+//! `EditText` overlaid at the rectangle this row lays out for it, synced
+//! through `shell::field`, and the reason is the whole of the operator's
+//! complaint: an egui `TextEdit` fed by the `GameTextInput` mirror adopts the
+//! IME's committed buffer wholesale, so a letter typed with the cursor in the
+//! middle of a draft landed at the end, nothing was selectable, and there was
+//! no paste menu. What this file still owns is the ROW — where the field
+//! stands, how tall it may grow, and the send beside it.
 
 use eframe::egui;
 
-/// How tall the field may grow before it scrolls inside itself, in points —
-/// and, with the touch floor, the whole of what the row's own height may be.
-/// The cap has one home: the band below is what enforces it, so the scroller
-/// states no second maximum of its own.
-const FIELD_CAP: f32 = 132.0;
+use super::app::Shell;
 
 /// **The field's own padding, and with it the field's own resting height**
-/// (bl-01a6). A `TextEdit` at rest is one text row inside a two-point margin
-/// — nineteen points of box, which at the bottom of a forty-four point band
+/// (bl-01a6). A field at rest is one text row inside a two-point margin —
+/// nineteen points of box, which at the bottom of a forty-eight point band
 /// reads as a thin line pressed into a corner, and is not a target a thumb
 /// can hit. So the padding is derived rather than chosen: half the difference
 /// between the §13.2 touch floor and one line of body text, top and bottom,
@@ -22,15 +27,13 @@ const FIELD_CAP: f32 = 132.0;
 /// because the line is the platform's — a device with larger text gets a
 /// larger field, and the floor is never the thing that gives.
 ///
-/// The text is already the transcript's size and nothing here sets it: a
-/// `TextEdit`'s default font selection resolves to `TextStyle::Body`, which
-/// is what `chat::row` labels a body with.
-///
-/// **Shared with the search field** (§13.6, bl-4c2b), which is the second
-/// field on this glass and has the same problem: a `TextEdit` at rest is a
-/// thin box that a thumb aimed at its row misses. One home for *a field at
-/// rest is the touch floor*, rather than a second derivation that would drift
-/// the first time the floor moves.
+/// **Shared with the search field** (§13.6, bl-4c2b) and with the five
+/// single-purpose fields that borrow the composer's widget id, which are
+/// still egui's and have the same problem: a `TextEdit` at rest is a thin box
+/// that a thumb aimed at its row misses. One home for *a field at rest is the
+/// touch floor*, rather than a second derivation that would drift the first
+/// time the floor moves. The native field is dressed from it too, in device
+/// pixels.
 pub(super) fn padding(ui: &egui::Ui) -> egui::Margin {
     let line = ui.text_style_height(&egui::TextStyle::Body);
     let pad = ((super::mark::TOUCH - line) / 2.0).max(SIDE_PAD).round() as i8;
@@ -42,97 +45,103 @@ pub(super) fn padding(ui: &egui::Ui) -> egui::Margin {
 /// cramped box however tall it is.
 const SIDE_PAD: f32 = 8.0;
 
-/// The composer row: the one editable field plus a send control, shared by
-/// the transcript's composer and the conversation starter — the same gesture
-/// at two depths, already sharing a widget id (DESIGN §8). Returns the taken
-/// text when a send happened, and refocuses the field either way.
-///
-/// The button exists because Enter is not a control a phone can be promised
-/// (bl-9196): the IME's action key is the keyboard's to interpret, and a
-/// message that can be typed but not sent is a chat app that does not chat.
-/// Enter stays as the second path where a keyboard offers it.
-///
-/// **The row is allocated its own height, never the screen's remainder**
-/// (bl-193c). Both callers paint bottom-up, so a row that asks for what is
-/// left is handed the whole rest of the screen — and the two children then
-/// resolve that rect at opposite extremes: a `ScrollArea` anchors to the top
-/// of what it is given (it never reads the cross alignment) while the
-/// bottom-aligned button anchors to the floor. On device that is a field
-/// under the header and a send button a screen below it. The band fixes the
-/// rect before either child sees it.
-/// `acts` is what the send control fires, and it is the caller's because the
-/// two depths differ there and nowhere else: the transcript's composer posts
-/// `message`, while the starter stages and fires as one gesture (`prepare`
-/// then `prompt`, `seat::acts::started`) and so carries both tags on the one
-/// button an operator can see (PARITY §4).
-pub(super) fn composer(
-    ui: &mut egui::Ui,
-    text: &mut String,
-    hint: &str,
-    acts: &[&str],
-) -> Option<String> {
-    // The band is the field's own last-painted height, floored at a touch
-    // target and capped at the growth limit. Last frame's measurement,
-    // because a widget's height is not knowable before it is laid out — and
-    // it is the CONTENT height that is cached, which depends on the text and
-    // the width but never on the band, so the loop converges instead of
-    // pinning the field at whatever it was first given.
-    let measured = egui::Id::new(super::app::COMPOSER.id).with("row-height");
-    let grown = ui.data(|d| d.get_temp::<f32>(measured)).unwrap_or_default();
-    let band = egui::vec2(
-        ui.available_width(),
-        grown.clamp(super::mark::TOUCH, FIELD_CAP),
-    );
-    let mut taken = None;
-    ui.allocate_ui_with_layout(
-        band,
-        egui::Layout::right_to_left(egui::Align::BOTTOM),
-        |ui| {
-            // Laid right-to-left so the button claims its seat first and the
-            // field's infinite width takes what remains, not the whole row;
-            // bottom-aligned so the button sits on the band's floor beside a
-            // field that fills the band.
-            let control = egui::Button::new("send").min_size(egui::vec2(0.0, super::mark::TOUCH));
-            let send = ui.add(control);
-            super::act::acts(ui, &send, acts);
-            let pressed = send.clicked();
-            // Multiline (bl-56d6): the IME's enter is a newline on this stack
-            // (DESIGN §3 residual) and that is also simply what a phone chat
-            // composer does with enter — so the field grows with its text to a
-            // cap and scrolls inside it, and the button is the one send. A field
-            // that grew unbounded would push the transcript off the glass.
-            // `auto_shrink` off: the scroller fills the band it was sized
-            // from, so the field's ink and the row are the same rectangle.
-            // `min_scrolled_height` is the reason the field used to paint
-            // under the gesture-nav bar (bl-9cfd): a vertical `ScrollArea`
-            // refuses to be shorter than 64 points by default, so a 44-point
-            // band was overflowed by 20 — and the overflow inherited this
-            // row's BOTTOM alignment, which put the text at the very bottom
-            // of it, exactly where the nav bar is. The band is the cap and
-            // the floor both; a scroller that will not fit inside what it is
-            // given is a scroller that decides the layout.
-            let shown = egui::ScrollArea::vertical()
-                .id_salt(super::app::COMPOSER.id)
-                .min_scrolled_height(0.0)
-                .auto_shrink([false, false])
-                .show(ui, |ui| {
-                    ui.add(
-                        egui::TextEdit::multiline(text)
-                            .id(egui::Id::new(super::app::COMPOSER.id))
-                            .desired_width(f32::INFINITY)
-                            .desired_rows(1)
-                            .margin(padding(ui))
-                            .hint_text(hint),
-                    )
-                });
-            ui.data_mut(|d| d.insert_temp(measured, shown.content_size.y));
-            if pressed {
-                if !text.trim().is_empty() {
-                    taken = Some(std::mem::take(text));
+impl Shell {
+    /// The composer row: the one editable field plus a send control, shared
+    /// by the transcript's composer and the conversation starter — the same
+    /// gesture at two depths (DESIGN §8). Returns the taken text when a send
+    /// happened.
+    ///
+    /// The button exists because Enter is not a control a phone can be
+    /// promised (bl-9196): the IME's action key is the keyboard's to
+    /// interpret, and a message that can be typed but not sent is a chat app
+    /// that does not chat. On this field enter breaks the line, which is what
+    /// every phone chat app does with it.
+    ///
+    /// **The row is allocated its own height, never the screen's remainder**
+    /// (bl-193c). Both callers paint bottom-up, so a row that asks for what
+    /// is left is handed the whole rest of the screen. The band is the
+    /// field's own last measurement, floored at the touch target and capped
+    /// (`crate::draft::band`) — a measurement rather than a guess, because
+    /// the text is laid out by the platform now and only the platform knows
+    /// how tall it came out.
+    ///
+    /// `acts` is what the send control fires, and it is the caller's because
+    /// the two depths differ there and nowhere else: the transcript's
+    /// composer posts `message`, while the starter stages and fires as one
+    /// gesture (`prepare` then `prompt`, `seat::acts::started`) and so
+    /// carries both tags on the one button an operator can see (PARITY §4).
+    pub(super) fn compose(
+        &mut self,
+        ui: &mut egui::Ui,
+        hint: &str,
+        acts: &[&str],
+    ) -> Option<String> {
+        let band = egui::vec2(ui.available_width(), self.field.band());
+        let mut taken = None;
+        ui.allocate_ui_with_layout(
+            band,
+            egui::Layout::right_to_left(egui::Align::BOTTOM),
+            |ui| {
+                // Laid right-to-left so the button claims its seat first and
+                // the field takes what remains, not the whole row;
+                // bottom-aligned so the button sits on the band's floor
+                // beside a field that fills the band.
+                let control =
+                    egui::Button::new("send").min_size(egui::vec2(0.0, super::mark::TOUCH));
+                let send = ui.add(control);
+                super::act::acts(ui, &send, acts);
+                let pressed = send.clicked();
+                // What is left of the band is the field's, and egui paints
+                // nothing in it: the platform's own view stands there.
+                let (rect, _) = ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
+                self.overlay(ui, hint, rect);
+                if pressed && !self.composer.trim().is_empty() {
+                    taken = Some(std::mem::take(&mut self.composer));
+                    self.field.took(&self.android);
                 }
-                shown.inner.request_focus();
-            }
-        },
-    );
-    taken
+            },
+        );
+        taken
+    }
+
+    /// Put the native field where the row put it, and take the draft back.
+    ///
+    /// **A popup takes the glass instead** (§13.2's opened-list rule). A
+    /// platform view is drawn over the GL surface by the window compositor
+    /// and knows nothing of egui's areas, so a list opened over the composer
+    /// — the controls band's selectors open upward, directly across it —
+    /// would paint UNDER the field. The field steps off the glass for that
+    /// frame, which is the one arrangement in which the topmost thing on the
+    /// screen is the thing the operator opened.
+    fn overlay(&mut self, ui: &mut egui::Ui, hint: &str, rect: egui::Rect) {
+        if egui::Popup::is_any_open(ui.ctx()) {
+            return;
+        }
+        let ppp = ui.ctx().pixels_per_point();
+        let px = |v: f32| (v * ppp).round() as i32;
+        let at = [
+            px(rect.left()),
+            px(rect.top()),
+            px(rect.width()),
+            px(rect.height()),
+        ];
+        let skin = super::theme::skin(padding(ui), ppp);
+        // **Where the harness types** (§15.2). The field carries no
+        // accessibility node the walk can find by name any more than an egui
+        // widget does — it is one view inside an app whose tree is a single
+        // opaque surface — so the rectangle the app states is how a walk
+        // reaches it: tap here, then `adb shell input text`.
+        self.note_control("composer", ui, rect);
+        if self
+            .field
+            .frame(&self.android, hint, at, skin, &mut self.composer)
+        {
+            // A native view's edits wake no egui frame, so the mirror is
+            // read at the repaint cadence while the caret is in the field —
+            // the same focus-gated poll DESIGN §3 rules for the IME bridge,
+            // for the same reason.
+            ui.ctx()
+                .request_repaint_after(std::time::Duration::from_millis(16));
+        }
+    }
 }

@@ -38,6 +38,8 @@ mod controls;
 #[cfg(target_os = "android")]
 mod enroll;
 #[cfg(target_os = "android")]
+mod field;
+#[cfg(target_os = "android")]
 mod inset;
 #[cfg(target_os = "android")]
 pub(crate) mod jvm;

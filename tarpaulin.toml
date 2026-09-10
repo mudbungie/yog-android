@@ -236,6 +236,15 @@
 # it answers with are `tools::paper`'s and `tools::bridged::answer`'s, which
 # are pure and asserted by host tests.
 #
+# `src/shell/field.rs` is the composer's native field (bl-8bbb), the same
+# class again: three static calls into `dev.yog.Field` and the posting of a
+# rectangle, `cfg(target_os = "android")` to the last line. The seam is drawn
+# where every other bridge in this tree draws it — everything the field
+# DECIDES is `crate::draft`, which is pure and stays UNDER the floor: how the
+# bridge's two-line answer reads (and that a malformed one never echoes the
+# operator's draft back into logcat), which side of the mirror moved, and what
+# band the field's own measurement earns. What is left here is the crossing.
+#
 # `src/shell/app/fields.rs` is the three `Field` constants split out of
 # `app.rs` (bl-5a56) and inherits its entry exactly: it is `cfg(target_os =
 # "android")` data with no behaviour at all.
@@ -262,6 +271,7 @@ exclude-files = [
     "src/shell/controls/pick.rs",
     "src/shell/controls/tune.rs",
     "src/shell/enroll.rs",
+    "src/shell/field.rs",
     "src/shell/mark.rs",
     "src/shell/enroll/material.rs",
     "src/shell/enroll/scan.rs",

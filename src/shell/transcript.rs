@@ -58,9 +58,7 @@ impl Shell {
             // Closest to the floor: the acts on this conversation, then the
             // composer that rides above the keyboard.
             self.controls(ui, snap);
-            if let Some(taken) =
-                super::composer::composer(ui, &mut self.composer, "message", &["message"])
-            {
+            if let Some(taken) = self.compose(ui, "message", &["message"]) {
                 self.deposit(snap, taken);
             }
             ui.add_space(4.0);

@@ -103,6 +103,13 @@ impl eframe::App for Shell {
                 .inner_margin(egui::Margin::symmetric(10, 0))
                 .show(ui, |ui| self.screens(ui));
         });
+        // **A field nothing placed comes off the glass** (bl-8bbb). The
+        // composer is a platform view drawn over the GL surface by the window
+        // compositor, so it is not painted out of existence by a screen that
+        // stops drawing it — it has to be told. Frame-scoped like `back`
+        // above and taken here for the same reason: a screen that stops
+        // painting a composer stops having one.
+        self.field.rest(&self.android);
         // Nothing took it, so there was no depth to walk: the top of the app,
         // where back means what the platform means by it (bl-550e).
         if std::mem::take(&mut self.back) {

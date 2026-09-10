@@ -14,6 +14,7 @@ pub mod attention;
 pub mod bootstrap;
 pub mod cache;
 pub mod codec;
+pub mod draft;
 pub mod envelope;
 pub mod foot;
 pub mod frame;

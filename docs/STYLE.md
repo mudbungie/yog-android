@@ -146,7 +146,12 @@ preview is dimmed ink, so *there is more* reads before the triangle does.
 
 **The composer** (DESIGN §13.2): a `SURFACE` field with no stroke at rest and
 the brand ring when it holds the caret, resting at `TOUCH` and growing to
-its cap; beside it the send, its word in the brand. Under it the controls
+its cap; beside it the send, its word in the brand. **The field is a platform
+`EditText`** (bl-8bbb) and is dressed from these same tokens through
+`shell::theme::skin`, which is this file's one adapter wearing its other face:
+packed ARGB and device pixels where egui takes a `Color32` and points. The
+ring it wears while focused is one point wide — the most a boundary may be
+(§2) — because what a focused field changes is the brand, never the weight. Under it the controls
 band: selectors that show the VALUE they hold in `INK` and their name in
 `INK_WEAK` when they hold none, greyed to `INK_FAINT` where the engine does
 not offer the setting (bl-809d).

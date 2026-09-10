@@ -117,12 +117,8 @@ impl Shell {
     /// is ever on screen, they are the same gesture at two depths, and the IME
     /// bridge addresses exactly one field by that id (bl-014e).
     fn starter(&mut self, ui: &mut egui::Ui) {
-        if let Some(goal) = crate::shell::composer::composer(
-            ui,
-            &mut self.composer,
-            "start a conversation",
-            &["prepare", "prompt"],
-        ) && let Some(model) = self.model()
+        if let Some(goal) = self.compose(ui, "start a conversation", &["prepare", "prompt"])
+            && let Some(model) = self.model()
         {
             model.start_conversation(goal);
         }

@@ -19,6 +19,7 @@ use winit::platform::android::activity::AndroidApp;
 use super::boot::{Running, boot};
 use super::bridge::Bridge;
 use super::enroll::Scanner;
+use super::field::Native;
 use super::inset::InsetPx;
 use crate::rows::AutoExpand;
 
@@ -117,6 +118,12 @@ pub(crate) struct Shell {
     /// navigation for its reason exactly.
     pub(crate) step: Option<String>,
     pub(crate) composer: String,
+    /// **The composer's native field** (bl-8bbb, `shell::field`): the
+    /// platform `EditText` overlaid at the rectangle the composer row lays
+    /// out, and the standing this side keeps between frames. The DRAFT above
+    /// is not a second home for the text — the field is the home, and this is
+    /// what agrees the two after every frame.
+    pub(crate) field: Native,
     /// What the search field holds. A question, not an answer — the hits are
     /// the model's and ride the snapshot — and it is emptied when the search
     /// screen is left, because leaving a search leaves it.
@@ -225,6 +232,7 @@ impl Shell {
             android,
             bridge: Bridge::default(),
             composer: String::new(),
+            field: Native::default(),
             needle: String::new(),
             envelope: String::new(),
             envelope_said: None,
