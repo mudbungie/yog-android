@@ -10,65 +10,59 @@
 //! control that vanishes teaches nothing — the argument the greyed provider
 //! row already carries — while one that is there, readable and dark says
 //! *this provider has no such lane*, in the one place an operator would go
-//! looking for it. It also puts both on the glass on every walked screen
-//! rather than only on one seeded with a provider that takes them, which is
-//! the parity gate's own ask: unproven is red (PARITY §5).
+//! looking for it.
+//!
+//! **And a dark control ANSWERS when it is tapped** (bl-0691). Grey alone
+//! turned out to teach nothing either: an operator on a provider that takes
+//! reasoning effort perfectly well saw the same grey a provider without the
+//! lane earns, and there is no hover on a phone to say which it was. So the
+//! dark control keeps its tap and spends it on the sentence
+//! `codec::pick::knob` made — whose provider's refusal it is, or that nothing
+//! has been asked yet — painted above the row by `controls.rs`. The three
+//! reasons are three different instructions to the operator, which is why one
+//! grey could never carry them.
 
 use eframe::egui;
 
 use super::super::act;
 use super::super::app::Shell;
-use crate::codec::RoleRow;
+use crate::codec::pick::knob::Knob;
 use crate::shell::place::Band;
-
-/// The effort selector's width class. Still narrower than a provider or a
-/// model selector, and now sized for the longest thing the face can say —
-/// `effort: medium`, plus the room the caret is drawn into — so the control
-/// keeps its width when the level changes under it. A face that resized on
-/// every pick would move the priority toggle beside it.
-const EFFORT: f32 = 132.0;
 
 impl Shell {
     /// **The effort selector**: the vocabulary is closed and no wire read
     /// backs it, so the options are the codec's own constant; `off` is one of
     /// them and rides as the real null the engine reads.
+    ///
+    /// The face is the FILE's own word, which may be one the gesture
+    /// vocabulary does not spell (bl-e9f9) — shown as itself, because an
+    /// operator seeing `extreme` is being told the truth — and it carries the
+    /// control's NAME as well as its value (bl-b191): a magnitude names
+    /// nothing, and `medium` alone was read as a context size once already.
     pub(super) fn effort(
         &mut self,
         ui: &mut egui::Ui,
-        set: Option<&RoleRow>,
+        face: String,
+        wide: f32,
         area: Band,
-        taken: bool,
+        knob: &Knob,
     ) {
-        // The read carries the FILE's own word, which may be one the gesture
-        // vocabulary does not spell (bl-e9f9). It is shown as itself — an
-        // operator seeing `extreme` is being told the truth, and the four
-        // words below are what they may change it TO.
-        //
-        // **The face carries the control's NAME as well as its value**
-        // (bl-b191). The two selectors beside it are named by their content —
-        // a provider row reads `anthropic`, a model row reads a model — and
-        // the toggle after it paints the word `priority` whatever it is set
-        // to. A magnitude does not name anything: `medium` alone is a level
-        // of something the operator has to guess, and the guess recorded in
-        // bl-78c2 was *context size*. So the empty state's word stays on the
-        // face once a level is standing, and the level is what follows it.
-        // REMOTE §9.4's own word, spelled the same here as on the wire.
-        let shown = crate::codec::pick::face::effort(self.effort.clone(), set);
+        if !knob.taken {
+            self.dark(ui, face, wide, knob, "effort");
+            return;
+        }
         let mut picked = None;
-        let opened = ui
-            .add_enabled_ui(taken, |ui| {
-                super::drop::drop_down(ui, area, "effort", shown, EFFORT, |ui| {
-                    for level in crate::codec::pick::LEVELS {
-                        let label = crate::codec::Effort::label(level);
-                        if ui.selectable_label(false, &label).clicked() {
-                            picked = Some((level, label));
-                        }
-                    }
-                })
-            })
-            .inner;
+        let opened = super::drop::drop_down(ui, area, "effort", face, wide, |ui| {
+            for level in crate::codec::pick::LEVELS {
+                let label = crate::codec::Effort::label(level);
+                if ui.selectable_label(false, &label).clicked() {
+                    picked = Some((level, label));
+                }
+            }
+        });
         act::act(ui, &opened, "effort");
         if let Some((level, label)) = picked {
+            self.tuning_said = None;
             self.effort = Some(label);
             if let Some(model) = self.model() {
                 model.set_effort(level);
@@ -78,19 +72,45 @@ impl Shell {
 
     /// **The priority toggle**: ask the provider's priority lane for this
     /// role's calls, or stop asking. A toggle and not a tri-state — `off`
-    /// removes the line, and asking for the *standard* lane is a different
-    /// intent no config key expresses (REMOTE §9.4).
-    pub(super) fn priority(&mut self, ui: &mut egui::Ui, set: Option<&RoleRow>, taken: bool) {
-        let (mut on, shown) = crate::codec::pick::face::priority(self.priority, set);
-        let control = ui
-            .add_enabled_ui(taken, |ui| ui.toggle_value(&mut on, shown))
-            .inner;
+    /// removes the line, because asking for the *standard* lane is a
+    /// different intent no config key expresses (REMOTE §9.4).
+    ///
+    /// It wears its state in its own words (`priority: on`) rather than in a
+    /// fill, because in a band of chips the word is what an operator reads
+    /// and a chip that alone among six carried a tint would be saying
+    /// something about state that STYLE.md reserves for the six accents.
+    pub(super) fn priority(
+        &mut self,
+        ui: &mut egui::Ui,
+        face: String,
+        wide: f32,
+        knob: &Knob,
+        on: bool,
+    ) {
+        if !knob.taken {
+            self.dark(ui, face, wide, knob, "priority");
+            return;
+        }
+        let control = crate::shell::theme::chip(ui, face.into(), wide, true);
         act::act(ui, &control, "priority");
         if control.clicked() {
-            self.priority = Some(on);
+            self.tuning_said = None;
+            self.priority = Some(!on);
             if let Some(model) = self.model() {
-                model.set_priority(on);
+                model.set_priority(!on);
             }
+        }
+    }
+
+    /// **A knob the provider will not take**: on the glass, dark, and still a
+    /// target — the tap is what says why (bl-0691). The `act:` tag rides it
+    /// in this state too, because a disabled control is still the
+    /// discoverable affordance for the act (PARITY §4).
+    fn dark(&mut self, ui: &mut egui::Ui, face: String, wide: f32, knob: &Knob, op: &str) {
+        let control = crate::shell::theme::dark_chip(ui, face, wide);
+        act::act(ui, &control, op);
+        if control.clicked() {
+            self.tuning_said.clone_from(&knob.why);
         }
     }
 }

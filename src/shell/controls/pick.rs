@@ -32,13 +32,12 @@ impl Shell {
         &mut self,
         ui: &mut egui::Ui,
         snap: &Snapshot,
-        set: Option<&RoleRow>,
+        face: String,
         wide: f32,
         area: Band,
     ) {
-        let shown = provider(self, set).unwrap_or_else(|| "provider".to_owned());
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "provider", shown, wide, |ui| {
+        let opened = super::drop::drop_down(ui, area, "provider", face, wide, |ui| {
             for row in &snap.providers {
                 let label = format!("{} · {}", row.name, row.fact);
                 let label = if row.blocked.is_some() {
@@ -75,29 +74,23 @@ impl Shell {
         &mut self,
         ui: &mut egui::Ui,
         snap: &Snapshot,
-        set: Option<&RoleRow>,
+        face: String,
         wide: f32,
         area: Band,
     ) {
-        let Some(provider) = provider(self, set) else {
-            let control = ui.add_enabled(
-                false,
-                egui::Button::new("model").min_size(egui::vec2(wide, 0.0)),
-            );
+        let Some(provider) = provider(self, crate::codec::pick::worker(&snap.roles).as_ref())
+        else {
+            let control = crate::shell::theme::chip(ui, face.into(), wide, false);
             act::acts(ui, &control, &["models", "model"]);
             return;
         };
-        // **What this conversation is actually ON** (bl-809d). The face used
-        // to carry only what THIS device had just picked, so the settling
-        // read — which drops the optimistic pick — put the word `model` back
-        // over a workspace that had one assigned. `codec::pick::face` is the
-        // reading, under the floor; it shows the workspace's model only under
-        // the workspace's own provider, because a model belongs to the
-        // provider that serves it.
-        let shown =
-            crate::codec::pick::face::model(self.model.clone(), set, Some(provider.as_str()));
+        // **What this conversation is actually ON** (bl-809d) is the face the
+        // row handed in: `codec::pick::face` made it, under the coverage
+        // floor, and it shows the workspace's model only under the
+        // workspace's own provider, because a model belongs to the provider
+        // that serves it.
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "model", shown, wide, |ui| {
+        let opened = super::drop::drop_down(ui, area, "model", face, wide, |ui| {
             for name in snap.models.get(&provider).into_iter().flatten() {
                 if ui.selectable_label(false, name).clicked() {
                     picked = Some(name.clone());

@@ -114,7 +114,12 @@ padding is `M` across and `S` down; a screen's side gutter is `M`.
 
 Type, in points — four sizes and no fifth (`theme::type_scale`):
 `SMALL 12 · MONO 13 · BODY 15 · HEADING 20`. A button's words are body size:
-a control is text, not a smaller kind of text.
+a control is text, not a smaller kind of text. **The one exception is the
+controls band under the composer** (bl-0691), whose six controls at body size
+spend two hundred points of a phone's row on three verbs and leave the two
+selectors nothing to read a provider name in; its words are `SMALL` and its
+chips are padded at `S`, and that is the whole of the exception — an opened
+list is body size like every other list.
 
 Touch: every row and every control stands at least **48 points** tall
 (`theme::TOUCH`, DESIGN §13.2), full width where it lists. A block's corner
@@ -145,16 +150,30 @@ the width it has. A tool row's state is its words' ink; a folded one's
 preview is dimmed ink, so *there is more* reads before the triangle does.
 
 **The composer** (DESIGN §13.2): a `SURFACE` field with no stroke at rest and
-the brand ring when it holds the caret, resting at `TOUCH` and growing to
-its cap; beside it the send, its word in the brand. **The field is a platform
-`EditText`** (bl-8bbb) and is dressed from these same tokens through
-`shell::theme::skin`, which is this file's one adapter wearing its other face:
-packed ARGB and device pixels where egui takes a `Color32` and points. The
-ring it wears while focused is one point wide — the most a boundary may be
-(§2) — because what a focused field changes is the brand, never the weight. Under it the controls
-band: selectors that show the VALUE they hold in `INK` and their name in
-`INK_WEAK` when they hold none, greyed to `INK_FAINT` where the engine does
-not offer the setting (bl-809d).
+the brand ring when it holds the caret, resting at `TOUCH` and **growing to
+its cap only while it holds the caret** (bl-0691); beside it the send, its
+word in the brand and centred in its own box like every other control's.
+**The field is a platform `EditText`** (bl-8bbb) and is dressed from these
+same tokens through `shell::theme::skin`, which is this file's one adapter
+wearing its other face: packed ARGB and device pixels where egui takes a
+`Color32` and points. The ring it wears while focused is one point wide — the
+most a boundary may be (§2) — because what a focused field changes is the
+brand, never the weight.
+
+**The controls band** (DESIGN §13.2, bl-0691): ONE band of chips under the
+composer, `TOUCH` tall, holding every conversation-level control — the stop
+acts under the engine's own gates, the tuning pair, and the two selectors.
+Its width is divided by `shell::place::row` rather than equally: a chip that
+names a verb keeps the width of its own words, and the two selectors take
+what is left and elide inside it, because a model name is as long as a
+provider chose to make it. Its words are `SMALL` — the one place in this app
+where a control's are, because six controls at body size leave the selectors
+nothing to say a name in — and its chips are padded at the `S` step rather
+than the `M` one. Each shows the VALUE it holds in `INK` and its own name in
+`INK_WEAK` when it holds none, and goes `INK_FAINT` where the provider's row
+does not offer the setting (bl-809d). **A dark chip here is still a target**:
+its reason is a sentence and not two words, so the tap is what says it, in
+`Annotation` ink on the line above the band (bl-0691).
 
 **A control** — a button, a selector, a toggle: `SURFACE` fill, no stroke,
 `RADIUS` corners, `TOUCH` tall, its words in `INK`. Pressed or open it is

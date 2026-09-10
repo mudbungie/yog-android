@@ -13,11 +13,6 @@ use winit::platform::android::activity::AndroidApp;
 
 use super::{COMPOSER, ENVELOPE, NEEDLE, Shell};
 
-/// The least clearance the bottom of the glass gets when the platform reports
-/// no inset at all — a display with no gesture bar and no keyboard up still
-/// should not put a control on the physical edge.
-const GUTTER: f32 = 8.0;
-
 /// Boot eframe over the Activity. `sys::android_main` is the only caller;
 /// everything before this call is sys.rs's.
 pub(crate) fn run(app: AndroidApp) {
@@ -92,7 +87,14 @@ impl eframe::App for Shell {
         // top-down scroller ends at it, and nothing downstream has to
         // remember anything.
         let mut inside = ui.available_rect_before_wrap();
-        inside.max.y -= (self.inset.bottom as f32 / ppp).max(GUTTER);
+        // **The clearance is ADDED to the platform's inset, and the rule is
+        // `place::floor`** (bl-0691). It used to be `max`, so a device with a
+        // gesture-nav bar got the inset and nothing else — and the last
+        // control of the bottom-up stack was painted with its own edge on the
+        // system bar's, which is what an operator sees as *the band rides the
+        // navigation bar*. The inset is the platform's fact and the gutter is
+        // this interface's own margin; one is not a floor for the other.
+        inside.max.y -= crate::shell::place::floor(self.inset.bottom as f32 / ppp);
         // A gutter on both sides. The platform insets carry only top and
         // bottom (`inset.rs`: the status bar and the taller of keyboard and
         // gesture-nav), so nothing else was holding content off the display's

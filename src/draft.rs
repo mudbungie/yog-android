@@ -80,10 +80,18 @@ pub fn read(answer: &str) -> Result<Said, String> {
 /// The band the composer row stands at, in points: the field's own measured
 /// content, floored at the touch target and capped at [`CAP`].
 ///
+/// **It grows only while the field holds the caret** (bl-0691). The band is
+/// taken off the top of the transcript, on the screen the transcript is the
+/// whole point of, and a draft nobody is typing does not need to be read four
+/// lines at a time — an unfocused composer rests at the touch floor and
+/// scrolls inside itself, with every word of the draft still there the moment
+/// it is tapped. The cap is untouched: this decides which of the two numbers
+/// the measurement is clamped to, not what the ceiling is.
+///
 /// A device pixel scale of zero or less is not a scale — the platform has not
 /// laid out yet — and the honest answer there is the resting height.
-pub fn band(high: i32, ppp: f32) -> f32 {
-    if ppp <= 0.0 {
+pub fn band(high: i32, ppp: f32, focused: bool) -> f32 {
+    if ppp <= 0.0 || !focused {
         return TOUCH;
     }
     (high as f32 / ppp).clamp(TOUCH, CAP)

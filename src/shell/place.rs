@@ -26,6 +26,28 @@
 //! of the two. `place/tests.rs` holds it over a sweep of geometries; that
 //! composition is the ratchet.
 
+pub mod row;
+
+/// **The clearance the glass keeps below whatever it paints** — eight points,
+/// the `S` step of the spacing scale (`docs/STYLE.md` §4).
+pub const GUTTER: f32 = 8.0;
+
+/// **The floor**: how far above the bottom of the display a screen's content
+/// ends, given the platform's own bottom inset in points (the taller of the
+/// keyboard and the gesture-nav bar, `shell/inset.rs`).
+///
+/// **The gutter is ADDED to the inset, never maxed against it** (bl-0691).
+/// It used to be `inset.max(GUTTER)`, which reads as *a device with no
+/// gesture bar still gets clearance* and is true — but on a device that has
+/// one it means the clearance is zero and the last control in the bottom-up
+/// stack is painted with its own edge on the system bar's. The two numbers
+/// answer different questions: the inset is the platform's, and the gutter is
+/// this interface's own margin, which it keeps from whatever the platform put
+/// there.
+pub fn floor(inset: f32) -> f32 {
+    inset.max(0.0) + GUTTER
+}
+
 /// A stretch of glass: two edges, in egui's points, top first.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Band {

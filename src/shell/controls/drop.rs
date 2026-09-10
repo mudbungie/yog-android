@@ -31,6 +31,14 @@ use crate::shell::place::{Band, fit};
 /// placement arithmetic must be told the same number egui is.
 const GAP: f32 = 0.0;
 
+/// **The room the caret is drawn into, kept out of the face's own width**
+/// (bl-0691). The triangle is painted over the button's rect after the fact,
+/// so a face laid out at the button's full inner width runs its last glyph
+/// under it — which never showed while a selector had a third of the row and
+/// showed at once when the two selectors began sharing what the verbs left.
+/// The face is therefore laid to a width this much smaller, and elides there.
+pub(super) const CARET_ROOM: f32 = 20.0;
+
 /// A selector: the current value, and a list of what it may become.
 ///
 /// `area` is the tappable band (`Shell::controls` reads it off the rect
@@ -48,13 +56,19 @@ pub(super) fn drop_down(
     // position moves when the stop controls come and go, and a popup keyed
     // to it would close itself when a turn ends. The salt is the caller's
     // stable name, exactly as `ComboBox::from_id_salt` took it.
+    // Laid to the room the caret leaves rather than truncated by the button
+    // at its own inner width, which is the same elision one caret's width
+    // earlier.
+    let room = (width - ui.spacing().button_padding.x * 2.0 - CARET_ROOM).max(0.0);
+    let shown = egui::WidgetText::from(shown).into_galley(
+        ui,
+        Some(egui::TextWrapMode::Truncate),
+        room,
+        egui::TextStyle::Button,
+    );
     let face = ui
         .push_id(id, |ui| {
-            ui.add(
-                egui::Button::new(shown)
-                    .min_size(egui::vec2(width, 0.0))
-                    .truncate(),
-            )
+            ui.add(egui::Button::new(shown).min_size(egui::vec2(width, 0.0)))
         })
         .inner;
     caret(ui, face.rect);

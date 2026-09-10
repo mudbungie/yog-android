@@ -60,6 +60,7 @@ pub(super) fn spend(
             let listed = asks::models(seat, focus, &provider);
             learned(listed, Some(provider), standing)
         }
+        Cmd::Options => options(seat, focus, standing),
         // **The sign-in pair** (§13.19). The act's answer IS the tail's first
         // frame, so it is adopted rather than reported (`after::signed`); the
         // watch crosses no wire at all — it is what makes the lane wanted, and
@@ -179,6 +180,18 @@ fn aimed(seat: &Seat, focus: &mut Focus, standing: &mut Standing, moved: Focus) 
     *focus = moved;
     if was != focus.workspace {
         preload(seat, focus, standing);
+    }
+    None
+}
+
+/// **The controls row's own pair** (bl-0691), both swallowed like the preload
+/// they are: neither is a gesture the operator made, so an engine that cannot
+/// answer either leaves the row exactly where it stood — dark, and saying so
+/// when it is tapped.
+fn options(seat: &Seat, focus: &Focus, standing: &mut Standing) -> Option<String> {
+    preload(seat, focus, standing);
+    if let Ok((workspace, envelope)) = asks::providers(seat, focus) {
+        standing.options.learned(&workspace, None, envelope);
     }
     None
 }

@@ -69,12 +69,13 @@ pub(crate) struct Native {
 
 impl Native {
     /// The height the composer's band stands at, in points — the field's own
-    /// last measurement, floored at the touch target and capped
-    /// (`crate::draft::band`). Last frame's, because a view's height is not
-    /// knowable before the platform has laid it out, and the resting height
-    /// before the platform has laid one out at all.
+    /// last measurement, floored at the touch target, capped, and taken as
+    /// the resting height whenever the field does not hold the caret
+    /// (`crate::draft::band`, bl-0691). Last frame's, because a view's height
+    /// is not knowable before the platform has laid it out, and the resting
+    /// height before the platform has laid one out at all.
     pub(crate) fn band(&self) -> f32 {
-        self.high.max(band(0, 1.0))
+        self.high.max(band(0, 1.0, false))
     }
 
     /// One frame of the field: place it, read the draft back, and hand over
@@ -98,7 +99,7 @@ impl Native {
                 return false;
             }
         };
-        self.high = band(said.high, skin.scale);
+        self.high = band(said.high, skin.scale, said.focused);
         match self.mirror.step(&said.text, draft) {
             Move::Adopt(text) => *draft = text,
             Move::Push(text) => give(app, &text),

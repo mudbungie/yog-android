@@ -128,3 +128,79 @@ fn a_preload_answered_with_the_wrong_kind_is_silent_too() {
     assert!(snap.roles.is_empty());
     assert_eq!(snap.roles_read, 0);
 }
+
+/// **What the controls row asks for itself** (bl-0691): one gesture, two
+/// reads — the assignments and the provider rows — because the row spends
+/// them together and nothing else asks for the pair. It exists because the
+/// two triggers that used to answer them each left a hole: the assignments
+/// were read on a focus MOVE, so a seat that resumed onto a workspace never
+/// read them at all, and the provider rows only when a selector was opened,
+/// so the tuning knobs were gated on a listing that was usually empty.
+#[test]
+fn the_controls_row_reads_the_assignments_and_the_provider_rows_together() {
+    let providers = json!({ "ok": true, "kind": "providers",
+                            "rows": [{ "name": "acme", "fact": "signed in", "blocked": null,
+                                       "effort": true, "priority": false }] })
+    .to_string()
+    .into_bytes();
+    let (mut model, served) = super::model_against(vec![
+        vec![ws_reply()],
+        vec![roles_reply(json!("high"), false)], // the focus preload
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![roles_reply(json!("high"), false)], // the row's own pair…
+        vec![providers],                         // …both halves of it
+        vec![ws_reply()],
+        vec![conv_reply()],
+    ]);
+    settle(&mut model, &|s| !s.workspaces.is_empty());
+    model.focus_workspace(Some("home".into()));
+    settle(&mut model, &|s| s.roles_read == 1);
+    model.read_options();
+    let snap = settle(&mut model, &|s| !s.providers.is_empty());
+    assert_eq!(snap.roles_read, 2, "the assignments were read again");
+    let knobs = crate::codec::pick::knob::tunable(&snap.providers, Some("acme"));
+    assert!(knobs.0.taken, "the row states it takes effort");
+    assert!(!knobs.1.taken, "and states it does not take priority");
+    assert_eq!(
+        knobs.1.why.as_deref(),
+        Some("acme does not take priority"),
+        "the dark knob carries the row's own refusal"
+    );
+    drop(model);
+    let requests = served.join().unwrap();
+    assert_eq!(ops(&requests)[4], "roles");
+    assert_eq!(ops(&requests)[5], "providers");
+}
+
+/// **An engine that answers neither leaves the row where it stood.** The pair
+/// is a preload and not a gesture the operator made, so a refusal of either
+/// half is silent — the controls stay dark and say why when they are tapped,
+/// which is what they were already doing.
+#[test]
+fn a_controls_read_the_engine_refuses_is_silent() {
+    let refusal = json!({ "ok": false, "error": "unknown op \"providers\"" })
+        .to_string()
+        .into_bytes();
+    let (mut model, _served) = model_against(vec![
+        vec![ws_reply()],
+        vec![refusal.clone()], // the focus preload, refused
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![refusal.clone()], // the row's pair, both refused
+        vec![refusal],
+        vec![ws_reply()],
+        vec![conv_reply()],
+    ]);
+    settle(&mut model, &|s| !s.workspaces.is_empty());
+    model.focus_workspace(Some("home".into()));
+    settle(&mut model, &|s| !s.conversations.is_empty());
+    model.read_options();
+    let snap = settle(&mut model, &|s| s.workspaces.len() == 1);
+    assert_eq!(
+        snap.error, None,
+        "a preload the engine refuses is not an error"
+    );
+    assert!(snap.roles.is_empty() && snap.providers.is_empty());
+    assert_eq!(snap.roles_read, 0, "nothing was read, so nothing overtakes");
+}

@@ -186,6 +186,13 @@ pub(crate) struct Shell {
     /// apart is what keeps a toggle from snapping back for a cadence after
     /// it is turned off (bl-e9f9).
     pub(crate) priority: Option<bool>,
+    /// **What a dark tuning control said when it was tapped** (bl-0691): the
+    /// sentence `codec::pick::knob` made about why the knob cannot be set,
+    /// standing over the controls row until the next act replaces the picks.
+    /// A viewport fact like the picks above it, and it travels with their
+    /// reset — a reason about a provider the focus has left is not a reason
+    /// about anything.
+    pub(crate) tuning_said: Option<String>,
     /// **A platform back press this frame has not yet been taken** (bl-550e).
     /// Read once at the top of the pass and consumed by whatever has a depth
     /// to walk — the bar wherever it paints a back control, the scan screen
@@ -248,6 +255,7 @@ impl Shell {
             model: None,
             effort: None,
             priority: None,
+            tuning_said: None,
             tuned_at: 0,
             back: false,
             screen: None,

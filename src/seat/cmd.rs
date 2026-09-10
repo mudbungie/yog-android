@@ -16,6 +16,14 @@ pub(super) enum Cmd {
     Providers,
     /// List one provider's models.
     Models(String),
+    /// **What the controls row is gated on** (bl-0691): the workspace's role
+    /// assignments and its provider rows, read together because the row
+    /// spends them together — which provider the worker is on, and what that
+    /// provider's own row says it takes. Its own command rather than two,
+    /// because they are one question asked once per workspace by the surface
+    /// that needs the answer, and a surface asking twice for one thing is
+    /// where a second reading comes from.
+    Options,
     /// **Sign one provider in** (§13.19) — the act, fired at the focused
     /// workspace. Its answer is the run's standing rather than a receipt, so
     /// it seeds the tail as well as starting the run.

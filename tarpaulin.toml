@@ -52,6 +52,16 @@
 # and the bridge vocabulary it spends live in `src/scan.rs`, which is pure and
 # stays UNDER the floor — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
+# `src/shell/controls/chip.rs` and `src/shell/controls/stops.rs` are the
+# controls row split at bl-0691, and both inherit `controls.rs`'s entry
+# exactly: a `match` from a chip to the widget that paints it, and three
+# `ui.button` calls under the engine's own gates, `cfg(target_os = "android")`
+# to the last line. Both halves that can be decided elsewhere are: WHAT each
+# control says is `codec::pick::face`, WHETHER a tuning knob may be set and the
+# sentence it answers a tap with is `codec::pick::knob`, and HOW WIDE each
+# control gets to be is `shell::place::row` — all pure and asserted by host
+# tests. What is left here is which widget shows which of them.
+#
 # `src/shell/controls/held.rs` is the capability band (bl-b39d), the same class
 # again: three `ui.button` calls under a weak label, `cfg(target_os =
 # "android")` to the last line. Everything it decides is elsewhere and under
@@ -213,6 +223,14 @@
 # offered over plaintext are all `crate::update`, asserted by host tests. What
 # is left here is the JNI call and which widget shows the answer.
 #
+# `src/shell/theme/anatomy.rs` is the shapes that language is spent on
+# (STYLE.md §5) — the list row, the multi-ink line, the chip — split from the
+# adapter below at the 300-line cap (bl-0691) and inheriting its entry exactly:
+# an allocated rectangle, a `Painter` and a `Button` apiece, `cfg(target_os =
+# "android")` to the last line. What each shape SAYS and how wide it may be are
+# decided elsewhere and under the floor (`codec::pick::face`,
+# `shell::place::row`).
+#
 # `src/shell/theme.rs` is the language's one adapter into egui (bl-549b,
 # docs/STYLE.md), the same class again: a `Visuals` built once at app start,
 # a `Color32` per token, and one allocated row, `cfg(target_os = "android")`
@@ -266,9 +284,11 @@ exclude-files = [
     "src/shell/clip.rs",
     "src/shell/composer.rs",
     "src/shell/controls.rs",
+    "src/shell/controls/chip.rs",
     "src/shell/controls/drop.rs",
     "src/shell/controls/held.rs",
     "src/shell/controls/pick.rs",
+    "src/shell/controls/stops.rs",
     "src/shell/controls/tune.rs",
     "src/shell/enroll.rs",
     "src/shell/field.rs",
@@ -308,6 +328,7 @@ exclude-files = [
     "src/shell/update.rs",
     "src/shell/sys.rs",
     "src/shell/theme.rs",
+    "src/shell/theme/anatomy.rs",
     "src/tools/bridged/door.rs",
     "src/tools/paper/bridge.rs",
     "src/tools/shade/bridge.rs",

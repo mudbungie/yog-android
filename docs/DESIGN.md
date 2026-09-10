@@ -456,8 +456,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/live.rs` + `src/rows/windowed.rs` | where the lane meets the record: the prose gated on the flight that opens it, and a window row minted only for a call no committed block names yet | landed (bl-e3d1, the window bl-ee21) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/codec/pick/face.rs` | what each control on the row SAYS: the pick, then the workspace's assignment, then the control's own name — pure, host-tested | landed (bl-809d) |
+| `src/codec/pick/knob.rs` | what the selected provider's row will TAKE, and the sentence a dark knob answers a tap with — three reasons, three instructions, none of them derived from a model name — pure, host-tested | landed (bl-0691, out of `pick.rs`) |
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
-| `src/shell/controls.rs` | android-only: the controls row under the composer — the conversation-level acts, one row | landed (bl-0267) |
+| `src/shell/controls.rs` | android-only: the controls row under the composer — where it sits, what it drops when the focus moves, and the one listing read it asks for | landed (bl-0267, one row bl-0691) |
+| `src/shell/controls/chip.rs` | android-only: which controls the row has, what each is showing, and how wide it would like to be — the row's vocabulary, split from the row itself | landed (bl-0691) |
+| `src/shell/controls/stops.rs` | android-only: the three acts on a turn already running, each shown by the engine's own gate on the row | landed (bl-0691, out of `controls.rs`) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/help.rs` | the op table, vendored and compiled in (§13.14): one reader, two consumers — the parity roster folds over it and the help screen paints it | landed (bl-3685) |
 | `src/update.rs` | the release channel's decision (§20): is a published release newer than this build, and which asset under it is the APK | landed (bl-7a68) |
@@ -549,6 +552,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/place.rs` | the second host-tested sliver: which side of a control its list opens on and how tall it may be, so an opened popup lands inside the tappable area — pure, and the only half of §13.2's geometry a test can reach | landed (bl-78c2) |
+| `src/shell/place/row.rs` | the third host-tested sliver: how one row of controls divides its width, max-min fair over what each control asked for — so the words that fit keep their width and the selectors are what elides | landed (bl-0691) |
 | `src/shell/controls/drop.rs` | android-only: the drop-down that spends it — `Popup` over a button, because `ComboBox` places its list against the display | landed (bl-78c2) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, and the one list-row helper every navigation list paints through | landed (bl-5a98) |
@@ -589,7 +593,8 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
 | `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
-| `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, a `Color32` by a state's name at a paint site, and the outline-free list row every navigation list paints through | landed (bl-549b) |
+| `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, and a `Color32` by a state's name at a paint site | landed (bl-549b) |
+| `src/shell/theme/anatomy.rs` | android-only: the shapes STYLE.md §5 spells — the outline-free list row every navigation list paints through, the multi-ink line, and the chip, live or dark, laid to the width the row gave it | landed (bl-0691, out of `theme.rs` at the cap) |
 | `rules/no-literal-colour.yml` | the rule that keeps it one home: no paint file constructs a `Color32` or names a palette constant of its own | landed (bl-549b) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE + FOREGROUND_SERVICE_SPECIAL_USE), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App`, and the two lanes armed on resume | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9, bl-fcc5, bl-8bd0) |
 
@@ -1577,7 +1582,16 @@ here is a defect.
   a bar.
 - **The composer is one shared row** at two depths (§8): a multiline field
   that grows to a cap and scrolls inside it, beside a send button that is
-  THE send. The platform residual makes this the only honest shape: the
+  THE send. **It grows only while it holds the caret** (bl-0691): the height
+  it takes is the transcript's, on the screen the transcript is the point of,
+  and a draft nobody is typing does not need to be read four lines at a time
+  — an unfocused composer rests at the touch floor and scrolls inside it,
+  with every word of the draft still there the moment it is tapped. **And the
+  send's word is centred in its own box**, which is not a taste: a `Button`
+  positions its text with the ENCLOSING ui's layout
+  (`Layout::align_size_within_rect`), so the row's `BOTTOM` cross-align laid
+  `send` on the floor of its box while the field's hint beside it was centred
+  in its own. The row is centred; nothing else about it moves. The platform residual makes this the only honest shape: the
   IME's enter key is a newline on this stack (§3 — the field is declared
   multi-line and declares no action, because GameActivity writes an action
   where the enter key does not read it), which is also what every phone chat
@@ -1654,6 +1668,16 @@ here is a defect.
   the inset is spent in one place, and a widget that cannot fit inside the
   band it was handed is a widget deciding the layout — say the smaller
   minimum, do not pad around it.
+
+  **The floor is the inset PLUS this interface's own gutter, and that is one
+  rule in one place** (`shell::place::floor`, bl-0691). It used to be
+  `inset.max(GUTTER)`, which reads as *a device with no gesture bar still gets
+  clearance* — true, and it also said that a device WITH one gets no clearance
+  at all, so the lowest control in the bottom-up stack was painted with its
+  own edge on the system bar's. The two numbers answer different questions:
+  the inset is the platform's, and the gutter is the margin this interface
+  keeps from whatever the platform put there. One is never a floor for the
+  other.
 - **An opened list is inside the tappable area, and that is asserted rather
   than remembered** (bl-78c2). The two rules above make the floor structural
   for everything a screen LAYS OUT. A popup is not laid out: egui gives it an
@@ -1705,6 +1729,17 @@ here is a defect.
   the row's own height and as the minimum interact size inside it. One row
   owns every conversation-level act, so a new one is an entry here rather
   than a new place to look.
+
+  **And it is ONE row, literally, since bl-0691** (operator ruling, reversing
+  the second band below). Every control in it is a chip in one band of chips
+  (`docs/STYLE.md`) and the width is divided by `shell::place::row`, which is
+  max-min fair over what each control asked for: a control that names a verb
+  wants the width of its own words and gets it; the two selectors want
+  everything and split what is left, eliding inside it. So *fixed* and
+  *flexible* are not two kinds of control with a branch between them — a
+  selector is a control whose want is `INFINITY` — and six controls fit a
+  phone's row without any of the short words being truncated to feed a long
+  one. The rule is pure and asserted; only the spending is in the paint.
 - **The tuning pair rides a second band, and only when the provider will
   take it** (REMOTE §9.4, bl-dfbb). *Effort* is how much reasoning the
   worker's model calls request (`low`/`medium`/`high`/`off`, a closed
@@ -1726,10 +1761,44 @@ here is a defect.
   sentence, which is indistinguishable from a seat that never built one. A
   control that vanishes teaches nothing; the greyed provider row has said so
   since bl-0267, and this is that rule applied one control along. Nothing
-  about WHO decides moves: `codec::pick::tunable` still answers it off the
-  engine's own row, and the answer now picks the control's *state* instead of
-  its existence. It also stops the walk needing a provider that takes both
-  before the parity gate can see either.
+  about WHO decides moves: `codec::pick::knob::tunable` still answers it off
+  the engine's own row, and the answer now picks the control's *state*
+  instead of its existence. It also stops the walk needing a provider that
+  takes both before the parity gate can see either.
+
+  **Amended again (bl-0691): a dark control CARRIES ITS REASON, and the row
+  asks for the answer it is gated on.** Grey by itself taught nothing either.
+  Two defects, one root and one consequence, both seen by an operator on a
+  provider that takes both knobs.
+
+  - **The row asks for what it is gated on, once per workspace, and it asks
+    for both halves.** The `options` read (`seat::model::read_options`) is one
+    gesture carrying two: the §9.14 assignments, which say which provider the
+    worker is on, and the §9.13 provider rows, which carry the two capability
+    columns. Each half closed a hole of its own. The columns ride nothing else
+    on the wire, so a gate read off `snap.providers` was answered by an EMPTY
+    listing until somebody opened the provider selector — which is what an
+    operator saw: `effort` dark and `priority` inert on `openai-chatgpt`,
+    whose row states both. And the assignments were read only on a focus MOVE,
+    so a seat that RESUMED onto a workspace (§14's cache restores the focus
+    without a gesture) never read them at all and painted a row of
+    placeholders over a workspace with a model assigned. The trigger is now
+    the reads' own rule — *the surface that needs an answer asks for it* —
+    fired the first time the row paints under a workspace: once per workspace,
+    not once per frame and not once per act, with the selectors' own gestures
+    still refreshing the listing and the tuning acts still re-reading the
+    assignments.
+  - **The tap on a dark knob is spent on a sentence.** There is no hover on a
+    phone, and there are exactly three reasons a knob is dark, each a
+    different instruction: no provider is set (set one), the engine has not
+    listed this provider (nothing has answered yet), or the row states it
+    does not take this knob (nothing to do). One grey could never carry
+    three, so `codec::pick::knob` makes the sentence — under the coverage
+    floor, never in the paint — and the control stays tappable to say it,
+    above the row, in the annotation accent. **Never derived from the model
+    name**: `gpt-5.6` on one row and on another are the same three tokens and
+    different capabilities, and §8's rule is that the seat re-derives no world
+    state.
 
   **Every control on the row wears its VALUE, not its verb** (bl-809d).
   *Which model is this conversation on* is the question an operator glances
@@ -1756,16 +1825,23 @@ here is a defect.
   the face reads `effort: <level>` once one is standing, keeping the empty
   state's word instead of replacing it.
 
-  They are a **second band** under the first rather than more controls in it,
-  for a measured reason: three selectors and a toggle beside the conversation
-  acts leave a model selector too narrow to read a model name in at a
-  320-point width, and egui's own wrapping layout does not answer it — the
-  `ComboBox` these selectors were did not declare its width to the wrap
-  check, so it overflowed the column instead of moving down (measured: 418
-  points in a 390-point column), and the drop-down that replaced it truncates
-  at its width rather than wrapping (bl-78c2). Either way the second row is
-  allocated, not wrapped into. One block under the composer, two rows when
-  there is something in the second: that is still one place to look.
+  They rode a **second band** under the first until bl-0691, for a measured
+  reason: three selectors and a toggle beside the conversation acts leave a
+  model selector too narrow to read a model name in at a 320-point width, and
+  egui's own wrapping layout does not answer it — the `ComboBox` these
+  selectors were did not declare its width to the wrap check, so it overflowed
+  the column instead of moving down (measured: 418 points in a 390-point
+  column), and the drop-down that replaced it truncates at its width rather
+  than wrapping (bl-78c2).
+
+  **The operator's ruling is that the second band cost more than it bought,
+  and the reasoning is a scale the measurement above did not weigh**: forty-
+  eight points is nothing next to a model name, and it is a great deal next to
+  a transcript that had four lines on it. The measurement was right about a
+  model selector at a THIRD of the row; the answer is that the selectors take
+  what the verbs do not, which is most of the row whenever no turn is running,
+  and elide when it is. A model name half-read is a control an operator taps
+  to see whole; a conversation four lines tall is the screen itself gone.
 - **Tap is the act, and the controls load what the workspace actually has**
   (operator ruling, bl-e9f9 — this replaces the *shows only what this device
   set* rule the row shipped with). Nothing in the row holds a draft: picking
@@ -1785,6 +1861,16 @@ here is a defect.
   carries it, so the control snaps back to what IS set and the banner says
   why. Nothing needs a second mechanism for the refused case.
 
+  **The provider pick is not one of those values, and that is a distinction
+  and not an exception** (bl-0691). Picking a provider POSTS NOTHING — the act
+  is the model pick, which names provider and model together — so there is no
+  write for the read to confirm or refuse. Dropping it with the three that
+  were written turned *set an effort level* into *lose the provider you were
+  picking a model under*, and took the tuning knobs dark in the same frame,
+  their gate being that provider's own row. It is a path through the
+  selectors rather than an assignment, so it goes when the FOCUS goes, like
+  every other viewport fact here.
+
   **The effort word is the file's, not this codec's vocabulary.** The config
   may hold a level the four-word gesture set does not spell; it is shown as
   itself, unselectable but never dropped, because flattening it to *nothing
@@ -1795,7 +1881,9 @@ here is a defect.
   refuses the op in band by name, and that means *no preload* — silently. A
   banner there would be this app telling an operator off for running the
   engine they have; the controls simply start empty, exactly as they did
-  before the read existed.
+  before the read existed. The same silence covers the listing read the row
+  now asks for: a refusal leaves the knobs dark, and what they say when tapped
+  is *the engine has not listed this provider*, which is exactly true.
 
   The selection belongs to the workspace it was made in and goes when the
   focus leaves it. A provider row is greyed **by the credential fact it

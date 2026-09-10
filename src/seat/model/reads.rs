@@ -40,6 +40,16 @@ impl Model {
         let _ = self.cmds.send(Cmd::Models(provider));
     }
 
+    /// **Ask for what the controls row shows and is gated on** (bl-0691):
+    /// the workspace's role assignments (REMOTE §9.14) and its provider rows
+    /// (§9.13), which carry the two capability columns the tuning pair is
+    /// dark or live by. Asked by the row the first time it paints under a
+    /// workspace — including a workspace this seat resumed onto, where no
+    /// focus gesture ever fires and nothing else would ask.
+    pub fn read_options(&self) {
+        let _ = self.cmds.send(Cmd::Options);
+    }
+
     /// **Follow one provider's sign-in** (§13.19), or — with `None` — stop
     /// following one. The lane is opened by the next pass and its frames
     /// arrive in the snapshots after it; `None` crosses no wire at all, so a

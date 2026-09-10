@@ -80,12 +80,18 @@ impl Shell {
         let mut taken = None;
         ui.allocate_ui_with_layout(
             band,
-            egui::Layout::right_to_left(egui::Align::BOTTOM),
+            // **Centred, and that is where the send's own word comes from**
+            // (bl-0691). A `Button` positions its text with
+            // `Layout::align_size_within_rect` — the ENCLOSING ui's layout,
+            // not the button's — so under a `BOTTOM` cross-align the word
+            // `send` was laid on the floor of its own box while the field's
+            // hint beside it was centred in its (measured on the emulator:
+            // nineteen device pixels low). Nothing else in the row moves: the
+            // field takes the band whatever the cross-alignment is.
+            egui::Layout::right_to_left(egui::Align::Center),
             |ui| {
                 // Laid right-to-left so the button claims its seat first and
-                // the field takes what remains, not the whole row;
-                // bottom-aligned so the button sits on the band's floor
-                // beside a field that fills the band.
+                // the field takes what remains, not the whole row.
                 let control =
                     egui::Button::new("send").min_size(egui::vec2(0.0, super::mark::TOUCH));
                 let send = ui.add(control);

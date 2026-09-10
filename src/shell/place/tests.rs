@@ -274,3 +274,19 @@ fn an_opened_list_never_leaves_the_tappable_area() {
     assert!(flipped > 0, "no list ever opened upward");
     assert!(refused > 0, "no control was ever out of room");
 }
+
+/// **The floor is the platform's inset PLUS this interface's own clearance**
+/// (bl-0691). A device with a gesture-nav bar used to get exactly the inset,
+/// which put the last control of the bottom-up stack edge to edge with the
+/// system bar; the gutter is what this app keeps for itself, and it is kept
+/// whatever the platform asked for.
+#[test]
+fn the_floor_keeps_a_gutter_above_whatever_the_platform_put_there() {
+    let same =
+        |given: f32, want: f32| assert!((given - want).abs() < super::SLACK, "{given} vs {want}");
+    same(super::floor(48.0), 48.0 + super::GUTTER);
+    same(super::floor(0.0), super::GUTTER);
+    // A probe that answered nonsense is not a reason to paint above the top
+    // of the glass.
+    same(super::floor(-10.0), super::GUTTER);
+}

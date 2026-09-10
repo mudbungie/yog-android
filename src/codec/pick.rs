@@ -25,6 +25,7 @@ use serde_json::{Map, Value, json};
 use super::fields::{bool_of, opt, str_of};
 
 pub mod face;
+pub mod knob;
 
 /// One provider as the engine lists it — the name it is picked by, and the
 /// two facts a surface may state about it.
@@ -139,21 +140,6 @@ pub fn worker(rows: &[RoleRow]) -> Option<RoleRow> {
 /// The one role a phone assigns, named here because the read and the two
 /// gestures must agree about which row is theirs.
 pub const WORKER: &str = "worker";
-
-/// **What the selected provider will take** (bl-dfbb): the two capability
-/// booleans off the row the engine listed, and both false for a provider
-/// this seat has not picked or does not know. It is a read of the wire's own
-/// row and never a guess — the same fact `blocked` greying spends, asked a
-/// different way — and it lives here rather than in the paint because the
-/// paint is not under the coverage floor.
-pub fn tunable(rows: &[ProviderRow], provider: Option<&str>) -> (bool, bool) {
-    let Some(provider) = provider else {
-        return (false, false);
-    };
-    rows.iter()
-        .find(|row| row.name == provider)
-        .map_or((false, false), |row| (row.effort, row.priority))
-}
 
 /// The role a pick assigns. The wire takes a free token; this seat spends
 /// exactly one of them and says so at the call site, but the field rides as

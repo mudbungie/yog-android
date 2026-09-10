@@ -57,15 +57,29 @@ fn a_shape_this_build_cannot_read_never_echoes_the_draft() {
 
 #[test]
 fn the_band_is_the_field_s_own_measure_between_the_floor_and_the_cap() {
-    assert!((band(96, 2.0) - 48.0).abs() < f32::EPSILON);
-    assert!((band(0, 2.0) - TOUCH).abs() < f32::EPSILON);
-    assert!((band(10_000, 2.0) - CAP).abs() < f32::EPSILON);
+    assert!((band(96, 2.0, true) - 48.0).abs() < f32::EPSILON);
+    assert!((band(0, 2.0, true) - TOUCH).abs() < f32::EPSILON);
+    assert!((band(10_000, 2.0, true) - CAP).abs() < f32::EPSILON);
 }
 
 #[test]
 fn no_scale_yet_is_the_resting_height() {
-    assert!((band(600, 0.0) - TOUCH).abs() < f32::EPSILON);
-    assert!((band(600, -1.0) - TOUCH).abs() < f32::EPSILON);
+    assert!((band(600, 0.0, true) - TOUCH).abs() < f32::EPSILON);
+    assert!((band(600, -1.0, true) - TOUCH).abs() < f32::EPSILON);
+}
+
+/// **A field that does not hold the caret rests** (bl-0691): the band it
+/// would have grown to is the transcript's height on the screen the
+/// transcript is the point of, and the draft is all still there — one tap
+/// away, at whatever height its own text earns.
+#[test]
+fn an_unfocused_field_rests_at_the_touch_floor_however_long_its_draft() {
+    assert!((band(600, 2.0, false) - TOUCH).abs() < f32::EPSILON);
+    assert!((band(10_000, 2.0, false) - TOUCH).abs() < f32::EPSILON);
+    assert!(
+        band(600, 2.0, true) > band(600, 2.0, false),
+        "and the caret is what grows it"
+    );
 }
 
 #[test]

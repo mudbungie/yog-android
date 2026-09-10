@@ -2,9 +2,7 @@
 //! the engine's spelling reads back, a real null is a fact, every malformed
 //! shape refuses by name, and the pick's envelope is pinned byte for byte.
 
-use super::{
-    Effort, LEVELS, encode_effort, encode_pick, encode_priority, level_of, names, row, tunable,
-};
+use super::{Effort, LEVELS, encode_effort, encode_pick, encode_priority, level_of, names, row};
 use crate::codec::{Act, Ask, Gesture, encode};
 use serde_json::{Value, json};
 
@@ -166,30 +164,6 @@ fn a_level_outside_the_vocabulary_refuses_naming_it() {
         "{why}"
     );
     assert!(read(json!({ "level": 7 })).is_err());
-}
-
-/// **What the controls may offer** (bl-dfbb): the capability of the selected
-/// provider's own row, and nothing at all for a provider this seat has not
-/// picked or the engine did not list.
-#[test]
-fn the_gate_is_the_selected_providers_own_row() {
-    let rows = vec![
-        row(
-            &json!({ "name": "acme", "fact": "credential present", "blocked": null,
-                     "effort": true, "priority": false }),
-        )
-        .unwrap(),
-        row(
-            &json!({ "name": "rival", "fact": "no credential", "blocked": null,
-                     "effort": false, "priority": true }),
-        )
-        .unwrap(),
-    ];
-    assert_eq!(tunable(&rows, Some("acme")), (true, false));
-    assert_eq!(tunable(&rows, Some("rival")), (false, true));
-    assert_eq!(tunable(&rows, Some("nobody")), (false, false));
-    assert_eq!(tunable(&rows, None), (false, false));
-    assert_eq!(tunable(&[], Some("acme")), (false, false));
 }
 
 /// **The assignment row, with the two subtleties that make it useful**
