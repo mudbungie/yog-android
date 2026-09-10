@@ -1,7 +1,8 @@
 +++
 title = "the composer is not a normal text field: typing with the cursor mid-text appends at the end, nothing is selectable, paste is unproven — make it a native Android EditText overlaid on the composer's rect"
 created = 1789002185
-updated = 1789002185
+updated = 1789002266
+claimant = "Cantaloups-A10"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
