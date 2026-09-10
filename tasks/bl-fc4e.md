@@ -1,0 +1,9 @@
++++
+title = "the phone has no way onto the network from a tool: an http tool through Android's own stack, and curl plus busybox packaged as executables on the shell's PATH (§16.1 rung: net)"
+created = 1789002764
+updated = 1789002764
+priority = 2
+root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
+tags = ["usability-r3"]
++++
+Operator's BanisterIsthmus conversation 2026-09-08/09 on the phone foot: the shell's Toybox has no wget/curl, so the model could not fetch anything and proposed exactly this — 'add networking commands directly to Yog using Android's native networking APIs' and 'bundle selected native binaries with Yog (curl + busybox) as packaged native components'. Ship both as one rung beside paper/sighted/shade: (1) `http`: method, url, headers, body, an optional save-to path under app storage; TLS through Android's stack (no bundled CA store), response bounded (head/tail like litany's tool_output), status + headers + body in the capture; a download lands a file the `open` tool can hand to the installer (that is how an APK install works: download, open, the operator taps). (2) curl and busybox shipped as executables: Android lets an app execute files under its nativeLibraryDir when they are packaged as jniLibs (`libcurl_bin.so` naming, the Termux/F-Droid pattern) — package static arm64 (+x86_64 for the emulator) builds of curl (with TLS via the bundled or system CA path) and busybox, and put that dir on the shell tool's PATH with the names curl/busybox exposed (symlinks or a wrapper). Record licences (NOTICE), sizes, and the exact build recipe in the Makefile (reproducible, pinned versions/checksums). Advertise both in the foot's tool document with honest descriptions. Prove on the emulator: `http` fetches a page; `shell` runs `curl -sI https://…` and `busybox wget`.
