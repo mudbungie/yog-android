@@ -1,7 +1,8 @@
 +++
 title = "paste into the composer is unproven: Gboard's clipboard chip and KEYCODE_PASTE did not reach the text mirror on the emulator; verify on a real device and fix the IME bridge if it reproduces"
 created = 1788935360
-updated = 1789002764
+updated = 1789002765
+claimant = "Cantaloups-A10"
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
