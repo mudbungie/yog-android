@@ -135,7 +135,7 @@ fn invoked(seat: &Seat, client: &str, tool: &str, input: &Value) -> Result<Value
     ))
 }
 
-/// The four tools this loop spends, and the input each is given.
+/// The tools this loop spends, and the input each is given.
 fn calls(nonce: &str) -> Vec<(&'static str, Value)> {
     vec![
         ("shell", json!({ "command": format!("echo {nonce}") })),
@@ -145,6 +145,7 @@ fn calls(nonce: &str) -> Vec<(&'static str, Value)> {
             json!({ "title": nonce, "text": "from the invoke beat" }),
         ),
         ("open", json!({ "url": "https://example.invalid/" })),
+        ("http", json!({ "url": "https://example.com/" })),
     ]
 }
 
@@ -171,9 +172,11 @@ fn the_device_advertises_the_set_this_build_offers() -> Result<(), String> {
     Ok(())
 }
 
-/// **The four**, chosen so that each answers with something no host test could
+/// **The five**, chosen so that each answers with something no host test could
 /// have produced: a value this harness minted, a figure that is this device's,
-/// a row in the platform's own shade, and a refusal the platform itself makes.
+/// a row in the platform's own shade, a refusal the platform itself makes, and
+/// a page fetched over the device's own TLS against the device's own trust
+/// store — which is the one of the five that leaves this box entirely.
 /// Each capture is written out whole for `scripts/invoke-judge.sh` to judge
 /// against the device it came from.
 #[test]

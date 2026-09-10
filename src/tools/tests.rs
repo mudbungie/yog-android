@@ -35,7 +35,8 @@ fn the_advertisement_is_the_table_and_every_element_is_three_facts() {
             "open",
             "camera",
             "location",
-            "notifications"
+            "notifications",
+            "http"
         ]
     );
     for tool in &set {

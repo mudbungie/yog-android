@@ -28,6 +28,7 @@ use crate::codec::{Capture, Tool};
 
 mod bridged;
 mod files;
+mod net;
 /// `pub(crate)` for one caller outside this module: the glass's own long-press
 /// copy reaches the clipboard door through it (`shell::clip`, bl-7781), rather
 /// than opening a second door onto the same Java static.
@@ -77,6 +78,7 @@ pub fn advertisement() -> Vec<Tool> {
     set.extend(paper::tools());
     set.extend(sighted::tools());
     set.extend(shade::tools());
+    set.push(net::tool());
     set
 }
 
@@ -101,6 +103,7 @@ pub fn run_in(tool: &str, input: &Value, data_dir: &str) -> Capture {
         paper::DEVICE | paper::CLIPBOARD | paper::NOTIFY | paper::OPEN => paper::run(tool, o),
         sighted::CAMERA | sighted::LOCATION => sighted::run(tool, o, data_dir),
         shade::NOTIFICATIONS => shade::run(o),
+        net::NAME => net::run(o, data_dir),
         other => refused(
             NO_SUCH_TOOL,
             &format!("this machine carries no tool called {other:?}"),

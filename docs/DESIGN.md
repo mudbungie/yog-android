@@ -537,6 +537,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/shade/bridge.rs` | android-only: the one static call into `dev.yog.Shade` | landed (bl-5cbd) |
 | `android/…/{Shade,ShadeService,Notice}.java` | the listener's platform half: the door, the service the operator enables, the two refusals it tells apart, and one notification as the lines a model reads | landed (bl-5cbd) |
 | `android/…/Span.java` | how long ago, in the unit a reader acts on — one ladder, shared by a fix's age and a notification's | landed (bl-5cbd, out of `Position.java`) |
+| `src/tools/net.rs` | the `http` tool (§16.1, the net rung): its advertised element, the method and header reading, the containment rule on a saved path, and the elision that bounds an answer — pure | landed (bl-fc4e) |
+| `src/tools/net/bridge.rs` | android-only: the one static call into `dev.yog.Net`, five strings wide | landed (bl-fc4e) |
+| `android/…/{Net,Fetch}.java` | the request's platform half: the door, `HttpURLConnection` under the device's own TLS and trust store, the two bounds (what is held, what is streamed to a file) and a sentence for every failure | landed (bl-fc4e) |
 | `android/…/App.java` | the two handles a tool-host thread cannot get for itself: this app's context, and whether it is in front | landed (bl-f34f) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the lanes' frames adopted inside it | landed (bl-dfbb, out of `model.rs`; the tick replaced by the lanes bl-8e3c) |
@@ -797,6 +800,26 @@ the call — and the cost of that, a dismissed notification being gone and an
 unwatched moment being unanswerable, is stated in the description rather than
 papered over with a buffer. And **it is read-only**: a bound listener may also
 dismiss a notification and fire its buttons, and neither is built at this rung.
+
+**The net rung costs no platform service either, and buys the one thing this
+device could not do at all** (§16.1, bl-fc4e). Until it landed a model on this
+phone could drive the glass, take a still and read the shade, and could not
+fetch a URL: Android's `toybox` carries no `wget` and no `curl`, so the shell
+tool had a network and nothing to spend it with. `http` is the direct verb —
+one request through `HttpURLConnection`, which on Android is the platform's
+own client, so **TLS is the device's**: its trust store, its roots, whatever
+CA the operator installed. Nothing here ships a certificate bundle that could
+go stale, and the honest other half is stated in the description a model
+reads — this tool can never be more permissive than the phone, so a host
+Android will not trust is a refusal carrying the platform's own sentence.
+**The answer is bounded and the file is not**: the capture is cut to a stated
+cap with its head and tail kept and the middle named, `read_file`'s shape for
+`read_file`'s reason, while `save_to` streams the WHOLE body into this app's
+own storage and answers the path. That path is what makes the rung reach
+further than a read — `open` hands it to Android, which is how a downloaded
+APK reaches the installer for the operator's own tap, and it is why `save_to`
+is contained to the app's storage in this crate rather than left to the
+platform's `EACCES`: a refusal that teaches is the corpus's rule.
 
 **The interface tools need a platform service, and enabling it is the
 operator's act** (bl-1511, and §5's trust model unchanged): an app uid cannot
@@ -4362,6 +4385,7 @@ ball, ordered by what each costs:
 | 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | **landed** (bl-b0a9) |
 | 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | **landed** (bl-5cbd) |
 | 3 — the pocketed foot | no new tool: the host loop is held open by a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off unless the leaf is foot-grade | **landed** (bl-8bd0, §18) |
+| net — the network | `http` (one request through the platform's stack), and the packaged `curl`/`busybox` on the shell tool's PATH | no service and no grant: `INTERNET` is a normal permission this app already holds for the wire. The executables cost APK size and a NOTICE, nothing else | `http` **landed** (bl-fc4e); the executables are bl-f22a |
 
 **Rung 1's one open platform question is closed, and the answer is in the
 platform's own source** (bl-f34f). *Is a clipboard WRITE restricted the way a
@@ -4485,6 +4509,31 @@ and room for the second** — bl-b82d adds its lane to this class rather than
 declaring another, and §18.6 states what it inherits. Unlike the attention
 half, the foot half is app-only: `invocations` is an existing follow-class
 read, gated on nothing upstream.
+
+**The net rung is two answers to one want, and both are built** (bl-fc4e,
+bl-f22a). The want came off a real drive: the model on this phone proposed the
+two shapes itself, having found that Android's `toybox` carries no `wget` and
+no `curl` — so the shell tool had a network and nothing to spend it with.
+
+*The direct verb is `http`*, and it is the cheap half: one request through
+`HttpURLConnection`, which is the platform's own client, so TLS is the
+DEVICE's — its trust store, its roots, the CA the operator installed — and
+this app ships no certificate bundle to go stale. Its price is a permission
+this app already holds for the wire. Two rulings ride with it. **The answer is
+bounded and the file is not**: a capture is a model's tool result, so the text
+is cut to a stated cap keeping the head and the tail and naming what went,
+while `save_to` streams the whole body to a file under this app's own storage
+and answers the path — and that path is what `open` hands to Android, which is
+how a downloaded APK reaches the installer for the operator to tap. And **the
+containment of a saved path is decided in this crate**, not left to the
+platform: a walk out of the app's storage is refused by name, because a
+refusal arriving as the OS's `EACCES` teaches a model nothing about what it
+may ask for, which is this corpus's editorial rule.
+
+*The packaged half is `curl` and `busybox`*, and it is the one that costs
+APK size (bl-f22a, its own ball because it is its own artifact). It is the
+same rung because it answers the same want from the other end: a command line
+is what a model reaches for, and a verb cannot be composed into a pipeline.
 
 **The consent surface is three gates that already exist, and no new one.**
 thrall's model is an operator-authored document whose entries are the consent
@@ -5235,7 +5284,7 @@ is not a difference:
 
 | tool | what it needs | boot-started |
 |---|---|---|
-| `shell`, `read_file`, `write_file`, `list_files` | nothing but this process | works |
+| `shell`, `read_file`, `write_file`, `list_files`, `http` | nothing but this process | works |
 | `ui_read`, `ui_tap`, `ui_type`, `ui_press`, `ui_screenshot` | `dev.yog.InterfaceService`, an accessibility service the operator enabled — a service, holding its own connection | works |
 | `device`, `clipboard_set`, `notifications` | a Context | works |
 | `notify` | a Context to post; an Activity only to RAISE the runtime dialog | posts; a missing grant names the settings act, as it already does with nothing in front |

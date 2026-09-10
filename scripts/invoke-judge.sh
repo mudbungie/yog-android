@@ -2,7 +2,7 @@
 # sourced by `scripts/invoke.sh`. Its own file for the seam the seeds keep:
 # out there is a world being stood up, in here is what an answer must contain.
 #
-# The four are not four samples of one thing. Each was chosen because its
+# The five are not five samples of one thing. Each was chosen because its
 # evidence is somewhere a host test cannot reach:
 #
 #   * `shell` answers a value this run minted, which is the whole route proved
@@ -14,7 +14,12 @@
 #     `dumpsys notification` on the tools channel;
 #   * `open` is REFUSED, by Android and not by this app, because nothing of
 #     yog's is on the screen — a refusal that cannot be produced off a device
-#     at all, and the one this corpus's honesty rule is about.
+#     at all, and the one this corpus's honesty rule is about;
+#   * `http` fetches a page over TLS, which proves the one thing no part of
+#     this harness stands in for: the DEVICE's own networking stack, verifying
+#     against the DEVICE's own trust store. It is also the only beat here that
+#     leaves this box, so a failure names the emulator's network before it
+#     names the tool.
 #
 # `dumpsys notification` redacts the content it prints, which is why the beat
 # matches the CHANNEL rather than the title this run chose (DESIGN §15.4 paid
@@ -30,7 +35,7 @@ with open(sys.argv[1]) as fh:
 
 judge_captures() {
   local missing=0 tool
-  for tool in shell device notify open; do
+  for tool in shell device notify open http; do
     [ -f "$OUT/$tool.json" ] || { verdict fail "$tool: no capture came back"; missing=1; }
   done
   [ "$missing" = 0 ] || return 0
@@ -72,5 +77,16 @@ judge_captures() {
     verdict pass "open: the platform refused a background launch and said so in band"
   else
     verdict fail "open: expected the background refusal, got exit $(said open exit_code)"
+  fi
+
+  # 5. The device's own network stack, and its own trust store with it: an
+  # https page fetched, its status line first, its headers under it. Matched on
+  # the status rather than on the body, because what is being proved is the
+  # request — the body is example.com's to change.
+  if [ "$(said http exit_code)" = 0 ] \
+    && grep -q "^HTTP 200" <<<"$(said http stdout)"; then
+    verdict pass "http: the device fetched an https page through the platform's own TLS"
+  else
+    verdict fail "http: no 200 came back (exit $(said http exit_code), said: $(said http stderr))"
   fi
 }

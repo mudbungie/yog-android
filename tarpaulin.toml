@@ -330,6 +330,7 @@ exclude-files = [
     "src/shell/theme.rs",
     "src/shell/theme/anatomy.rs",
     "src/tools/bridged/door.rs",
+    "src/tools/net/bridge.rs",
     "src/tools/paper/bridge.rs",
     "src/tools/shade/bridge.rs",
     "src/tools/sighted/bridge.rs",
