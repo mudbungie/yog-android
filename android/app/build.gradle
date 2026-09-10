@@ -61,6 +61,22 @@ android {
             shrinkResources false
         }
     }
+    // **THE PACKAGED EXECUTABLES HAVE TO BE EXTRACTED** (bl-f22a, DESIGN
+    // §16.1). Since AGP 4.2 the default is `extractNativeLibs=false`: the
+    // libraries are mapped straight out of the APK and `nativeLibraryDir`
+    // points INSIDE it, at a path nothing can `exec`. `curl` and `busybox`
+    // are packaged here as `libcurl_bin.so`/`libbusybox_bin.so` precisely
+    // because that directory is the one place an app may execute from — so
+    // they have to be real files in it, which is what legacy packaging means
+    // and the whole of what it is for here. The cost is install size and a
+    // slightly slower install; the alternative is two executables that are
+    // present and unrunnable.
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17

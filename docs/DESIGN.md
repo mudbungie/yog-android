@@ -540,6 +540,10 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/net.rs` | the `http` tool (§16.1, the net rung): its advertised element, the method and header reading, the containment rule on a saved path, and the elision that bounds an answer — pure | landed (bl-fc4e) |
 | `src/tools/net/bridge.rs` | android-only: the one static call into `dev.yog.Net`, five strings wide | landed (bl-fc4e) |
 | `android/…/{Net,Fetch}.java` | the request's platform half: the door, `HttpURLConnection` under the device's own TLS and trust store, the two bounds (what is held, what is streamed to a file) and a sentence for every failure | landed (bl-fc4e) |
+| `src/tools/shell/kit.rs` | what a command line's environment gains when this APK packages executables (§16.1's net rung): the directory at the front of `PATH`, the device's own trust store beside it, and the empty set a build that packages nothing earns — pure | landed (bl-f22a) |
+| `src/tools/shell/bridge.rs` | android-only: the one static call into `dev.yog.Kit`, asking where the links are | landed (bl-f22a) |
+| `android/…/Kit.java` | the links themselves: one symlink per packaged executable, made once per process in the app's own storage, pointing into `nativeLibraryDir` — the one directory this uid may execute from | landed (bl-f22a) |
+| `scripts/natives.sh`, `scripts/busybox-applets.conf` | the build recipe: pinned tarballs, an NDK cross-build of OpenSSL, curl and busybox per ABI, and the applet set busybox is configured to | landed (bl-f22a) |
 | `android/…/App.java` | the two handles a tool-host thread cannot get for itself: this app's context, and whether it is in front | landed (bl-f34f) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the lanes' frames adopted inside it | landed (bl-dfbb, out of `model.rs`; the tick replaced by the lanes bl-8e3c) |
@@ -4385,7 +4389,7 @@ ball, ordered by what each costs:
 | 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | **landed** (bl-b0a9) |
 | 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | **landed** (bl-5cbd) |
 | 3 — the pocketed foot | no new tool: the host loop is held open by a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off unless the leaf is foot-grade | **landed** (bl-8bd0, §18) |
-| net — the network | `http` (one request through the platform's stack), and the packaged `curl`/`busybox` on the shell tool's PATH | no service and no grant: `INTERNET` is a normal permission this app already holds for the wire. The executables cost APK size and a NOTICE, nothing else | `http` **landed** (bl-fc4e); the executables are bl-f22a |
+| net — the network | `http` (one request through the platform's stack), and the packaged `curl`/`busybox` on the shell tool's PATH | no service and no grant: `INTERNET` is a normal permission this app already holds for the wire. The executables cost an installed 5.8 MB per ABI and a NOTICE, nothing else | **landed** (bl-fc4e, bl-f22a) |
 
 **Rung 1's one open platform question is closed, and the answer is in the
 platform's own source** (bl-f34f). *Is a clipboard WRITE restricted the way a
@@ -4530,10 +4534,68 @@ platform: a walk out of the app's storage is refused by name, because a
 refusal arriving as the OS's `EACCES` teaches a model nothing about what it
 may ask for, which is this corpus's editorial rule.
 
-*The packaged half is `curl` and `busybox`*, and it is the one that costs
-APK size (bl-f22a, its own ball because it is its own artifact). It is the
-same rung because it answers the same want from the other end: a command line
-is what a model reaches for, and a verb cannot be composed into a pipeline.
+*The packaged half is `curl` and `busybox`* (bl-f22a, its own ball because it
+is its own artifact). It is the same rung because it answers the same want
+from the other end: a command line is what a model reaches for, and a verb
+cannot be piped into `sed`. Four facts decide its whole shape.
+
+**`nativeLibraryDir` is the only place an app may execute from.** Since API 29
+an app's own writable data directory is W^X, so nothing written or copied
+there at runtime can be `exec`d at all — and the installer fills
+`nativeLibraryDir` from `lib/<abi>/` in the APK, which Gradle fills from
+`jniLibs` and only for files named `lib*.so`. So the executables ship as
+`libcurl_bin.so` and `libbusybox_bin.so`: the name is not a disguise, it is
+the one shape the platform will carry an executable in. It also forces
+`useLegacyPackaging` on — the AGP default maps libraries straight out of the
+APK and points `nativeLibraryDir` INSIDE it, at a path nothing can execute.
+
+**Symlinks, not wrapper scripts**, which is the same rule read the other way:
+a script in the app's storage could never run, but a SYMLINK there is not
+executed — the kernel resolves it and executes the target. `dev.yog.Kit`
+makes one link per packaged executable once per process, and the shell tool
+puts that directory at the FRONT of a command line's `PATH`, so a name the
+platform also carries resolves to the packaged copy.
+
+**Neither carries a CA bundle, because the device has one — but it has to be
+handed over as a FILE, and that is a finding rather than a preference.** curl
+is built `--without-ca-bundle --without-ca-path`, and the obvious answer was
+to point it at the platform's certificate DIRECTORY. It does not work, and it
+fails in the shape that looks most like a bad certificate: Android names those
+files by OpenSSL's **old** subject hash (`X509_NAME_hash_old`, the 0.9.8 one)
+while OpenSSL 1.0 and later look a directory up by the new hash. Measured on a
+current emulator, the store holds `01419da9.0` and OpenSSL 3 goes looking for
+`8d89cda1.0` — so `--capath` at the platform's own store finds nothing and
+every https fetch fails to build a chain. `dev.yog.Kit` therefore
+concatenates the roots into one PEM beside the links, from the newest store
+this device has (the Conscrypt apex from API 30, `/system` before it), and the
+shell tool points `SSL_CERT_FILE` at it. **It is rebuilt at every launch**,
+which is what keeps it a projection of the platform's store rather than a
+second copy: a root the operator adds is there the next time the app starts,
+and nothing here can go stale for longer than one launch. A device whose store
+this app cannot read gets the links WITHOUT a bundle, and curl then fails a
+handshake in its own words rather than this app pretending to a trust store it
+does not have.
+
+**busybox ships without TLS on purpose.** `CONFIG_FEATURE_WGET_HTTPS` is
+busybox's own small TLS and it does not verify certificates; an unverifying
+https client beside a verifying curl is exactly the decoy this corpus's
+editorial rule exists to exclude. `busybox wget` speaks plain http, `curl`
+does https, and the shell tool's description says which is which — the same
+shape `clipboard_set` takes about the read it does not offer.
+
+*What the two halves cost together* is one line in the manifest's permission
+list (already held for the wire) and 5.8 MB of installed files per ABI, all
+of it the packaged pair (curl 5,807,408 bytes, busybox 236,608, both
+stripped). **The APK itself did not grow**: measured on the x86_64 debug
+artifact either side of the change, 28,154,585 bytes before and 27,398,462
+after, because `useLegacyPackaging` also COMPRESSES the libraries the default
+stores uncompressed — the pair adds 2.6 MB of compressed entries and the
+existing library gives back more than that. What is bigger is the INSTALL,
+which is what extraction means, and that is the honest number to quote. The build is pinned by version and sha256 in the `Makefile`
+and performed by `scripts/natives.sh` from upstream tarballs — nothing binary
+is vendored into this repository, which is also why the disclosure gate never
+has to judge a blob it cannot read. `NOTICE` carries the licences, the sizes
+and the GPL-2.0 correspondence for busybox.
 
 **The consent surface is three gates that already exist, and no new one.**
 thrall's model is an operator-authored document whose entries are the consent

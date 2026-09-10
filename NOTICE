@@ -1,0 +1,63 @@
+# Third-party executables packaged in this APK
+
+yog-android itself is MIT-licensed (see LICENSE). Beyond its Rust
+dependencies — whose licences are enumerated exhaustively by `cargo deny`
+against the committed `Cargo.lock` — the APK carries two third-party
+EXECUTABLES, one per supported ABI, under `lib/<abi>/` in the archive and
+`nativeLibraryDir` on the device. They are built from unmodified upstream
+source by `scripts/natives.sh`, pinned by version and SHA-256 in the
+`Makefile`, and nothing of them is vendored into this repository.
+
+This file is that disclosure. It is written by hand because a licence is a
+statement to a person, and the sizes are here because an APK's size is a cost
+somebody pays on a phone.
+
+----------------------------------------------------------------------------
+
+## curl — packaged as `libcurl_bin.so`, spent as `curl`
+
+  Version   8.11.1
+  Source    https://curl.se/download/curl-8.11.1.tar.xz
+  Licence   curl (MIT/X derivative) — https://curl.se/docs/copyright.html
+  Size      about 5.5 MB per ABI, stripped
+
+Linked statically against OpenSSL below and dynamically against bionic
+(`libc`, `libm`, `libdl` — the libraries Android guarantees). Built with no
+CA bundle and no CA path of its own: the app concatenates the device's own
+trusted roots into one PEM at every launch and the shell tool points
+`SSL_CERT_FILE` at it, so the trust store is the platform's.
+
+Copyright (c) 1996 - 2024, Daniel Stenberg, and many contributors.
+
+## OpenSSL — inside `libcurl_bin.so`, not packaged separately
+
+  Version   3.4.0
+  Source    https://github.com/openssl/openssl/releases/download/openssl-3.4.0/openssl-3.4.0.tar.gz
+  Licence   Apache License 2.0 — https://www.openssl.org/source/license.html
+
+Copyright (c) 1998-2024 The OpenSSL Project Authors. All Rights Reserved.
+
+## busybox — packaged as `libbusybox_bin.so`, spent as `busybox`
+
+  Version   1.36.1
+  Source    https://busybox.net/downloads/busybox-1.36.1.tar.bz2
+  Licence   GNU General Public License, version 2 ONLY (GPL-2.0-only)
+            https://busybox.net/license.html
+  Size      about 240 KB per ABI, stripped
+
+Copyright (C) 1998-2023 Erik Andersen, Rob Landley, Denys Vlasenko and others.
+
+**The GPL-2.0 obligation, and how it is met.** The busybox in this APK is
+built from the unmodified upstream tarball named above, whose SHA-256 is
+pinned in the `Makefile`; the applet set is `scripts/busybox-applets.conf` and
+the complete build recipe is `scripts/natives.sh`. Those three files plus the
+public tarball are the complete corresponding source for the binary that
+ships, and this repository is public. No busybox source is modified, and no
+busybox code is linked into yog-android's own binary — it is a separate
+executable in the same archive.
+
+**No TLS is compiled into it.** `CONFIG_FEATURE_WGET_HTTPS` (busybox's own
+small TLS) does not verify certificates, so `busybox wget` here speaks plain
+http and `curl` is the one that does https. The shell tool's description says
+so, because a client that appears to do TLS and does not verify is worse than
+one that says it cannot.

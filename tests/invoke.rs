@@ -135,17 +135,37 @@ fn invoked(seat: &Seat, client: &str, tool: &str, input: &Value) -> Result<Value
     ))
 }
 
-/// The tools this loop spends, and the input each is given.
-fn calls(nonce: &str) -> Vec<(&'static str, Value)> {
+/// The invocations this loop spends: a NAME for the capture it writes, the
+/// tool it calls, and the input it is given. The name is not the tool, because
+/// three of these are the shell tool asked three different questions — and a
+/// capture file per invocation is what `scripts/invoke-judge.sh` reads.
+fn calls(nonce: &str) -> Vec<(&'static str, &'static str, Value)> {
     vec![
-        ("shell", json!({ "command": format!("echo {nonce}") })),
-        ("device", json!({})),
         (
+            "shell",
+            "shell",
+            json!({ "command": format!("echo {nonce}") }),
+        ),
+        ("device", "device", json!({})),
+        (
+            "notify",
             "notify",
             json!({ "title": nonce, "text": "from the invoke beat" }),
         ),
-        ("open", json!({ "url": "https://example.invalid/" })),
-        ("http", json!({ "url": "https://example.com/" })),
+        ("open", "open", json!({ "url": "https://example.invalid/" })),
+        ("http", "http", json!({ "url": "https://example.com/" })),
+        // The two packaged executables, spent as a command line would spend
+        // them — by NAME, off the PATH this app puts in front of the child.
+        (
+            "curl",
+            "shell",
+            json!({ "command": "curl -sS -I https://example.com/" }),
+        ),
+        (
+            "busybox",
+            "shell",
+            json!({ "command": "busybox wget -O - http://example.com/" }),
+        ),
     ]
 }
 
@@ -162,7 +182,7 @@ fn calls(nonce: &str) -> Vec<(&'static str, Value)> {
 #[ignore = "needs the emulator, the engine and the foot leaf make invoke provides"]
 fn the_device_advertises_the_set_this_build_offers() -> Result<(), String> {
     let offered = advertised(&seat()?, &env("FOOT_CLIENT")?, &env("FOOT_WORKSPACE")?)?;
-    for (wanted, _) in calls("") {
+    for (_, wanted, _) in calls("") {
         assert!(
             offered.iter().any(|name| name == wanted),
             "{wanted} is not in the advertised set: {offered:?}"
@@ -172,11 +192,13 @@ fn the_device_advertises_the_set_this_build_offers() -> Result<(), String> {
     Ok(())
 }
 
-/// **The five**, chosen so that each answers with something no host test could
+/// **The seven**, chosen so that each answers with something no host test could
 /// have produced: a value this harness minted, a figure that is this device's,
 /// a row in the platform's own shade, a refusal the platform itself makes, and
 /// a page fetched over the device's own TLS against the device's own trust
-/// store — which is the one of the five that leaves this box entirely.
+/// store, and the two packaged executables spent BY NAME off the PATH this
+/// app hands its children — which is the only proof that the symlinks, the
+/// legacy packaging and the executable bit all survived the install.
 /// Each capture is written out whole for `scripts/invoke-judge.sh` to judge
 /// against the device it came from.
 #[test]
@@ -190,16 +212,16 @@ fn four_invocations_reach_the_platform_and_their_captures_come_back() -> Result<
     // BACKGROUND, and a foot whose host did not survive being pocketed would
     // otherwise fail as a timed-out invocation rather than as what it is.
     advertised(&seat, &client, &env("FOOT_WORKSPACE")?)?;
-    for (tool, input) in calls(&nonce) {
+    for (name, tool, input) in calls(&nonce) {
         let capture = invoked(&seat, &client, tool, &input)?;
         let body = serde_json::to_string_pretty(&capture).map_err(|why| why.to_string())?;
-        std::fs::write(out.join(format!("{tool}.json")), &body)
-            .map_err(|why| format!("{tool}: writing the capture: {why}"))?;
+        std::fs::write(out.join(format!("{name}.json")), &body)
+            .map_err(|why| format!("{name}: writing the capture: {why}"))?;
         let exit = capture.get("exit_code").cloned().unwrap_or(Value::Null);
-        println!("invoke: {tool} answered exit {exit}");
+        println!("invoke: {name} answered exit {exit}");
         assert!(
             exit.is_number(),
-            "{tool}: a capture states its own exit: {body}"
+            "{name}: a capture states its own exit: {body}"
         );
     }
     Ok(())

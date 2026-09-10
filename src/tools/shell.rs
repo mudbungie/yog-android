@@ -8,6 +8,14 @@
 //! machine the adjudicator cannot inspect, and the design must not claim
 //! otherwise.
 //!
+//! **Two names on its PATH are this app's own** (DESIGN §16.1's net rung,
+//! bl-f22a): `curl` and `busybox` are packaged executables, reached through a
+//! directory of symlinks the platform half makes once per process. What that
+//! costs and why it is symlinks is [`kit`]; what it means here is one call
+//! before the spawn, and an empty answer on a build or a device that packages
+//! neither — in which case the command line runs under exactly the
+//! environment it would have run under anyway.
+//!
 //! **The deadline terminates the child**, and the capture says so with the
 //! shell's own `timeout` verdict, so an operator reading a transcript
 //! recognizes it. Draining happens on two threads because a child that fills
@@ -22,6 +30,10 @@ use serde_json::{Map, Value, json};
 
 use super::{BAD_INPUT, arg, object_schema, refused};
 use crate::codec::{Capture, Tool};
+
+#[cfg(target_os = "android")]
+mod bridge;
+mod kit;
 
 pub(crate) const NAME: &str = "shell";
 
@@ -51,7 +63,13 @@ pub(crate) fn tool() -> Tool {
          filesystem is not, and anything needing a system permission this app was not \
          granted will be refused by the platform. Returns the command's stdout, stderr and \
          exit status. A command still running after 60 seconds is terminated and reported \
-         as exit 124.",
+         as exit 124. Two commands on its PATH are packaged with this app rather than the \
+         platform's: `curl`, which does TLS and verifies against this device's own \
+         certificate store, and `busybox`, about ninety applets including wget, tar, gzip, \
+         unzip, sed, awk, grep, find, diff, vi and less. `busybox wget` speaks plain http \
+         only — busybox's own small TLS does not verify certificates, so it is not built \
+         in — which makes `curl` the one to reach for over https. Android's own toybox \
+         carries neither.",
         object_schema(
             json!({ "command": { "type": "string",
                                  "description": "the command line, as sh would read it" } }),
@@ -81,6 +99,10 @@ pub(crate) fn execute_with(program: &str, command: &str, deadline: Duration) -> 
     let spawned = Command::new(program)
         .arg("-c")
         .arg(command)
+        // The packaged executables' directory, at the front of the PATH, and
+        // the device's own certificate store beside it — or nothing at all,
+        // which is what a build that packages neither answers.
+        .envs(kit::additions())
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

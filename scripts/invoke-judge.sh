@@ -2,7 +2,7 @@
 # sourced by `scripts/invoke.sh`. Its own file for the seam the seeds keep:
 # out there is a world being stood up, in here is what an answer must contain.
 #
-# The five are not five samples of one thing. Each was chosen because its
+# The seven are not seven samples of one thing. Each was chosen because its
 # evidence is somewhere a host test cannot reach:
 #
 #   * `shell` answers a value this run minted, which is the whole route proved
@@ -19,7 +19,13 @@
 #     this harness stands in for: the DEVICE's own networking stack, verifying
 #     against the DEVICE's own trust store. It is also the only beat here that
 #     leaves this box, so a failure names the emulator's network before it
-#     names the tool.
+#     names the tool;
+#   * `curl` and `busybox` are the packaged executables, spent BY NAME through
+#     the shell tool — which is the only thing that can prove the whole chain
+#     of them at once: legacy packaging put real files in `nativeLibraryDir`,
+#     the installer left them executable, `dev.yog.Kit` linked them into the
+#     app's storage, and the shell tool put that directory on the child's
+#     PATH. Any one of those four wrong is "not found" here.
 #
 # `dumpsys notification` redacts the content it prints, which is why the beat
 # matches the CHANNEL rather than the title this run chose (DESIGN §15.4 paid
@@ -35,7 +41,7 @@ with open(sys.argv[1]) as fh:
 
 judge_captures() {
   local missing=0 tool
-  for tool in shell device notify open http; do
+  for tool in shell device notify open http curl busybox; do
     [ -f "$OUT/$tool.json" ] || { verdict fail "$tool: no capture came back"; missing=1; }
   done
   [ "$missing" = 0 ] || return 0
@@ -88,5 +94,24 @@ judge_captures() {
     verdict pass "http: the device fetched an https page through the platform's own TLS"
   else
     verdict fail "http: no 200 came back (exit $(said http exit_code), said: $(said http stderr))"
+  fi
+
+  # 6. The packaged curl, resolved by NAME off the PATH the shell tool hands
+  # its child, doing TLS against the device's own certificate directories —
+  # which is what `SSL_CERT_DIR` buys, since this curl carries no CA bundle.
+  if [ "$(said curl exit_code)" = 0 ] \
+    && grep -q "^HTTP/[0-9.]* 200" <<<"$(said curl stdout)"; then
+    verdict pass "curl: the packaged executable ran off the PATH and verified an https host"
+  else
+    verdict fail "curl: no 200 (exit $(said curl exit_code), said: $(said curl stderr))"
+  fi
+
+  # 7. And busybox, over plain http — the one it is built for, because its own
+  # small TLS does not verify certificates and is deliberately not compiled in.
+  if [ "$(said busybox exit_code)" = 0 ] \
+    && grep -q "Example Domain" <<<"$(said busybox stdout)"; then
+    verdict pass "busybox: the packaged applet ran off the PATH and fetched a page"
+  else
+    verdict fail "busybox: nothing came back (exit $(said busybox exit_code), said: $(said busybox stderr))"
   fi
 }

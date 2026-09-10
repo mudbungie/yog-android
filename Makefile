@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit cross-clippy line-cap leak-scan protocol-gate deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit cross-clippy line-cap leak-scan protocol-gate deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity natives
 
 all: check
 
@@ -46,6 +46,36 @@ release:
 # get by typing nothing.
 ABIS ?= arm64-v8a x86_64
 
+# **The packaged executables' pins** (bl-f22a, DESIGN §16.1's net rung). curl
+# and busybox ride in the APK as `libcurl_bin.so` and `libbusybox_bin.so`,
+# because `nativeLibraryDir` is the one directory an Android app may execute
+# from and Gradle carries a file there only if it is named `lib*.so`. The
+# shell tool puts them on a command line's PATH as `curl` and `busybox`;
+# Android's own toybox carries neither, which is the whole reason.
+#
+# **Version AND sha256, and this is their one home.** `scripts/natives.sh`
+# takes every pin from here, so a bump is one edit in one file, and a tarball
+# that does not hash to its pin stops the build rather than being built. The
+# recipe is in that script; the licences and sizes are in `NOTICE`.
+BUSYBOX_VERSION := 1.36.1
+BUSYBOX_SHA256  := b8cc24c9574d809e7279c3be349795c5d5ceb6fdf19ca709f80cde50e47de314
+CURL_VERSION    := 8.11.1
+CURL_SHA256     := c7ca7db48b0909743eaef34250da02c19bc61d4f1dcedd6603f109409536ab56
+OPENSSL_VERSION := 3.4.0
+OPENSSL_SHA256  := e15dda82fe2fe8139dc2ac21a36d4ca01d5313c75f99f46c4e8a27709b7294bf
+
+# The executables alone, for the loop where only they matter. `apk` runs this
+# first, so this target is the named hand-run and not a second recipe. It is
+# cached under `target/natives`: the first run on a box builds OpenSSL, curl
+# and busybox for every ABI in the list and takes minutes, and every run after
+# it does nothing. It needs the NDK (as `apk` does) and, on that first run,
+# the network.
+natives:
+	@BUSYBOX_VERSION='$(BUSYBOX_VERSION)' BUSYBOX_SHA256='$(BUSYBOX_SHA256)' \
+	 CURL_VERSION='$(CURL_VERSION)' CURL_SHA256='$(CURL_SHA256)' \
+	 OPENSSL_VERSION='$(OPENSSL_VERSION)' OPENSSL_SHA256='$(OPENSSL_SHA256)' \
+	 ABIS='$(ABIS)' scripts/natives.sh
+
 APK_OUT := android/app/build/outputs/apk/debug/app-debug.apk
 APK_UNSIGNED := android/app/build/outputs/apk/release/app-release-unsigned.apk
 APK_SIGNED := android/app/build/outputs/apk/release/app-release-signed.apk
@@ -55,6 +85,7 @@ APK_SIGNED := android/app/build/outputs/apk/release/app-release-signed.apk
 # because the ABI list, the jniLibs destination and the release profile are
 # facts about THIS app and not about which key signs it.
 define assemble
+$(MAKE) natives
 cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build --release
 gradle=$$(GRADLE='$(GRADLE)' scripts/gradle.sh) && cd android && "$$gradle" assemble$(1)
 endef
@@ -298,7 +329,7 @@ rules-audit:
 # extending a module. Anything projected ≥200 is pre-split at design time; 300
 # is the wall, never the target.
 LINE_CAP := 300
-LINE_CAP_EXEMPT := \.(md|txt|toml|yaml|yml|json|lock)$$|(^|/)(Makefile|LICENSE|\.gitignore|\.githooks/)
+LINE_CAP_EXEMPT := \.(md|txt|toml|yaml|yml|json|lock)$$|(^|/)(Makefile|LICENSE|NOTICE|\.gitignore|\.githooks/)
 
 line-cap:
 	@files=$$(git ls-files | grep -Ev '$(LINE_CAP_EXEMPT)' || true); \
