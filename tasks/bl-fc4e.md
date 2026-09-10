@@ -1,7 +1,8 @@
 +++
 title = "the phone has no way onto the network from a tool: an http tool through Android's own stack, and curl plus busybox packaged as executables on the shell's PATH (§16.1 rung: net)"
 created = 1789002764
-updated = 1789002764
+updated = 1789002853
+claimant = "Cantaloups-A11"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["usability-r3"]
