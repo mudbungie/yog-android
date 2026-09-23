@@ -1,7 +1,7 @@
 +++
 title = "the workflow selector: third control under the composer, gated on the boundary speaking litany's workflow verb"
 created = 1788317686
-updated = 1788659888
+updated = 1790127248
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
@@ -16,3 +16,7 @@ Three things this seat would need before a selector is anything but invention:
 3. An ACT setting or clearing the mark — litany's `workflow <ws> <agent> [--config <name> | --clear]`, unexposed at the boundary.
 
 Until those exist the honest client-side answer is nothing at all: a control that listed names off a directory it cannot read, or set a mark through a verb the boundary does not speak, would be the decoy shape DESIGN §16.1 refuses. Left open, gated on yog.
+
+---
+
+The gate is open: yog bl-b680 landed the boundary's workflow verbs — reply/governing carries workflow_mark (null, or {holder, oid, short_oid, lineage}), request/workflow {workspace, agent, config} sets the mark and request/clear-workflow clears it, and request/lineages is the enumeration a selector picks from (a mark names a lineage's head, never a workflows/ template file). Edition 19 stamps in corpus/shapes.json; PROTOCOL stays 19. REMOTE §9.24.
