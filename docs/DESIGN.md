@@ -604,7 +604,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
 | `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
 | `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, and a `Color32` by a state's name at a paint site | landed (bl-549b) |
-| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,frontier,flight,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half (with BEP 42's observed `ip` and its per-family vote, bl-544b), BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), its frontier of responsive nodes with the door re-asked while dry (yog bl-d00f), the sliding window of queries in the air (yog bl-d9c1), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62, walk bl-066c) |
+| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,frontier,flight,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half (with BEP 42's observed `ip` and its per-family vote, bl-544b), BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), its frontier of responsive nodes with the door re-asked while dry (yog bl-d00f) — only at the addresses that answered (yog bl-f519), the sliding window of queries in the air (yog bl-d9c1), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62, walk bl-066c) |
 | `src/rendezvous.rs` | §21.1: the two roving files beside the leaf, both or neither, and the four HKDF derivations under `yog rendezvous` | landed (bl-3d62) |
 | `src/rendezvous/{item,call}.rs` | §21.2: the sealed presence and call (ChaCha20-Poly1305, `nonce ‖ ciphertext ‖ tag` over the endpoint list), and the two DHT verbs a rendezvous spends — presence read, call written under the derived inbox keypair | landed (bl-3d62) |
 | `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
@@ -5782,7 +5782,13 @@ so dead nodes never sit on the slots a live node past them needs. When the
 frontier runs dry before K nodes past the door have replied, the door is asked
 `find_node` again, as long as it has ever named anyone: the one router that
 answers names a single random node eight times per query, so its first seeds
-are often all silent and re-asking draws fresh ones. The walk is a **sliding
+are often all silent and re-asking draws fresh ones. **A re-ask knocks only
+where the door answered** (bl-29dd, porting yog bl-f519): a bootstrap address
+silent past its first deadline leaves the door for the rest of the walk, as a
+silent node leaves the frontier. From the engine's box the roster resolves to
+five addresses of which three never answer, and re-asking all five spent
+three of every five door queries on nothing — in the walks that ended dark,
+most of the cap. The walk is a **sliding
 window**, not lockstep rounds: up to α walk queries in the air, each with its
 own deadline, and the next frontier node asked the moment any answers or times
 out, so a silent node costs its own slot for one deadline and never delays an
@@ -5791,9 +5797,14 @@ in one flight, every holder at once, each with its own deadline. The defaults
 are the engine's measured ones — α 8, K 8, a 1 s deadline per query, a
 64-query cap — pinned by `the_defaults_are_the_measured_window_and_deadline`.
 Measured from the engine's box after both fixes: `lookup` 10/10 at a median
-~6.5 s, `put` 10/10 at ~7.5 s, `get` 9/10 at ~7.5 s. yog bl-f519 (a `put`
-whose flight occasionally draws no acknowledgement, cause unmeasured) is the
-engine's open question and is not addressed here.
+~6.5 s, `put` 10/10 at ~7.5 s, `get` 9/10 at ~7.5 s. yog bl-f519 measured
+the `put` that occasionally drew no acknowledgement and found a dark walk, not
+a silent `put`: a walk that reached no token holder sent nothing and borrowed
+the silent-put message. Both halves of its fix are ported (bl-29dd) — the door
+sheds silent routers as above, and a `put` whose walk found no token holder
+fails *no DHT node near T offered a write token* and sends nothing, *no DHT
+node stored the item* kept for holders that were sent the item and none
+stored it.
 
 **What a walk costs the phone.** The cap is the bound: at most 64 queries,
 the door's re-asks counted among them, each a datagram of about a hundred bytes out and
