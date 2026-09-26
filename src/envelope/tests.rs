@@ -8,7 +8,7 @@ use std::path::Path;
 
 /// The envelope a seat would render, built out of a minted leaf so the stated
 /// grade and the certificate's own agree by construction.
-fn minted(dir: &Path, grade: &str, name: &str) -> String {
+pub(super) fn minted(dir: &Path, grade: &str, name: &str) -> String {
     mint_ca(dir, "ca");
     if grade == "foot" {
         mint_foot(dir, "ca", name);
@@ -245,6 +245,7 @@ fn the_hint_names_every_key_and_fixes_no_order() {
         ca: "ca".to_owned(),
         cert: "cert".to_owned(),
         key: "key".to_owned(),
+        roving: None,
     });
     let value: serde_json::Value = serde_json::from_str(&text).unwrap();
     for key in value.as_object().unwrap().keys() {
@@ -271,6 +272,7 @@ fn a_grade_word_this_build_cannot_spell_is_written_back_and_refused_on_the_way_i
         ca: "ca".to_owned(),
         cert: "cert".to_owned(),
         key: "key".to_owned(),
+        roving: None,
     });
     let value: serde_json::Value = serde_json::from_str(&text).unwrap();
     assert_eq!(value["grade"], "admin");

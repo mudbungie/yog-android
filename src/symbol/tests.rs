@@ -57,6 +57,18 @@ fn a_realistic_envelope_still_fits_at_level_m() {
 }
 
 #[test]
+fn a_roving_envelope_still_fits_at_level_m() {
+    // The roving pair (yog bl-9043) grows a mint to about 1729 bytes: past
+    // level Q's capacity, still inside M's 2331, so the level stays M.
+    let payload: String = (0..1729u32)
+        .map(|i| char::from(b'a' + u8::try_from(i % 26).unwrap()))
+        .collect();
+    let symbol = encode(&payload).unwrap();
+    assert!(symbol.modules <= 177, "a version-40 symbol at most");
+    assert_eq!(decoded(&symbol), payload);
+}
+
+#[test]
 fn a_payload_too_large_for_the_format_refuses_rather_than_truncating() {
     let why = encode(&"x".repeat(4000)).unwrap_err();
     assert!(

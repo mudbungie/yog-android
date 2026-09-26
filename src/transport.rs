@@ -16,12 +16,24 @@
 //! server leaf must carry the matching `IP:` SAN — and anything else is a
 //! DNS name. Nothing to configure, nothing that can disagree with what was
 //! dialled.
+//!
+//! **Since the punched wire (DESIGN §21) the socket comes from the
+//! [`Ladder`]**, not from `TcpStream::connect` — the same four-rung climb
+//! REMOTE §13.4 gives every client — and "every ask is its own connection"
+//! holds for a dialled socket exactly as before while a PUNCHED one is held:
+//! its preface is spent once, a finished ask hands it back
+//! ([`Open::each`](open::Open::each)), and the next ask writes only its
+//! request. The engine serves a held stream request after request and pings
+//! it through its silence; the ping is discarded ahead of every answer.
 
+mod open;
 mod wire;
 
+pub use open::{Hangup, Open};
 pub use wire::Wire;
 
 use crate::codec::reply::{self, Reply};
+use crate::ladder::{Clock, Conn, Ladder, Rove, SystemClock};
 use crate::material::Material;
 use crate::{frame, hello};
 use rustls::pki_types::ServerName;
@@ -45,18 +57,36 @@ pub struct Seat {
     config: Arc<rustls::ClientConfig>,
     address: String,
     name: ServerName<'static>,
+    ladder: Arc<Ladder>,
 }
 
 impl Seat {
     /// Build the seat from provisioned material. Nothing is dialled here: a
     /// seat is a fact about what this device may say, not about whether an
-    /// engine happens to be up.
+    /// engine happens to be up. Material that roves climbs the mainline.
     pub fn open(m: &Material) -> Result<Self, String> {
+        let rove = m.pairing.clone().map(Rove::mainline);
+        Self::open_with(m, rove, Arc::new(SystemClock))
+    }
+
+    /// [`open`](Self::open) with the commons and the clock named — the
+    /// suite's door, pointing the ladder at a fake DHT and a clock it turns.
+    pub fn open_with(
+        m: &Material,
+        rove: Option<Rove>,
+        clock: Arc<dyn Clock>,
+    ) -> Result<Self, String> {
         Ok(Self {
             config: crate::tls::client_config(m)?,
             address: m.address.clone(),
             name: server_name(&m.address)?,
+            ladder: Arc::new(Ladder::new(m.address.clone(), rove, clock)),
         })
+    }
+
+    /// How many punched streams this seat is holding for its next asks.
+    pub fn held(&self) -> usize {
+        self.ladder.held()
     }
 
     /// The address this seat dials.
@@ -117,23 +147,45 @@ impl Seat {
     /// whatever thread it likes and hangs up from any other, which is the
     /// whole of what a lane needs and one-shot asks do not.
     pub fn hold(&self, request: &Value) -> Result<(Open, Hangup), Wire> {
-        let (mut tls, hangup) = self.dial(request)?;
+        let (mut tls, hangup, spent, punched) = self.dial(request)?;
         // The engine's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
-        let edition = hello::confirm(&mut tls).map_err(Wire::Unusable)?;
-        Ok((Open { tls, edition }, hangup))
+        // A held stream spent its preface on its first ask and carries the
+        // edition it was told then.
+        let edition = match spent {
+            Some(edition) => edition,
+            None => hello::confirm(&mut tls).map_err(Wire::Unusable)?,
+        };
+        let keep = punched.then(|| Arc::clone(&self.ladder));
+        Ok((Open::new(tls, edition, keep), hangup))
     }
 
     /// The connection with the request written, and the hang-up handle on it
     /// — a second descriptor on the same socket, taken here so that a clone
     /// that cannot be had is the same sentence as a socket that would not
-    /// open: both are the channel failing before a byte of the act left.
-    fn dial(
-        &self,
-        request: &Value,
-    ) -> Result<(StreamOwned<ClientConnection, TcpStream>, Hangup), Wire> {
-        let (tcp, hangup) = TcpStream::connect(&self.address)
-            .and_then(|tcp| Ok((tcp.try_clone()?, tcp)))
+    /// open: both are the channel failing before a byte of the act left. The
+    /// third answer is the edition a HELD stream already carries, `None` for
+    /// a fresh socket whose preface is still to be read; the fourth is
+    /// whether the socket was punched, which is what a finished ask keeps.
+    fn dial(&self, request: &Value) -> Result<Dialled, Wire> {
+        let conn = self.ladder.connect().map_err(Wire::Transport)?;
+        let (tcp, punched) = match conn {
+            Conn::Held(held) => {
+                let mut tls = held.tls;
+                let hangup = tls
+                    .sock
+                    .try_clone()
+                    .map_err(|e| Wire::Transport(format!("connect {}: {e}", self.address)))?;
+                let _ = tls.sock.set_read_timeout(Some(ASK_TIMEOUT));
+                frame::write_frame(&mut tls, request.to_string().as_bytes())
+                    .map_err(|e| Wire::Transport(format!("send: {e}")))?;
+                return Ok((tls, Hangup::new(hangup), Some(held.edition), true));
+            }
+            Conn::Fresh { tcp, punched } => (tcp, punched),
+        };
+        let (tcp, hangup) = tcp
+            .try_clone()
+            .map(|clone| (clone, tcp))
             .map_err(|e| Wire::Transport(format!("connect {}: {e}", self.address)))?;
         // A timeout that failed to arm costs a slow failure, never a wrong
         // one — and Some(nonzero) cannot be refused, so an error arm here
@@ -151,87 +203,28 @@ impl Seat {
         // therefore begins where the write ENDS, which is why the class here
         // is the same one a socket that would not open earns.
         send(&mut tls, request).map_err(|e| Wire::Transport(format!("send: {e}")))?;
-        Ok((tls, Hangup { tcp: hangup }))
+        Ok((tls, Hangup::new(hangup), None, punched))
     }
 }
+
+/// What [`Seat::dial`] hands up: the stream with the request on it, the
+/// hang-up handle, the edition if the preface is already spent, and whether
+/// the socket was punched.
+type Dialled = (
+    StreamOwned<ClientConnection, TcpStream>,
+    Hangup,
+    Option<u32>,
+    bool,
+);
 
 /// This end's two frames, written in one breath (REMOTE §3): the version
 /// preface, then the gesture envelope. One fallible unit because they are one
 /// act to a caller — a connection that could not carry the preface could not
 /// have carried the request either, and two sentences for that would be two
 /// spellings of "the socket went away".
-/// A connection with its request written and the preface confirmed: the
-/// answer's frames are what is left on it.
-pub struct Open {
-    tls: StreamOwned<ClientConnection, TcpStream>,
-    /// **What the engine on the other end can spell** (REMOTE §3.2): the
-    /// edition its preface stated, or `ledger::FLOOR` where it stated none.
-    /// Kept on the connection rather than in a process-wide slot, because a
-    /// capability question must not depend on what else has been dialled
-    /// since — see `crate::ledger`.
-    edition: u32,
-}
-
-/// **The way to end a held read from another thread.** A reader parked on
-/// the socket wakes when the socket is shut down under it, so a lane is
-/// stopped by hanging up rather than by a flag it would only read between
-/// frames — up to a hold away.
-pub struct Hangup {
-    tcp: TcpStream,
-}
-
-impl Open {
-    /// **The edition the engine stated**, for whoever asks
-    /// `crate::ledger::spells` — the one question a control has that no
-    /// protocol bump ever answered: *could this engine have said that field
-    /// at all* (REMOTE §3.2).
-    #[must_use]
-    pub fn edition(&self) -> u32 {
-        self.edition
-    }
-
-    /// Read every frame up to the terminator, handing each to `adopt` as it
-    /// lands. `adopt` answering `false` ends the read here — the connection
-    /// is dropped, which is how the engine learns its answer has no reader.
-    /// A socket that ends without the terminator is a lost stream (REMOTE
-    /// §10: a stream that ended and a dial that failed are one case).
-    pub fn each(mut self, adopt: &mut dyn FnMut(Value) -> bool) -> Result<(), Wire> {
-        loop {
-            // **Lost and not `Transport`** (bl-07b1): the gesture is on the
-            // wire by the time this reads, so a channel that dies here is yog
-            // REMOTE §3's lost reply — the engine may have completed the act.
-            // The channel question is unchanged (`Wire::transport` answers yes
-            // to both), so the tool host's ladder reads exactly what it read.
-            let frame = frame::read_frame(&mut self.tls)
-                .map_err(|e| Wire::Lost(format!("receive: {e}")))?;
-            match frame {
-                Some(body) if adopt(parsed(&body)?) => {}
-                _ => return Ok(()),
-            }
-        }
-    }
-}
-
-impl Hangup {
-    /// End the held read. Idempotent, and a socket already gone is not an
-    /// error — the reader it was for has nothing left to be woken from.
-    pub fn hang_up(&self) {
-        let _ = self.tcp.shutdown(std::net::Shutdown::Both);
-    }
-}
-
 fn send(w: &mut dyn std::io::Write, request: &Value) -> std::io::Result<()> {
     hello::state(w)?;
     frame::write_frame(w, request.to_string().as_bytes())
-}
-
-/// One frame's bytes as the JSON value the codec reads — the strict-decode
-/// discipline at the framing, said in the frame's own terms. Unusable and not
-/// a channel failure: the bytes arrived intact and said something this end
-/// cannot read, which dialling again cannot mend.
-fn parsed(body: &[u8]) -> Result<Value, Wire> {
-    serde_json::from_slice(body)
-        .map_err(|e| Wire::Unusable(format!("receive: frame is not JSON: {e}")))
 }
 
 /// The name to verify the server certificate against, read off the address.

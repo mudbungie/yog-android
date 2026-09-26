@@ -47,6 +47,26 @@ serde_json = "1"
 # the gate instead of quietly re-acquiring a C toolchain. Feature set mirrors
 # the server's own rustls line exactly.
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+# ring: named directly for the punched wire (bl-3d62, DESIGN §21; yog's own
+# bl-df31 argument verbatim) — the DHT rendezvous signs BEP 44 items with
+# ed25519 and names a target by SHA-1, the pairing derives four facts by
+# HKDF-SHA256, and both items are sealed with ChaCha20-Poly1305; all four are
+# shipped by the provider rustls above already selects. The manifest gained a
+# line and the lockfile a dependency EDGE: no crate, no license, no advisory
+# — measured by diffing the lockfile, not assumed — so this is not the new
+# dependency rule 6 gates.
+ring = "0.17"
+# socket2: the ONE new crate of the punched wire, and rule 6's approved
+# exception — operator ruling 2026-09-23 (yog REMOTE §13.7 ruling 1), the
+# same ruling and the same pin thrall took (thrall bl-0a8b). The punch
+# (REMOTE §13.3) listens and connects from one port, which needs
+# SO_REUSEADDR and SO_REUSEPORT, and std exposes neither; a `setsockopt` in
+# `src/shell/sys.rs` was the other door and is refused for thrall's reason —
+# these run per connection at runtime, not once at the process edge, and
+# they are needed on the host suite, which never compiles `src/shell`.
+# Pure Rust over the libc std already links; MIT OR Apache-2.0, no new
+# licence value, no advisory. Exact pin, `all` for `set_reuse_port`.
+socket2 = { version = "=0.6.5", default-features = false, features = ["all"] }
 # rxing: operator ruling 2026-08-30 (bl-d815) — the QR decoder behind **Scan
 # QR** on the enrollment screen. The ruling is a choice between three routes,
 # and it is recorded here because the manifest is where the cost lands:

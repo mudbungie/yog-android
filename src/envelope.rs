@@ -42,6 +42,8 @@ use serde_json::{Map, Value};
 
 use crate::leaf::Grade;
 
+pub(crate) mod roving;
+
 /// The tag that both names this envelope and states its version — one field,
 /// because a payload that carried a version but no name would be read out of
 /// any JSON a camera happened to see.
@@ -87,6 +89,9 @@ pub struct Envelope {
     pub cert: String,
     /// This device's private key, PEM.
     pub key: String,
+    /// The rendezvous public key and the pairing salt, hex, where the
+    /// engine roves.
+    pub roving: Option<(String, String)>,
 }
 
 /// **Write one out** — the compact JSON REMOTE §8.4 rules, tag first in
@@ -116,6 +121,9 @@ pub fn write(envelope: &Envelope) -> String {
         ("key", &envelope.key),
     ] {
         map.insert(key.to_owned(), Value::from(said.clone()));
+    }
+    for (key, said) in roving::fields(envelope.roving.as_ref()) {
+        map.insert(key.to_owned(), Value::from(said));
     }
     Value::Object(map).to_string()
 }
@@ -163,6 +171,7 @@ pub fn read(text: &str) -> Result<Envelope, String> {
         ca: field(obj, "ca")?,
         cert: field(obj, "cert")?,
         key: field(obj, "key")?,
+        roving: roving::read(obj)?,
     };
     agrees(&envelope)?;
     Ok(envelope)
@@ -244,12 +253,13 @@ fn field(obj: &Map<String, Value>, key: &str) -> Result<String, String> {
 /// against an operator who did nothing wrong.
 pub fn land(dir: &Path, envelope: &Envelope) -> Result<(), String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
-    let written = [
+    let mut written = vec![
         (crate::material::ANCHORS, envelope.ca.clone()),
         (crate::material::CHAIN, envelope.cert.clone()),
         (crate::material::KEY, envelope.key.clone()),
         (crate::material::ADDRESS, envelope.address.clone()),
     ];
+    written.extend(roving::files(envelope.roving.as_ref()));
     for (name, body) in &written {
         let path = dir.join(name);
         std::fs::write(&path, ends_in_newline(body))

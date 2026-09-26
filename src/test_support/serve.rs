@@ -209,7 +209,7 @@ fn scripted(
 
 /// The server half's TLS config over the minted files: client certificates
 /// required, chaining to `ca`.
-fn config(dir: &Path, ca: &str, leaf: &str) -> Arc<rustls::ServerConfig> {
+pub(super) fn config(dir: &Path, ca: &str, leaf: &str) -> Arc<rustls::ServerConfig> {
     let mut store = rustls::RootCertStore::empty();
     for anchor in CertificateDer::pem_file_iter(dir.join(format!("{ca}.pem"))).unwrap() {
         store.add(anchor.unwrap()).unwrap();

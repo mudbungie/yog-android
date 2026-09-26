@@ -17,7 +17,14 @@
 //! The directory is the caller's fact (the Android shell hands its app-files
 //! dir; a test hands a scratch dir); the file names inside it are this
 //! module's, and they are the delivery channels' write contract.
+//!
+//! **Beside the four, an optional pair** (DESIGN §21.1, yog REMOTE §13.2):
+//! the engine's rendezvous public key and the pairing salt, read by
+//! [`crate::rendezvous::read_dir`] with the same three answers one rung
+//! over. Both or neither — an entry with an address and no rendezvous
+//! material is today's entry and never touches the DHT (REMOTE §13.4).
 
+use crate::rendezvous::Pairing;
 use std::path::{Path, PathBuf};
 
 /// The operator CA this seat verifies the engine against.
@@ -46,6 +53,8 @@ pub struct Material {
     pub key: PathBuf,
     /// `host:port`, as provisioned.
     pub address: String,
+    /// The rendezvous material, where the entry roves.
+    pub pairing: Option<Pairing>,
 }
 
 /// Read the seat's material out of `dir`. See the module doc for the three
@@ -86,6 +95,7 @@ pub fn read_dir(dir: &Path) -> Result<Option<Material>, String> {
         chain: dir.join(CHAIN),
         key: dir.join(KEY),
         address,
+        pairing: crate::rendezvous::read_dir(dir)?,
     }))
 }
 

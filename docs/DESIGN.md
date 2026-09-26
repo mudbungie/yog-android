@@ -38,7 +38,10 @@ What follows from that, and is invariant:
   serialization. A capability this client needs and the boundary lacks is
   added to the boundary, upstream in yog — never invented here.
 - **The client is always the asker** (REMOTE §3, the routing ruling). No
-  listening socket on the phone, ever; the seat polls.
+  listening socket on the phone but one: the punch port of §21.4, which
+  exists only on an entry that roves, only for one climb, and accepts only
+  inside the window this device opened by calling its engine. The seat
+  still polls.
 - **Bootstrap rides existing trust, never the new device's own connection**
   (REMOTE §1.4, widened by bl-ae9d — §5). The app carries no enrollment,
   pairing, or account protocol reachable over its own unauthenticated
@@ -601,6 +604,14 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
 | `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
 | `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, and a `Color32` by a state's name at a paint site | landed (bl-549b) |
+| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half, BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62) |
+| `src/rendezvous.rs` | §21.1: the two roving files beside the leaf, both or neither, and the four HKDF derivations under `yog rendezvous` | landed (bl-3d62) |
+| `src/rendezvous/{item,call}.rs` | §21.2: the sealed presence and call (ChaCha20-Poly1305, `nonce ‖ ciphertext ‖ tag` over the endpoint list), and the two DHT verbs a rendezvous spends — presence read, call written under the derived inbox keypair | landed (bl-3d62) |
+| `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
+| `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
+| `src/ladder.rs` + `src/ladder/{rove,backoff}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), and the rest between failed climbs | landed (bl-3d62) |
+| `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
+| `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle — and the hand-back of a punched stream whose answer ended clean (split from `transport.rs`, §21.5) | landed (bl-3d62) |
 | `src/shell/theme/anatomy.rs` | android-only: the shapes STYLE.md §5 spells — the outline-free list row every navigation list paints through, the multi-ink line, and the chip, live or dark, laid to the width the row gave it | landed (bl-0691, out of `theme.rs` at the cap) |
 | `rules/no-literal-colour.yml` | the rule that keeps it one home: no paint file constructs a `Color32` or names a palette constant of its own | landed (bl-549b) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE + FOREGROUND_SERVICE_SPECIAL_USE), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App`, and the two lanes armed on resume | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9, bl-fcc5, bl-8bd0) |
@@ -5723,3 +5734,111 @@ within the hour on its own; **a phone cannot**, because the last rung needs a
 tap — so a phone whose person is not holding it stays skewed indefinitely. The
 row is what makes that recoverable: the refusal names both versions, and the
 one act that fixes it is on the screen an operator lands on.
+
+## 21. The punched wire: the phone reaches its engine from anywhere (bl-3d62)
+
+The app half of yog bl-0247. REMOTE §12.1 holds — nothing is owed a phone
+that is not owed a laptop — so this is the same client contract thrall
+carries (thrall bl-0a8b), reimplemented here per REMOTE §13.7 ruling 2 and
+tested against the same byte fixtures, which were pinned from the engine's
+own output. REMOTE §13.2–§13.4 is the authority; this section says only what
+the phone does with it.
+
+### 21.1 The material: two files beside the leaf
+
+An entry that roves holds `rendezvous.pub` (the engine's ed25519 public key)
+and `pairing.salt` beside `ca.pem`, 32 bytes of hex each, **both or
+neither**. Neither is today's entry, byte for byte; one alone is the
+half-provisioned store `material::read_dir` already names, one rung over
+(`rendezvous::read_dir`). They arrive the way the leaf does: the §8.4
+enrollment envelope carries them as `rendezvous_pub` and `pairing_salt`
+(yog bl-9043, edition 20), an engine that does not rove sends neither, and
+half a pair refuses before anything lands (`envelope::roving`). The QR stays
+at level M: the pair grows a mint to about 1729 bytes, past Q, inside M.
+
+Everything else is derived, HKDF-SHA256 under the salt `yog rendezvous`, one
+label each: `presence salt`, `inbox salt`, `seal key`, `inbox key`. The
+inbox key is an ed25519 **seed**, so the call is signed under a keypair both
+ends compute and this device stores no keypair of its own.
+
+### 21.2 The DHT client
+
+`src/dht` is a pure client of the mainline — outbound UDP, never a node, no
+listener, nothing offered. It is the engine's module reimplemented, including
+the two defects the engine's live walks found: the bootstrap routers are asked
+`find_node` and never BEP 44's `get` (yog bl-f6e1), and the bootstrap is a
+door and never a result, so a walk whose learned nodes are all silent is a
+dark commons rather than an empty read (yog bl-9408). The round is the
+engine's measured one second; the roster is the engine's four routers.
+
+### 21.3 The ladder
+
+Every dial climbs `ladder::Ladder`, cheapest first: **a live held stream;
+the entry's direct `address`** (5 s per resolved address); **a re-punch at
+the RAM-cached engine endpoints**, no DHT round trip; **the full
+rendezvous** — read presence, write the call (a fresh 8-byte nonce, `seq`
+the clock's epoch second and always rising), punch. What worked is RAM for
+the process, never disk. An entry with no pairing has the old two-step: a
+plain connect, down to the same sentence.
+
+**The TLS is the same TLS whichever rung answered.** The ladder hands back a
+socket; `transport::Seat` runs the inner mTLS over it verifying the engine
+name off `address`, so `address` stays required on a roving entry — it is
+the name's one home (thrall's deviation 1, for the same reason).
+
+**Redial is the feature.** A dropped channel re-enters the whole ladder on the
+caller's own naps (`host::serve`, §18.5). The two rungs that cost seconds sit
+behind one backoff — 1 s doubling to 64 s — so a phone with no network
+settles instead of walking a dark commons per dial; a connection, a served
+stream, or a network change resets it.
+
+**A network change is the addresses moving.** Every dial reads the addresses
+this box would send from (`punch::local_ips`, a UDP "connect" that sends
+nothing) — the same list the call names — and a set that differs from the
+last dial's drops every held stream (dead mappings) and clears the backoff.
+The cache stays, so the next dial re-punches at the engine's last endpoints
+first and rendezvouses afresh only if that misses. No platform callback is
+needed: the routing table is the one source, and a flap back to the same
+address is caught by the held stream's own reader instead.
+
+### 21.4 The punch
+
+`rendezvous::punch` binds one port on both families with `SO_REUSEADDR` and
+`SO_REUSEPORT`, listens there, and connects toward every engine endpoint
+*from* that port, v6 first, one SYN per 2 s — the simultaneous open a NAT pair
+needs. The first stream that lands is kept. That takes `socket2`, the one new
+crate, under the operator's 2026-09-23 ruling (REMOTE §13.7 ruling 1). The
+window is **35 s**, not the engine's 20: the engine polls its inbox every
+15 s and punches for 20 after, so a client that stopped at 20 would miss a
+late poll entirely — thrall's figure, a default to revisit on evidence. This
+listener is the one exception to §1's no-listening-socket rule, and it exists
+only for the length of one climb.
+
+### 21.5 Held streams
+
+A punched stream whose answer ended with the terminator goes back to the
+ladder (`transport::Open::each`) with its preface spent; the next ask writes
+only its request. Between asks a holder thread reads it: `{"ping":true}` is
+discarded (and discarded ahead of a reply too, where one written just before
+the request sits in the buffer), any other frame drops the stream, and **two
+minutes with no frame at all hangs up** — the engine's own bound, mirrored,
+on the injected clock so the suite walks it in an instant. A dialled socket is
+still one ask, one connection, as before. A ladder that goes away takes its
+held streams with it.
+
+### 21.6 What is proved, and what is not
+
+Host tests, no device, no network: the HKDF labels, seal/unseal and the
+signed item against the engine's byte fixtures; the walk against a fake DHT
+on loopback UDP with a router that answers only `find_node`; every rung taken
+and fallen through against a scripted engine that holds its connection; the
+backoff; a network change; an engine that moved (cache miss, then
+rendezvous); ping discard and the silence hang-up.
+
+**Not proved, and stated:** no walk against the live mainline from a phone;
+no TCP simultaneous open across a real NAT pair (REMOTE §13.8 is still open);
+no measurement of what an idle held stream costs the radio — the holder wakes
+every 250 ms to look for a taker, a default to revisit. The scheduled
+attention fetch (§17) opens a fresh seat, and so a fresh ladder, per fetch:
+it pays the direct rung and a rendezvous each time rather than sharing the
+foreground seat's cache.

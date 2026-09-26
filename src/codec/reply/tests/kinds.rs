@@ -129,3 +129,34 @@ fn the_machinery_answers_name_the_kind_they_were_read_from() {
         assert_eq!(read.kind(), named);
     }
 }
+
+/// **The engine's own `enrolled` frame, byte for byte** (yog
+/// `corpus/reply/enrolled.json`, edition 20, yog bl-9043): the roving pair
+/// rides under `rendezvous_pub` and `pairing_salt` and decodes into the
+/// envelope's pair; the same frame without them is an entry that does not
+/// rove, and one without the other refuses rather than landing half.
+#[test]
+fn the_engines_enrolled_frame_carries_the_rendezvous_material() {
+    let frame = br#"{"address":"engine.invalid:7737","ca":"-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n","cert":"-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n","grade":"foot","key":"-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n","kind":"enrolled","name":"builder","ok":true,"pairing_salt":"1111111111111111111111111111111111111111111111111111111111111111","rendezvous_pub":"0000000000000000000000000000000000000000000000000000000000000000"}"#;
+    let mut body: serde_json::Value = serde_json::from_slice(frame).unwrap();
+    let Reply::Enrolled(envelope) = super::super::decode(&body).unwrap().unwrap() else {
+        panic!("not enrolled");
+    };
+    assert_eq!(
+        envelope.roving,
+        Some(("0".repeat(64), "1".repeat(64))),
+        "the engine's pair, in the engine's order"
+    );
+    let o = body.as_object_mut().unwrap();
+    o.remove("pairing_salt");
+    let half = super::super::decode(&body);
+    assert!(half.is_err(), "half a pair is malformed: {half:?}");
+    body.as_object_mut().unwrap().remove("rendezvous_pub");
+    let Reply::Enrolled(envelope) = super::super::decode(&body).unwrap().unwrap() else {
+        panic!("not enrolled");
+    };
+    assert_eq!(
+        envelope.roving, None,
+        "a loopback-only engine sends neither"
+    );
+}

@@ -9,7 +9,10 @@ use std::process::Command;
 
 pub mod serve;
 
+pub use held::{Beat, serve_held};
 pub use serve::{Turn, serve_lanes, serve_many, serve_once, serve_turns, serve_versioned};
+
+pub mod held;
 
 /// Mint a CA under `dir` as `<name>.pem`/`<name>.key`.
 pub fn mint_ca(dir: &Path, name: &str) {
@@ -124,7 +127,60 @@ pub fn material(dir: &Path, ca: &str, leaf: &str, address: &str) -> crate::mater
         chain: dir.join(format!("{leaf}.pem")),
         key: dir.join(format!("{leaf}.key")),
         address: address.to_owned(),
+        pairing: None,
     }
+}
+
+/// **Time a test turns by hand** — `crate::ladder::Clock` over a shared
+/// offset, so the silence bound and the backoff walk without waiting.
+pub struct FakeClock {
+    started: std::time::Instant,
+    offset: std::sync::Mutex<std::time::Duration>,
+}
+
+impl FakeClock {
+    pub fn new() -> std::sync::Arc<FakeClock> {
+        std::sync::Arc::new(FakeClock {
+            started: std::time::Instant::now(),
+            offset: std::sync::Mutex::new(std::time::Duration::ZERO),
+        })
+    }
+
+    /// Move the clock forward by `by`.
+    pub fn advance(&self, by: std::time::Duration) {
+        let mut offset = self
+            .offset
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        *offset += by;
+    }
+}
+
+impl crate::ladder::Clock for FakeClock {
+    fn now(&self) -> std::time::Instant {
+        let offset = *self
+            .offset
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        self.started + offset
+    }
+
+    fn unix(&self) -> i64 {
+        i64::try_from(self.now().duration_since(self.started).as_secs()).unwrap_or(0)
+            + 1_700_000_000
+    }
+}
+
+/// Poll `ready` every few milliseconds for up to `wait`: whether it came true.
+pub fn until(ready: &mut dyn FnMut() -> bool, wait: std::time::Duration) -> bool {
+    let started = std::time::Instant::now();
+    while started.elapsed() < wait {
+        if ready() {
+            return true;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+    }
+    ready()
 }
 
 /// A fresh scratch directory under the OS temp root — no `tempfile`

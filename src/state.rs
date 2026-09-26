@@ -22,10 +22,36 @@
 //! rather than refusing. Without that, a foot that met a refusal once could
 //! never be started again inside the process it stopped in, and the operator's
 //! own remedy (open the app) would do nothing at all.
+//!
+//! **One more resident since the punched wire (DESIGN §21), and not a second
+//! chokepoint.** [`Slot`] is the one lock type every other module may hold —
+//! a mutex behind a closure door, so the crate's lock inventory is still this
+//! file and the ladder's shared RAM (the addresses it last saw, the endpoint
+//! cache, the backoff, the held streams) is `Slot`s rather than a rule-7
+//! carve-out apiece.
 
 use std::sync::{Mutex, OnceLock, PoisonError};
 
 use crate::host::{Host, Standing};
+
+/// **The lock a module outside this file may hold.** A closure door rather
+/// than a guard, so a caller can never hold it across a wait — every use is
+/// a few lines under the lock and nothing blocks inside it.
+pub(crate) struct Slot<T>(Mutex<T>);
+
+impl<T> Slot<T> {
+    pub(crate) fn new(value: T) -> Self {
+        Self(Mutex::new(value))
+    }
+
+    /// Run `f` under the lock. A poisoned lock is taken as it stands —
+    /// a thread that died mid-update left a value, and a value is better
+    /// than a panic on every later dial.
+    pub(crate) fn with<R>(&self, f: &mut dyn FnMut(&mut T) -> R) -> R {
+        let mut held = self.0.lock().unwrap_or_else(PoisonError::into_inner);
+        f(&mut held)
+    }
+}
 
 /// The one slot. `OnceLock` rather than a `LazyLock` initializer because the
 /// slot's *contents* are what varies; the mutex itself is created once and

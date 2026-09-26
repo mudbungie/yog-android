@@ -55,6 +55,7 @@ fn seat() -> Result<Seat, String> {
         chain: PathBuf::from(env("WIRE_CHAIN")?),
         key: PathBuf::from(env("WIRE_KEY")?),
         address: env("WIRE_ADDRESS")?,
+        pairing: None,
     })
 }
 
