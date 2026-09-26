@@ -46,11 +46,11 @@ fn get_is_none_when_nobody_holds_one() {
     assert_eq!(dht.get(keypair().public(), vec![]).unwrap(), None);
 }
 
-/// The live mainline's shape (yog REMOTE §13.7 ruling 3, bl-f6e1): the
-/// bootstrap is a router that answers `find_node` and never `get`, and the
-/// item's home is a node past it. Asking the router `get` — the old walk's
-/// first and only round — hears nothing; the walk asks it `find_node`
-/// instead, and `get` and `put` of the node it opens onto.
+/// The live mainline's shape (yog REMOTE §13.7 ruling 3, yog bl-f6e1): the bootstrap
+/// is a router that answers `find_node` and never `get`, and the item's home
+/// is a node past it. Asking the router `get` — the old walk's first and only
+/// round — hears nothing; the walk asks it `find_node` instead, and `get` and
+/// `put` of the node it opens onto.
 #[test]
 fn bep44_walks_past_a_router_that_never_answers_get() {
     let kp = keypair();
@@ -61,12 +61,14 @@ fn bep44_walks_past_a_router_that_never_answers_get() {
     router.serve(vec![holder.node()], Mood::Router, vec![]);
     let mut dht = client(vec![router.addr], quick());
 
-    let mut pending = lookup::Pending::new();
+    let mut flight = flight::Flight::new();
     let target = bencode::Dict::from([bencode::entry("target", bencode::bytes(&item.target().0))]);
-    dht.ask(&mut pending, router.addr, "get", target);
-    let mut heard = 0usize;
-    dht.collect(&mut pending, &mut |_, _| heard += 1).unwrap();
-    assert_eq!(heard, 0, "the router is silent to get");
+    assert!(dht.ask(&mut flight, router.addr, false, "get", target));
+    assert!(
+        dht.land(&mut flight).unwrap().is_none(),
+        "the router is silent to get"
+    );
+    assert!(flight.is_empty());
 
     assert_eq!(dht.put(item.clone()).unwrap(), 1);
     assert_eq!(dht.get(kp.public(), vec![]).unwrap(), Some(item));

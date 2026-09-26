@@ -604,7 +604,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
 | `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
 | `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, and a `Color32` by a state's name at a paint site | landed (bl-549b) |
-| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half, BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62) |
+| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,frontier,flight,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half, BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), its frontier of responsive nodes with the door re-asked while dry (yog bl-d00f), the sliding window of queries in the air (yog bl-d9c1), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62, walk bl-066c) |
 | `src/rendezvous.rs` | §21.1: the two roving files beside the leaf, both or neither, and the four HKDF derivations under `yog rendezvous` | landed (bl-3d62) |
 | `src/rendezvous/{item,call}.rs` | §21.2: the sealed presence and call (ChaCha20-Poly1305, `nonce ‖ ciphertext ‖ tag` over the endpoint list), and the two DHT verbs a rendezvous spends — presence read, call written under the derived inbox keypair | landed (bl-3d62) |
 | `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
@@ -5768,8 +5768,52 @@ listener, nothing offered. It is the engine's module reimplemented, including
 the two defects the engine's live walks found: the bootstrap routers are asked
 `find_node` and never BEP 44's `get` (yog bl-f6e1), and the bootstrap is a
 door and never a result, so a walk whose learned nodes are all silent is a
-dark commons rather than an empty read (yog bl-9408). The round is the
-engine's measured one second; the roster is the engine's four routers.
+dark commons rather than an empty read (yog bl-9408). The roster is the
+engine's four routers.
+
+**The walk is the engine's, rule for rule** (bl-066c, porting yog bl-d00f and
+bl-d9c1; the evidence is yog REMOTE §13.7 ruling 3's tables). It converges on
+a *frontier*, not on everything it has heard of: the K closest nodes that
+replied, are not yet asked, or are still in the air. A node silent past its
+deadline, one that answered only an error (live, a `get` refused as `204
+Unknown query type`), and one this socket cannot send to (a v6 node from a v4
+socket — the send is refused, spends no query and holds no slot) all leave it,
+so dead nodes never sit on the slots a live node past them needs. When the
+frontier runs dry before K nodes past the door have replied, the door is asked
+`find_node` again, as long as it has ever named anyone: the one router that
+answers names a single random node eight times per query, so its first seeds
+are often all silent and re-asking draws fresh ones. The walk is a **sliding
+window**, not lockstep rounds: up to α walk queries in the air, each with its
+own deadline, and the next frontier node asked the moment any answers or times
+out, so a silent node costs its own slot for one deadline and never delays an
+answer beside it; the door's queries hold no α slot. `put` spends its tokens
+in one flight, every holder at once, each with its own deadline. The defaults
+are the engine's measured ones — α 8, K 8, a 1 s deadline per query, a
+64-query cap — pinned by `the_defaults_are_the_measured_window_and_deadline`.
+Measured from the engine's box after both fixes: `lookup` 10/10 at a median
+~6.5 s, `put` 10/10 at ~7.5 s, `get` 9/10 at ~7.5 s. yog bl-f519 (a `put`
+whose flight occasionally draws no acknowledgement, cause unmeasured) is the
+engine's open question and is not addressed here.
+
+**What a walk costs the phone.** The cap is the bound: at most 64 queries,
+the door's re-asks counted among them, each a datagram of about a hundred bytes out and
+at most a few hundred back (eight compact nodes; a `get` reply carrying the
+item is under 1.1 KB), so a walk moves on the order of tens of kilobytes at
+worst. The bill that matters on a handset is radio time, not bytes: the
+cellular radio stays in its high-power state for as long as datagrams keep
+flowing, and a walk that keeps the frontier alive now usually runs near the
+cap — `get` walks traced at 48-64 queries, `find_node` 23-64 — for the
+medians above. One rendezvous rung (§21.3) is two walks, a `get` of the
+presence and a `put` of the call, so a dial through the commons holds the
+radio roughly fifteen seconds where the pre-port walk usually ended dark in
+about two (and then failed). The window made that time *shorter* than the
+lockstep walk at the same cap (bl-d00f lockstep: `put` 19.2 s median), and α 8
+is what does it — the same queries, sent faster. What bounds the total is the
+ladder, not the walk: a rung that fails arms the backoff (1 s doubling to
+64 s, `ladder/backoff.rs`), and a network change is what clears it early. **Nothing here
+was measured on a phone or over cellular**, so the engine's defaults stand;
+a smaller cap or α is a trade for a lower success rate and wants a
+measurement from a handset before it is taken.
 
 ### 21.3 The ladder
 

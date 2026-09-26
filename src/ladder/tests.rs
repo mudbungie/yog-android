@@ -98,7 +98,7 @@ fn rove(bootstrap: Vec<String>) -> Rove {
         config: Config {
             alpha: 3,
             k: 3,
-            round: Duration::from_millis(300),
+            deadline: Duration::from_millis(300),
             max_queries: 64,
         },
         window: Duration::from_secs(2),

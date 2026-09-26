@@ -2,12 +2,12 @@
 //! `put` stores one at the nodes closest to its target. Both are one walk
 //! (`lookup`) asking `get` — the walk that finds the closest nodes is the
 //! walk that collects their write tokens — and `put` then spends those tokens
-//! in one more round. Nothing here trusts the commons: an item is a value
+//! in one more flight, every holder at once, each with its own deadline. Nothing here trusts the commons: an item is a value
 //! only once its signature verifies under the key the caller asked for.
 
 use super::Dht;
+use super::flight::Flight;
 use super::krpc::{Message, Node};
-use super::lookup::Pending;
 use super::mutable::{Mutable, target_of};
 
 impl Dht {
@@ -35,18 +35,21 @@ impl Dht {
             .filter_map(|(n, r)| Some((*n, r.get(b"token".as_slice())?.as_bytes()?.to_vec())))
             .take(self.config.k)
             .collect();
-        let mut pending = Pending::new();
+        let mut flight = Flight::new();
         for (node, token) in holders {
-            self.ask(&mut pending, node.addr, "put", item.put_args(&token));
+            self.ask(&mut flight, node.addr, false, "put", item.put_args(&token));
         }
         let mut acks = 0usize;
         let mut refusals = Vec::new();
-        self.collect(&mut pending, &mut |addr, message| match message {
-            Message::Reply { .. } => acks += 1,
-            Message::Error { code, message, .. } => {
-                refusals.push(format!("{addr}: {code} {message}"));
+        while !flight.is_empty() {
+            match self.land(&mut flight)? {
+                Some((_, Message::Reply { .. })) => acks += 1,
+                Some((query, Message::Error { code, message, .. })) => {
+                    refusals.push(format!("{}: {code} {message}", query.addr));
+                }
+                None => {}
             }
-        })?;
+        }
         if acks == 0 {
             return Err(refusals
                 .into_iter()

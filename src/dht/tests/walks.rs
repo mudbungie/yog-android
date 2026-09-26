@@ -22,11 +22,13 @@ fn a_walk_stops_at_its_query_cap() {
     let mut dht = client(
         vec![nodes[0].addr],
         Config {
-            max_queries: 2,
+            max_queries: 3,
             ..quick()
         },
     );
-    // The bootstrap's round and one more: `D`, two hops out, is never reached.
+    // The bootstrap and two more — `C` and `B`, never a fourth: `D`, two hops
+    // out and learned from `B`, is never asked, because the window counts
+    // every query against the cap as it sends it.
     assert_eq!(
         dht.lookup(id(0xff)).unwrap(),
         vec![nodes[2].node(), nodes[1].node()]
@@ -52,13 +54,13 @@ fn a_silent_commons_is_an_error() {
 }
 
 #[test]
-fn a_zero_round_never_waits() {
+fn a_zero_deadline_never_waits() {
     let mut a = FakeNode::bind(id(0));
     a.serve(vec![], Mood::Answer, vec![]);
     let mut dht = client(
         vec![a.addr],
         Config {
-            round: Duration::ZERO,
+            deadline: Duration::ZERO,
             ..quick()
         },
     );

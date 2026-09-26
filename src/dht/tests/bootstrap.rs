@@ -28,7 +28,12 @@ fn a_walk_whose_learned_nodes_are_all_silent_is_dark_not_a_success() {
     let mut nodes = eightfold(&a);
     nodes.push(b.node());
     let door = router(nodes);
-    let mut dht = client(vec![door.addr], quick());
+    // The door is re-asked while it names anyone (yog bl-d00f); the cap ends it.
+    let config = Config {
+        max_queries: 9,
+        ..quick()
+    };
+    let mut dht = client(vec![door.addr], config);
     let dark = format!("no DHT node answered find_node for {}", "ff".repeat(20));
     assert_eq!(dht.lookup(id(0xff)).unwrap_err(), dark);
     // The BEP 44 verbs inherit it: nothing near the target, nothing to read
