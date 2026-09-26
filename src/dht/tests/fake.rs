@@ -12,7 +12,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
-use wire::{error, reply, routing};
+use wire::{claim, error, reply, routing};
 
 mod wire;
 
@@ -37,6 +37,9 @@ pub(crate) enum Mood {
     Rotor,
     /// Answers everything but `put`: offers a token and never spends it.
     Mute,
+    /// Answers, and says (BEP 42's `ip`) the query came from this address —
+    /// true or not, which is the point: one node's word is only a claim.
+    Claim(SocketAddr),
 }
 
 pub(crate) struct FakeNode {
@@ -121,6 +124,7 @@ fn run(
             Mood::Refuse => error(&tid, 201, "refused"),
             Mood::Anonymous => reply(&tid, Dict::new()),
             Mood::Stray => reply(b"stray", Dict::from([entry("id", bytes(&id.0))])),
+            Mood::Claim(ip) => claim(answer(&tid, id, peers, &mut items, &q), ip),
             Mood::Answer | Mood::Router | Mood::Mute => answer(&tid, id, peers, &mut items, &q),
         };
         socket.send_to(&datagram, from).unwrap();

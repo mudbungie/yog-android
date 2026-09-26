@@ -156,11 +156,7 @@ impl Ladder {
             .clock
             .unix()
             .max(self.last_seq.load(Ordering::Relaxed) + 1);
-        let mine = mine
-            .into_iter()
-            .map(|ip| SocketAddr::new(ip, punch.port()))
-            .collect();
-        call::call(&mut dht, &rove.pairing, seq, mine)?;
+        call::call(&mut dht, &rove.pairing, seq, mine, punch.port())?;
         self.last_seq.store(seq, Ordering::Relaxed);
         self.cache.with(&mut |c| c.clone_from(&endpoints));
         punch

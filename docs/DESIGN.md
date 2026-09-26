@@ -604,7 +604,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
 | `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
 | `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, and a `Color32` by a state's name at a paint site | landed (bl-549b) |
-| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,frontier,flight,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half, BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), its frontier of responsive nodes with the door re-asked while dry (yog bl-d00f), the sliding window of queries in the air (yog bl-d9c1), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62, walk bl-066c) |
+| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,frontier,flight,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half (with BEP 42's observed `ip` and its per-family vote, bl-544b), BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), its frontier of responsive nodes with the door re-asked while dry (yog bl-d00f), the sliding window of queries in the air (yog bl-d9c1), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62, walk bl-066c) |
 | `src/rendezvous.rs` | §21.1: the two roving files beside the leaf, both or neither, and the four HKDF derivations under `yog rendezvous` | landed (bl-3d62) |
 | `src/rendezvous/{item,call}.rs` | §21.2: the sealed presence and call (ChaCha20-Poly1305, `nonce ‖ ciphertext ‖ tag` over the endpoint list), and the two DHT verbs a rendezvous spends — presence read, call written under the derived inbox keypair | landed (bl-3d62) |
 | `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
@@ -5844,6 +5844,23 @@ The cache stays, so the next dial re-punches at the engine's last endpoints
 first and rendezvouses afresh only if that misses. No platform callback is
 needed: the routing table is the one source, and a flap back to the same
 address is caught by the held stream's own reader instead.
+
+**The call carries the observed address** (bl-544b, porting yog bl-efae;
+yog REMOTE §13.2). The addresses this box sends from are route-local, and on
+cellular that is a carrier-private address the engine cannot reach — yog
+REMOTE §13.8 measured the observed endpoint as the only one there is on that
+path. So every walk keeps what each answering node says it saw the query come
+from (BEP 42's `ip`, 6 or 18 bytes, anything else ignored), and
+`Dht::observed` votes per family over the last walk: the endpoint named most
+often, nothing on a tie, nothing after a walk that heard nobody — one node's
+claim is only a claim. The call lists the local addresses and then each
+observed address not already among them, **at the punch port**: the observed
+port is the DHT socket's UDP mapping, not the punch socket's TCP one, so only
+the address is taken and port preservation is trusted. **A carrier NAT that
+rewrites the port per mapping defeats this**, and that case stays open with
+REMOTE §13.8. The sealed call's byte format is unchanged — it was always a
+list. The foot (thrall bl-921e) made the same omission and carries the same
+defect on cellular.
 
 ### 21.4 The punch
 

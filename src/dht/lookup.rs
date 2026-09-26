@@ -8,6 +8,8 @@
 //! silent is never asked again and leaves the frontier. Bounded twice over
 //! against a hostile commons: a query ends at its deadline, and the walk at
 //! `max_queries` however many "closer" nodes the answers keep inventing.
+//! Each node that answers may also say where it saw the query come from; the
+//! walk keeps those claims for [`Dht::observed`] to vote on.
 
 use super::Dht;
 use super::bencode::{Dict, bytes, entry};
@@ -66,6 +68,7 @@ impl Dht {
             return Err("no bootstrap node to ask".into());
         }
         let args = Dict::from([entry("target", bytes(&target.0))]);
+        self.claims.clear();
         let mut walk = Walk::new(target, self.config.k);
         let mut flight = Flight::new();
         let mut sent = self.door(&mut walk, &mut flight, &args);
@@ -85,6 +88,7 @@ impl Dht {
                 break;
             }
         }
+        self.claims = walk.claims;
         let mut out = walk.out;
         if out.replies.is_empty() && out.errors.is_empty() {
             return Err(format!("no DHT node answered {q} for {target}"));

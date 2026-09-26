@@ -38,6 +38,9 @@ pub(crate) struct Walk {
     /// at two addresses is two nodes, and iteration is closest first.
     pool: BTreeMap<([u8; 20], SocketAddr), Node>,
     pub(crate) out: Outcome,
+    /// What every answering node said this client's address is (BEP 42),
+    /// one claim per reply — the door's included, since a claim is a claim.
+    pub(crate) claims: Vec<SocketAddr>,
 }
 
 impl Walk {
@@ -49,6 +52,7 @@ impl Walk {
             replied: BTreeSet::new(),
             pool: BTreeMap::new(),
             out: Outcome::default(),
+            claims: Vec::new(),
         }
     }
 
@@ -88,7 +92,7 @@ impl Walk {
     /// errors. A reply that names no id is heard and is nothing.
     pub(crate) fn heard(&mut self, query: Query, message: Message) {
         match message {
-            Message::Reply { r, .. } => {
+            Message::Reply { r, ip, .. } => {
                 let Some(id) = r
                     .get(b"id".as_slice())
                     .and_then(|v| v.as_bytes())
@@ -96,6 +100,7 @@ impl Walk {
                 else {
                     return;
                 };
+                self.claims.extend(ip);
                 let node = Node {
                     id,
                     addr: query.addr,

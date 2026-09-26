@@ -6,7 +6,7 @@
 use super::Pairing;
 use super::item::{Call, Presence};
 use crate::dht::Dht;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 
 /// The engine's punch endpoints, read off its presence item: `get` under
 /// its rendezvous key and the presence salt, opened under the seal key. An
@@ -27,15 +27,36 @@ pub(crate) fn presence(dht: &mut Dht, pairing: &Pairing) -> Result<Vec<SocketAdd
 }
 
 /// Write the call — *punch me at these endpoints* — under the derived inbox
-/// keypair and salt, sealed, at `seq`. A fresh random nonce per call, so the
-/// engine (which remembers the last nonce it punched) punches exactly once
-/// for it; the nonce is handed back for the suite to read off the commons.
+/// keypair and salt, sealed, at `seq`. The endpoints are `mine` (the
+/// route-local addresses) and then every address the last walk's nodes
+/// agreed they saw this device at ([`Dht::observed`]) that is not one of
+/// them, all at the punch `port` (yog REMOTE §13.2, the engine's own
+/// presence rule, yog bl-efae). On cellular the observed address is the only
+/// one the engine can reach (DESIGN §21). Only the ADDRESS is taken: the
+/// observed port is the DHT socket's UDP mapping, not the punch port's TCP
+/// one, so port preservation is trusted — a carrier that rewrites it is the
+/// case this does not reach (yog REMOTE §13.8).
+///
+/// A fresh random nonce per call, so the engine (which remembers the last
+/// nonce it punched) punches exactly once for it; the nonce is handed back
+/// for the suite to read off the commons.
 pub(crate) fn call(
     dht: &mut Dht,
     pairing: &Pairing,
     seq: i64,
-    endpoints: Vec<SocketAddr>,
+    mine: Vec<IpAddr>,
+    port: u16,
 ) -> Result<u64, String> {
+    let mut ips = mine;
+    for ip in dht.observed().iter().map(SocketAddr::ip) {
+        if !ips.contains(&ip) {
+            ips.push(ip);
+        }
+    }
+    let endpoints = ips
+        .into_iter()
+        .map(|ip| SocketAddr::new(ip, port))
+        .collect();
     let mut nonce = [0u8; 8];
     crate::dht::random(&mut nonce)?;
     let nonce = u64::from_be_bytes(nonce);
@@ -46,3 +67,6 @@ pub(crate) fn call(
     dht.put(item)?;
     Ok(nonce)
 }
+
+#[cfg(test)]
+mod tests;
