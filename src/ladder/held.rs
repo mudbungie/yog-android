@@ -20,6 +20,7 @@
 //! buffer ahead of the reply.
 
 use super::Clock;
+use super::say::{self, Say};
 use crate::frame;
 use crate::state::Slot;
 use rustls::{ClientConnection, StreamOwned};
@@ -63,8 +64,9 @@ impl Pool {
         }
     }
 
-    /// Keep `held` for the next ask, read through its silence on `clock`.
-    pub(crate) fn keep(&self, held: Held, clock: Arc<dyn Clock>) {
+    /// Keep `held` for the next ask, read through its silence on `clock`,
+    /// saying how its hold ended on `say`.
+    pub(crate) fn keep(&self, held: Held, clock: Arc<dyn Clock>, say: Say) {
         let wanted = Arc::new(AtomicBool::new(false));
         let (tx, back) = mpsc::channel();
         let flag = Arc::clone(&wanted);
@@ -72,7 +74,10 @@ impl Pool {
         // is first scheduled, which a loaded box can put after the clock has
         // already moved.
         let since = clock.now();
-        std::thread::spawn(move || hold(held, since, &flag, &tx, clock.as_ref()));
+        std::thread::spawn(move || {
+            let ended = hold(held, since, &flag, &tx, clock.as_ref());
+            say(&ended);
+        });
         let mut holder = Some(Holder { wanted, back });
         self.holders
             .with(&mut |holders| holders.extend(holder.take()));
@@ -118,35 +123,45 @@ impl Drop for Pool {
     }
 }
 
-/// One held stream's life between asks, as the module doc spells it.
+/// One held stream's life between asks, as the module doc spells it; the
+/// answer is the line that says how it ended, pings counted.
 fn hold(
     mut held: Held,
     since: Instant,
     wanted: &AtomicBool,
     back: &mpsc::Sender<Held>,
     clock: &dyn Clock,
-) {
+) -> String {
     // A timeout that failed to arm costs a read that never wakes for a
     // taker; Some(nonzero) cannot be refused, so an arm here is untestable.
     let _ = held.tls.sock.set_read_timeout(Some(TICK));
     let mut last = since;
-    loop {
+    let mut pings = 0;
+    let why = loop {
         if wanted.load(Ordering::Relaxed) {
-            let _ = back.send(held);
-            return;
+            break match back.send(held) {
+                Ok(()) => None,
+                Err(_) => Some("released: the network changed or the ladder went away"),
+            };
         }
         if clock.now().duration_since(last) >= SILENCE {
-            return;
+            break Some("two minutes of silence");
         }
+        // The terminator, a frame that is not a ping where no reply is due,
+        // or the socket failing: the engine is not speaking this protocol on
+        // this stream any more, and it is dropped, not kept.
         match read_frame(&mut held.tls) {
-            Ok(Some(body)) if is_ping_body(&body) => last = clock.now(),
+            Ok(Some(body)) if is_ping_body(&body) => {
+                last = clock.now();
+                pings += 1;
+            }
             Err(e) if timed_out(&e) => {}
-            // The terminator, a frame that is not a ping where no reply is
-            // due, or the socket failing: the engine is not speaking this
-            // protocol on this stream any more, and it is dropped, not kept.
-            _ => return,
+            Ok(None) => break Some("the engine ended it"),
+            Ok(Some(_)) => break Some("a frame that is not a ping"),
+            Err(_) => break Some("the stream closed or failed"),
         }
-    }
+    };
+    why.map_or_else(|| say::handed(pings), |why| say::dropped(why, pings))
 }
 
 /// One frame off a held stream, patient about the body: the header is read

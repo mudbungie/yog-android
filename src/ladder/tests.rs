@@ -25,6 +25,7 @@ use std::time::{Duration, Instant};
 mod fallthrough;
 mod held;
 mod rungs;
+mod said;
 
 const WAIT: Duration = Duration::from_secs(10);
 
@@ -103,6 +104,31 @@ fn rove(bootstrap: Vec<String>) -> Rove {
         },
         window: Duration::from_secs(2),
         addresses,
+        say: say::quiet(),
+    }
+}
+
+/// A sink the suite reads back: every line the rungs said, in order.
+#[derive(Clone, Default)]
+struct Heard(Arc<Mutex<Vec<String>>>);
+
+impl Heard {
+    fn sink(&self) -> Say {
+        let lines = Arc::clone(&self.0);
+        Arc::new(move |line: &str| lines.lock().unwrap().push(line.to_owned()))
+    }
+
+    /// Every line so far, emptied.
+    fn take(&self) -> Vec<String> {
+        std::mem::take(&mut *self.0.lock().unwrap())
+    }
+
+    /// Wait until a line containing `part` has been said.
+    fn wait(&self, part: &str) -> bool {
+        until(
+            &mut || self.0.lock().unwrap().iter().any(|l| l.contains(part)),
+            WAIT,
+        )
     }
 }
 
@@ -160,16 +186,27 @@ fn an_entry_that_does_not_rove_dials_as_it_always_has() {
 #[test]
 fn the_direct_rung_resolves_a_name_and_names_what_it_could_not_reach() {
     let _serial = serial();
-    let e = direct("nowhere.invalid:1").unwrap_err();
+    let heard = Heard::default();
+    let voice = Voice::new(heard.sink());
+    let e = direct("nowhere.invalid:1", &voice).unwrap_err();
     assert!(e.starts_with("connect nowhere.invalid:1: "), "{e}");
-    let e = direct(&closed()).unwrap_err();
+    let e = direct(&closed(), &voice).unwrap_err();
     assert!(e.contains("refused"), "{e}");
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     let address = format!("localhost:{}", listener.local_addr().unwrap().port());
     // `localhost` resolves to both families on most boxes; the v6 one is
     // refused and the v4 one connects, or the other way round — either way
     // one of them lands.
-    assert!(direct(&address).is_ok());
+    assert!(direct(&address, &voice).is_ok());
+    let said = heard.take();
+    assert_eq!(
+        said[..2],
+        [
+            "yog.rendezvous: direct rung — the entry's name did not resolve",
+            "yog.rendezvous: direct rung — 1 address(es) tried: v4 refused",
+        ]
+    );
+    assert!(said[2].ends_with(" connected"), "{said:?}");
 }
 
 #[test]

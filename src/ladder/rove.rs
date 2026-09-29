@@ -1,6 +1,7 @@
 //! What a roving entry climbs with, and the clock it climbs on — split from
 //! the ladder so the rungs are the policy and this is only its inputs.
 
+use super::say::{self, Say};
 use crate::dht::Config;
 use crate::rendezvous::{Pairing, punch};
 use std::net::IpAddr;
@@ -40,6 +41,9 @@ pub struct Rove {
     /// what a network change moves (DESIGN §21.3). A function so the suite
     /// can move it; the device's is [`punch::local_ips`].
     pub addresses: fn() -> Vec<IpAddr>,
+    /// Where the rungs' lines go (`ladder::say`); the device's is
+    /// [`say::logcat`], the suite's a sink it reads back.
+    pub say: Say,
 }
 
 /// The engine reads its inbox every fifteen seconds and punches for twenty
@@ -67,6 +71,7 @@ impl Rove {
             config: Config::default(),
             window: WINDOW,
             addresses: punch::local_ips,
+            say: say::logcat(),
         }
     }
 }

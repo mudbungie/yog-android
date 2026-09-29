@@ -34,14 +34,17 @@
 mod backoff;
 pub mod held;
 mod rove;
+pub mod say;
 
 pub use held::Held;
 pub use rove::{Clock, Rove, SystemClock};
+pub use say::Say;
 
 use crate::dht::{Dht, Udp};
 use crate::rendezvous::{call, punch};
 use crate::state::Slot;
 use backoff::Backoff;
+use say::Voice;
 use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
@@ -71,10 +74,15 @@ pub struct Ladder {
     backoff: Slot<Backoff>,
     held: held::Pool,
     last_seq: AtomicI64,
+    /// What the rungs say (`say`): the rove's sink, or nothing.
+    voice: Voice,
 }
 
 impl Ladder {
     pub fn new(address: String, rove: Option<Rove>, clock: Arc<dyn Clock>) -> Ladder {
+        let sink = rove
+            .as_ref()
+            .map_or_else(say::quiet, |r| Arc::clone(&r.say));
         Ladder {
             address,
             rove,
@@ -84,6 +92,7 @@ impl Ladder {
             backoff: Slot::new(Backoff::new()),
             held: held::Pool::new(),
             last_seq: AtomicI64::new(0),
+            voice: Voice::new(sink),
         }
     }
 
@@ -103,7 +112,7 @@ impl Ladder {
         if let Some(held) = self.held.take() {
             return Ok(Conn::Held(Box::new(held)));
         }
-        let direct = match direct(&self.address) {
+        let direct = match direct(&self.address, &self.voice) {
             Ok(tcp) => {
                 self.settle();
                 return Ok(Conn::Fresh {
@@ -115,8 +124,10 @@ impl Ladder {
         };
         let now = self.clock.now();
         if let Some(said) = self.backoff.with(&mut |b| b.resting(now)) {
+            self.voice.once("rest", &say::resting());
             return Err(format!("{direct}; {said}"));
         }
+        self.voice.forget("rest");
         match self.climb(rove, mine) {
             Ok(tcp) => {
                 self.settle();
@@ -132,7 +143,9 @@ impl Ladder {
     /// A finished ask hands its punched stream back for the next one.
     pub fn keep(&self, held: Held) {
         self.settle();
-        self.held.keep(held, Arc::clone(&self.clock));
+        self.voice.say(&say::kept());
+        self.held
+            .keep(held, Arc::clone(&self.clock), self.voice.sink());
     }
 
     /// How many punched streams are being held.
@@ -145,23 +158,37 @@ impl Ladder {
     fn climb(&self, rove: &Rove, mine: Vec<IpAddr>) -> Result<TcpStream, String> {
         let punch = punch::Punch::bind(0)?;
         let cached = self.cache.with(&mut |c| c.clone());
-        if !cached.is_empty()
-            && let Some(tcp) = punch.punch(cached, rove.window)
-        {
-            return Ok(tcp);
+        if !cached.is_empty() {
+            self.voice.say(&say::repunch(&cached, rove.window));
+            if let Some(tcp) = self.landed(punch.punch(cached, rove.window), rove.window) {
+                return Ok(tcp);
+            }
         }
-        let mut dht = dht(rove)?;
-        let endpoints = call::presence(&mut dht, &rove.pairing)?;
+        let mut dht = dht(rove).inspect_err(|e| self.voice.say(&say::no_commons(e)))?;
+        let (at, endpoints) = call::presence(&mut dht, &rove.pairing)
+            .inspect_err(|e| self.voice.say(&say::not_found(e)))?;
+        self.voice.say(&say::found(at, &endpoints));
         let seq = self
             .clock
             .unix()
             .max(self.last_seq.load(Ordering::Relaxed) + 1);
-        call::call(&mut dht, &rove.pairing, seq, mine, punch.port())?;
+        let called = call::call(&mut dht, &rove.pairing, seq, mine, punch.port())
+            .inspect_err(|_| self.voice.say(&say::not_called()))?;
+        self.voice.say(&say::called(&called, seq));
         self.last_seq.store(seq, Ordering::Relaxed);
         self.cache.with(&mut |c| c.clone_from(&endpoints));
-        punch
-            .punch(endpoints, rove.window)
+        self.voice.say(&say::punching(&endpoints, rove.window));
+        self.landed(punch.punch(endpoints, rove.window), rove.window)
             .ok_or_else(|| "the punch landed nothing inside its window".to_owned())
+    }
+
+    /// Say how a punch ended — the peer's family, or the window running out.
+    fn landed(&self, tcp: Option<TcpStream>, window: Duration) -> Option<TcpStream> {
+        self.voice.say(&match &tcp {
+            Some(tcp) => say::landed(tcp.peer_addr().ok().map(|a| a.ip())),
+            None => say::expired(window),
+        });
+        tcp
     }
 
     /// The backoff returns to its floor: something connected or served.
@@ -183,8 +210,10 @@ impl Ladder {
             moved
         });
         if moved {
+            let held = self.held.len();
             self.held.clear();
             self.settle();
+            self.voice.say(&say::moved(mine, held));
         }
     }
 }
@@ -206,18 +235,29 @@ fn dht(rove: &Rove) -> Result<Dht, String> {
 }
 
 /// The direct rung: every address the entry resolves to, each given
-/// [`DIRECT`], in the sentence today's dial already earns.
-fn direct(address: &str) -> Result<TcpStream, String> {
+/// [`DIRECT`], in the sentence today's dial already earns — and said once
+/// per change of outcome, the families tried and how each ended.
+fn direct(address: &str, voice: &Voice) -> Result<TcpStream, String> {
     let mut refused = format!("connect {address}: no address resolved");
-    for at in address
-        .to_socket_addrs()
-        .map_err(|e| format!("connect {address}: {e}"))?
-    {
+    let mut tried = Vec::new();
+    let resolved = address.to_socket_addrs().map_err(|e| {
+        voice.once("direct", &say::unresolved());
+        format!("connect {address}: {e}")
+    })?;
+    for at in resolved {
         match TcpStream::connect_timeout(&at, DIRECT) {
-            Ok(tcp) => return Ok(tcp),
-            Err(e) => refused = format!("connect {address}: {e}"),
+            Ok(tcp) => {
+                tried.push((at.ip(), "connected"));
+                voice.once("direct", &say::direct(&tried));
+                return Ok(tcp);
+            }
+            Err(e) => {
+                tried.push((at.ip(), say::outcome(&e)));
+                refused = format!("connect {address}: {e}");
+            }
         }
     }
+    voice.once("direct", &say::direct(&tried));
     Err(refused)
 }
 

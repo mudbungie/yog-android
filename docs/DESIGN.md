@@ -611,6 +611,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
 | `src/ladder.rs` + `src/ladder/{rove,backoff}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), and the rest between failed climbs | landed (bl-3d62) |
 | `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
+| `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
 | `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle — and the hand-back of a punched stream whose answer ended clean (split from `transport.rs`, §21.5) | landed (bl-3d62) |
 | `src/shell/theme/anatomy.rs` | android-only: the shapes STYLE.md §5 spells — the outline-free list row every navigation list paints through, the multi-ink line, and the chip, live or dark, laid to the width the row gave it | landed (bl-0691, out of `theme.rs` at the cap) |
 | `rules/no-literal-colour.yml` | the rule that keeps it one home: no paint file constructs a `Color32` or names a palette constant of its own | landed (bl-549b) |
@@ -5914,3 +5915,47 @@ every 250 ms to look for a taker, a default to revisit. The scheduled
 attention fetch (§17) opens a fresh seat, and so a fresh ladder, per fetch:
 it pays the direct rung and a rendezvous each time rather than sharing the
 foreground seat's cache.
+
+### 21.7 What the ladder says (bl-df05)
+
+A dial that fails silently is indistinguishable from one never made, so the
+rungs say each event in logcat — yog REMOTE §13.4's *operator's view of the
+loop*, the engine's bl-355c, from the phone's end. One line apiece, every one
+built in `ladder::say` and beginning `yog.rendezvous:` (in the message, not the
+tag, for `shell::app::probe`'s reason):
+
+    yog.rendezvous: direct rung — <n> address(es) tried: v6 timed out, v4 refused
+    yog.rendezvous: direct rung — the entry's name did not resolve
+    yog.rendezvous: climb skipped — resting after the last failed climb
+    yog.rendezvous: network changed — this box now sends from 1 v6, 1 v4; <h> held stream(s) dropped, rest cleared
+    yog.rendezvous: re-punch at <k> cached endpoint(s) (1 v4), window <w>s
+    yog.rendezvous: rendezvous not started — no bootstrap node resolved
+    yog.rendezvous: presence read — seq <s>, <k> endpoint(s) (1 v6, 1 v4)
+    yog.rendezvous: presence not read — <the rung's own sentence, or: the DHT walk failed (reason withheld: it names the target)>
+    yog.rendezvous: call written — nonce <n>, seq <s>, <k> endpoint(s) (1 v4), <a> ack(s)
+    yog.rendezvous: call not written — the DHT put failed (reason withheld: it names the target)
+    yog.rendezvous: punch started — <k> endpoint(s) (1 v4), window <w>s
+    yog.rendezvous: punch landed — peer v4
+    yog.rendezvous: punch expired after <w>s with no stream
+    yog.rendezvous: held stream kept for the next ask
+    yog.rendezvous: held stream handed to an ask — <p> ping(s) discarded while held
+    yog.rendezvous: held stream dropped — <reason>; <p> ping(s) discarded while held
+
+A drop's reason is one of five classes: two minutes of silence, the engine
+ended it, a frame that is not a ping, the stream closed or failed, or released
+(the network changed or the ladder went away). A line carries counts,
+sequence numbers, nonces and address families — **never an address, a key, a
+salt or a sealed byte**; a DHT failure's own text names the target walked
+toward, a derivation of the key and salt, so it is withheld. Pings are
+counted into the held stream's closing line rather than said one per 25 s.
+
+**A repeated outcome is said once.** A redial re-enters the ladder on every
+nap, so the direct rung's outcome and the rest's refusal are said only when
+they differ from that kind's last line; a climb that is climbed again says its
+lines again, which the backoff already rate-limits. The sink is injected on
+`Rove::say` — logcat at info on the device, stderr off it — and the fake-DHT
+bench reads the lines back rung by rung. An entry that does not rove has no
+rungs and says nothing: its dial is the old one, and its sentence is its
+error. **Not said:** a ping discarded ahead of a reply inside
+`transport::Open::each` — that reader holds no sink, and the holder's count
+covers the silence between asks, which is where a held stream lives.
