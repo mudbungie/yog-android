@@ -26,16 +26,26 @@
 //! change), so the next dial re-punches at the cached endpoints first and
 //! rendezvouses afresh only if that fails.
 //!
+//! **One climb per entry at a time** (bl-58a0): every seat on an entry
+//! holds the same ladder (`entries`), and every caller passes its gate
+//! before it climbs — one dial in flight, the rest waiting on it and sharing
+//! the line it lands. `gate` says why a second concurrent climb is never
+//! right.
+//!
 //! **The TLS is the same TLS whichever rung answered.** This module hands
 //! back a socket; `transport::Seat` runs the ordinary inner mTLS over it,
 //! verifying the same engine name off the same `address`, and the engine
 //! reads the same leaf. §4 is untouched.
 
 mod backoff;
+mod entries;
+mod gate;
 pub mod held;
 mod rove;
 pub mod say;
 
+pub(crate) use entries::ladder as entry;
+pub use gate::Lease;
 pub use held::Held;
 pub use rove::{Clock, Rove, SystemClock};
 pub use say::Say;
@@ -44,6 +54,7 @@ use crate::dht::{Dht, Udp};
 use crate::rendezvous::{call, punch};
 use crate::state::Slot;
 use backoff::Backoff;
+use gate::{Gate, Turn};
 use say::Voice;
 use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
@@ -56,11 +67,13 @@ use std::time::Duration;
 const DIRECT: Duration = Duration::from_secs(5);
 
 /// What a dial got: a stream with its preface already spent, or a socket
-/// the caller runs the whole wire over — and whether it was punched, which
-/// is what decides if a finished ask keeps it.
+/// the caller runs the whole wire over. A punched line — held or fresh — is
+/// out on a [`Lease`] until it goes back to the pool or is dropped; a
+/// dialled socket is one ask's and is never kept.
 pub enum Conn {
-    Held(Box<Held>),
-    Fresh { tcp: TcpStream, punched: bool },
+    Held(Box<Held>, Lease),
+    Punched(TcpStream, Lease),
+    Dialled(TcpStream),
 }
 
 /// One entry's ladder.
@@ -73,6 +86,7 @@ pub struct Ladder {
     cache: Slot<Vec<SocketAddr>>,
     backoff: Slot<Backoff>,
     held: held::Pool,
+    gate: Arc<Gate>,
     last_seq: AtomicI64,
     /// What the rungs say (`say`): the rove's sink, or nothing.
     voice: Voice,
@@ -91,6 +105,7 @@ impl Ladder {
             cache: Slot::new(Vec::new()),
             backoff: Slot::new(Backoff::new()),
             held: held::Pool::new(),
+            gate: Gate::new(),
             last_seq: AtomicI64::new(0),
             voice: Voice::new(sink),
         }
@@ -102,23 +117,26 @@ impl Ladder {
         let Some(rove) = &self.rove else {
             let tcp = TcpStream::connect(&self.address)
                 .map_err(|e| format!("connect {}: {e}", self.address))?;
-            return Ok(Conn::Fresh {
-                tcp,
-                punched: false,
-            });
+            return Ok(Conn::Dialled(tcp));
         };
         let mine = (rove.addresses)();
         self.notice_network(&mine);
-        if let Some(held) = self.held.take() {
-            return Ok(Conn::Held(Box::new(held)));
-        }
+        // Rung 1, then the gate: a caller that is not the one dialling looks
+        // in the pool again after every change, until a line is there for it
+        // or the dial is its own.
+        let dialling = loop {
+            let seen = self.gate.seen();
+            if let Some(held) = self.held.take() {
+                return Ok(Conn::Held(Box::new(held), self.gate.lend()));
+            }
+            if let Turn::Dial(dialling) = self.gate.turn(seen, self.clock.as_ref()) {
+                break dialling;
+            }
+        };
         let direct = match direct(&self.address, &self.voice) {
             Ok(tcp) => {
                 self.settle();
-                return Ok(Conn::Fresh {
-                    tcp,
-                    punched: false,
-                });
+                return Ok(Conn::Dialled(tcp));
             }
             Err(said) => said,
         };
@@ -131,7 +149,7 @@ impl Ladder {
         match self.climb(rove, mine) {
             Ok(tcp) => {
                 self.settle();
-                Ok(Conn::Fresh { tcp, punched: true })
+                Ok(Conn::Punched(tcp, dialling.punched()))
             }
             Err(said) => {
                 self.backoff.with(&mut |b| b.failed(now, said.clone()));

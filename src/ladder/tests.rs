@@ -22,6 +22,7 @@ use std::sync::atomic::AtomicU8;
 use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
+mod entry;
 mod fallthrough;
 mod held;
 mod rungs;
@@ -177,10 +178,7 @@ fn an_entry_that_does_not_rove_dials_as_it_always_has() {
         None,
         Arc::new(SystemClock),
     );
-    assert!(matches!(
-        ladder.connect().unwrap(),
-        Conn::Fresh { punched: false, .. }
-    ));
+    assert!(matches!(ladder.connect().unwrap(), Conn::Dialled(_)));
 }
 
 #[test]

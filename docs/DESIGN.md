@@ -5848,6 +5848,30 @@ behind one backoff — 1 s doubling to 64 s — so a phone with no network
 settles instead of walking a dark commons per dial; a connection, a served
 stream, or a network change resets it.
 
+**One ladder per entry, one dial in flight** (bl-58a0). A pairing's inbox
+is one item — newest `seq` wins — and the engine punches the call it reads
+once a poll, so two ladders climbing one entry at once write two calls from
+two punch ports and only one is ever answered; measured live, where the
+roster read, the conversations read and the attention fetch each climbed
+their own and each dial burned 35 s windows for nothing. So every
+`transport::Seat` on an entry — asker, tool host, attention lane — takes the
+entry's ONE ladder from a process-wide table (`ladder::entries`, keyed by
+address, pairing and commons, held weakly so a ladder no seat holds still
+goes away with its held streams), and every caller passes the entry's gate
+(`ladder::gate`) before it climbs. One caller dials; every other waits and
+re-looks in the held pool after each change. A punched line — landed or
+taken from the pool — is out on a `Lease` until its ask hands it back or it
+is dropped; a waiter waits for it, so the second caller is served over the
+first's line, and a dropped line lets it dial. A line held by a parked read
+(the foot's `invocations`, the attention lane) never comes back, so a
+waiter that has watched lines out for **10 s** with no dial in flight dials
+its own — still one at a time. The wait is on the injected clock
+(`state::Watched`, the one lock a caller may wait on). An entry that does not
+rove has no gate and no table. **Not done here:** the punch port is still
+bound per climb rather than once per entry for the run (lernie's shape), so
+an engine that reads a call late can still punch the port of a dial that
+already gave up.
+
 **A network change is the addresses moving.** Every dial reads the addresses
 this box would send from (`punch::local_ips`, a UDP "connect" that sends
 nothing) — the same list the call names — and a set that differs from the
@@ -5897,7 +5921,8 @@ the request sits in the buffer), any other frame drops the stream, and **two
 minutes with no frame at all hangs up** — the engine's own bound, mirrored,
 on the injected clock so the suite walks it in an instant. A dialled socket is
 still one ask, one connection, as before. A ladder that goes away takes its
-held streams with it.
+held streams with it — and since bl-58a0 it goes away only when no seat on
+its entry holds it (§21.3).
 
 ### 21.6 What is proved, and what is not
 

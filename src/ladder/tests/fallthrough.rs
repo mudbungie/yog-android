@@ -59,8 +59,5 @@ fn a_roving_entry_whose_address_answers_dials_it_directly() {
         Some(rove(vec!["nowhere.invalid:1".to_owned()])),
         FakeClock::new(),
     );
-    assert!(matches!(
-        ladder.connect().unwrap(),
-        Conn::Fresh { punched: false, .. }
-    ));
+    assert!(matches!(ladder.connect().unwrap(), Conn::Dialled(_)));
 }

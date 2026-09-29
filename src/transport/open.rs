@@ -5,7 +5,7 @@
 
 use super::Wire;
 use crate::frame;
-use crate::ladder::{Held, Ladder};
+use crate::ladder::{Held, Ladder, Lease};
 use rustls::{ClientConnection, StreamOwned};
 use serde_json::Value;
 use std::net::TcpStream;
@@ -22,9 +22,11 @@ pub struct Open {
     /// since — see `crate::ledger`.
     edition: u32,
     /// The ladder a PUNCHED stream goes back to when its answer ends clean
-    /// (REMOTE §13.4: held and reused); `None` for a dialled socket, which is
-    /// dropped as it always was.
-    keep: Option<Arc<Ladder>>,
+    /// (REMOTE §13.4: held and reused), and the lease it is out on — dropped
+    /// after the stream is back, or with the stream, and either way the
+    /// entry's next caller looks (bl-58a0). `None` for a dialled socket,
+    /// which is dropped as it always was.
+    keep: Option<(Arc<Ladder>, Lease)>,
 }
 
 /// **The way to end a held read from another thread.** A reader parked on
@@ -39,7 +41,7 @@ impl Open {
     pub(super) fn new(
         tls: StreamOwned<ClientConnection, TcpStream>,
         edition: u32,
-        keep: Option<Arc<Ladder>>,
+        keep: Option<(Arc<Ladder>, Lease)>,
     ) -> Open {
         Open { tls, edition, keep }
     }
@@ -75,7 +77,7 @@ impl Open {
             let frame = frame::read_frame(&mut self.tls)
                 .map_err(|e| Wire::Lost(format!("receive: {e}")))?;
             let Some(body) = frame else {
-                if let Some(ladder) = self.keep.take() {
+                if let Some((ladder, _lease)) = self.keep.take() {
                     ladder.keep(Held {
                         tls: self.tls,
                         edition: self.edition,

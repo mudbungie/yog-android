@@ -33,7 +33,7 @@ pub use open::{Hangup, Open};
 pub use wire::Wire;
 
 use crate::codec::reply::{self, Reply};
-use crate::ladder::{Clock, Conn, Ladder, Rove, SystemClock};
+use crate::ladder::{Clock, Conn, Ladder, Lease, Rove, SystemClock};
 use crate::material::Material;
 use crate::{frame, hello};
 use rustls::pki_types::ServerName;
@@ -80,7 +80,7 @@ impl Seat {
             config: crate::tls::client_config(m)?,
             address: m.address.clone(),
             name: server_name(&m.address)?,
-            ladder: Arc::new(Ladder::new(m.address.clone(), rove, clock)),
+            ladder: crate::ladder::entry(m.address.clone(), rove, clock),
         })
     }
 
@@ -147,7 +147,7 @@ impl Seat {
     /// whatever thread it likes and hangs up from any other, which is the
     /// whole of what a lane needs and one-shot asks do not.
     pub fn hold(&self, request: &Value) -> Result<(Open, Hangup), Wire> {
-        let (mut tls, hangup, spent, punched) = self.dial(request)?;
+        let (mut tls, hangup, spent, lease) = self.dial(request)?;
         // The engine's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
         // A held stream spent its preface on its first ask and carries the
@@ -156,7 +156,7 @@ impl Seat {
             Some(edition) => edition,
             None => hello::confirm(&mut tls).map_err(Wire::Unusable)?,
         };
-        let keep = punched.then(|| Arc::clone(&self.ladder));
+        let keep = lease.map(|lease| (Arc::clone(&self.ladder), lease));
         Ok((Open::new(tls, edition, keep), hangup))
     }
 
@@ -165,12 +165,12 @@ impl Seat {
     /// that cannot be had is the same sentence as a socket that would not
     /// open: both are the channel failing before a byte of the act left. The
     /// third answer is the edition a HELD stream already carries, `None` for
-    /// a fresh socket whose preface is still to be read; the fourth is
-    /// whether the socket was punched, which is what a finished ask keeps.
+    /// a fresh socket whose preface is still to be read; the fourth is the
+    /// lease a punched line is out on, which is what a finished ask keeps.
     fn dial(&self, request: &Value) -> Result<Dialled, Wire> {
         let conn = self.ladder.connect().map_err(Wire::Transport)?;
-        let (tcp, punched) = match conn {
-            Conn::Held(held) => {
+        let (tcp, lease) = match conn {
+            Conn::Held(held, lease) => {
                 let mut tls = held.tls;
                 let hangup = tls
                     .sock
@@ -179,9 +179,10 @@ impl Seat {
                 let _ = tls.sock.set_read_timeout(Some(ASK_TIMEOUT));
                 frame::write_frame(&mut tls, request.to_string().as_bytes())
                     .map_err(|e| Wire::Transport(format!("send: {e}")))?;
-                return Ok((tls, Hangup::new(hangup), Some(held.edition), true));
+                return Ok((tls, Hangup::new(hangup), Some(held.edition), Some(lease)));
             }
-            Conn::Fresh { tcp, punched } => (tcp, punched),
+            Conn::Punched(tcp, lease) => (tcp, Some(lease)),
+            Conn::Dialled(tcp) => (tcp, None),
         };
         let (tcp, hangup) = tcp
             .try_clone()
@@ -203,18 +204,18 @@ impl Seat {
         // therefore begins where the write ENDS, which is why the class here
         // is the same one a socket that would not open earns.
         send(&mut tls, request).map_err(|e| Wire::Transport(format!("send: {e}")))?;
-        Ok((tls, Hangup::new(hangup), None, punched))
+        Ok((tls, Hangup::new(hangup), None, lease))
     }
 }
 
 /// What [`Seat::dial`] hands up: the stream with the request on it, the
-/// hang-up handle, the edition if the preface is already spent, and whether
-/// the socket was punched.
+/// hang-up handle, the edition if the preface is already spent, and the
+/// lease a punched line is out on.
 type Dialled = (
     StreamOwned<ClientConnection, TcpStream>,
     Hangup,
     Option<u32>,
-    bool,
+    Option<Lease>,
 );
 
 /// This end's two frames, written in one breath (REMOTE §3): the version

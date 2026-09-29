@@ -29,8 +29,14 @@
 //! file and the ladder's shared RAM (the addresses it last saw, the endpoint
 //! cache, the backoff, the held streams) is `Slot`s rather than a rule-7
 //! carve-out apiece.
+//!
+//! **And [`Watched`], the one lock a caller may wait on** (bl-58a0): the
+//! ladder's per-entry gate, where every caller on an entry waits while one
+//! dial is in flight and while the line it landed is out. The same closure
+//! door as [`Slot`], so still nothing is held across a wait.
 
-use std::sync::{Mutex, OnceLock, PoisonError};
+use std::sync::{Condvar, Mutex, OnceLock, PoisonError};
+use std::time::Duration;
 
 use crate::host::{Host, Standing};
 
@@ -50,6 +56,47 @@ impl<T> Slot<T> {
     pub(crate) fn with<R>(&self, f: &mut dyn FnMut(&mut T) -> R) -> R {
         let mut held = self.0.lock().unwrap_or_else(PoisonError::into_inner);
         f(&mut held)
+    }
+}
+
+/// **A [`Slot`] a caller can wait on.** Every pass through [`with`](Self::with)
+/// wakes every waiter, so a waiter re-asks its question after ANY change
+/// rather than after the one it guessed would matter; and between askings the
+/// lock is released for at most a tick, so a deadline read off an injected
+/// clock is read at least that often.
+pub(crate) struct Watched<T> {
+    value: Mutex<T>,
+    changed: Condvar,
+}
+
+impl<T> Watched<T> {
+    pub(crate) fn new(value: T) -> Self {
+        Self {
+            value: Mutex::new(value),
+            changed: Condvar::new(),
+        }
+    }
+
+    /// Run `f` under the lock and wake every waiter — who can only look once
+    /// the lock is released, so the wake may go first and they still read
+    /// what `f` left.
+    pub(crate) fn with<R>(&self, f: &mut dyn FnMut(&mut T) -> R) -> R {
+        let mut held = self.value.lock().unwrap_or_else(PoisonError::into_inner);
+        self.changed.notify_all();
+        f(&mut held)
+    }
+
+    /// Ask `f` under the lock until it answers, waiting between askings for
+    /// a change or for `tick`, whichever comes first.
+    pub(crate) fn wait<R>(&self, f: &mut dyn FnMut(&mut T) -> Option<R>, tick: Duration) -> R {
+        let mut held = self.value.lock().unwrap_or_else(PoisonError::into_inner);
+        loop {
+            let waited = match f(&mut held) {
+                Some(answer) => return answer,
+                None => self.changed.wait_timeout(held, tick),
+            };
+            (held, _) = waited.unwrap_or_else(PoisonError::into_inner);
+        }
     }
 }
 
