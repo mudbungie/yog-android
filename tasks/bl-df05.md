@@ -1,7 +1,8 @@
 +++
 title = "the app's rendezvous path logs nothing: no ladder rung, no punch, no held-line event reaches logcat, so a live dial can only be observed from socket state"
 created = 1790657358
-updated = 1790657358
+updated = 1790657384
+claimant = "Urinalyses-A2"
 priority = 3
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
