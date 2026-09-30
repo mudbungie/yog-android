@@ -1,7 +1,8 @@
 +++
 title = "after a punch lands, the ladder re-punches the cached endpoints ~6 s later while the stream is still held, and every re-punch expires after 35 s; the engine logs each as 'already punched — no punch'"
 created = 1790731438
-updated = 1790731438
+updated = 1790731448
+claimant = "Urinalyses-A5"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
