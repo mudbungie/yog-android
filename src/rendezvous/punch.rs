@@ -20,8 +20,8 @@
 //!
 //! **The one socket this app ever listens on, and it accepts only inside a
 //! window.** It exists only on an entry holding rendezvous material, is
-//! bound once per entry for the run (`ladder::entries`, bl-97ed — the engine
-//! answers a re-punch only from the port its call named), and accepts only
+//! bound once per entry for the run (`ladder::entries`, bl-97ed — the
+//! engine's NAT lets back only the port its call named), and accepts only
 //! inside a window this end opened: whatever the kernel queued between
 //! windows is dropped unread when the next one opens, since it belongs to
 //! no dial this end is making. DESIGN §1's *"the phone opens no listening

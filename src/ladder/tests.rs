@@ -137,6 +137,14 @@ impl Heard {
     }
 }
 
+/// How many calls the lines say were written.
+fn calls(lines: &[String]) -> usize {
+    lines
+        .iter()
+        .filter(|l| l.contains("call written —"))
+        .count()
+}
+
 /// An address nothing listens on: port 1, which no box this suite runs on
 /// serves. Not a port bound and dropped — std binds with `SO_REUSEADDR`, and
 /// the punch's connectors leave from `SO_REUSEPORT` ports that linger for

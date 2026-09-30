@@ -30,7 +30,7 @@ fn every_line_is_the_house_shape_and_names_no_address() {
         unresolved(),
         resting(),
         moved(&ips, 1),
-        repunch(&e, w),
+        recall(&e),
         no_commons("no bootstrap node resolved"),
         found(9, &e),
         not_found("no DHT node answered get for 0123abcd"),
@@ -43,6 +43,9 @@ fn every_line_is_the_house_shape_and_names_no_address() {
         kept(),
         handed(3),
         dropped("two minutes of silence", 0),
+        returned(true),
+        returned(false),
+        stopped(),
     ];
     for line in &lines {
         assert!(line.starts_with("yog.rendezvous: "), "{line}");
@@ -65,6 +68,18 @@ fn every_line_is_the_house_shape_and_names_no_address() {
     assert_eq!(
         lines[13],
         "yog.rendezvous: punch landed — peer unknown family"
+    );
+    assert_eq!(
+        lines[5],
+        "yog.rendezvous: re-call — presence cached, 3 endpoint(s) (1 v6 loopback, 2 v4), no presence walk"
+    );
+    assert_eq!(
+        lines[18..],
+        [
+            "yog.rendezvous: back in the foreground — rest cleared, re-call armed",
+            "yog.rendezvous: back in the foreground — rest cleared, presence to be read",
+            "yog.rendezvous: climb stopped — the app left the foreground; no call written",
+        ]
     );
 }
 

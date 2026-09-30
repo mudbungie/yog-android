@@ -1,6 +1,7 @@
-//! The lifecycle toggle (bl-c21d): a backgrounded ladder parks — climbs
-//! nothing, drops nothing — and the first ask back in front re-punches from
-//! the port whose call landed before it writes any call.
+//! The lifecycle toggle (bl-c21d, bl-c00e): a backgrounded ladder parks —
+//! climbs nothing, drops nothing — a climb in flight at HOME stops at its
+//! next rung boundary with no call written, and the first ask back in front
+//! is one re-call from the port whose call landed.
 
 use super::*;
 use crate::test_support::{Beat, serve_from, serve_held};
@@ -73,12 +74,11 @@ fn a_backgrounded_ladder_parks_and_drops_nothing_until_the_return() {
     assert_eq!(served.join().unwrap().len(), 1, "one line, never dropped");
 }
 
-/// The live case: the re-punch was spent (here by a line the engine never
-/// served; live by a climb in the background), the app goes behind, and the
-/// return re-arms it — so the first ask back rides the landed call's port,
-/// which is the only one the engine's NAT lets in, and writes no call.
+/// The live case: the line died behind the app, and the first ask back is
+/// a re-call — exactly one call, no presence walk, from the landed port,
+/// which is the only one the fake engine accepts.
 #[test]
-fn the_first_ask_after_a_return_re_punches_from_the_landed_port_before_any_call() {
+fn the_first_ask_after_a_return_is_one_re_call_from_the_landed_port() {
     let _serial = serial();
     let dir = pki();
     let only = Arc::new(AtomicU16::new(0));
@@ -88,7 +88,6 @@ fn the_first_ask_after_a_return_re_punches_from_the_landed_port_before_any_call(
         "server",
         vec![
             vec![Beat::Answer(reply(1)), Beat::Hangup],
-            vec![Beat::Hangup],
             vec![Beat::Answer(reply(2))],
         ],
         Arc::clone(&only),
@@ -102,7 +101,6 @@ fn the_first_ask_after_a_return_re_punches_from_the_landed_port_before_any_call(
     let (seq, call) = called(&node);
     only.store(call.endpoints[0].port(), Ordering::Relaxed);
     assert!(until(&mut || seat.held() == 0, WAIT), "the line died");
-    assert!(seat.ask(&serde_json::json!({ "op": "x" })).is_err());
     awake.front(false);
     let back = asking(&seat);
     assert!(heard.wait("parked"));
@@ -111,14 +109,60 @@ fn the_first_ask_after_a_return_re_punches_from_the_landed_port_before_any_call(
     assert_eq!(back.join().unwrap().unwrap(), 2);
     let said = heard.take();
     let at = |part: &str| said.iter().position(|l| l.contains(part));
-    assert!(at("back in the foreground") < at("re-punch at"), "{said:?}");
+    assert_eq!(
+        said.first().map(String::as_str),
+        Some("yog.rendezvous: back in the foreground — rest cleared, re-call armed")
+    );
     assert!(
-        at("re-punch at").is_some() && at("call written").is_none(),
+        at("re-call —").is_some() && at("presence read").is_none(),
         "{said:?}"
     );
-    assert_eq!(called(&node).0, seq, "no call was written");
+    assert_eq!(calls(&said), 1, "{said:?}");
+    assert!(said.iter().all(|l| !l.contains("re-punch")), "{said:?}");
+    assert!(called(&node).0 > seq, "the re-call's call");
     drop(seat);
-    assert_eq!(served.join().unwrap().len(), 3);
+    assert_eq!(served.join().unwrap().len(), 2);
+}
+
+/// HOME while the climb walks for the presence: the climb stops at the
+/// next rung boundary and writes no call in the background; the return's
+/// climb is a re-call from the presence that walk read.
+#[test]
+fn home_during_the_presence_walk_stops_the_climb_before_its_call() {
+    let _serial = serial();
+    let dir = pki();
+    let (address, served) = serve_held(&dir, "ca", "server", vec![vec![Beat::Answer(reply(2))]]);
+    let node = commons(vec![address.parse().unwrap()]);
+    let heard = Heard::default();
+    let awake = Awake::new();
+    let mut rove = rove(vec![node.addr.to_string()]);
+    let (sink, home) = (heard.sink(), Arc::clone(&awake));
+    // The walk's end is said on the climbing thread: HOME lands there.
+    rove.say = Arc::new(move |line: &str| {
+        if line.contains("presence read") {
+            home.front(false);
+        }
+        sink(line);
+    });
+    rove.awake = Arc::clone(&awake);
+    let m = material(&dir, "ca", "client", &closed());
+    let seat = Arc::new(Seat::open_with(&m, Some(rove), FakeClock::new()).unwrap());
+    assert!(seat.ask(&serde_json::json!({ "op": "a" })).is_err());
+    let said = heard.take();
+    assert_eq!(calls(&said), 0, "{said:?}");
+    assert_eq!(
+        said.last().map(String::as_str),
+        Some("yog.rendezvous: climb stopped — the app left the foreground; no call written")
+    );
+    let back = asking(&seat);
+    assert!(heard.wait("parked"));
+    awake.front(true);
+    assert_eq!(back.join().unwrap().unwrap(), 2);
+    let said = heard.take();
+    assert_eq!(calls(&said), 1, "{said:?}");
+    assert!(said.iter().any(|l| l.contains("re-call armed")), "{said:?}");
+    drop(seat);
+    assert_eq!(served.join().unwrap().len(), 1);
 }
 
 #[test]

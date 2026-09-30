@@ -15,12 +15,16 @@
 //! **What a waiter waits on**, re-asked after every change:
 //!
 //! - a dial in flight — wait; its end is a change.
-//! - a punched line out with a caller ([`Lease`]) — wait for it to come back
+//! - a punched line out with an ASK ([`Lease`]) — wait for it to come back
 //!   to the pool, which is a change; one that is dropped instead is a change
-//!   too, and then nothing is out and the waiter dials. A line held by a
-//!   parked read (the foot's `invocations`, the attention lane) never comes
-//!   back, so a waiter that has watched lines out for [`LENT`] with no dial
-//!   in flight dials its own — serially still, since the gate admits one.
+//!   too, and then nothing is out and the waiter dials. An ask is answered
+//!   inside its own timeout, so this wait has no bound of its own: a caller
+//!   never climbs beside a line an ask will hand back (bl-c00e).
+//! - only lines out with PARKED reads ([`Lease::park`]: the lanes, the
+//!   attention fetch — `transport::Seat::hold`) — these come back only when
+//!   the engine's hold ends, so a waiter that has watched them for [`LENT`]
+//!   with no dial in flight and no ask's line out dials its own, beside
+//!   them — serially still, since the gate admits one.
 //! - nothing in flight and nothing out — this caller dials.
 //!
 //! **A look in the pool is a line out** (bl-2ba5). Taking a held line hands
@@ -55,6 +59,8 @@ const TICK: Duration = Duration::from_millis(250);
 struct State {
     dialling: bool,
     lent: usize,
+    /// Of `lent`, the lines out with a parked read.
+    parked: usize,
     /// Rises on every change a waiter might be waiting for.
     changes: u64,
 }
@@ -82,6 +88,8 @@ pub struct Lease {
     gate: Arc<Gate>,
     /// Whether its return is a change: a look that found nothing is not.
     returned: bool,
+    /// Whether the line is out with a parked read ([`Lease::park`]).
+    parked: bool,
 }
 
 impl Gate {
@@ -103,7 +111,7 @@ impl Gate {
                 if s.changes != seen {
                     return Some(None);
                 }
-                if s.dialling {
+                if s.dialling || s.lent > s.parked {
                     since = None;
                     return None;
                 }
@@ -134,6 +142,7 @@ impl Gate {
         Lease {
             gate: Arc::clone(self),
             returned: true,
+            parked: false,
         }
     }
 }
@@ -151,6 +160,18 @@ impl Lease {
     pub(crate) fn missed(mut self) {
         self.returned = false;
     }
+
+    /// The line is a parked read's: it comes back only when the engine's
+    /// hold ends, so a waiter's [`LENT`] runs against it. A change — a
+    /// waiter held without a bound behind an ask's line now has one.
+    /// Called once per lease, by the one caller that opens a parked read.
+    pub(crate) fn park(&mut self) {
+        self.parked = true;
+        self.gate.0.with(&mut |s| {
+            s.parked += 1;
+            s.changes += 1;
+        });
+    }
 }
 
 impl Drop for Dialling {
@@ -165,8 +186,10 @@ impl Drop for Dialling {
 impl Drop for Lease {
     fn drop(&mut self) {
         let returned = u64::from(self.returned);
+        let parked = usize::from(self.parked);
         self.gate.0.with(&mut |s| {
             s.lent = s.lent.saturating_sub(1);
+            s.parked = s.parked.saturating_sub(parked);
             s.changes += returned;
         });
     }

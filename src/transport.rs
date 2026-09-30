@@ -49,8 +49,9 @@ const ASK_TIMEOUT: Duration = Duration::from_mins(2);
 /// How long a fresh socket is given to carry the engine's preface — the
 /// TLS handshake and one frame, which an engine that accepted the stream
 /// writes at once. Short, because a stream can connect and never be served:
-/// a re-punch the engine's listener completed outside any call's window
-/// sits in its accept queue unread (DESIGN §21.9), and a whole
+/// an engine that predates yog bl-5276 completed a punch's handshake
+/// outside any call's window and left it in its accept queue unread
+/// (DESIGN §21.9), and a whole
 /// [`ASK_TIMEOUT`] there would cost a redial two minutes.
 const PREFACE: Duration = Duration::from_secs(10);
 
@@ -141,7 +142,7 @@ impl Seat {
     /// frame up to the terminator. A stream of one is the ordinary answer.
     pub fn ask(&self, request: &Value) -> Result<Vec<Value>, Wire> {
         let mut stream = Vec::new();
-        let (open, _hangup) = self.hold(request)?;
+        let (open, _hangup) = self.read(request, false)?;
         open.each(&mut |frame| {
             stream.push(frame);
             true
@@ -155,7 +156,17 @@ impl Seat {
     /// whatever thread it likes and hangs up from any other, which is the
     /// whole of what a lane needs and one-shot asks do not.
     pub fn hold(&self, request: &Value) -> Result<(Open, Hangup), Wire> {
-        let (mut tls, hangup, spent, lease) = self.dial(request)?;
+        self.read(request, true)
+    }
+
+    /// Open a read; a `parked` one marks its punched line so the entry's
+    /// other callers know it will not come back soon (`ladder::gate`) — an
+    /// ask's line they wait for, a parked read's only for so long.
+    fn read(&self, request: &Value, parked: bool) -> Result<(Open, Hangup), Wire> {
+        let (mut tls, hangup, spent, mut lease) = self.dial(request)?;
+        if let Some(lease) = lease.as_mut().filter(|_| parked) {
+            lease.park();
+        }
         // The engine's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
         // A held stream spent its preface on its first ask and carries the

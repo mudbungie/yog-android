@@ -1,6 +1,6 @@
 //! The gate alone, on a clock the test turns: one dial at a time, a lent
-//! line waited for, a dropped one not, and a line out past [`LENT`] no
-//! longer waited for.
+//! line waited for, a dropped one not, an ask's line waited for without a
+//! bound, and a parked read's line out past [`LENT`] no longer waited for.
 
 use super::*;
 use crate::test_support::FakeClock;
@@ -68,9 +68,10 @@ fn a_punched_line_out_is_waited_for_and_its_return_is_a_look() {
 }
 
 #[test]
-fn a_line_out_past_the_bound_is_no_longer_waited_for() {
+fn a_parked_line_out_past_the_bound_is_no_longer_waited_for() {
     let (gate, clock) = (Gate::new(), FakeClock::new());
-    let _parked = dials(&gate, clock.as_ref()).punched();
+    let mut parked = dials(&gate, clock.as_ref()).punched();
+    parked.park();
     let second = waiter(&gate, &clock);
     assert!(second.recv_timeout(SOON).is_err());
     clock.advance(LENT);
@@ -110,4 +111,27 @@ fn a_change_since_the_caller_looked_is_a_look_not_a_wait() {
     let seen = gate.seen();
     drop(gate.lend());
     assert!(matches!(gate.turn(seen, clock.as_ref()), Turn::Look));
+}
+
+#[test]
+fn an_asks_line_is_waited_for_without_a_bound_and_a_parked_one_for_lent() {
+    let (gate, clock) = (Gate::new(), FakeClock::new());
+    let mut lease = dials(&gate, clock.as_ref()).punched();
+    let second = waiter(&gate, &clock);
+    clock.advance(LENT * 3);
+    assert!(
+        second.recv_timeout(SOON).is_err(),
+        "an ask's line comes back: no bound"
+    );
+    lease.park();
+    assert!(
+        second.recv_timeout(WAIT).unwrap().is_none(),
+        "parking the line is a change: look"
+    );
+    let third = waiter(&gate, &clock);
+    assert!(third.recv_timeout(SOON).is_err(), "a parked read, for LENT");
+    clock.advance(LENT);
+    assert!(third.recv_timeout(WAIT).unwrap().is_some_and(|d| d.beside));
+    drop(lease);
+    assert_eq!(gate.0.with(&mut |s| (s.lent, s.parked)), (0, 0));
 }

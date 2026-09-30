@@ -1,15 +1,16 @@
 //! The rungs' edges: the direct rung taken on an entry that roves, and a
-//! cached endpoint that misses falling through to a full rendezvous.
+//! re-call at a cached presence that expires dropping the presence, so the
+//! next climb reads it afresh.
 
 use super::*;
 use crate::test_support::{Beat, serve_held};
 
-/// The engine moved while this device was away (DESIGN §21.3): the held
-/// stream is gone, the cached endpoint answers nothing —
-/// and the climb falls through the re-punch to a full rendezvous, which
-/// reads the engine's newer presence and lands there.
+/// The engine moved while this device was away (DESIGN §21.3, §21.9): the
+/// held stream is gone, and the re-call at the cached presence expires
+/// unanswered — which drops the presence, so the next climb reads the
+/// engine's newer one and lands there.
 #[test]
-fn a_cache_that_misses_falls_through_to_a_rendezvous_at_the_engines_new_home() {
+fn a_re_call_that_expires_drops_the_presence_and_the_next_climb_reads_the_new_home() {
     let _serial = serial();
     let dir = pki();
     let (old, served_old) = serve_held(
@@ -20,7 +21,8 @@ fn a_cache_that_misses_falls_through_to_a_rendezvous_at_the_engines_new_home() {
     );
     let (new, served_new) = serve_held(&dir, "ca", "server", vec![vec![Beat::Answer(reply(2))]]);
     let node = commons(vec![old.parse().unwrap()]);
-    let seat = seat(&dir, &node, FakeClock::new());
+    let clock = FakeClock::new();
+    let (seat, heard) = super::said::heard_seat(&dir, &node, clock.clone());
     assert_eq!(
         seat.ask(&serde_json::json!({ "op": "a" })).unwrap()[0]["n"],
         1
@@ -38,10 +40,26 @@ fn a_cache_that_misses_falls_through_to_a_rendezvous_at_the_engines_new_home() {
     let mut dht = Dht::new(Box::new(udp), vec![node.addr], rove(vec![]).config).unwrap();
     dht.put(engine.sign(pairing.presence_salt(), 2, moved).unwrap())
         .unwrap();
+    heard.take();
+    assert!(seat.ask(&serde_json::json!({ "op": "x" })).is_err());
+    let said = heard.take();
+    let at = |part: &str| said.iter().position(|l| l.contains(part));
+    assert!(at("re-call —").is_some(), "{said:?}");
+    assert!(at("presence read").is_none(), "{said:?}");
+    assert!(
+        at("call written").is_some_and(|c| Some(c) < at("punch expired")),
+        "{said:?}"
+    );
+    // The failed climb rests the ladder; the rest runs out.
+    clock.advance(Duration::from_secs(1));
     assert_eq!(
         seat.ask(&serde_json::json!({ "op": "b" })).unwrap()[0]["n"],
         2
     );
+    let said = heard.take();
+    assert!(said.iter().any(|l| l.contains("presence read")), "{said:?}");
+    assert!(said.iter().all(|l| !l.contains("re-call")), "{said:?}");
+    assert_eq!(calls(&said), 1, "{said:?}");
     drop(seat);
     assert_eq!(served_new.join().unwrap().len(), 1);
 }

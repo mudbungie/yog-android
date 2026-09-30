@@ -137,8 +137,17 @@ pub(crate) fn parked() -> String {
     format!("{MARKER}: parked — the app is not in the foreground; nothing climbs")
 }
 
-pub(crate) fn returned() -> String {
-    format!("{MARKER}: back in the foreground — rest cleared, re-punch armed")
+pub(crate) fn returned(recall: bool) -> String {
+    let next = if recall {
+        "re-call armed"
+    } else {
+        "presence to be read"
+    };
+    format!("{MARKER}: back in the foreground — rest cleared, {next}")
+}
+
+pub(crate) fn stopped() -> String {
+    format!("{MARKER}: climb stopped — the app left the foreground; no call written")
 }
 
 pub(crate) fn moved(mine: &[IpAddr], held: usize) -> String {
@@ -148,12 +157,11 @@ pub(crate) fn moved(mine: &[IpAddr], held: usize) -> String {
     )
 }
 
-pub(crate) fn repunch(cached: &[SocketAddr], window: Duration) -> String {
+pub(crate) fn recall(cached: &[SocketAddr]) -> String {
     format!(
-        "{MARKER}: re-punch at {} cached endpoint(s) ({}), window {}s",
+        "{MARKER}: re-call — presence cached, {} endpoint(s) ({}), no presence walk",
         cached.len(),
-        families(&ips(cached)),
-        window.as_secs()
+        families(&ips(cached))
     )
 }
 

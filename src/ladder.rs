@@ -1,10 +1,10 @@
 //! **The dial ladder** (yog REMOTE §13.4; the phone's half of yog bl-0247):
 //! the four ways this device reaches its engine, tried in the order they
 //! cost, on every dial. *The live held connection; the entry's direct
-//! `address` where one exists; a re-punch at the RAM-cached endpoints, which
-//! costs no DHT round trip; the full rendezvous.* What worked stays RAM for
-//! the run — never disk — which is the runtime half of REMOTE §8's `:0`
-//! discipline.
+//! `address` where one exists; a re-call from the RAM-cached presence, which
+//! writes a call without walking for the presence first (yog bl-278f); the
+//! full rendezvous.* What worked stays RAM for the run — never disk — which
+//! is the runtime half of REMOTE §8's `:0` discipline.
 //!
 //! **Severable by material** (REMOTE §13.4). An entry whose material holds
 //! no [`Pairing`] has a ladder of two rungs — a held stream never exists for
@@ -23,9 +23,8 @@
 //! Three things reset it, each the evidence it wants: a rung that connected,
 //! a stream that served, and the network changing (`network`: the platform's
 //! report, or the addresses this box sends from moving) — which also drops
-//! every held stream (dead mappings after a change) and the punch port with
-//! its cached endpoints, so the next dial rendezvouses afresh from a fresh
-//! port.
+//! every held stream (dead mappings after a change) and the punch port, so
+//! the next dial calls afresh from a fresh port.
 //!
 //! **One climb per entry at a time** (bl-58a0): every seat on an entry
 //! holds the same ladder (`entries`), and every caller passes its gate
@@ -62,7 +61,7 @@ use gate::{Gate, Turn};
 use say::Voice;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 /// How long a direct dial is given before the ladder moves on. Only spent
@@ -87,12 +86,11 @@ pub struct Ladder {
     clock: Arc<dyn Clock>,
     /// The network generation this ladder last acted on (`network`).
     seen: AtomicU64,
-    /// The entry's punch port and what a call from it found (`entries`).
+    /// The entry's punch port, cached presence and last `seq` (`entries`).
     port: entries::Bound,
     backoff: Slot<Backoff>,
     held: held::Pool,
     gate: Arc<Gate>,
-    last_seq: AtomicI64,
     /// The process's returns this ladder has seen (`awake`).
     returns: AtomicU64,
     /// What the rungs say (`say`): the rove's sink, or nothing.
@@ -101,7 +99,12 @@ pub struct Ladder {
 
 impl Ladder {
     pub fn new(address: String, rove: Option<Rove>, clock: Arc<dyn Clock>) -> Ladder {
-        Ladder::on(address, rove, clock, Arc::new(Slot::new(None)))
+        Ladder::on(
+            address,
+            rove,
+            clock,
+            Arc::new(Slot::new(entries::Port::default())),
+        )
     }
 
     /// A ladder climbing from `port` — the entry's, shared with every
@@ -126,7 +129,6 @@ impl Ladder {
             backoff: Slot::new(Backoff::new()),
             held: held::Pool::new(),
             gate: Gate::new(),
-            last_seq: AtomicI64::new(0),
             returns: AtomicU64::new(returns),
             voice: Voice::new(sink),
         }
@@ -171,7 +173,7 @@ impl Ladder {
             return Err(format!("{direct}; {said}"));
         }
         self.voice.forget("rest");
-        match self.climb(rove, !dialling.beside) {
+        match self.climb(rove, dialling.beside) {
             Ok(tcp) => {
                 self.settle();
                 Ok(Conn::Punched(tcp, dialling.punched()))
@@ -183,16 +185,9 @@ impl Ladder {
         }
     }
 
-    /// A finished ask hands its punched stream back for the next one — and
-    /// a line served is the evidence that re-arms the re-punch
-    /// (`entries::Port`).
+    /// A finished ask hands its punched stream back for the next one.
     pub fn keep(&self, held: Held) {
         self.settle();
-        self.port.with(&mut |port| {
-            if let Some(port) = port {
-                port.armed = true;
-            }
-        });
         self.voice.say(&say::kept());
         self.held
             .keep(held, Arc::clone(&self.clock), self.voice.sink());
@@ -211,10 +206,9 @@ impl Ladder {
     /// **A network change** (DESIGN §21.3, §21.11): the generation moved
     /// since this ladder last looked (`network`). That drops every held
     /// stream — a dead mapping after a change — and clears the backoff; the
-    /// punch port goes with the endpoints cached beside it by being of the
-    /// old generation (`entries::Port`): the engine's NAT holds a mapping
-    /// toward the address and port the last call named, and this box no
-    /// longer sends from that address. Called on every dial, just before a
+    /// punch port goes by being of the old generation (`entries::Port`): the
+    /// engine's NAT held a mapping toward the address and port the last call
+    /// named, and this box no longer sends from that address. Called on every dial, just before a
     /// call names the addresses, and at once when the platform reports;
     /// answers the generation now and the addresses in it.
     fn notice(&self, rove: &Rove) -> (u64, Vec<IpAddr>) {

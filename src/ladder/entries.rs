@@ -11,11 +11,13 @@
 //! and the next seat on that entry starts a fresh one. An entry that does not
 //! rove shares nothing — its dial is a plain connect with no state behind it.
 //!
-//! **The punch port is held strongly, for the run** (bl-97ed, DESIGN §21.9):
-//! the engine punches a call once, toward the port that call named, and its
-//! NAT then holds a mapping toward exactly that port — so a re-punch is
-//! answerable only from it. The [`Port`] outlives every ladder on its entry,
-//! and a fresh ladder takes it up where the last one left it.
+//! **The punch port and the presence cache are held strongly, for the run**
+//! (bl-97ed, bl-c00e; DESIGN §21.9): the call a climb writes names the port
+//! it punches from, and a port that is kept is a port the engine's NAT has
+//! let in before; the engine's presence is the engine's fact, not this
+//! box's, and saves the next climb its walk (the re-call). The [`Port`]
+//! outlives every ladder on its entry, and a fresh ladder takes it up where
+//! the last one left it.
 
 use super::{Clock, Ladder, Rove};
 use crate::rendezvous::punch::Punch;
@@ -24,27 +26,26 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, OnceLock, Weak};
 
-/// The entry's punch port and the engine endpoints the last call from it
-/// found — one value, because the endpoints are worth re-punching only from
-/// the port the call named. A network change drops both: a port is the
-/// entry's only in the network generation it was bound in (`network`).
+/// The entry's punch port, and the engine's presence as last read.
 ///
-/// **A re-punch is spent by trying it** (`armed`). A re-punch can land a
-/// TCP stream the engine never serves — its listener completes the
-/// handshake whenever the SYN gets in, but it accepts only inside a new
-/// call's window (DESIGN §21.9) — and a cache that outlived that would
-/// re-punch into the same dead end on every redial and never write a call.
-/// So a re-punch disarms it, a line served and kept re-arms it, and a call
-/// written arms it afresh.
+/// **The presence is a re-call's whole input** (yog bl-278f): a climb that
+/// holds it writes its call without walking for the presence first. It is
+/// kept across a network change — it says where the ENGINE is, and this box
+/// moving does not move it — and dropped by a call that expires unanswered,
+/// the one evidence that it may be stale, so the next climb reads it again.
+#[derive(Default)]
 pub(crate) struct Port {
-    pub(crate) punch: Arc<Punch>,
-    pub(crate) cached: Vec<SocketAddr>,
-    pub(crate) armed: bool,
-    pub(crate) generation: u64,
+    /// The punch bound for the run, and the network generation it was
+    /// bound in: a port is the entry's only in that generation (`network`).
+    pub(crate) bound: Option<(Arc<Punch>, u64)>,
+    pub(crate) presence: Vec<SocketAddr>,
+    /// The last call's `seq`: the next is above it, whichever ladder on
+    /// the entry writes it, or the commons refuses it.
+    pub(crate) seq: i64,
 }
 
 /// An entry's port, shared by every ladder that climbs it.
-pub(crate) type Bound = Arc<Slot<Option<Port>>>;
+pub(crate) type Bound = Arc<Slot<Port>>;
 
 type Key = (String, [u8; 32], [u8; 32], Vec<String>);
 type Table = Slot<HashMap<Key, (Weak<Ladder>, Bound)>>;
@@ -72,7 +73,7 @@ pub(crate) fn ladder(address: String, rove: Option<Rove>, clock: Arc<dyn Clock>)
     table().with(&mut |table| {
         let (live, port) = table
             .entry(key.clone())
-            .or_insert_with(|| (Weak::new(), Arc::new(Slot::new(None))));
+            .or_insert_with(|| (Weak::new(), Arc::new(Slot::new(Port::default()))));
         if let Some(live) = live.upgrade() {
             return live;
         }

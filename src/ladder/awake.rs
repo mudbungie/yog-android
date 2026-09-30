@@ -3,8 +3,8 @@
 //!
 //! Measured live: a backgrounded app has no DNS and no path — the entry's
 //! name does not resolve and no bootstrap node does — so a ladder that
-//! climbed there spent the re-punch (§21.9's arm) on nothing and rested, and
-//! the next dial in front went straight to a fresh call. So a climb waits
+//! climbed there spent its climb on nothing and rested, and a climb already
+//! in flight at HOME wrote its call in the background. So a climb waits
 //! until the process is **awake**, which is the platform's fact and never
 //! this app's guess at it. Three things make it so, each reported by the
 //! component the platform tells:
@@ -20,12 +20,13 @@
 //!   the length of its one run; the platform grants a job its network.
 //!
 //! A parked caller drops nothing and starts nothing: what the ladder holds
-//! stays held, and the caller waits here until the process wakes. **A wake
-//! after sleep is a return**, counted, and the ladder's first caller after
-//! one clears the rest and re-arms the re-punch (`Ladder::wake`): the line
-//! the platform killed in the background is evidence about the platform, not
-//! about the engine's mapping, so the first climb back rides the port the
-//! last call named before it pays for a call.
+//! stays held, and the caller waits here until the process wakes; a climb
+//! already past the gate stops at its next rung boundary (`climb`). **A
+//! wake after sleep is a return**, counted, and the ladder's first caller
+//! after one clears the rest (`Ladder::wake`): the failures the platform
+//! caused in the background are evidence about the platform, not about the
+//! engine, so the first climb back is not made to rest — and with the
+//! engine's presence cached it is a re-call, one walk and a punch.
 
 use super::{Ladder, Rove, say};
 use crate::state::Watched;
@@ -127,8 +128,7 @@ impl Drop for Hold {
 
 impl Ladder {
     /// Park while the process sleeps; on the first look after a return,
-    /// clear the rest and re-arm the entry's re-punch — the next climb then
-    /// leaves from the port the last call named before it writes a call.
+    /// clear the rest, and say whether the next climb is a re-call.
     pub(super) fn wake(&self, rove: &Rove) {
         let returns = rove
             .awake
@@ -138,11 +138,7 @@ impl Ladder {
         }
         self.voice.forget("park");
         self.settle();
-        self.port.with(&mut |port| {
-            if let Some(port) = port {
-                port.armed = true;
-            }
-        });
-        self.voice.say(&say::returned());
+        let recall = self.port.with(&mut |port| !port.presence.is_empty());
+        self.voice.say(&say::returned(recall));
     }
 }

@@ -59,12 +59,15 @@ fn a_dark_address_rendezvouses_punches_and_holds_the_stream_for_the_next_ask() {
     );
 }
 
-/// The re-punch rides the engine's NAT mapping (bl-97ed): the fake engine
-/// answers only a stream from the port the call named once the first line
-/// is up, as a NAT that punched toward that port does — so a re-punch from
-/// any other port is dropped at its door, and this one is served.
+/// Rung 3 is a RE-CALL (yog bl-278f): a punch with no call behind it is
+/// one-sided — the engine's NAT holds no mapping once the served stream
+/// ended — so a dropped stream's next climb writes a fresh call at the
+/// cached presence, from the port the first call named, and punches. The
+/// fake engine answers only that port, as a NAT that punched toward it
+/// does, and the presence on the commons is made unreadable first, so a
+/// climb that walked for it would fail.
 #[test]
-fn a_dropped_stream_re_punches_from_the_port_the_call_named_without_a_walk() {
+fn a_dropped_stream_re_calls_from_the_port_the_call_named_without_a_presence_walk() {
     let _serial = serial();
     let dir = pki();
     let only = Arc::new(AtomicU16::new(0));
@@ -79,26 +82,43 @@ fn a_dropped_stream_re_punches_from_the_port_the_call_named_without_a_walk() {
         Arc::clone(&only),
     );
     let node = commons(vec![address.parse().unwrap()]);
-    let seat = seat(&dir, &node, FakeClock::new());
+    let (seat, heard) = super::said::heard_seat(&dir, &node, FakeClock::new());
     assert_eq!(
         seat.ask(&serde_json::json!({ "op": "transcript" }))
             .unwrap()[0]["n"],
         1
     );
-    only.store(called(&node).1.endpoints[0].port(), Ordering::Relaxed);
+    let (seq, call) = called(&node);
+    only.store(call.endpoints[0].port(), Ordering::Relaxed);
     // A SYN from any other port is dropped at the door, unserved.
     drop(std::net::TcpStream::connect(&address).unwrap());
     assert!(
         until(&mut || seat.held() == 0, WAIT),
         "the engine hung up, and the holder noticed"
     );
-    // The commons goes dark: only the cache can find the engine now.
-    drop(node);
+    let (engine, pairing) = pairing();
+    let foreign = Presence { endpoints: vec![] }.seal(&[0u8; 32]).unwrap();
+    let udp = crate::dht::Udp::bind("127.0.0.1:0".parse().unwrap()).unwrap();
+    let mut dht = Dht::new(Box::new(udp), vec![node.addr], rove(vec![]).config).unwrap();
+    dht.put(engine.sign(pairing.presence_salt(), 2, foreign).unwrap())
+        .unwrap();
+    heard.take();
     assert_eq!(
         seat.ask(&serde_json::json!({ "op": "transcript" }))
             .unwrap()[0]["n"],
         2
     );
+    let said = heard.take();
+    assert!(said.iter().any(|l| l.contains("re-call —")), "{said:?}");
+    assert!(
+        said.iter()
+            .all(|l| !l.contains("presence") || l.contains("presence cached")),
+        "{said:?}"
+    );
+    assert_eq!(calls(&said), 1, "{said:?}");
+    let (next, call) = called(&node);
+    assert!(next > seq, "a fresh call");
+    assert_eq!(call.endpoints[0].port(), only.load(Ordering::Relaxed));
     drop(seat);
     assert_eq!(
         served.join().unwrap().len(),

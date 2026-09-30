@@ -611,9 +611,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
 | `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
 | `src/ladder.rs` + `src/ladder/{rove,backoff,climb}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), the rest between failed climbs, and the two seconds-scale rungs behind it (`climb`, split at the cap) | landed (bl-3d62, split bl-2ba5) |
-| `src/ladder/awake.rs` | §21.10: whether this process may climb at all — the one predicate a roving ladder parks on (activity in front, pocket service holding, a job's run) — and the return that clears the rest and re-arms the re-punch | landed (bl-c21d) |
+| `src/ladder/awake.rs` | §21.10: whether this process may climb at all — the one predicate a roving ladder parks on (activity in front, pocket service holding, a job's run) — and the return that clears the rest | landed (bl-c21d, re-call bl-c00e) |
 | `src/ladder/network.rs` | §21.11: where this box sends from and when that changed — the platform's default-network report (fallback: the routing-table read), the reachable-address filter, the scope classes the lines say, and the generation that drops held lines, rest and punch port at once | landed (bl-792e) |
-| `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port with the endpoints its last call found (held for the run) | landed (bl-58a0, port bl-97ed) |
+| `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port, the engine's cached presence and the last call `seq` (held for the run) | landed (bl-58a0, port bl-97ed, presence bl-c00e) |
 | `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
 | `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
 | `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle — and the hand-back of a punched stream whose answer ended clean (split from `transport.rs`, §21.5) | landed (bl-3d62) |
@@ -5834,14 +5834,16 @@ measurement from a handset before it is taken.
 ### 21.3 The ladder
 
 Every dial climbs `ladder::Ladder`, cheapest first: **a live held stream;
-the entry's direct `address`** (5 s per resolved address); **a re-punch at
-the RAM-cached engine endpoints**, no DHT round trip; **the full
-rendezvous** — read presence, write the call (a fresh 8-byte nonce, `seq`
-the clock's epoch second and always rising), punch. Both punch rungs leave
-from the entry's one port, bound for the run (§21.9). What worked is RAM for
-the process, never disk. **Nothing climbs while the process sleeps** — a
-caller parks before rung 1 until the activity is in front or the platform
-holds the process for it (§21.10). An entry with no pairing has the old two-step: a
+the entry's direct `address`** (5 s per resolved address); **a re-call from
+the RAM-cached presence** — one DHT walk, the call's put, and no presence
+read (§21.12); **the full rendezvous** — read presence, write the call (a
+fresh 8-byte nonce, `seq` the clock's epoch second and always rising above
+the entry's last), punch. Both punch rungs leave from the entry's one port,
+bound for the run (§21.9). What worked is RAM for the process, never disk.
+**Nothing climbs while the process sleeps** — a caller parks before rung 1
+until the activity is in front or the platform holds the process for it,
+and a climb already past the gate stops at its next rung boundary (§21.10,
+§21.12). An entry with no pairing has the old two-step: a
 plain connect, down to the same sentence.
 
 **The TLS is the same TLS whichever rung answered.** The ladder hands back a
@@ -5872,13 +5874,15 @@ is dropped; a waiter waits for it, so the second caller is served over the
 first's line, and a dropped line lets it dial. **A caller looking in the pool
 is a line out** (bl-2ba5): it counts itself out before it takes, and a look
 that found nothing takes the count back without a change (§21.8 for why). A
-line held by a parked read (the foot's `invocations`, the seat's lanes) comes
-back only when the engine's hold ends, up to thirty seconds, so a waiter that
-has watched lines out for **10 s** with no dial in flight dials its own —
-still one at a time, and **beside** the line still out: that dial skips the
-re-punch rung, whose cached endpoints are the ones the out line was punched
-at, and goes straight to a fresh call, from a port of its own that is
-forgotten after its window (§21.9). The wait is on the injected clock
+line out with an **ask** is waited for without a bound of the gate's own —
+the ask is answered inside its timeout — so no caller climbs beside it
+(§21.12). A line held by a **parked read** (`transport::Seat::hold`: the
+seat's lanes, the attention fetch; `Lease::park` marks it) comes back only
+when the engine's hold ends, up to thirty seconds, so a waiter that has
+watched only parked reads' lines out for **10 s**, with no dial in flight,
+dials its own — still one at a time, and **beside** the line still out: a
+fresh call from a port of its own that is forgotten after its window
+(§21.9). The wait is on the injected clock
 (`state::Watched`, the one lock a caller may wait on). An entry that does not
 rove has no gate and no table. The punch port and the endpoints its last
 call found are the entry's too, held for the run rather than weakly (§21.9).
@@ -5892,10 +5896,11 @@ instead (`punch::local_ips`, a UDP "connect" that sends nothing), and a read
 that differs from the last moves the generation the same way. A new
 generation drops every held stream (dead mappings) and clears the backoff
 **at once**, on the platform's thread, for every ladder alive; and the punch
-port with the endpoints cached beside it is the entry's only in the
-generation it was bound in, so the next dial binds afresh and writes a call
-(§21.9): the engine's NAT holds a mapping toward the address and port the
-last call named, and this box no longer sends from that address. The call's
+port is the entry's only in the generation it was bound in, so the next
+dial binds afresh and its call names the new port (§21.9): the engine's NAT
+held a mapping toward the address and port the last call named, and this
+box no longer sends from that address. The cached presence stays — it says
+where the engine is, and this box moving does not move it (§21.12). The call's
 own addresses are read as it is written, not at the dial's start. A flap
 back to the same set is caught by the held stream's own reader instead.
 
@@ -5977,7 +5982,10 @@ tag, for `shell::app::probe`'s reason):
     yog.rendezvous: direct rung — the entry's name did not resolve
     yog.rendezvous: climb skipped — resting after the last failed climb
     yog.rendezvous: network changed — this box now sends from 1 v6 global, 1 v4; <h> held stream(s) dropped, rest cleared
-    yog.rendezvous: re-punch at <k> cached endpoint(s) (1 v4), window <w>s
+    yog.rendezvous: parked — the app is not in the foreground; nothing climbs
+    yog.rendezvous: back in the foreground — rest cleared, re-call armed
+    yog.rendezvous: climb stopped — the app left the foreground; no call written
+    yog.rendezvous: re-call — presence cached, <k> endpoint(s) (1 v4), no presence walk
     yog.rendezvous: rendezvous not started — no bootstrap node resolved
     yog.rendezvous: presence read — seq <s>, <k> endpoint(s) (1 v6, 1 v4)
     yog.rendezvous: presence not read — <the rung's own sentence, or: the DHT walk failed (reason withheld: it names the target)>
@@ -6051,105 +6059,65 @@ from a fresh port could never be answered. That dial writes a fresh call.
 
 **Not done here, and stated:** a lane hung up *mid-hold* — the focus
 moving — still shuts down its punched line; the next ask then climbs to a
-fresh call. The re-punch rung's port was bl-97ed's (§21.9).
+fresh call. The re-punch rung's port was bl-97ed's (§21.9); the rung itself is
+retired, replaced by the re-call (§21.12).
 
 ### 21.9 The punch port, bound once per entry for the run (bl-97ed)
 
 **The ruling** (operator, on bl-97ed): bind the punch port once per entry
-for the life of the process, as lernie (`Worked::punch`) and thrall do, and
-keep rung 3. Until this, rung 3 bound a fresh port per climb and wrote no
-call, and live every re-punch expired after 35 s (§21.8).
+for the life of the process, as lernie (`Worked::punch`) and thrall do.
+Until then every climb bound a fresh port.
 
 **The reasoning, checked against yog REMOTE §13.3 and the engine's
 `wire/rendezvous`.** The engine punches only on a new call, from its one
-port held for its run, toward the endpoints and the port that call named —
+port held for its run, toward the endpoints and the port that call named,
 so its NAT then holds a mapping toward exactly (this box's address, that
-port). A re-punch from the same port rides that mapping while it lives
-(residential NAT TCP mappings last minutes, and a held line's pings keep it
-up while the line is); a re-punch from a fresh port meets a NAT that has no
-mapping for it. Rung 3 is viable only with a stable port, and so **the
-cached endpoints are paired with the port the call named**:
-`ladder::entries::Port` holds the `Punch` and the endpoints as one value.
+port). A port kept for the run is one the engine's NAT has let in before.
 
 **Where it lives.** The entry table (`ladder::entries`) holds each roving
-entry's `Port` strongly, beside its weakly held ladder, so the port
-survives across climbs and across seats: a ladder that goes away with its
-last seat leaves the port, and the next seat's ladder climbs from it. Two
-things replace it, each forced:
+entry's `Port` strongly, beside its weakly held ladder, so the port survives
+across climbs and across seats: a ladder that goes away with its last seat
+leaves the port, and the next seat's ladder climbs from it. The same value
+carries the engine's cached presence (§21.12) and the entry's last call
+`seq` — a second ladder on the entry inside the same clock second must
+still write a higher one, or the commons refuses its put. Two things
+replace the port, each forced:
 
-- **A network change** (§21.3) drops it: the mapping names an address this
-  box no longer sends from. The next climb binds and calls afresh.
-- **A dial beside a line still out** (§21.3, §21.8) binds a fresh port: the
-  line out holds the entry's port toward the engine's one port, TCP carries
-  one connection per pair of ends, and the engine would punch the new call
+- **A network change** (§21.3) lets it go: the mapping names an address
+  this box no longer sends from. The next climb binds afresh.
+- **A dial beside a line still out** (§21.3) binds a fresh port: the line
+  out holds the entry's port toward the engine's one port, TCP carries one
+  connection per pair of ends, and the engine would punch the new call
   toward a pair already in use. **That port is the beside call's alone and
-  is never stored** (bl-c21d). Until then, once its call was written it
-  became the entry's, and measured live the landed port was replaced by the
-  beside one, so no later re-punch had a mapping to ride: the entry's port is
-  the port whose call landed (or the first bound, until one lands).
+  is never stored** (bl-c21d): measured live, storing it left the entry on
+  a port whose call had not landed.
 
-A climb whose re-punch misses writes its call from the same port.
+**The re-punch rung this section used to keep is retired** (yog bl-278f,
+§21.12). It punched at the cached endpoints from this port with no call
+behind it, riding a NAT mapping it assumed outlived the window. Measured on
+three wifi dials against engine 0.0.74, the re-punch left from exactly the
+landed port for 35 s and nothing reached the engine's kernel: the engine's
+home NAT holds no mapping once the served stream has ended, and the engine
+sends SYNs only inside a call's window, so a punch with no call is
+one-sided. Its guards went with it — the "armed" flag a re-punch spent and
+a served line re-armed, and the reasoning about a re-punch landing in an
+engine's accept queue unread (the engine serves its punch port at any time
+since yog bl-5276). The 10 s preface bound (`transport`, `PREFACE`) stays: a
+fresh socket that connects and is never served still costs that, not the
+ask's two minutes.
 
-**What the re-punch cannot do against today's engine, and the two guards
-that follow.** The engine's punch listeners are held for its run, but it
-calls `accept` only inside a new call's window. Its kernel still completes
-the handshake of any SYN the mapping lets in, so from this end a re-punch
-*lands* — and the stream then sits in the engine's accept queue, unread,
-until the engine's next call. So the stable port is **necessary, not
-sufficient**: rung 3 serves end to end only once the engine serves its
-punch listeners outside a call's window (an engine-side change, not made
-here). Unguarded, that dead end is worse than the 35 s expiry it replaces —
-a two-minute ask timeout per redial, and a cache re-punched forever — so:
-
-- **A fresh socket is given 10 s for the engine's preface** (`transport`,
-  `PREFACE`), not the ask's two minutes: an engine that accepted a stream
-  writes its preface at once, and one that never accepted it never will.
-  The handshake is driven by the first write, so the bound fires as a
-  channel failure with nothing of the act in doubt.
-- **A re-punch is spent by trying it** (`Port::armed`): trying it disarms
-  it, a punched line served and kept re-arms it, a call written arms it.
-  A re-punched line that dies before it serves therefore sends the next
-  climb to a fresh call, instead of every redial re-punching into the same
-  queue.
-
-Against today's engine a dropped line so costs one landed-but-unserved
-re-punch and its 10 s bound, then a call — less than the 35 s expiry it
-cost before. **Stated, unmeasured:** where this end closed the last line,
-the pair (punch port, engine endpoint) sits in TIME_WAIT here for up to a
-minute, and outside loopback Linux refuses a connect on that exact pair —
-the re-punch's own SYNs then fail locally for that minute, and a call from
-the same port relies on the engine's SYN alone. Nothing here was measured
-on a phone.
-
-**Proved on the fake bench** (`ladder/tests/port.rs` and `rungs.rs`, whose
-engine can answer only the port the call named, as a NAT that punched
-toward it would): a second seat on the entry, opened after the first went
-away, re-punches from the port the first call named and writes no call; a
-re-punch after a dropped line is sent from that port and served, while a
-connect from any other port is dropped at the door; a network change binds
-a new port and the next call names it; a re-punched line that dies unserved
-sends the next climb to a fresh call. Beside them: a stream queued between
+**Proved on the fake bench** (`ladder/tests/port.rs`, whose engine can
+answer only the port the call named, as a NAT that punched toward it
+would): a second seat on the entry, opened after the first went away,
+climbs from the port the first call named; a network change binds a new
+port and the next call names it; a beside call names a port of its own and
+the entry keeps the landed one. Beside them: a stream queued between
 windows is dropped (`rendezvous/punch/tests.rs`), and an unserved stream
-gives up at the preface bound (`transport/tests.rs`).
+gives up at the preface bound (`transport/tests.rs`). Still unmeasured:
+whether a TIME_WAIT pair (punch port, engine endpoint) left by this end's
+own close refuses the next call's SYNs for its minute outside loopback.
 
-**The engine half has since landed** (yog bl-5276, engine 0.0.74): the
-engine serves every punched stream that lands on its listener, at any time,
-so a re-punch from the landed port is now served end to end rather than
-queued. The preface bound and the spent arm stay as guards.
-
-**What stayed unmeasured, and what the live dial then showed** (bl-c21d,
-four dials on a build carrying this section and §21.8, against engine
-0.0.74): rung 3 was never exercised in the foreground, for two reasons of
-this end's own. After HOME the held line died about five seconds later
-(bl-f677) and the ladder re-punched **in the background**, where the entry's
-name did not resolve and no bootstrap node did — so the arm was spent on a
-climb that could reach nothing, and the next foreground dial went straight to
-a call. And a concurrent ask beside the lent line wrote a call from a fresh
-port that then replaced the entry's. §21.10 closes both. Still unmeasured:
-the TIME_WAIT pair above, and whether a residential NAT's TCP mapping
-outlives a background gap of minutes.
-
-### 21.10 No climb while the process sleeps, and the return that re-punches (bl-c21d)
+### 21.10 No climb while the process sleeps, and the return (bl-c21d)
 
 **One predicate: is this process awake** (`ladder::Awake`). A roving
 ladder's caller parks on it before rung 1 — it drops nothing the ladder
@@ -6171,23 +6139,22 @@ the platform's fact, reported by the component the platform tells:
 An entry that does not rove has no ladder policy and is unchanged.
 
 **A wake after sleep is a return, and the first caller after one clears the
-rest and re-arms the re-punch** (`Ladder::wake`). The line the platform
-killed behind the app is evidence about the platform, not about the
-engine's mapping, so the first climb back leaves from the entry's port — the
-port whose call landed (§21.9) — at the cached endpoints, before any call.
-The 10 s preface bound stays the guard: a re-punch the engine does not serve
-costs that, then a call. Two lines say it: `parked — the app is not in the
+rest** (`Ladder::wake`). The failures the platform caused behind the app
+are evidence about the platform, not about the engine, so the first climb
+back does not rest; with the engine's presence cached it is a re-call — one
+call from the entry's port, the port whose call landed (§21.9), with no
+presence walk (§21.12). Two lines say it: `parked — the app is not in the
 foreground; nothing climbs` (once per sleep) and `back in the foreground —
-rest cleared, re-punch armed`.
+rest cleared, re-call armed` (or `presence to be read`, where nothing is
+cached). A climb already past the gate when the app leaves stops at its
+next rung boundary (§21.12).
 
 **Proved on the fake bench** (`ladder/tests/awake.rs`, `port.rs`): a
 backgrounded ask parks with the held line still held and nothing said but the
-park, and is served over that line on the return; after a re-punch was spent
-and the app went behind, the first ask back re-punches from the landed port —
-the only one the fake engine accepts — and writes no call; a beside call names
-a port of its own and the entry keeps the landed one; and the predicate's
-three reporters, alone and together. **Not yet re-verified live**: the return
-dial should move the engine's `/doctor` accepted count from 0 to 1.
+park, and is served over that line on the return; a beside call names a port
+of its own and the entry keeps the landed one; and the predicate's three
+reporters, alone and together. The return's re-call and the stop at HOME are
+§21.12's.
 
 ### 21.11 The network is the platform's fact, and the call names only its link (bl-792e)
 
@@ -6251,3 +6218,67 @@ report — it ends on its own read — and a climb whose punch window is open
 when the report lands finishes that window; with a VPN as the default
 network the report is the VPN's link, which the filter may leave empty, so
 the call then names only its observed address.
+
+### 21.12 Rung 3 is a re-call; parking stops a climb; an ask's line is waited for (bl-c00e)
+
+Measured 2026-09-29 on three wifi dials (engine 0.0.74, a build carrying
+§21.10): the return's re-punch left from exactly the landed port and could
+not land — the engine's home NAT holds no mapping once the served stream
+has ended (§21.9). The ruling is yog bl-278f's (yog REMOTE §13.3–§13.4, being
+amended to say it): **the rungs are held line → direct → re-call → full
+rendezvous.** Two drifts from bl-c21d rode with it.
+
+**The re-call** (`ladder::climb`). The engine's presence — its endpoints,
+its punch port among them — is cached on the entry (`entries::Port`) the
+moment a walk reads it. A climb that holds it writes a fresh call at those
+endpoints without reading the presence first — one DHT walk (the put's), not
+two, about 8 s cheaper — and punches from the entry's port, which the call
+names. **A call that expires unanswered drops the cache**, the one evidence
+that the engine may have moved, so the next climb reads the presence again;
+that climb is the next one, not a fall-through inside the same climb, since
+a call that expired usually means an engine that did not read it, and a
+second call behind it would double the wait for the same answer. The cache
+survives a network change (it is the engine's fact) and a beside dial uses
+it too, from its own port. The return's line says `re-call armed` when the
+cache holds a presence and `presence to be read` when it does not. **The
+held line with its 25 s pings is the only thing that keeps a NAT mapping
+alive** (ruling 2), so keeping it alive (bl-f677) is the real fast return;
+this rung is what a return costs when it was not kept.
+
+**Parking stops a climb in flight** (`Ladder::boundary`). Measured live, a
+climb already past the gate at HOME wrote its call in the background and
+landed there. The climb now asks `Awake` at each rung boundary — before the
+walk and before the call — and a process not awake stops it there with
+`climb stopped — the app left the foreground; no call written`. A call
+already written runs its punch window out, because the engine is punching
+toward it. The presence the stopped walk read stays cached, so the return is
+a re-call.
+
+**An ask's line is waited for; only a parked read's is given up on**
+(`ladder::gate`). Measured live, a concurrent ask climbed to a beside call
+while the entry's only line was out with another ask. The gate now tells
+the two apart: `transport::Seat::hold` — the lanes, the attention fetch —
+marks its lease parked (`Lease::park`, a change a waiter re-reads), and
+`Seat::ask` does not. A waiter behind a line out with an ask waits without a
+bound of the gate's own, since the ask ends inside its timeout and a dropped
+line is a change; the 10 s exit (`LENT`) runs only when every line out is a
+parked read's, and never while a dial is in flight. So a second ask climbs
+beside nothing it will be handed.
+
+**Proved on the fake bench**, whose engine accepts only the port a call
+named: a dropped line's next climb is one re-call from the landed port,
+with the commons' presence made unreadable first so a walk would have
+failed (`ladder/tests/rungs.rs`); a second seat on the entry re-calls from
+the first seat's port (`port.rs`); the return after the line died says
+`re-call armed` and writes exactly one call, no presence walk and no
+re-punch line (`awake.rs`); HOME during the presence walk writes no call,
+and the return is one re-call (`awake.rs`); a re-call that expires drops
+the cache and the next climb reads the engine's new home (`fallthrough.rs`);
+a caller behind an ask's line past three times `LENT` climbs nothing and is
+served over the line, and two asks on an idle entry are one climb and one
+call with the clock run past `LENT` mid-climb (`shared.rs`); the parked
+count in the gate alone (`gate/tests.rs`). **Not yet re-verified live**: a
+return on wifi should now say `re-call armed`, write one call and land.
+**Open**: a lane is marked parked for its whole life, so an ask behind a
+lane that happens to answer at once still waits its 10 s before climbing;
+the lane's line comes back first in practice.

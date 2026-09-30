@@ -1,103 +1,96 @@
-//! **The two rungs that cost seconds** (DESIGN §21.3): a re-punch at the
-//! RAM-cached endpoints, then the full rendezvous — split from `ladder` on
-//! the seam the backoff already draws, since only these two sit behind it.
+//! **The two rungs that cost seconds** (DESIGN §21.3, §21.9): a re-call
+//! from the cached presence, then the full rendezvous — split from `ladder`
+//! on the seam the backoff already draws, since only these two sit behind
+//! it.
 
-use super::entries::Port;
 use super::{Ladder, Rove, say};
 use crate::dht::{Dht, Udp};
 use crate::rendezvous::call;
 use crate::rendezvous::punch::Punch;
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
-use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 impl Ladder {
-    /// The two seconds-scale rungs: a re-punch at what worked last time,
-    /// then the full rendezvous, both from the entry's one port (`bound`):
-    /// the engine's NAT answers a re-punch only from the port the call it
-    /// punched named. `repunch` is false for a dial beside a line still out
-    /// (`gate::Dialling::beside`): the cached endpoints are the ones that
-    /// line was punched at, the engine punches a call's nonce once (yog
-    /// REMOTE §13.4, *already punched — no punch*), and so a second line
-    /// takes a fresh call or nothing — from a fresh port, because the line
-    /// still out holds the entry's port toward the engine's, and TCP carries
-    /// one connection per pair of ends. **That port is the beside call's
-    /// alone, and is forgotten** (bl-c21d): the entry's port stays the one
-    /// whose call landed, whose mapping the engine's NAT holds — replacing
-    /// it with the beside port was measured live leaving no later re-punch a
-    /// mapping to ride.
-    pub(super) fn climb(&self, rove: &Rove, repunch: bool) -> Result<TcpStream, String> {
-        let (punch, cached) = if repunch {
-            self.bound(rove)?
+    /// **One walk or two, then a call and a punch** (yog bl-278f). With the
+    /// engine's presence cached the climb is a **re-call**: it writes a
+    /// fresh call at the cached endpoints without reading the presence
+    /// first. Without it, the full rendezvous reads the presence, caches it,
+    /// and calls. Either way the call names the port the climb punches from,
+    /// because the engine punches a call once, toward the port it named, and
+    /// its NAT lets back nothing else — a punch with no call behind it is
+    /// one-sided, which is why the old re-punch rung is gone. A call that
+    /// expires unanswered drops the cached presence: the next climb reads it.
+    ///
+    /// The port is the entry's (`bound`), except for a dial `beside` a line
+    /// still out (`gate::Dialling::beside`): that line holds the entry's
+    /// port toward the engine's, and TCP carries one connection per pair of
+    /// ends, so a beside call names a fresh port of its own, which is
+    /// forgotten after its window (bl-c21d).
+    ///
+    /// **A climb stops at a rung boundary once the process is not awake**
+    /// (bl-c00e; `awake`): before the walk and before the call, so nothing is
+    /// written in the background. A punch whose call is already written runs
+    /// its window out — the engine is punching toward it.
+    pub(super) fn climb(&self, rove: &Rove, beside: bool) -> Result<TcpStream, String> {
+        let punch = if beside {
+            Arc::new(Punch::bind(0)?)
         } else {
-            (Arc::new(Punch::bind(0)?), Vec::new())
+            self.bound(rove)?
         };
-        if !cached.is_empty() {
-            self.voice.say(&say::repunch(&cached, rove.window));
-            if let Some(tcp) = self.landed(punch.punch(cached, rove.window), rove.window) {
-                return Ok(tcp);
-            }
-        }
+        self.boundary(rove)?;
         let mut dht = dht(rove).inspect_err(|e| self.voice.say(&say::no_commons(e)))?;
-        let (at, endpoints) = call::presence(&mut dht, &rove.pairing)
-            .inspect_err(|e| self.voice.say(&say::not_found(e)))?;
-        self.voice.say(&say::found(at, &endpoints));
-        let seq = self
-            .clock
-            .unix()
-            .max(self.last_seq.load(Ordering::Relaxed) + 1);
+        let cached = self.port.with(&mut |port| port.presence.clone());
+        let endpoints = if cached.is_empty() {
+            let (at, endpoints) = call::presence(&mut dht, &rove.pairing)
+                .inspect_err(|e| self.voice.say(&say::not_found(e)))?;
+            self.voice.say(&say::found(at, &endpoints));
+            self.port
+                .with(&mut |port| port.presence.clone_from(&endpoints));
+            endpoints
+        } else {
+            self.voice.say(&say::recall(&cached));
+            cached
+        };
+        self.boundary(rove)?;
+        let last = self.port.with(&mut |port| port.seq);
+        let seq = self.clock.unix().max(last + 1);
         // The addresses are read now, as the call names them — not at the
         // dial's start, a walk of the commons ago (bl-792e).
-        let (generation, mine) = self.notice(rove);
+        let (_, mine) = self.notice(rove);
         let called = call::call(&mut dht, &rove.pairing, seq, mine, punch.port())
             .inspect_err(|_| self.voice.say(&say::not_called()))?;
         self.voice.say(&say::called(&called, seq));
-        self.last_seq.store(seq, Ordering::Relaxed);
-        // The call named this punch's port, so these endpoints are worth
-        // re-punching from it — the pair is stored as one (`entries::Port`).
-        // A beside call's port is not the entry's, and is never stored.
-        if repunch {
-            self.port.with(&mut |port| {
-                *port = Some(Port {
-                    punch: Arc::clone(&punch),
-                    cached: endpoints.clone(),
-                    armed: true,
-                    generation,
-                });
-            });
-        }
+        self.port.with(&mut |port| port.seq = seq);
         self.voice.say(&say::punching(&endpoints, rove.window));
         self.landed(punch.punch(endpoints, rove.window), rove.window)
-            .ok_or_else(|| "the punch landed nothing inside its window".to_owned())
+            .ok_or_else(|| {
+                self.port.with(&mut |port| port.presence.clear());
+                "the punch landed nothing inside its window".to_owned()
+            })
+    }
+
+    /// A rung boundary: the climb goes on only while the process is awake.
+    fn boundary(&self, rove: &Rove) -> Result<(), String> {
+        if rove.awake.awake() {
+            return Ok(());
+        }
+        self.voice.say(&say::stopped());
+        Err("the climb stopped: the app left the foreground".to_owned())
     }
 
     /// The entry's punch port, bound on the first climb and kept for the
-    /// run (bl-97ed), with the endpoints to re-punch — the last call's, if
-    /// the re-punch is armed, and it is disarmed by being handed out
-    /// (`entries::Port`). A port bound here has no call behind it yet, so it
-    /// caches nothing; a port of another network generation is not the
+    /// run (bl-97ed); a port of another network generation is not the
     /// entry's any more, and is let go (`network`).
-    fn bound(&self, rove: &Rove) -> Result<(Arc<Punch>, Vec<SocketAddr>), String> {
+    fn bound(&self, rove: &Rove) -> Result<Arc<Punch>, String> {
         let generation = rove.network.generation();
         self.port.with(&mut |port| {
-            if let Some(port) = port.as_mut().filter(|p| p.generation == generation) {
-                let cached = if port.armed {
-                    port.cached.clone()
-                } else {
-                    Vec::new()
-                };
-                port.armed = false;
-                return Ok((Arc::clone(&port.punch), cached));
+            if let Some((punch, _)) = port.bound.as_ref().filter(|(_, g)| *g == generation) {
+                return Ok(Arc::clone(punch));
             }
             let punch = Arc::new(Punch::bind(0)?);
-            *port = Some(Port {
-                punch: Arc::clone(&punch),
-                cached: Vec::new(),
-                armed: false,
-                generation,
-            });
-            Ok((punch, Vec::new()))
+            port.bound = Some((Arc::clone(&punch), generation));
+            Ok(punch)
         })
     }
 

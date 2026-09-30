@@ -89,7 +89,11 @@ fn a_caller_waiting_on_a_line_that_is_dropped_dials_once() {
     drop((reading, hangup));
     drop(gate);
     assert_eq!(asking.join().unwrap().unwrap()[0]["n"], 2);
-    assert_eq!(call_seq(&node), clock.unix(), "the re-dial wrote no call");
+    assert_eq!(
+        call_seq(&node),
+        clock.unix() + 1,
+        "the re-dial was one re-call"
+    );
     drop(first);
     assert_eq!(
         served.join().unwrap().len(),
