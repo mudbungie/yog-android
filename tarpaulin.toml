@@ -327,6 +327,7 @@ exclude-files = [
     "src/shell/transcript.rs",
     "src/shell/update.rs",
     "src/shell/sys.rs",
+    "src/shell/sys/doors.rs",
     "src/shell/theme.rs",
     "src/shell/theme/anatomy.rs",
     "src/tools/bridged/door.rs",

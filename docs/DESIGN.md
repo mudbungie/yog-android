@@ -611,6 +611,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
 | `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
 | `src/ladder.rs` + `src/ladder/{rove,backoff,climb}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), the rest between failed climbs, and the two seconds-scale rungs behind it (`climb`, split at the cap) | landed (bl-3d62, split bl-2ba5) |
+| `src/ladder/awake.rs` | §21.10: whether this process may climb at all — the one predicate a roving ladder parks on (activity in front, pocket service holding, a job's run) — and the return that clears the rest and re-arms the re-punch | landed (bl-c21d) |
 | `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port with the endpoints its last call found (held for the run) | landed (bl-58a0, port bl-97ed) |
 | `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
 | `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
@@ -5837,7 +5838,9 @@ the RAM-cached engine endpoints**, no DHT round trip; **the full
 rendezvous** — read presence, write the call (a fresh 8-byte nonce, `seq`
 the clock's epoch second and always rising), punch. Both punch rungs leave
 from the entry's one port, bound for the run (§21.9). What worked is RAM for
-the process, never disk. An entry with no pairing has the old two-step: a
+the process, never disk. **Nothing climbs while the process sleeps** — a
+caller parks before rung 1 until the activity is in front or the platform
+holds the process for it (§21.10). An entry with no pairing has the old two-step: a
 plain connect, down to the same sentence.
 
 **The TLS is the same TLS whichever rung answered.** The ladder hands back a
@@ -5873,7 +5876,8 @@ back only when the engine's hold ends, up to thirty seconds, so a waiter that
 has watched lines out for **10 s** with no dial in flight dials its own —
 still one at a time, and **beside** the line still out: that dial skips the
 re-punch rung, whose cached endpoints are the ones the out line was punched
-at, and goes straight to a fresh call. The wait is on the injected clock
+at, and goes straight to a fresh call, from a port of its own that is
+forgotten after its window (§21.9). The wait is on the injected clock
 (`state::Watched`, the one lock a caller may wait on). An entry that does not
 rove has no gate and no table. The punch port and the endpoints its last
 call found are the entry's too, held for the run rather than weakly (§21.9).
@@ -6071,8 +6075,11 @@ things replace it, each forced:
 - **A dial beside a line still out** (§21.3, §21.8) binds a fresh port: the
   line out holds the entry's port toward the engine's one port, TCP carries
   one connection per pair of ends, and the engine would punch the new call
-  toward a pair already in use. Once that call is written, its port is the
-  entry's — the port the last call named.
+  toward a pair already in use. **That port is the beside call's alone and
+  is never stored** (bl-c21d). Until then, once its call was written it
+  became the entry's, and measured live the landed port was replaced by the
+  beside one, so no later re-punch had a mapping to ride: the entry's port is
+  the port whose call landed (or the first bound, until one lands).
 
 A climb whose re-punch misses writes its call from the same port.
 
@@ -6118,3 +6125,59 @@ sends the next climb to a fresh call. Beside them: a stream queued between
 windows is dropped (`rendezvous/punch/tests.rs`), and an unserved stream
 gives up at the preface bound (`transport/tests.rs`).
 
+**The engine half has since landed** (yog bl-5276, engine 0.0.74): the
+engine serves every punched stream that lands on its listener, at any time,
+so a re-punch from the landed port is now served end to end rather than
+queued. The preface bound and the spent arm stay as guards.
+
+**What stayed unmeasured, and what the live dial then showed** (bl-c21d,
+four dials on a build carrying this section and §21.8, against engine
+0.0.74): rung 3 was never exercised in the foreground, for two reasons of
+this end's own. After HOME the held line died about five seconds later
+(bl-f677) and the ladder re-punched **in the background**, where the entry's
+name did not resolve and no bootstrap node did — so the arm was spent on a
+climb that could reach nothing, and the next foreground dial went straight to
+a call. And a concurrent ask beside the lent line wrote a call from a fresh
+port that then replaced the entry's. §21.10 closes both. Still unmeasured:
+the TIME_WAIT pair above, and whether a residential NAT's TCP mapping
+outlives a background gap of minutes.
+
+### 21.10 No climb while the process sleeps, and the return that re-punches (bl-c21d)
+
+**One predicate: is this process awake** (`ladder::Awake`). A roving
+ladder's caller parks on it before rung 1 — it drops nothing the ladder
+holds and starts nothing — and wakes on the change, not on a poll. Awake is
+the platform's fact, reported by the component the platform tells:
+
+- **the activity is in front** — `MainActivity`'s resume and pause, through
+  `dev.yog.App` (the fact's existing home, which `open` already asks) and
+  the native `App.foreground`. A process nobody has told otherwise is awake:
+  the host suite, and a process a job or the service started.
+- **the pocket service holds the process** — `dev.yog.Pocket` reports its
+  hold and its end through `App.pocketed`. A foreground service is above the
+  network threshold (§18.6), and the foot and the attention lane are exactly
+  the climbs a pocketed phone makes. If bl-f677 rules for a foreground
+  service that keeps the seat's line, it reports here and nothing else moves.
+- **a job is running** — the scheduled fetch (§17) takes a `Hold` for its
+  one run; the platform grants a job its network.
+
+An entry that does not rove has no ladder policy and is unchanged.
+
+**A wake after sleep is a return, and the first caller after one clears the
+rest and re-arms the re-punch** (`Ladder::wake`). The line the platform
+killed behind the app is evidence about the platform, not about the
+engine's mapping, so the first climb back leaves from the entry's port — the
+port whose call landed (§21.9) — at the cached endpoints, before any call.
+The 10 s preface bound stays the guard: a re-punch the engine does not serve
+costs that, then a call. Two lines say it: `parked — the app is not in the
+foreground; nothing climbs` (once per sleep) and `back in the foreground —
+rest cleared, re-punch armed`.
+
+**Proved on the fake bench** (`ladder/tests/awake.rs`, `port.rs`): a
+backgrounded ask parks with the held line still held and nothing said but the
+park, and is served over that line on the return; after a re-punch was spent
+and the app went behind, the first ask back re-punches from the landed port —
+the only one the fake engine accepts — and writes no call; a beside call names
+a port of its own and the entry keeps the landed one; and the predicate's
+three reporters, alone and together. **Not yet re-verified live**: the return
+dial should move the engine's `/doctor` accepted count from 0 to 1.

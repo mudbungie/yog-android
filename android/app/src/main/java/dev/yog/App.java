@@ -54,9 +54,26 @@ public final class App {
         app = activity.getApplicationContext();
     }
 
+    /**
+     * Whether a roving ladder may climb, as far as the screen goes (bl-c21d):
+     * a backgrounded app has no DNS and no path, so a climb there spends the
+     * re-punch on nothing. Decided in Rust ({@code ladder::Awake}), beside
+     * the pocket service's own report.
+     */
+    private static native void foreground(boolean front);
+
+    /**
+     * {@link Pocket} started (or stopped) holding the process in the
+     * foreground — above the platform's network threshold, so the foot and
+     * the lane may climb while the activity is behind (bl-c21d). Decided in
+     * Rust beside {@link #foreground}.
+     */
+    static native void pocketed(boolean holding);
+
     /** This app is what the operator is looking at. */
     static void resumed(Activity activity) {
         front = activity;
+        foreground(true);
     }
 
     /**
@@ -66,6 +83,7 @@ public final class App {
     static void paused(Activity activity) {
         if (front == activity) {
             front = null;
+            foreground(false);
         }
     }
 

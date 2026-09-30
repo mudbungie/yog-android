@@ -29,7 +29,8 @@ Machine-enforced by ast-grep (`rules/*.yml`), the manifest (`Cargo.toml
    Enforced: `rules/no-pub-borrow-return.yml`.
 3. **`unsafe` is confined, not forbidden** (relaxed from `forbid` under
    bl-c761, yog's precedent): every `unsafe` block, fn or attribute lives in
-   `src/shell/sys.rs`, where the soundness arguments are written — the
+   `src/shell/sys.rs` (and its child `sys/doors.rs`, the plain `Java_*`
+   exports split at the cap), where the soundness arguments are written — the
    `unsafe(no_mangle)` entry symbol, the pre-boot `WGPU_BACKEND` env fold,
    and the JNI handle conversions. The rule's `ignores` list is the one
    location authority — add a site to sys.rs rather than widening it.

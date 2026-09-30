@@ -1,10 +1,12 @@
 //! What a roving entry climbs with, and the clock it climbs on — split from
 //! the ladder so the rungs are the policy and this is only its inputs.
 
+use super::Awake;
 use super::say::{self, Say};
 use crate::dht::Config;
 use crate::rendezvous::{Pairing, punch};
 use std::net::IpAddr;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 /// Time, injected — so the silence bound and the backoff walk in a test
@@ -44,6 +46,9 @@ pub struct Rove {
     /// Where the rungs' lines go (`ladder::say`); the device's is
     /// [`say::logcat`], the suite's a sink it reads back.
     pub say: Say,
+    /// Whether the process may climb now (`ladder::awake`); the device's is
+    /// [`Awake::process`], the suite's one it toggles.
+    pub awake: Arc<Awake>,
 }
 
 /// The engine reads its inbox every fifteen seconds and punches for twenty
@@ -72,6 +77,7 @@ impl Rove {
             window: WINDOW,
             addresses: punch::local_ips,
             say: say::logcat(),
+            awake: Awake::process(),
         }
     }
 }

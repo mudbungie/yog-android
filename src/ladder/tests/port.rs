@@ -126,3 +126,51 @@ fn a_re_punched_line_that_dies_unserved_spends_the_cache_and_the_next_climb_call
     drop(seat);
     assert_eq!(served.join().unwrap().len(), 3);
 }
+
+/// A dial beside a line still out names its own fresh port for its own
+/// window, and is forgotten (bl-c21d): the entry's port stays the one whose
+/// call landed, whose mapping the engine's NAT holds.
+#[test]
+fn a_beside_call_does_not_change_the_entrys_port() {
+    let _serial = serial();
+    let dir = pki();
+    let (gate, open) = std::sync::mpsc::channel::<()>();
+    let (address, served) = serve_held(
+        &dir,
+        "ca",
+        "server",
+        vec![vec![Beat::Gate(open)], vec![Beat::Answer(reply(2))]],
+    );
+    let node = commons(vec![address.parse().unwrap()]);
+    let clock = FakeClock::new();
+    let (seat, heard) = super::said::heard_seat(&dir, &node, clock.clone());
+    let seat = Arc::new(seat);
+    let ladder = entry(
+        closed(),
+        Some(rove(vec![node.addr.to_string()])),
+        clock.clone(),
+    );
+    let (reading, hangup) = seat.hold(&serde_json::json!({ "op": "a" })).unwrap();
+    let landed = punch_of(&ladder);
+    heard.take();
+    let asking = Arc::clone(&seat);
+    let beside = std::thread::spawn(move || asking.ask(&serde_json::json!({ "op": "b" })));
+    std::thread::sleep(Duration::from_millis(400));
+    clock.advance(gate::LENT);
+    assert!(heard.wait("punch landed"), "a second line landed");
+    hangup.hang_up();
+    drop((reading, hangup, gate));
+    assert_eq!(beside.join().unwrap().unwrap()[0]["n"], 2);
+    let (_, call) = called(&node);
+    assert_ne!(
+        call.endpoints[0].port(),
+        landed.port(),
+        "the beside call named its own"
+    );
+    assert!(
+        Arc::ptr_eq(&punch_of(&ladder), &landed),
+        "the entry kept the landed port"
+    );
+    drop((seat, ladder));
+    assert_eq!(served.join().unwrap().len(), 2);
+}

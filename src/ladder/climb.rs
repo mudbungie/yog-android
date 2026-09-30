@@ -22,8 +22,11 @@ impl Ladder {
     /// REMOTE §13.4, *already punched — no punch*), and so a second line
     /// takes a fresh call or nothing — from a fresh port, because the line
     /// still out holds the entry's port toward the engine's, and TCP carries
-    /// one connection per pair of ends. The fresh port is the entry's once
-    /// its call is written: the port the last call named.
+    /// one connection per pair of ends. **That port is the beside call's
+    /// alone, and is forgotten** (bl-c21d): the entry's port stays the one
+    /// whose call landed, whose mapping the engine's NAT holds — replacing
+    /// it with the beside port was measured live leaving no later re-punch a
+    /// mapping to ride.
     pub(super) fn climb(
         &self,
         rove: &Rove,
@@ -55,13 +58,16 @@ impl Ladder {
         self.last_seq.store(seq, Ordering::Relaxed);
         // The call named this punch's port, so these endpoints are worth
         // re-punching from it — the pair is stored as one (`entries::Port`).
-        self.port.with(&mut |port| {
-            *port = Some(Port {
-                punch: Arc::clone(&punch),
-                cached: endpoints.clone(),
-                armed: true,
+        // A beside call's port is not the entry's, and is never stored.
+        if repunch {
+            self.port.with(&mut |port| {
+                *port = Some(Port {
+                    punch: Arc::clone(&punch),
+                    cached: endpoints.clone(),
+                    armed: true,
+                });
             });
-        });
+        }
         self.voice.say(&say::punching(&endpoints, rove.window));
         self.landed(punch.punch(endpoints, rove.window), rove.window)
             .ok_or_else(|| "the punch landed nothing inside its window".to_owned())

@@ -1,8 +1,9 @@
 //! The crate's ONE `unsafe` location (AGENTS.md rule 3, relaxed from
 //! `forbid` under bl-c761; `rules/unsafe-outside-sys.yml` is the
-//! enforcement, and its `ignores` list names exactly this file). Five raw
-//! effects live here, all at the process edge, and their soundness arguments
-//! are the file's:
+//! enforcement, and its `ignores` list names exactly this module — this file
+//! and `sys/doors.rs`, the plain Java-calls-Rust doors split from it at the
+//! cap). The raw effects live here, all at the process edge, and their
+//! soundness arguments are this header's:
 //!
 //! * **`android_main`** — the entry android-activity's native glue resolves
 //!   by symbol name once the Activity is up. `unsafe(no_mangle)` asserts the
@@ -34,6 +35,11 @@
 //!   requires be leaked. Both arguments are checked, both outlive every use,
 //!   and the write happens only where nobody has written — the argument is
 //!   `handed`'s own.
+//! * **`Java_dev_yog_App_foreground` and `Java_dev_yog_App_pocketed`** — the
+//!   lifecycle's two reports into `ladder::Awake` (bl-c21d, DESIGN §21.10):
+//!   the activity resumed or paused, the pocket service started or stopped
+//!   holding the process. The same direction and the same naming argument;
+//!   each is one boolean in and nothing out.
 //! * **the `WGPU_BACKEND` fold** — `std::env::set_var` is unsafe in edition
 //!   2024 because a concurrent `getenv` is UB. Here it runs first, on the
 //!   main thread, before eframe boots and before any thread this process
@@ -53,6 +59,8 @@
 
 use winit::platform::android::activity::AndroidApp;
 
+mod doors;
+
 /// The process entry. Everything after the env fold is safe code in
 /// `app::run`; nothing else in the crate runs before this.
 #[unsafe(no_mangle)]
@@ -61,98 +69,6 @@ extern "Rust" fn android_main(app: AndroidApp) {
     // getenv exists yet (the whole argument is this file's doc header).
     unsafe { std::env::set_var("WGPU_BACKEND", "gles") };
     super::app::run(app);
-}
-
-/// **The scheduled fetch, called from the platform's job** (DESIGN §17;
-/// `dev.yog.Watch`). The direction is Java-calls-Rust and not the bridges'
-/// Rust-calls-Java, because a job may start this process with no Activity
-/// ever created — `ndk_context`'s globals are filled by android-activity on
-/// the way to [`android_main`], so a bridge asking the JVM for a class would
-/// be reading a handle nothing had written.
-///
-/// Two lines out, the answer protocol this crate already speaks: the title,
-/// then the line under it. An empty string is silence, which is every failure
-/// and every run that found nothing new — the decision is
-/// [`crate::attention::sweep`]'s and is tested on the host.
-#[unsafe(no_mangle)]
-extern "system" fn Java_dev_yog_Watch_probe(
-    mut env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    dir: jni::objects::JString<'_>,
-) -> jni::sys::jstring {
-    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
-    let said = crate::attention::sweep(std::path::Path::new(&files))
-        .map(|notice| format!("{}\n{}", notice.title, notice.text))
-        .unwrap_or_default();
-    env.new_string(said)
-        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
-}
-
-/// **The pocketed foot's standing line, called from the foreground service**
-/// (DESIGN §18; `dev.yog.Pocket`). Java-calls-Rust for the fetch's reason: the
-/// service is asking about the process, not about a screen, and it may be
-/// asking while nothing is in front.
-///
-/// The same two-line protocol, and the same meaning for an empty answer —
-/// **nothing here to hold**, which is the service's whole stop condition. The
-/// decision is [`crate::pocket::line`]'s and is tested on the host; the state
-/// it reads is the process's one host ([`crate::state::standing`]).
-#[unsafe(no_mangle)]
-extern "system" fn Java_dev_yog_Pocket_standing(
-    mut env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    dir: jni::objects::JString<'_>,
-) -> jni::sys::jstring {
-    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
-    let said = crate::pocket::line(std::path::Path::new(&files), crate::state::standing())
-        .map(|notice| format!("{}\n{}", notice.title, notice.text))
-        .unwrap_or_default();
-    env.new_string(said)
-        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
-}
-
-/// **Whether there is an attention lane to hold** (DESIGN §17.6; yog REMOTE
-/// §14 rung 2), asked by the same service. The two-line protocol again, and
-/// an empty answer means what it means everywhere here: nothing to hold.
-///
-/// The decision is [`crate::pocket::attending`]'s — is this device a seat —
-/// and the two operator gates beside it are Android's own facts, read in
-/// `dev.yog.Pocket` where the platform keeps them.
-#[unsafe(no_mangle)]
-extern "system" fn Java_dev_yog_Lane_attending(
-    mut env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    dir: jni::objects::JString<'_>,
-) -> jni::sys::jstring {
-    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
-    let said = crate::pocket::attending(std::path::Path::new(&files))
-        .map(|notice| format!("{}\n{}", notice.title, notice.text))
-        .unwrap_or_default();
-    env.new_string(said)
-        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
-}
-
-/// **One life of the held attention lane** (DESIGN §17.6): dial, hold, and
-/// answer the first rise the engine writes. It BLOCKS — up to the engine's own
-/// hold — which is what a held read is, and the caller is a thread the service
-/// made to park in it.
-///
-/// The same two-line answer, and an empty one is silence: the hold ended with
-/// nothing new, or nothing this end could use. The decision is
-/// [`crate::attention::wake`]'s and is tested on the host against a real
-/// server.
-#[unsafe(no_mangle)]
-extern "system" fn Java_dev_yog_Lane_wake(
-    mut env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    dir: jni::objects::JString<'_>,
-) -> jni::sys::jstring {
-    let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
-    let said = crate::attention::wake(std::path::Path::new(&files))
-        .map(|notice| format!("{}\n{}", notice.title, notice.text))
-        .unwrap_or_default();
-    env.new_string(said)
-        .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
 }
 
 /// **Take the tool host up in a process no Activity ever created** (DESIGN

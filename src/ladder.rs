@@ -37,6 +37,7 @@
 //! verifying the same engine name off the same `address`, and the engine
 //! reads the same leaf. §4 is untouched.
 
+mod awake;
 mod backoff;
 mod climb;
 mod entries;
@@ -45,6 +46,7 @@ pub mod held;
 mod rove;
 pub mod say;
 
+pub use awake::{Awake, Hold};
 pub(crate) use entries::ladder as entry;
 pub use gate::Lease;
 pub use held::Held;
@@ -57,7 +59,7 @@ use gate::{Gate, Turn};
 use say::Voice;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
-use std::sync::atomic::AtomicI64;
+use std::sync::atomic::{AtomicI64, AtomicU64};
 use std::time::Duration;
 
 /// How long a direct dial is given before the ladder moves on. Only spent
@@ -88,6 +90,8 @@ pub struct Ladder {
     held: held::Pool,
     gate: Arc<Gate>,
     last_seq: AtomicI64,
+    /// The process's returns this ladder has seen (`awake`).
+    returns: AtomicU64,
     /// What the rungs say (`say`): the rove's sink, or nothing.
     voice: Voice,
 }
@@ -108,6 +112,7 @@ impl Ladder {
         let sink = rove
             .as_ref()
             .map_or_else(say::quiet, |r| Arc::clone(&r.say));
+        let returns = rove.as_ref().map_or(0, |r| r.awake.returns());
         Ladder {
             address,
             rove,
@@ -118,6 +123,7 @@ impl Ladder {
             held: held::Pool::new(),
             gate: Gate::new(),
             last_seq: AtomicI64::new(0),
+            returns: AtomicU64::new(returns),
             voice: Voice::new(sink),
         }
     }
@@ -130,6 +136,8 @@ impl Ladder {
                 .map_err(|e| format!("connect {}: {e}", self.address))?;
             return Ok(Conn::Dialled(tcp));
         };
+        // Nothing climbs while the process sleeps (`awake`, bl-c21d).
+        self.wake(rove);
         let mine = (rove.addresses)();
         self.notice_network(&mine);
         // Rung 1, then the gate: a caller that is not the one dialling looks

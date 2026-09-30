@@ -21,6 +21,7 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
+mod awake;
 mod entry;
 mod fallthrough;
 mod held;
@@ -107,6 +108,7 @@ fn rove(bootstrap: Vec<String>) -> Rove {
         window: Duration::from_secs(2),
         addresses,
         say: say::quiet(),
+        awake: Awake::new(),
     }
 }
 
@@ -232,6 +234,7 @@ fn the_mainline_shape_is_the_engines() {
     assert_eq!(r.window, Duration::from_secs(35));
     assert!((r.addresses)().iter().all(|ip| !ip.is_loopback()));
     assert_eq!(r.config.k, 8);
+    assert!(Arc::ptr_eq(&r.awake, &Awake::process()));
     assert!(SystemClock.unix() > 1_700_000_000);
     assert!(SystemClock.now() <= Instant::now());
 }

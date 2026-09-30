@@ -132,6 +132,14 @@ pub(crate) fn resting() -> String {
     format!("{MARKER}: climb skipped — resting after the last failed climb")
 }
 
+pub(crate) fn parked() -> String {
+    format!("{MARKER}: parked — the app is not in the foreground; nothing climbs")
+}
+
+pub(crate) fn returned() -> String {
+    format!("{MARKER}: back in the foreground — rest cleared, re-punch armed")
+}
+
 pub(crate) fn moved(mine: &[IpAddr], held: usize) -> String {
     format!(
         "{MARKER}: network changed — this box now sends from {}; {held} held stream(s) dropped, rest cleared",
