@@ -3,7 +3,8 @@
 
 use super::*;
 use crate::rendezvous::item::Call;
-use crate::test_support::{Beat, serve_held};
+use crate::test_support::{Beat, serve_from, serve_held};
+use std::sync::atomic::AtomicU16;
 
 #[test]
 fn a_dark_address_rendezvouses_punches_and_holds_the_stream_for_the_next_ask() {
@@ -58,11 +59,16 @@ fn a_dark_address_rendezvouses_punches_and_holds_the_stream_for_the_next_ask() {
     );
 }
 
+/// The re-punch rides the engine's NAT mapping (bl-97ed): the fake engine
+/// answers only a stream from the port the call named once the first line
+/// is up, as a NAT that punched toward that port does — so a re-punch from
+/// any other port is dropped at its door, and this one is served.
 #[test]
-fn a_dropped_stream_re_punches_at_the_cached_endpoints_without_a_walk() {
+fn a_dropped_stream_re_punches_from_the_port_the_call_named_without_a_walk() {
     let _serial = serial();
     let dir = pki();
-    let (address, served) = serve_held(
+    let only = Arc::new(AtomicU16::new(0));
+    let (address, served) = serve_from(
         &dir,
         "ca",
         "server",
@@ -70,6 +76,7 @@ fn a_dropped_stream_re_punches_at_the_cached_endpoints_without_a_walk() {
             vec![Beat::Answer(reply(1)), Beat::Hangup],
             vec![Beat::Answer(reply(2))],
         ],
+        Arc::clone(&only),
     );
     let node = commons(vec![address.parse().unwrap()]);
     let seat = seat(&dir, &node, FakeClock::new());
@@ -78,6 +85,9 @@ fn a_dropped_stream_re_punches_at_the_cached_endpoints_without_a_walk() {
             .unwrap()[0]["n"],
         1
     );
+    only.store(called(&node).1.endpoints[0].port(), Ordering::Relaxed);
+    // A SYN from any other port is dropped at the door, unserved.
+    drop(std::net::TcpStream::connect(&address).unwrap());
     assert!(
         until(&mut || seat.held() == 0, WAIT),
         "the engine hung up, and the holder noticed"

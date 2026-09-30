@@ -4,8 +4,8 @@
 use super::*;
 use crate::test_support::{Beat, serve_held};
 
-/// The engine moved while this device was away (DESIGN §21.3): the network
-/// changed, the held stream is gone, the cached endpoint answers nothing —
+/// The engine moved while this device was away (DESIGN §21.3): the held
+/// stream is gone, the cached endpoint answers nothing —
 /// and the climb falls through the re-punch to a full rendezvous, which
 /// reads the engine's newer presence and lands there.
 #[test]
@@ -38,7 +38,6 @@ fn a_cache_that_misses_falls_through_to_a_rendezvous_at_the_engines_new_home() {
     let mut dht = Dht::new(Box::new(udp), vec![node.addr], rove(vec![]).config).unwrap();
     dht.put(engine.sign(pairing.presence_salt(), 2, moved).unwrap())
         .unwrap();
-    flap();
     assert_eq!(
         seat.ask(&serde_json::json!({ "op": "b" })).unwrap()[0]["n"],
         2

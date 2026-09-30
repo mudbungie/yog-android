@@ -99,3 +99,22 @@ fn the_box_advertises_no_loopback() {
     assert!(ips.len() <= 2);
     assert!(ips.iter().all(|ip| !ip.is_loopback()));
 }
+
+/// The port is held for the run (bl-97ed), so a SYN can land between two
+/// windows — a late answer to a dial that gave up. The next window opens by
+/// dropping it: it belongs to no dial this end is making.
+#[test]
+fn a_stream_queued_between_windows_is_dropped_when_the_next_opens() {
+    let punch = Punch::bind(0).expect("bind");
+    let mut late = std::net::TcpStream::connect(loopback(punch.port())).expect("queued");
+    assert!(
+        punch.punch(vec![], Duration::from_millis(200)).is_none(),
+        "the queued stream was not handed back"
+    );
+    let mut byte = [0u8; 1];
+    assert_eq!(
+        late.read(&mut byte).expect("closed"),
+        0,
+        "and it was closed"
+    );
+}

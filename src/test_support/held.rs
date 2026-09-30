@@ -9,6 +9,7 @@ use rustls::{ServerConnection, StreamOwned};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::mpsc::Receiver;
 use std::thread::JoinHandle;
 
@@ -36,13 +37,33 @@ pub fn serve_held(
     leaf: &str,
     scripts: Vec<Vec<Beat>>,
 ) -> (String, JoinHandle<Vec<Vec<Vec<u8>>>>) {
+    serve_from(dir, ca, leaf, scripts, Arc::new(AtomicU16::new(0)))
+}
+
+/// [`serve_held`], answering only a stream from the port `only` holds when
+/// it is accepted — `0` for any. The engine's NAT, modelled (bl-97ed): a
+/// punch lets back exactly the port the call it punched named, and a SYN
+/// from any other port is dropped at the door.
+pub fn serve_from(
+    dir: &Path,
+    ca: &str,
+    leaf: &str,
+    scripts: Vec<Vec<Beat>>,
+    only: Arc<AtomicU16>,
+) -> (String, JoinHandle<Vec<Vec<Vec<u8>>>>) {
     let config = super::serve::config(dir, ca, leaf);
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let address = format!("127.0.0.1:{}", listener.local_addr().unwrap().port());
     let handle = std::thread::spawn(move || {
         let mut all = Vec::new();
         for beats in scripts {
-            let (tcp, _) = listener.accept().unwrap();
+            let tcp = loop {
+                let (tcp, peer) = listener.accept().unwrap();
+                let only = only.load(Ordering::Relaxed);
+                if only == 0 || peer.port() == only {
+                    break tcp;
+                }
+            };
             let conn = ServerConnection::new(Arc::clone(&config)).unwrap();
             let mut tls = StreamOwned::new(conn, tcp);
             let preface = format!("{{\"protocol\":{}}}", crate::hello::PROTOCOL);

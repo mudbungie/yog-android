@@ -39,8 +39,9 @@ What follows from that, and is invariant:
   added to the boundary, upstream in yog — never invented here.
 - **The client is always the asker** (REMOTE §3, the routing ruling). No
   listening socket on the phone but one: the punch port of §21.4, which
-  exists only on an entry that roves, only for one climb, and accepts only
-  inside the window this device opened by calling its engine. The seat
+  exists only on an entry that roves, is bound once per entry for the run
+  (§21.9), and accepts only inside a window this device opened by calling
+  its engine. The seat
   still polls.
 - **Bootstrap rides existing trust, never the new device's own connection**
   (REMOTE §1.4, widened by bl-ae9d — §5). The app carries no enrollment,
@@ -610,6 +611,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
 | `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
 | `src/ladder.rs` + `src/ladder/{rove,backoff,climb}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), the rest between failed climbs, and the two seconds-scale rungs behind it (`climb`, split at the cap) | landed (bl-3d62, split bl-2ba5) |
+| `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port with the endpoints its last call found (held for the run) | landed (bl-58a0, port bl-97ed) |
 | `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
 | `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
 | `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle — and the hand-back of a punched stream whose answer ended clean (split from `transport.rs`, §21.5) | landed (bl-3d62) |
@@ -5833,7 +5835,8 @@ Every dial climbs `ladder::Ladder`, cheapest first: **a live held stream;
 the entry's direct `address`** (5 s per resolved address); **a re-punch at
 the RAM-cached engine endpoints**, no DHT round trip; **the full
 rendezvous** — read presence, write the call (a fresh 8-byte nonce, `seq`
-the clock's epoch second and always rising), punch. What worked is RAM for
+the clock's epoch second and always rising), punch. Both punch rungs leave
+from the entry's one port, bound for the run (§21.9). What worked is RAM for
 the process, never disk. An entry with no pairing has the old two-step: a
 plain connect, down to the same sentence.
 
@@ -5872,17 +5875,17 @@ still one at a time, and **beside** the line still out: that dial skips the
 re-punch rung, whose cached endpoints are the ones the out line was punched
 at, and goes straight to a fresh call. The wait is on the injected clock
 (`state::Watched`, the one lock a caller may wait on). An entry that does not
-rove has no gate and no table. **Not done here:** the punch port is still
-bound per climb rather than once per entry for the run (lernie's shape), so
-an engine that reads a call late can still punch the port of a dial that
-already gave up.
+rove has no gate and no table. The punch port and the endpoints its last
+call found are the entry's too, held for the run rather than weakly (§21.9).
 
 **A network change is the addresses moving.** Every dial reads the addresses
 this box would send from (`punch::local_ips`, a UDP "connect" that sends
 nothing) — the same list the call names — and a set that differs from the
-last dial's drops every held stream (dead mappings) and clears the backoff.
-The cache stays, so the next dial re-punches at the engine's last endpoints
-first and rendezvouses afresh only if that misses. No platform callback is
+last dial's drops every held stream (dead mappings), clears the backoff,
+and lets the punch port go with the endpoints cached beside it: the
+engine's NAT holds a mapping toward the address and port the last call
+named, and this box no longer sends from that address, so the next dial
+binds afresh and writes a call (§21.9). No platform callback is
 needed: the routing table is the one source, and a flap back to the same
 address is caught by the held stream's own reader instead.
 
@@ -5913,8 +5916,11 @@ crate, under the operator's 2026-09-23 ruling (REMOTE §13.7 ruling 1). The
 window is **35 s**, not the engine's 20: the engine polls its inbox every
 15 s and punches for 20 after, so a client that stopped at 20 would miss a
 late poll entirely — thrall's figure, a default to revisit on evidence. This
-listener is the one exception to §1's no-listening-socket rule, and it exists
-only for the length of one climb.
+listener is the one exception to §1's no-listening-socket rule. It is bound
+once per entry for the run (§21.9) and accepts only inside a window: a
+stream the kernel queued between windows — an engine that read a call late
+and punched after this end gave up — is dropped unread when the next
+window opens.
 
 ### 21.5 Held streams
 
@@ -6032,10 +6038,83 @@ a parked read wants a *second* line; the engine punches a call's nonce once,
 toward the port that call named, so a re-punch at the first line's endpoints
 from a fresh port could never be answered. That dial writes a fresh call.
 
-**Not done here, and stated:** the re-punch rung itself cannot land against
-this engine at all while the punch port is bound per climb — the engine
-listens only inside the window of a new call, and punches that call's port,
-never the fresh one a re-punch binds (bl-97ed carries it). And a
-lane hung up *mid-hold* — the focus moving — still shuts down its punched
-line; the next ask then climbs to a fresh call.
+**Not done here, and stated:** a lane hung up *mid-hold* — the focus
+moving — still shuts down its punched line; the next ask then climbs to a
+fresh call. The re-punch rung's port was bl-97ed's (§21.9).
+
+### 21.9 The punch port, bound once per entry for the run (bl-97ed)
+
+**The ruling** (operator, on bl-97ed): bind the punch port once per entry
+for the life of the process, as lernie (`Worked::punch`) and thrall do, and
+keep rung 3. Until this, rung 3 bound a fresh port per climb and wrote no
+call, and live every re-punch expired after 35 s (§21.8).
+
+**The reasoning, checked against yog REMOTE §13.3 and the engine's
+`wire/rendezvous`.** The engine punches only on a new call, from its one
+port held for its run, toward the endpoints and the port that call named —
+so its NAT then holds a mapping toward exactly (this box's address, that
+port). A re-punch from the same port rides that mapping while it lives
+(residential NAT TCP mappings last minutes, and a held line's pings keep it
+up while the line is); a re-punch from a fresh port meets a NAT that has no
+mapping for it. Rung 3 is viable only with a stable port, and so **the
+cached endpoints are paired with the port the call named**:
+`ladder::entries::Port` holds the `Punch` and the endpoints as one value.
+
+**Where it lives.** The entry table (`ladder::entries`) holds each roving
+entry's `Port` strongly, beside its weakly held ladder, so the port
+survives across climbs and across seats: a ladder that goes away with its
+last seat leaves the port, and the next seat's ladder climbs from it. Two
+things replace it, each forced:
+
+- **A network change** (§21.3) drops it: the mapping names an address this
+  box no longer sends from. The next climb binds and calls afresh.
+- **A dial beside a line still out** (§21.3, §21.8) binds a fresh port: the
+  line out holds the entry's port toward the engine's one port, TCP carries
+  one connection per pair of ends, and the engine would punch the new call
+  toward a pair already in use. Once that call is written, its port is the
+  entry's — the port the last call named.
+
+A climb whose re-punch misses writes its call from the same port.
+
+**What the re-punch cannot do against today's engine, and the two guards
+that follow.** The engine's punch listeners are held for its run, but it
+calls `accept` only inside a new call's window. Its kernel still completes
+the handshake of any SYN the mapping lets in, so from this end a re-punch
+*lands* — and the stream then sits in the engine's accept queue, unread,
+until the engine's next call. So the stable port is **necessary, not
+sufficient**: rung 3 serves end to end only once the engine serves its
+punch listeners outside a call's window (an engine-side change, not made
+here). Unguarded, that dead end is worse than the 35 s expiry it replaces —
+a two-minute ask timeout per redial, and a cache re-punched forever — so:
+
+- **A fresh socket is given 10 s for the engine's preface** (`transport`,
+  `PREFACE`), not the ask's two minutes: an engine that accepted a stream
+  writes its preface at once, and one that never accepted it never will.
+  The handshake is driven by the first write, so the bound fires as a
+  channel failure with nothing of the act in doubt.
+- **A re-punch is spent by trying it** (`Port::armed`): trying it disarms
+  it, a punched line served and kept re-arms it, a call written arms it.
+  A re-punched line that dies before it serves therefore sends the next
+  climb to a fresh call, instead of every redial re-punching into the same
+  queue.
+
+Against today's engine a dropped line so costs one landed-but-unserved
+re-punch and its 10 s bound, then a call — less than the 35 s expiry it
+cost before. **Stated, unmeasured:** where this end closed the last line,
+the pair (punch port, engine endpoint) sits in TIME_WAIT here for up to a
+minute, and outside loopback Linux refuses a connect on that exact pair —
+the re-punch's own SYNs then fail locally for that minute, and a call from
+the same port relies on the engine's SYN alone. Nothing here was measured
+on a phone.
+
+**Proved on the fake bench** (`ladder/tests/port.rs` and `rungs.rs`, whose
+engine can answer only the port the call named, as a NAT that punched
+toward it would): a second seat on the entry, opened after the first went
+away, re-punches from the port the first call named and writes no call; a
+re-punch after a dropped line is sent from that port and served, while a
+connect from any other port is dropped at the door; a network change binds
+a new port and the next call names it; a re-punched line that dies unserved
+sends the next climb to a fresh call. Beside them: a stream queued between
+windows is dropped (`rendezvous/punch/tests.rs`), and an unserved stream
+gives up at the preface bound (`transport/tests.rs`).
 

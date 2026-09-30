@@ -15,7 +15,7 @@ use crate::rendezvous::Pairing;
 use crate::rendezvous::item::Presence;
 use crate::test_support::{FakeClock, material, mint_ca, mint_leaf, scratch, until};
 use crate::transport::Seat;
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Mutex, MutexGuard};
@@ -24,6 +24,7 @@ use std::time::{Duration, Instant};
 mod entry;
 mod fallthrough;
 mod held;
+mod port;
 mod rungs;
 mod said;
 mod shared;
@@ -154,6 +155,23 @@ fn pki() -> PathBuf {
 fn seat(dir: &std::path::Path, node: &Commons, clock: Arc<FakeClock>) -> Seat {
     let m = material(dir, "ca", "client", &closed());
     Seat::open_with(&m, Some(rove(vec![node.addr.to_string()])), clock).unwrap()
+}
+
+/// The newest call on `node`'s commons, opened under the pairing, and its
+/// `seq` — what the engine's poll reads.
+fn called(node: &Commons) -> (i64, crate::rendezvous::item::Call) {
+    let pairing = pairing().1;
+    let udp = crate::dht::Udp::bind("127.0.0.1:0".parse().unwrap()).unwrap();
+    let mut dht = Dht::new(Box::new(udp), vec![node.addr], rove(vec![]).config).unwrap();
+    let item = dht
+        .get(
+            pairing.inbox_keypair().unwrap().public(),
+            pairing.inbox_salt(),
+        )
+        .unwrap()
+        .expect("a call was written");
+    let call = crate::rendezvous::item::Call::open(&pairing.seal_key(), &item.value).unwrap();
+    (item.seq, call)
 }
 
 fn reply(n: u32) -> Vec<Vec<u8>> {

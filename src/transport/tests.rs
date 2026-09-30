@@ -220,6 +220,25 @@ fn a_skewed_engine_is_refused_before_its_answer_is_read() {
     assert!(!e.transport());
 }
 
+/// A stream that connects and is never served — a re-punch the engine's
+/// listener completed outside any call's window (DESIGN §21.9) — costs the
+/// preface's bound, not a whole ask's.
+#[test]
+fn a_stream_nobody_serves_gives_up_at_the_preface_bound() {
+    let dir = pki();
+    let unserved = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = unserved.local_addr().unwrap().to_string();
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let started = std::time::Instant::now();
+    let e = seat.ask(&json!({ "op": "workspaces" })).unwrap_err();
+    // The handshake is driven by the first write, so the bound fires there:
+    // the channel's class, and nothing of the act in doubt.
+    assert!(e.transport() && !e.in_doubt(), "{e:?}");
+    assert!(started.elapsed() >= super::PREFACE);
+    assert!(started.elapsed() < super::ASK_TIMEOUT);
+    drop(unserved);
+}
+
 #[test]
 fn the_server_name_is_read_off_the_address() {
     assert!(matches!(

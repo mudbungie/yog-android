@@ -18,11 +18,14 @@
 //! the one nobody speaks on die in its handshake, so this end keeps the
 //! first and drops the rest, and no negotiation over which is needed.
 //!
-//! **The one socket this app ever listens on, and only inside a window.** It
-//! exists only on an entry holding rendezvous material, only for the length
-//! of one climb (`ladder::Ladder`), and it accepts only inside the window
-//! this end opened by calling the engine — DESIGN §1's *"the phone opens no
-//! listening socket"* holds everywhere else, and §21.4 states the exception.
+//! **The one socket this app ever listens on, and it accepts only inside a
+//! window.** It exists only on an entry holding rendezvous material, is
+//! bound once per entry for the run (`ladder::entries`, bl-97ed — the engine
+//! answers a re-punch only from the port its call named), and accepts only
+//! inside a window this end opened: whatever the kernel queued between
+//! windows is dropped unread when the next one opens, since it belongs to
+//! no dial this end is making. DESIGN §1's *"the phone opens no listening
+//! socket"* holds everywhere else, and §21.4 states the exception.
 //!
 //! **v6 first** where both ends published it (REMOTE §13.3): a stateful v6
 //! firewall has no ports to rewrite. Targets are punched in parallel
@@ -40,7 +43,7 @@ const ACCEPT_POLL: Duration = Duration::from_millis(20);
 /// The longest one SYN is given before the next is sent.
 const ATTEMPT: Duration = Duration::from_secs(2);
 
-/// One fixed punch port: its listeners, held for one climb.
+/// One fixed punch port: its listeners, held for the run.
 #[derive(Debug)]
 pub struct Punch {
     port: u16,
@@ -67,8 +70,11 @@ impl Punch {
     }
 
     /// Simultaneous-open toward every target for up to `window`: the first
-    /// stream that lands — connected or accepted — or none.
+    /// stream that lands — connected or accepted — or none. A stream queued
+    /// on the listeners before the window opened is dropped first: it landed
+    /// outside every window, a late answer to a dial that already gave up.
     pub fn punch(&self, targets: Vec<SocketAddr>, window: Duration) -> Option<TcpStream> {
+        while self.accepted().is_some() {}
         let (tx, rx) = mpsc::channel();
         let done = Arc::new(AtomicBool::new(false));
         for target in ordered(targets) {

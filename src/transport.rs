@@ -46,6 +46,14 @@ use std::time::Duration;
 /// How long a seat waits on one answer before giving up on the connection.
 const ASK_TIMEOUT: Duration = Duration::from_mins(2);
 
+/// How long a fresh socket is given to carry the engine's preface — the
+/// TLS handshake and one frame, which an engine that accepted the stream
+/// writes at once. Short, because a stream can connect and never be served:
+/// a re-punch the engine's listener completed outside any call's window
+/// sits in its accept queue unread (DESIGN §21.9), and a whole
+/// [`ASK_TIMEOUT`] there would cost a redial two minutes.
+const PREFACE: Duration = Duration::from_secs(10);
+
 /// **What a stream that carried no frame at all says.** One home, because two
 /// readers ask the same question of one shape: `Seat::answered` here, and
 /// `seat::pass::ask::wired`, which wants the envelope beside the reply and so
@@ -156,6 +164,8 @@ impl Seat {
             Some(edition) => edition,
             None => hello::confirm(&mut tls).map_err(Wire::Unusable)?,
         };
+        // The preface is in, under its own bound: the answer gets the ask's.
+        let _ = tls.sock.set_read_timeout(Some(ASK_TIMEOUT));
         let keep = lease.map(|lease| (Arc::clone(&self.ladder), lease));
         let (open, kept) = Open::new(tls, edition, keep);
         Ok((open, Hangup::new(hangup, kept)))
@@ -192,7 +202,7 @@ impl Seat {
         // A timeout that failed to arm costs a slow failure, never a wrong
         // one — and Some(nonzero) cannot be refused, so an error arm here
         // would be an untestable branch.
-        let _ = tcp.set_read_timeout(Some(ASK_TIMEOUT));
+        let _ = tcp.set_read_timeout(Some(PREFACE));
         let conn = ClientConnection::new(Arc::clone(&self.config), self.name.clone())
             .map_err(|e| Wire::Transport(format!("tls {}: {e}", self.address)))?;
         let mut tls = StreamOwned::new(conn, tcp);

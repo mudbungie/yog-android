@@ -23,8 +23,8 @@
 //! Three things reset it, each the evidence it wants: a rung that connected,
 //! a stream that served, and the addresses this box sends from moving —
 //! which also drops every held stream (dead mappings after an address
-//! change), so the next dial re-punches at the cached endpoints first and
-//! rendezvouses afresh only if that fails.
+//! change) and the punch port with its cached endpoints, so the next dial
+//! rendezvouses afresh from a fresh port.
 //!
 //! **One climb per entry at a time** (bl-58a0): every seat on an entry
 //! holds the same ladder (`entries`), and every caller passes its gate
@@ -55,7 +55,7 @@ use crate::state::Slot;
 use backoff::Backoff;
 use gate::{Gate, Turn};
 use say::Voice;
-use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
+use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
 use std::sync::atomic::AtomicI64;
 use std::time::Duration;
@@ -82,7 +82,8 @@ pub struct Ladder {
     clock: Arc<dyn Clock>,
     /// The addresses the last dial saw this box send from.
     seen: Slot<Option<Vec<IpAddr>>>,
-    cache: Slot<Vec<SocketAddr>>,
+    /// The entry's punch port and what a call from it found (`entries`).
+    port: entries::Bound,
     backoff: Slot<Backoff>,
     held: held::Pool,
     gate: Arc<Gate>,
@@ -93,6 +94,17 @@ pub struct Ladder {
 
 impl Ladder {
     pub fn new(address: String, rove: Option<Rove>, clock: Arc<dyn Clock>) -> Ladder {
+        Ladder::on(address, rove, clock, Arc::new(Slot::new(None)))
+    }
+
+    /// A ladder climbing from `port` — the entry's, shared with every
+    /// ladder before and after this one on it (`entries`).
+    pub(crate) fn on(
+        address: String,
+        rove: Option<Rove>,
+        clock: Arc<dyn Clock>,
+        port: entries::Bound,
+    ) -> Ladder {
         let sink = rove
             .as_ref()
             .map_or_else(say::quiet, |r| Arc::clone(&r.say));
@@ -101,7 +113,7 @@ impl Ladder {
             rove,
             clock,
             seen: Slot::new(None),
-            cache: Slot::new(Vec::new()),
+            port,
             backoff: Slot::new(Backoff::new()),
             held: held::Pool::new(),
             gate: Gate::new(),
@@ -160,9 +172,16 @@ impl Ladder {
         }
     }
 
-    /// A finished ask hands its punched stream back for the next one.
+    /// A finished ask hands its punched stream back for the next one — and
+    /// a line served is the evidence that re-arms the re-punch
+    /// (`entries::Port`).
     pub fn keep(&self, held: Held) {
         self.settle();
+        self.port.with(&mut |port| {
+            if let Some(port) = port {
+                port.armed = true;
+            }
+        });
         self.voice.say(&say::kept());
         self.held
             .keep(held, Arc::clone(&self.clock), self.voice.sink());
@@ -180,11 +199,13 @@ impl Ladder {
 
     /// **A network change is the addresses moving** (DESIGN §21.3): the
     /// set this box would send from differs from the last dial's. That drops
-    /// every held stream — a dead mapping after an address change — and
-    /// clears the backoff; the cache stays, because the endpoints that
-    /// worked are the first thing to try on the new network, and the
-    /// rendezvous is the rung after them. The first dial has nothing to
-    /// compare against and changes nothing.
+    /// every held stream — a dead mapping after an address change — clears
+    /// the backoff, and lets the punch port go with the endpoints cached
+    /// beside it (bl-97ed): the engine's NAT holds a mapping toward the
+    /// address and port the last call named, and this box no longer sends
+    /// from that address, so a re-punch from here could never be answered.
+    /// The next climb binds afresh and writes a call. The first dial has
+    /// nothing to compare against and changes nothing.
     fn notice_network(&self, mine: &[IpAddr]) {
         let moved = self.seen.with(&mut |seen| {
             let moved = seen.as_deref().is_some_and(|was| was != mine);
@@ -194,6 +215,7 @@ impl Ladder {
         if moved {
             let held = self.held.len();
             self.held.clear();
+            self.port.with(&mut |port| *port = None);
             self.settle();
             self.voice.say(&say::moved(mine, held));
         }

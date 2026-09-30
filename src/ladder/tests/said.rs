@@ -94,8 +94,9 @@ fn a_rendezvous_says_each_rung_and_the_held_stream_says_its_life() {
         dialled(&second),
         [format!("{P}held stream kept for the next ask")]
     );
-    // The network moves: the held stream is released and the cache re-punched;
-    // the direct rung's unchanged outcome is not said again.
+    // The network moves: the held stream is released, and the port goes with
+    // the endpoints cached beside it (bl-97ed) — the climb calls afresh. The
+    // direct rung's unchanged outcome is not said again.
     flap();
     assert!(ask(3));
     assert!(heard.wait("released"));
@@ -106,13 +107,20 @@ fn a_rendezvous_says_each_rung_and_the_held_stream_says_its_life() {
         )),
         "{third:?}"
     );
+    let mut third_dialled = dialled(&third);
+    let called = third_dialled.remove(2);
+    assert!(
+        called.starts_with(&format!("{P}call written — ")),
+        "{third:?}"
+    );
     assert_eq!(
-        dialled(&third),
+        third_dialled,
         [
             format!(
                 "{P}network changed — this box now sends from 1 v4; 1 held stream(s) dropped, rest cleared"
             ),
-            format!("{P}re-punch at 1 cached endpoint(s) (1 v4), window 2s"),
+            format!("{P}presence read — seq 1, 1 endpoint(s) (1 v4)"),
+            format!("{P}punch started — 1 endpoint(s) (1 v4), window 2s"),
             format!("{P}punch landed — peer v4"),
             format!("{P}held stream kept for the next ask"),
         ]

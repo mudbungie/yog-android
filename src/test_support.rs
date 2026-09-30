@@ -9,7 +9,7 @@ use std::process::Command;
 
 pub mod serve;
 
-pub use held::{Beat, serve_held};
+pub use held::{Beat, serve_from, serve_held};
 pub use serve::{Turn, serve_lanes, serve_many, serve_once, serve_turns, serve_versioned};
 
 pub mod held;
