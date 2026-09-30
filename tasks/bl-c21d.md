@@ -1,7 +1,8 @@
 +++
 title = "the ladder keeps climbing while the app is backgrounded (spending the re-punch arm with no DNS and no path), and a 'beside' call's fresh port replaces the entry's port — so rung 3 never fires in the foreground from the port the landed call named"
 created = 1790733203
-updated = 1790733203
+updated = 1790733213
+claimant = "Urinalyses-A9"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
