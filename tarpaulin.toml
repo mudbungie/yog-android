@@ -1,5 +1,5 @@
 # Repo-wide tarpaulin defaults: applied by every `cargo tarpaulin` run,
-# including the pre-commit hook and CI.
+# including the builder's gate run and CI.
 #
 # Pinned tarpaulin version: 0.35.2 (same pin as yog and lernie). 0.35.3 was
 # yanked, and 0.35.4+ silently excludes inline `#[cfg(test)] mod tests;` files

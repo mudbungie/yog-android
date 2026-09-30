@@ -9,7 +9,9 @@ use std::time::Instant;
 /// names a closer live one. Lockstep, the walk waited out the silent query's
 /// whole round before asking the closer node; windowed, the closer node is
 /// asked the moment the live one answers, and once the two live nodes are
-/// the K closest the walk ends without waiting on the silent one at all.
+/// the K closest the walk ends without waiting on the silent one at all —
+/// proved by a deadline the test could not sit through: the walk ends
+/// inside the minute the silent node was given, whatever the box's stalls.
 #[test]
 fn a_silent_node_does_not_delay_an_answer_in_the_same_window() {
     let mut near = FakeNode::bind(id(0xf0));
@@ -21,7 +23,7 @@ fn a_silent_node_does_not_delay_an_answer_in_the_same_window() {
     let door = router(vec![silent.node(), live.node()]);
     let config = Config {
         k: 2,
-        deadline: Duration::from_secs(2),
+        deadline: PATIENCE,
         ..quick()
     };
     let mut dht = client(vec![door.addr], config);
@@ -30,7 +32,10 @@ fn a_silent_node_does_not_delay_an_answer_in_the_same_window() {
         dht.lookup(id(0xff)).unwrap(),
         vec![near.node(), live.node()]
     );
-    assert!(started.elapsed() < Duration::from_millis(500));
+    assert!(
+        started.elapsed() < PATIENCE,
+        "the silent node was waited out"
+    );
 }
 
 /// One slot, the closest node silent: its deadline passes, the slot is
@@ -44,15 +49,17 @@ fn the_window_refills_when_a_query_times_out() {
     let door = router(vec![silent.node(), live.node()]);
     let config = Config {
         alpha: 1,
-        deadline: Duration::from_millis(200),
+        deadline: SILENCE,
         ..quick()
     };
     let mut dht = client(vec![door.addr], config);
     let started = Instant::now();
     assert_eq!(dht.lookup(id(0xff)).unwrap(), vec![live.node()]);
+    // One deadline waited, not two: the second bound is a whole deadline of
+    // margin for the box, the first is what the refill costs by design.
     let took = started.elapsed();
-    assert!(took >= Duration::from_millis(200), "{took:?}");
-    assert!(took < Duration::from_millis(800), "{took:?}");
+    assert!(took >= SILENCE, "{took:?}");
+    assert!(took < SILENCE * 2, "{took:?}");
 }
 
 /// A holder that offered a token and is silent to `put` costs its own
@@ -66,6 +73,6 @@ fn a_put_counts_the_holders_that_answer_past_a_silent_one() {
     let mut mute = FakeNode::bind(id(0x43));
     mute.serve(vec![], Mood::Mute, vec![]);
     let door = router(vec![holder.node(), mute.node()]);
-    let mut dht = client(vec![door.addr], quick());
+    let mut dht = client(vec![door.addr], waiting());
     assert_eq!(dht.put(item).unwrap(), 1);
 }

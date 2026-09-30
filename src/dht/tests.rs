@@ -14,13 +14,35 @@ use super::*;
 use fake::{FakeNode, Mood};
 use std::io;
 
-/// A walk that converges on three nodes and waits milliseconds, not seconds.
-fn quick() -> Config {
+/// How long an answering node has to be heard: a minute. No test on
+/// [`quick`] waits a query out, so this is never paid — it is the margin a
+/// stall on a loaded box has to fit inside. It was 300 ms, a bet on the box
+/// that a builder at load 59 on 40 threads collected (bl-6bac): a test thread
+/// stalled longer than that between sending a query and reading its answer,
+/// and `land` expired the query with the answer already in the socket —
+/// even the stand-in transport's error was read as silence.
+pub(crate) const PATIENCE: Duration = Duration::from_mins(1);
+
+/// What a test that waits a node OUT pays per silent query in the air:
+/// seconds, so a node answering beside a silent one keeps a margin no stall
+/// yet measured has reached, and a walk of a few silences still fits a test.
+pub(crate) const SILENCE: Duration = Duration::from_secs(5);
+
+/// A walk that converges on three nodes, with a minute for every answer.
+pub(crate) fn quick() -> Config {
     Config {
         alpha: 3,
         k: 3,
-        deadline: Duration::from_millis(300),
+        deadline: PATIENCE,
         max_queries: 64,
+    }
+}
+
+/// [`quick`], for a walk that waits at least one query out.
+pub(crate) fn waiting() -> Config {
+    Config {
+        deadline: SILENCE,
+        ..quick()
     }
 }
 

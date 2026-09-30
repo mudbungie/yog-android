@@ -282,9 +282,10 @@ protocol-gate:
 # still fire, per RULE and per LINE, so an edited pattern that silently
 # matches nothing cannot pass. `scripts/leak-rules.sh` is the one definition
 # of what counts, `leak-scan.sh` runs it, and this is the door. It reads INDEX
-# BLOBS, not the worktree: the bytes scanned are the bytes committed. It also
-# runs from `scripts/pre-commit` BEFORE the verdict cache is consulted — the
-# one gate step no stored verdict may skip.
+# BLOBS, not the worktree: the bytes scanned are the bytes committed. bl-gate
+# (the pre-commit hook) also runs it LOCALLY, before the verdict cache is
+# consulted — the one gate step no stored verdict may skip, and the one that
+# never leaves the box unscanned.
 #
 # The same scanner gates the balls TASK STORE: the machine-global
 # `bl-leak-gate` plugin execs `scripts/leak-scan.sh --commit <op's commit>`
@@ -316,8 +317,8 @@ rules-audit:
 
 # The 300-line cap on source files (AGENTS.md; docs and config are exempt).
 # This target is the ONE definition of the cap and of what counts as a source
-# file — the pre-commit hook and CI both call it, neither restates it. It
-# scans the WHOLE TREE, not the staged diff: a diff-only gate is a sampling,
+# file — `make check` (the gate, wherever it runs) and CI both call it,
+# neither restates it. It scans the WHOLE TREE, not the staged diff: a diff-only gate is a sampling,
 # not an invariant (yog bl-12dc: a file rode at 308 lines undetected until an
 # unrelated task edited it). `git ls-files` reads the INDEX, so a staged
 # addition is covered before it is ever committed. Offenders are reported ALL
@@ -358,13 +359,17 @@ fmt:
 fmt-check:
 	cargo fmt --check
 
-# The complete gate, and the exact target CI runs (`ci`). Coverage goes
-# through `scripts/check-coverage.sh` rather than the bare `coverage` target
-# so the pre-commit hook, `make check` and CI share ONE coverage step (held
-# output, replayed on failure; the signaled-tarpaulin three-outcome contract —
-# yog bl-673a). `make coverage` stays the bare, always-verbose hand-run.
-check: fmt-check lint
-	@scripts/check-coverage.sh
+# The complete gate — `fmt-check → lint → scripts/check-coverage.sh` — and the
+# exact target CI runs (`ci`) and the noodlezoo builder runs on every commit's
+# staged tree (.githooks/pre-commit → bl-gate → bl-remote-gate). The sequence
+# lives in `scripts/check`, not here, because make speaks two exit words and
+# the gate has three: a recipe exiting 75 (check-coverage.sh's "no verdict",
+# yog bl-673a) leaves make at 2, and a builder reading that as a FAIL writes a
+# permanent false verdict. A builder that must tell 75 from 1 runs the script;
+# this target is the same script, so nothing restates the steps. `make
+# coverage` stays the bare, always-verbose invocation for a hand-run.
+check:
+	@scripts/check
 
 ci: check
 

@@ -39,6 +39,13 @@ pub(crate) const SILENCE: Duration = Duration::from_mins(2);
 /// How often a holder looks up from the socket for a taker.
 const TICK: Duration = Duration::from_millis(250);
 
+/// How long a taker waits for a holder to hand its stream over. A live
+/// holder answers at its next tick; the bound is for one waiting out a
+/// promised body on the silence. Seconds, not a few ticks: a loaded box put
+/// a holder's tick past a second (bl-6bac), and a taker that gives up on a
+/// live holder orphans a good stream and pays a climb that dwarfs the wait.
+const TAKE: Duration = Duration::from_secs(5);
+
 /// A punched connection with its preface spent: the stream, and the edition
 /// the engine stated on it (`transport::Open::edition`).
 pub struct Held {
@@ -84,11 +91,11 @@ impl Pool {
     }
 
     /// The first held stream still alive, or none. A holder that has hung
-    /// up, or does not answer within a few ticks, is forgotten on the way.
+    /// up, or does not answer within [`TAKE`], is forgotten on the way.
     pub(crate) fn take(&self) -> Option<Held> {
         while let Some(holder) = self.holders.with(&mut Vec::pop) {
             holder.wanted.store(true, Ordering::Relaxed);
-            if let Ok(held) = holder.back.recv_timeout(TICK * 4) {
+            if let Ok(held) = holder.back.recv_timeout(TAKE) {
                 return Some(held);
             }
         }

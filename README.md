@@ -62,7 +62,7 @@ no build has heard of.
 ## Dev loop
 
 ```
-make check          # the complete local gate == CI == pre-commit hook
+make check          # the complete gate == CI == what the builder runs for the hook
 make conformance    # replay the vendored wire corpus (REMOTE §3)
 make test           # cargo test
 make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
@@ -288,7 +288,9 @@ Four layers, one definition each, no drift by construction:
    publish and re-scans the published store daily
    (`.github/workflows/store-scan.yml`).
 4. **CI** (`.github/workflows/ci.yml`) — `make ci`, which *is* `make check`:
-   fmt + lint + 100% coverage. Actions pinned to commit SHAs.
+   fmt + lint + 100% coverage. Actions pinned to commit SHAs. The pre-commit
+   hook runs the same target, on a builder rather than the committing box
+   (AGENTS.md "The gate").
 
 The crate is `publish = false`: the deliverable is an APK, and a registry
 release is a deliberate operator decision, not a reachable accident.

@@ -3,9 +3,8 @@
 
 use super::*;
 use crate::dht::tests::fake::{FakeNode, Mood};
-use crate::dht::{Config, NodeId, Udp};
+use crate::dht::{NodeId, Udp};
 use crate::rendezvous::item::Call;
-use std::time::Duration;
 
 fn pairing() -> Pairing {
     Pairing {
@@ -21,12 +20,7 @@ fn placed(mood: Mood, mine: Vec<IpAddr>) -> Vec<SocketAddr> {
     holder.serve(vec![], mood, vec![]);
     let mut router = FakeNode::bind(NodeId([1u8; 20]));
     router.serve(vec![holder.node()], Mood::Router, vec![]);
-    let config = Config {
-        alpha: 3,
-        k: 3,
-        deadline: Duration::from_millis(300),
-        max_queries: 64,
-    };
+    let config = crate::dht::tests::quick();
     let fresh = || {
         let udp = Udp::bind("127.0.0.1:0".parse().unwrap()).unwrap();
         Dht::new(Box::new(udp), vec![router.addr], config.clone()).unwrap()

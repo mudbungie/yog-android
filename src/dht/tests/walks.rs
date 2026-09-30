@@ -45,7 +45,7 @@ fn no_bootstrap_is_an_error_before_any_datagram() {
 fn a_silent_commons_is_an_error() {
     let mut a = FakeNode::bind(id(0));
     a.serve(vec![], Mood::Silent, vec![]);
-    let mut dht = client(vec![a.addr], quick());
+    let mut dht = client(vec![a.addr], waiting());
     let e = dht.lookup(id(0xff)).unwrap_err();
     assert_eq!(
         e,
@@ -96,7 +96,7 @@ fn noise_on_the_socket_is_not_an_answer() {
         vec![door.addr],
         Config {
             alpha: 4,
-            ..quick()
+            ..waiting()
         },
     );
     assert_eq!(dht.lookup(id(0xff)).unwrap(), vec![a.node()]);

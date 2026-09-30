@@ -9,7 +9,7 @@ use super::super::krpc::{Node, NodeId};
 use super::super::mutable::Mutable;
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use wire::{claim, error, reply, routing};
@@ -47,6 +47,9 @@ pub(crate) struct FakeNode {
     pub(crate) addr: SocketAddr,
     pub(crate) id: NodeId,
     stop: Arc<AtomicBool>,
+    /// Every datagram this node has read — the walk's spend, counted where
+    /// it lands rather than timed from the client's side.
+    heard: Arc<AtomicUsize>,
     thread: Option<JoinHandle<()>>,
 }
 
@@ -62,8 +65,14 @@ impl FakeNode {
             addr,
             id,
             stop: Arc::new(AtomicBool::new(false)),
+            heard: Arc::new(AtomicUsize::new(0)),
             thread: None,
         }
+    }
+
+    /// How many queries have reached this node so far.
+    pub(crate) fn heard(&self) -> usize {
+        self.heard.load(Ordering::Relaxed)
     }
 
     pub(crate) fn node(&self) -> Node {
@@ -75,9 +84,9 @@ impl FakeNode {
 
     pub(crate) fn serve(&mut self, peers: Vec<Node>, mood: Mood, items: Vec<Mutable>) {
         let socket = self.socket.take().unwrap();
-        let (id, stop) = (self.id, Arc::clone(&self.stop));
+        let (id, stop, heard) = (self.id, Arc::clone(&self.stop), Arc::clone(&self.heard));
         self.thread = Some(std::thread::spawn(move || {
-            run(&socket, id, &peers, mood, items, &stop);
+            run(&socket, id, &peers, mood, items, &stop, &heard);
         }));
     }
 }
@@ -98,6 +107,7 @@ fn run(
     mood: Mood,
     mut items: Vec<Mutable>,
     stop: &AtomicBool,
+    heard: &AtomicUsize,
 ) {
     let mut buf = vec![0u8; 8192];
     let mut turn = 0usize;
@@ -105,6 +115,7 @@ fn run(
         let Ok((n, from)) = socket.recv_from(&mut buf) else {
             continue;
         };
+        heard.fetch_add(1, Ordering::Relaxed);
         let q = Value::decode(&buf[..n]).unwrap();
         let tid = q.get("t").unwrap().as_bytes().unwrap().to_vec();
         let datagram = match mood {

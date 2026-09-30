@@ -139,10 +139,13 @@ fn a_dark_commons_arms_the_backoff_and_a_network_change_or_time_clears_it() {
         Some(rove(vec![node.addr.to_string()])),
         clock.clone(),
     );
+    // Walked or rested is read off the node — did a query reach it — never
+    // off the clock: a rest is instant, a walk is one waited-out deadline,
+    // and a loaded box can stretch either past the other (bl-6bac).
     let walked = |ladder: &Ladder| {
-        let started = Instant::now();
+        let before = node.heard();
         let e = ladder.connect().err().unwrap();
-        (e, started.elapsed() >= Duration::from_millis(300))
+        (e, node.heard() > before)
     };
     let (e, walked_first) = walked(&ladder);
     assert!(walked_first, "the first climb walks the commons");

@@ -71,7 +71,7 @@ fn a_dark_walk_forgets_what_the_last_one_heard() {
     let door = router(vec![a.node()]);
     let mut dark = FakeNode::bind(id(2));
     dark.serve(vec![], Mood::Silent, vec![]);
-    let mut dht = client(vec![door.addr], quick());
+    let mut dht = client(vec![door.addr], waiting());
     dht.lookup(id(0xff)).unwrap();
     assert_eq!(dht.observed(), vec![us]);
     dht.bootstrap = vec![dark.addr];

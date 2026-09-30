@@ -22,7 +22,7 @@
 # tree from `git rev-parse` in the working directory, so the same mechanism and
 # the same table judge yog's index and the balls TASK STORE — a different git
 # repo entirely (`<state>/balls/clones/<enc>/tasks`, holding `tasks/*.md`),
-# written by `bl`, never reached by this repo's pre-commit hook. Ball bodies
+# written by `bl`, never reached by this repo's `make leak-scan`. Ball bodies
 # are prose on a ref that publishes beside the source, and a second copy of the
 # rules for them would drift from this one inside a week. Its callers are
 # `scripts/yog-leak-gate` (the balls plugin, before the store is pushed) and

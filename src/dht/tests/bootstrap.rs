@@ -31,7 +31,7 @@ fn a_walk_whose_learned_nodes_are_all_silent_is_dark_not_a_success() {
     // The door is re-asked while it names anyone (yog bl-d00f); the cap ends it.
     let config = Config {
         max_queries: 9,
-        ..quick()
+        ..waiting()
     };
     let mut dht = client(vec![door.addr], config);
     let dark = format!("no DHT node answered find_node for {}", "ff".repeat(20));

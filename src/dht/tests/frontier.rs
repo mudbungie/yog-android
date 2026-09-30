@@ -36,12 +36,12 @@ fn silent_nodes_leave_the_frontier_for_the_live_ones_past_them() {
         n.serve(vec![], mood, items);
     }
     let door = router(ranked.iter().map(FakeNode::node).collect());
-    let mut dht = client(vec![door.addr], quick());
+    let mut dht = client(vec![door.addr], waiting());
     assert_eq!(
         dht.get(kp.public(), b"s".to_vec()).unwrap(),
         Some(item.clone())
     );
-    let mut dht = client(vec![door.addr], quick());
+    let mut dht = client(vec![door.addr], waiting());
     assert_eq!(
         dht.lookup(item.target()).unwrap(),
         vec![ranked[3].node(), ranked[4].node()]
@@ -83,27 +83,31 @@ fn a_dry_frontier_asks_the_door_again_for_fresh_seeds() {
         Mood::Rotor,
         vec![],
     );
-    let mut dht = client(vec![door.addr], quick());
+    let mut dht = client(vec![door.addr], waiting());
     assert_eq!(dht.lookup(id(0xff)).unwrap(), vec![live.node()]);
 }
 
 /// A door that only ever names a dead node is asked again until the query
 /// cap, and the walk is the dark-commons `Err`: the dead node is asked once
-/// and waited out once, and every later door ask names only it, so the cap
-/// of six ends the knocking in one deadline and a few loopback answers.
+/// and waited out once, and every later door ask names only it, so the rest
+/// of the cap of six is spent knocking at the door. Counted at the nodes,
+/// not timed: "one deadline" on the clock was a bet on the box (bl-6bac).
 #[test]
 fn a_door_naming_only_the_dead_is_asked_until_the_cap() {
     let silent = node(0x41, Mood::Silent, vec![]);
     let door = router(vec![silent.node()]);
     let config = Config {
         max_queries: 6,
-        deadline: Duration::from_millis(100),
-        ..quick()
+        ..waiting()
     };
     let mut dht = client(vec![door.addr], config);
-    let started = std::time::Instant::now();
     assert!(dht.lookup(id(0xff)).is_err());
-    assert!(started.elapsed() < Duration::from_secs(1));
+    assert_eq!(silent.heard(), 1, "the dead node is asked once");
+    assert_eq!(
+        door.heard() + silent.heard(),
+        6,
+        "and the cap spent at the door"
+    );
 }
 
 /// A node that answers the walk's verb with an error — live, a `get` refused
@@ -155,8 +159,7 @@ fn a_silent_router_leaves_the_door_after_its_first_deadline() {
     rotor.serve(seeds.collect(), Mood::Rotor, vec![]);
     let config = Config {
         max_queries: 9,
-        deadline: Duration::from_millis(100),
-        ..quick()
+        ..waiting()
     };
     let mut dht = client(vec![dead_router.addr, rotor.addr], config);
     assert_eq!(dht.lookup(id(0xff)).unwrap(), vec![live.node()]);

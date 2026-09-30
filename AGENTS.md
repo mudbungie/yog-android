@@ -77,14 +77,31 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
 - **100% test coverage**, tarpaulin pinned 0.35.2 (`tarpaulin.toml`). If it
   can't be tested, it mustn't be built. Coverage exclusions are added with
   reasoning, never to make a number.
-- **`make check` is the complete local gate and mirrors CI exactly:**
-  fmt-check → lint (line-cap + protocol-gate + leak-scan + clippy +
-  cross-clippy + rules-audit + cargo-deny) → coverage. `cross-clippy` is the
-  `target_os = "android"` half — the whole of `src/shell` — which the host
-  clippy never compiles; it runs where cargo-ndk exists and says it skipped
-  where it does not, and `.github/workflows/apk.yml` calls the same target. The pre-commit hook (`make install-hooks`, once) runs the same
-  scripts. Tool pins: rustc 1.95.0, ast-grep 0.44.1, cargo-deny 0.20.2,
-  tarpaulin 0.35.2 — bump only deliberately, and in lockstep with CI.
+- **The gate.** `make check` is the complete gate: `fmt-check → lint →
+  coverage`, where `lint` is `line-cap → protocol-gate → leak-scan → clippy -D
+  warnings → cross-clippy → rules-audit → cargo deny check` and coverage is
+  `scripts/check-coverage.sh` (tarpaulin, 100% floor). `check` is a door onto
+  `scripts/check`, which carries the three-word exit make cannot (0 pass, 75
+  no verdict, else fail — yog bl-673a). The pre-commit hook
+  (`.githooks/pre-commit`) does not run them on this machine — **this laptop
+  does not compile in a gate** (ops bl-3166, `~/ops/remote-builds.md` "Phase
+  2"), and `cargo tarpaulin` / `cargo llvm-cov` are shimmed here to refuse.
+  The hook keeps the mainline refusal and execs `bl-gate` (userconf), which
+  leak-scans locally, exports `BALLS_TOOLCHAIN`, asks `bl-speculate check` for
+  a verified verdict on the staged tree, and otherwise has the noodlezoo
+  builder run `scripts/check` and sign one (`bl-remote-gate`,
+  `~/ops/noodlezoo/docs/builder.md`): exit 0 is a pass, 1 means the builder
+  failed the tree (read its log), 75 means no verdict — nothing recorded,
+  commit refused, never `cargo test` instead. An agent that wants tests
+  before committing runs `bl-remote-run <target>`: any make target, on the
+  builder, log streamed home. `cross-clippy` is the `target_os = "android"`
+  half — the whole of `src/shell` — which the host clippy never compiles; it
+  runs where cargo-ndk exists and says it skipped where it does not, and
+  `.github/workflows/apk.yml` calls the same target. `ci.yml` runs `make ci`;
+  nobody restates a step the Makefile defines. Run `make install-hooks` once
+  per clone — it seats `pre-commit` **and** `commit-msg`. Tool pins: rustc
+  1.95.0, ast-grep 0.44.1, cargo-deny 0.20.2, tarpaulin 0.35.2 — bump only
+  deliberately, and in lockstep with CI and the builder image.
 - **A PROTOCOL bump is a four-repository act** (bl-5b19; yog bl-bca2). yog
   mints the wire protocol version. This app, the seat (`lernie`) and the foot
   (`thrall`) each **vendor** a copy of the number in a **repo-root `PROTOCOL`

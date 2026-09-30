@@ -59,7 +59,7 @@ fn bep44_walks_past_a_router_that_never_answers_get() {
     holder.serve(vec![], Mood::Answer, vec![]);
     let mut router = FakeNode::bind(id(0));
     router.serve(vec![holder.node()], Mood::Router, vec![]);
-    let mut dht = client(vec![router.addr], quick());
+    let mut dht = client(vec![router.addr], waiting());
 
     let mut flight = flight::Flight::new();
     let target = bencode::Dict::from([bencode::entry("target", bencode::bytes(&item.target().0))]);
@@ -117,7 +117,7 @@ fn put_to_holders_that_never_answer_is_an_error() {
     let mut mute = FakeNode::bind(id(1));
     mute.serve(vec![], Mood::Mute, vec![]);
     let door = router(vec![mute.node()]);
-    let mut dht = client(vec![door.addr], quick());
+    let mut dht = client(vec![door.addr], waiting());
     let item = keypair().sign(vec![], 1, b"x".to_vec()).unwrap();
     let e = dht.put(item.clone()).unwrap_err();
     assert_eq!(

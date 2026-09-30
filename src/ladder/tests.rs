@@ -10,7 +10,7 @@
 
 use super::*;
 use crate::dht::tests::fake::{FakeNode, Mood};
-use crate::dht::{Config, Dht, Keypair, NodeId};
+use crate::dht::{Dht, Keypair, NodeId};
 use crate::rendezvous::Pairing;
 use crate::rendezvous::item::Presence;
 use crate::test_support::{FakeClock, material, mint_ca, mint_leaf, scratch, until};
@@ -100,12 +100,9 @@ fn rove(bootstrap: Vec<String>) -> Rove {
     Rove {
         pairing: pairing().1,
         bootstrap,
-        config: Config {
-            alpha: 3,
-            k: 3,
-            deadline: Duration::from_millis(300),
-            max_queries: 64,
-        },
+        // The DHT suite's own: a dark commons here is waited out at its
+        // `SILENCE`, and an answering node has that long to be heard.
+        config: crate::dht::tests::waiting(),
         window: Duration::from_secs(2),
         network: Network::new(addresses),
         say: say::quiet(),

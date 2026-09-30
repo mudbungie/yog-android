@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
-# yog-android pre-commit hook. Two jobs, split deliberately (yog bl-1a5b):
-#
-#   1. The COMMIT-CONTEXT guard, which only a hook can do: no direct commits
-#      to mainline (main/master). Squash-merges from bl delivery are
-#      permitted; detected via presence of MERGE_MSG or SQUASH_MSG.
-#   2. The BUILD GATE — delegated whole to scripts/pre-commit, where it is
-#      content-addressable for bl-speculate's verdict cache. Anything that
-#      runs the gate outside a commit context runs scripts/pre-commit
-#      directly, so nothing but the guard may live here.
-#
-# Bypass is intentionally not supported. If something is broken, fix it.
+# The gate is bl-gate (userconf), one copy for every repo on the machine; see
+# AGENTS.md "The gate". Only the REF check lives here: no direct commits to
+# mainline, a bl delivery squash (MERGE_MSG/SQUASH_MSG) excepted. Seated by
+# `make install-hooks`. Bypass is intentionally not supported.
 
 set -euo pipefail
 
@@ -26,4 +19,4 @@ case "$branch" in
     ;;
 esac
 
-exec "$(git rev-parse --show-toplevel)/scripts/pre-commit"
+exec bl-gate "$@"
