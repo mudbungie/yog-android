@@ -1,7 +1,8 @@
 +++
 title = "the pre-commit gate collapses to exec bl-gate: scripts/check carries the three-word exit, make check is its door, the laptop never compiles in a gate (ops bl-3166)"
 created = 1790735904
-updated = 1790735904
+updated = 1790735905
+claimant = "Junketing-yoga"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
