@@ -1,0 +1,8 @@
++++
+title = "after a punch lands, the ladder re-punches the cached endpoints ~6 s later while the stream is still held, and every re-punch expires after 35 s; the engine logs each as 'already punched — no punch'"
+created = 1790731438
+updated = 1790731438
+priority = 2
+root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
++++
+Measured live 2026-09-29 on two dials (yog bl-65dc wifi leg, build c5eac49 with bl-58a0): 'punch landed' at +3 s, then 'held stream kept / handed to an ask' pairs, then at +6 s 're-punch at 2 cached endpoint(s), window 35s' with the held stream still up, expiring at +41 s; the engine (0.0.72) logs 'call nonce N already punched — no punch' for the same nonce at its next poll. Rung 3 must not fire while a held line exists for the entry (rung 1 answers), nor while a dial is in flight (bl-58a0's gate) — find which caller climbs past rung 1 (likely the scheduled attention fetch building a fresh seat, DESIGN §17, or a second asker that saw the line lent out and took the 10 s gate exit) and make the gate answer it with the held line. Also seen once: the held stream closed ~40 s after landing with the app still in the foreground ('held stream dropped — the stream closed or failed' and the engine's 'served stream ended' at the same second); say which side closed and why. Tests on the fake bench: after a landed punch, no re-punch starts while the line is held; a second caller during the hold is served over it.
