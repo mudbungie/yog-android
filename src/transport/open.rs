@@ -6,6 +6,7 @@
 use super::Wire;
 use crate::frame;
 use crate::ladder::{Held, Ladder, Lease};
+use crate::state::Slot;
 use rustls::{ClientConnection, StreamOwned};
 use serde_json::Value;
 use std::net::TcpStream;
@@ -27,14 +28,28 @@ pub struct Open {
     /// entry's next caller looks (bl-58a0). `None` for a dialled socket,
     /// which is dropped as it always was.
     keep: Option<(Arc<Ladder>, Lease)>,
+    /// Shared with this read's [`Hangup`]: set once the stream is back with
+    /// the ladder, after which hanging up is no longer the handle's to do.
+    kept: Arc<Slot<bool>>,
 }
 
 /// **The way to end a held read from another thread.** A reader parked on
 /// the socket wakes when the socket is shut down under it, so a lane is
 /// stopped by hanging up rather than by a flag it would only read between
 /// frames — up to a hold away.
+///
+/// **A read that ended clean has no socket to hang up** (bl-2ba5). The
+/// handle is a second descriptor on the stream, and a punched stream whose
+/// answer ended goes back to the ladder's pool — so a lane dropped after its
+/// hold ended used to shut down the line the pool was holding for the next
+/// ask, and the holder and the engine each read the other end close in the
+/// same second: measured live about forty seconds after a punch landed, the
+/// follow lane's thirty-second hold plus the pass that opened it. Keeping and
+/// hanging up are decided under one lock, so exactly one of them happens to
+/// a kept stream.
 pub struct Hangup {
     tcp: TcpStream,
+    kept: Arc<Slot<bool>>,
 }
 
 impl Open {
@@ -42,8 +57,15 @@ impl Open {
         tls: StreamOwned<ClientConnection, TcpStream>,
         edition: u32,
         keep: Option<(Arc<Ladder>, Lease)>,
-    ) -> Open {
-        Open { tls, edition, keep }
+    ) -> (Open, Arc<Slot<bool>>) {
+        let kept = Arc::new(Slot::new(false));
+        let open = Open {
+            tls,
+            edition,
+            keep,
+            kept: Arc::clone(&kept),
+        };
+        (open, kept)
     }
 
     /// **The edition the engine stated**, for whoever asks
@@ -78,6 +100,9 @@ impl Open {
                 .map_err(|e| Wire::Lost(format!("receive: {e}")))?;
             let Some(body) = frame else {
                 if let Some((ladder, _lease)) = self.keep.take() {
+                    // A hang-up that got here first shut the socket down; the
+                    // holder then reads it closed and drops it, as it should.
+                    self.kept.with(&mut |kept| *kept = true);
                     ladder.keep(Held {
                         tls: self.tls,
                         edition: self.edition,
@@ -97,14 +122,19 @@ impl Open {
 }
 
 impl Hangup {
-    pub(super) fn new(tcp: TcpStream) -> Hangup {
-        Hangup { tcp }
+    pub(super) fn new(tcp: TcpStream, kept: Arc<Slot<bool>>) -> Hangup {
+        Hangup { tcp, kept }
     }
 
-    /// End the held read. Idempotent, and a socket already gone is not an
-    /// error — the reader it was for has nothing left to be woken from.
+    /// End the held read — unless it already ended and its stream went back
+    /// to the ladder. Idempotent, and a socket already gone is not an error:
+    /// the reader it was for has nothing left to be woken from.
     pub fn hang_up(&self) {
-        let _ = self.tcp.shutdown(std::net::Shutdown::Both);
+        self.kept.with(&mut |kept| {
+            if !*kept {
+                let _ = self.tcp.shutdown(std::net::Shutdown::Both);
+            }
+        });
     }
 }
 

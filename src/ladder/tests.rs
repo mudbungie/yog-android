@@ -9,16 +9,15 @@
 //! serialising the file is the ordering the assertions stand on.
 
 use super::*;
-use crate::dht::Config;
 use crate::dht::tests::fake::{FakeNode, Mood};
-use crate::dht::{Keypair, NodeId};
+use crate::dht::{Config, Dht, Keypair, NodeId};
 use crate::rendezvous::Pairing;
 use crate::rendezvous::item::Presence;
 use crate::test_support::{FakeClock, material, mint_ca, mint_leaf, scratch, until};
 use crate::transport::Seat;
 use std::net::Ipv4Addr;
 use std::path::PathBuf;
-use std::sync::atomic::AtomicU8;
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{Duration, Instant};
 
@@ -27,6 +26,7 @@ mod fallthrough;
 mod held;
 mod rungs;
 mod said;
+mod shared;
 
 const WAIT: Duration = Duration::from_secs(10);
 

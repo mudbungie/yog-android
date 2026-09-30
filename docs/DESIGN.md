@@ -609,7 +609,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/rendezvous/{item,call}.rs` | §21.2: the sealed presence and call (ChaCha20-Poly1305, `nonce ‖ ciphertext ‖ tag` over the endpoint list), and the two DHT verbs a rendezvous spends — presence read, call written under the derived inbox keypair | landed (bl-3d62) |
 | `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
 | `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
-| `src/ladder.rs` + `src/ladder/{rove,backoff}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), and the rest between failed climbs | landed (bl-3d62) |
+| `src/ladder.rs` + `src/ladder/{rove,backoff,climb}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), the rest between failed climbs, and the two seconds-scale rungs behind it (`climb`, split at the cap) | landed (bl-3d62, split bl-2ba5) |
 | `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
 | `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
 | `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle — and the hand-back of a punched stream whose answer ended clean (split from `transport.rs`, §21.5) | landed (bl-3d62) |
@@ -5862,10 +5862,15 @@ goes away with its held streams), and every caller passes the entry's gate
 re-looks in the held pool after each change. A punched line — landed or
 taken from the pool — is out on a `Lease` until its ask hands it back or it
 is dropped; a waiter waits for it, so the second caller is served over the
-first's line, and a dropped line lets it dial. A line held by a parked read
-(the foot's `invocations`, the attention lane) never comes back, so a
-waiter that has watched lines out for **10 s** with no dial in flight dials
-its own — still one at a time. The wait is on the injected clock
+first's line, and a dropped line lets it dial. **A caller looking in the pool
+is a line out** (bl-2ba5): it counts itself out before it takes, and a look
+that found nothing takes the count back without a change (§21.8 for why). A
+line held by a parked read (the foot's `invocations`, the seat's lanes) comes
+back only when the engine's hold ends, up to thirty seconds, so a waiter that
+has watched lines out for **10 s** with no dial in flight dials its own —
+still one at a time, and **beside** the line still out: that dial skips the
+re-punch rung, whose cached endpoints are the ones the out line was punched
+at, and goes straight to a fresh call. The wait is on the injected clock
 (`state::Watched`, the one lock a caller may wait on). An entry that does not
 rove has no gate and no table. **Not done here:** the punch port is still
 bound per climb rather than once per entry for the run (lernie's shape), so
@@ -5922,7 +5927,10 @@ minutes with no frame at all hangs up** — the engine's own bound, mirrored,
 on the injected clock so the suite walks it in an instant. A dialled socket is
 still one ask, one connection, as before. A ladder that goes away takes its
 held streams with it — and since bl-58a0 it goes away only when no seat on
-its entry holds it (§21.3).
+its entry holds it (§21.3). **A read's hang-up handle is disarmed the moment
+its stream goes back to the pool** (`transport::Hangup`, bl-2ba5): keeping
+and hanging up are decided under one lock, so a lane dropped after its hold
+ended cannot shut down the line the pool now holds (§21.8).
 
 ### 21.6 What is proved, and what is not
 
@@ -5984,3 +5992,50 @@ rungs and says nothing: its dial is the old one, and its sentence is its
 error. **Not said:** a ping discarded ahead of a reply inside
 `transport::Open::each` — that reader holds no sink, and the holder's count
 covers the silence between asks, which is where a held stream lives.
+
+### 21.8 The re-punch beside a held line, and the forty-second close (bl-2ba5)
+
+Measured live on two dials (yog bl-65dc, wifi, build c5eac49): *punch
+landed* at +3 s, handed/kept pairs, then at +6 s *re-punch at 2 cached
+endpoint(s)* with the line still up, expiring at +41 s while the engine said
+*call nonce N already punched — no punch*. Once, the held stream dropped
+*closed or failed* about 40 s after landing in the foreground, the engine
+saying *served stream ended* in the same second.
+
+**The re-punch was a caller that read the entry as idle.** `Pool::take` pops
+a holder and waits for its thread to hand the stream over, which it does at
+its next read tick — up to 250 ms. The caller took its lease only after the
+take returned, so for that window the pool was empty, no line was counted out
+and no dial was in flight; the seat's asker, its lanes and the tool host hand
+the one line round several times a second, and a caller arriving in one of
+those windows was admitted to dial. The direct rung failed and the next rung
+was the re-punch. The 10 s exit could not produce it at +6 s: the dial in
+flight until +3 resets every waiter's watch. **Fix:** the lease is taken
+before the look and handed back quietly on a miss (`ladder::gate`). Neither
+direction is a change — no waiter waits for a line to leave, and a miss is
+nothing appearing.
+
+**The forty-second close was this end.** The engine hangs up a held stream
+only after two minutes of silence it pings through every 25 s (`Quiet::held`)
+— it cannot close at 40 s by itself. The seat's lanes (§14.1) are follow-class
+reads the engine holds for thirty seconds and then ends with the terminator;
+a punched lane's stream then goes back to the pool (`Open::each`), and the
+worker, told the lane is over, drops it — and `Lane`'s drop hangs up through
+its `Hangup`, a second descriptor on the same socket, now the pool's. The
+`shutdown` reached the holder as a closed stream and the engine as an EOF in
+the same second: a lane opened a few seconds after landing, plus its
+thirty-second hold. **Fix:** the hang-up is disarmed once the stream is kept
+(§21.5).
+
+**The 10 s exit no longer re-punches.** A caller that waits past the bound on
+a parked read wants a *second* line; the engine punches a call's nonce once,
+toward the port that call named, so a re-punch at the first line's endpoints
+from a fresh port could never be answered. That dial writes a fresh call.
+
+**Not done here, and stated:** the re-punch rung itself cannot land against
+this engine at all while the punch port is bound per climb — the engine
+listens only inside the window of a new call, and punches that call's port,
+never the fresh one a re-punch binds (bl-97ed carries it). And a
+lane hung up *mid-hold* — the focus moving — still shuts down its punched
+line; the next ask then climbs to a fresh call.
+

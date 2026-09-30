@@ -38,6 +38,7 @@
 //! reads the same leaf. §4 is untouched.
 
 mod backoff;
+mod climb;
 mod entries;
 mod gate;
 pub mod held;
@@ -50,15 +51,13 @@ pub use held::Held;
 pub use rove::{Clock, Rove, SystemClock};
 pub use say::Say;
 
-use crate::dht::{Dht, Udp};
-use crate::rendezvous::{call, punch};
 use crate::state::Slot;
 use backoff::Backoff;
 use gate::{Gate, Turn};
 use say::Voice;
 use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::atomic::AtomicI64;
 use std::time::Duration;
 
 /// How long a direct dial is given before the ladder moves on. Only spent
@@ -124,11 +123,14 @@ impl Ladder {
         // Rung 1, then the gate: a caller that is not the one dialling looks
         // in the pool again after every change, until a line is there for it
         // or the dial is its own.
+        // The caller counts itself out before it looks (`gate`, bl-2ba5).
         let dialling = loop {
             let seen = self.gate.seen();
+            let lease = self.gate.lend();
             if let Some(held) = self.held.take() {
-                return Ok(Conn::Held(Box::new(held), self.gate.lend()));
+                return Ok(Conn::Held(Box::new(held), lease));
             }
+            lease.missed();
             if let Turn::Dial(dialling) = self.gate.turn(seen, self.clock.as_ref()) {
                 break dialling;
             }
@@ -146,7 +148,7 @@ impl Ladder {
             return Err(format!("{direct}; {said}"));
         }
         self.voice.forget("rest");
-        match self.climb(rove, mine) {
+        match self.climb(rove, mine, !dialling.beside) {
             Ok(tcp) => {
                 self.settle();
                 Ok(Conn::Punched(tcp, dialling.punched()))
@@ -169,44 +171,6 @@ impl Ladder {
     /// How many punched streams are being held.
     pub fn held(&self) -> usize {
         self.held.len()
-    }
-
-    /// The two seconds-scale rungs: a re-punch at what worked last time,
-    /// then the full rendezvous.
-    fn climb(&self, rove: &Rove, mine: Vec<IpAddr>) -> Result<TcpStream, String> {
-        let punch = punch::Punch::bind(0)?;
-        let cached = self.cache.with(&mut |c| c.clone());
-        if !cached.is_empty() {
-            self.voice.say(&say::repunch(&cached, rove.window));
-            if let Some(tcp) = self.landed(punch.punch(cached, rove.window), rove.window) {
-                return Ok(tcp);
-            }
-        }
-        let mut dht = dht(rove).inspect_err(|e| self.voice.say(&say::no_commons(e)))?;
-        let (at, endpoints) = call::presence(&mut dht, &rove.pairing)
-            .inspect_err(|e| self.voice.say(&say::not_found(e)))?;
-        self.voice.say(&say::found(at, &endpoints));
-        let seq = self
-            .clock
-            .unix()
-            .max(self.last_seq.load(Ordering::Relaxed) + 1);
-        let called = call::call(&mut dht, &rove.pairing, seq, mine, punch.port())
-            .inspect_err(|_| self.voice.say(&say::not_called()))?;
-        self.voice.say(&say::called(&called, seq));
-        self.last_seq.store(seq, Ordering::Relaxed);
-        self.cache.with(&mut |c| c.clone_from(&endpoints));
-        self.voice.say(&say::punching(&endpoints, rove.window));
-        self.landed(punch.punch(endpoints, rove.window), rove.window)
-            .ok_or_else(|| "the punch landed nothing inside its window".to_owned())
-    }
-
-    /// Say how a punch ended — the peer's family, or the window running out.
-    fn landed(&self, tcp: Option<TcpStream>, window: Duration) -> Option<TcpStream> {
-        self.voice.say(&match &tcp {
-            Some(tcp) => say::landed(tcp.peer_addr().ok().map(|a| a.ip())),
-            None => say::expired(window),
-        });
-        tcp
     }
 
     /// The backoff returns to its floor: something connected or served.
@@ -234,22 +198,6 @@ impl Ladder {
             self.voice.say(&say::moved(mine, held));
         }
     }
-}
-
-/// A DHT client over a fresh UDP socket, once the bootstrap resolves.
-fn dht(rove: &Rove) -> Result<Dht, String> {
-    let bootstrap: Vec<SocketAddr> = rove
-        .bootstrap
-        .iter()
-        .filter_map(|name| name.to_socket_addrs().ok())
-        .flatten()
-        .collect();
-    if bootstrap.is_empty() {
-        return Err("no bootstrap node resolved".to_owned());
-    }
-    let udp = Udp::bind("0.0.0.0:0".parse().map_err(|e| format!("{e}"))?)
-        .map_err(|e| format!("rendezvous: {e}"))?;
-    Dht::new(Box::new(udp), bootstrap, rove.config.clone())
 }
 
 /// The direct rung: every address the entry resolves to, each given

@@ -75,7 +75,33 @@ fn a_line_out_past_the_bound_is_no_longer_waited_for() {
     assert!(second.recv_timeout(SOON).is_err());
     clock.advance(LENT);
     let dialling = second.recv_timeout(WAIT).unwrap();
-    assert!(dialling.is_some(), "a parked read never comes back: dial");
+    assert!(
+        dialling.is_some_and(|d| d.beside),
+        "a parked read never comes back: dial, beside the line still out"
+    );
+}
+
+#[test]
+fn a_caller_looking_in_the_pool_is_a_line_out_and_a_miss_is_no_change() {
+    let (gate, clock) = (Gate::new(), FakeClock::new());
+    let seen = gate.seen();
+    let looking = gate.lend();
+    assert_eq!(gate.seen(), seen, "going out is not a change");
+    // The window bl-2ba5 measured: the pool is empty while a take hands
+    // the line over, and a caller arriving then must not read an idle entry.
+    let second = waiter(&gate, &clock);
+    assert!(second.recv_timeout(SOON).is_err(), "waits on the look");
+    looking.missed();
+    assert_eq!(
+        gate.seen(),
+        seen,
+        "a look that found nothing changed nothing"
+    );
+    let dialling = second.recv_timeout(WAIT).unwrap();
+    assert!(
+        dialling.is_some_and(|d| !d.beside),
+        "nothing out, nothing in flight: dial, and not beside anything"
+    );
 }
 
 #[test]

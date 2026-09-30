@@ -23,6 +23,16 @@
 //!   in flight dials its own — serially still, since the gate admits one.
 //! - nothing in flight and nothing out — this caller dials.
 //!
+//! **A look in the pool is a line out** (bl-2ba5). Taking a held line hands
+//! it over from its holder thread, which wakes on its own tick — up to a
+//! quarter second in which the pool is empty and, were nothing counted, no
+//! line out and no dial in flight. A caller arriving in that window read
+//! the entry as idle and dialled a second line beside the first; measured
+//! live as a re-punch three seconds after a punch landed, while the line was
+//! still up. So a caller counts itself out *before* it looks ([`Lease`]),
+//! and a look that found nothing takes the count back without a change —
+//! nothing a waiter waits for appeared.
+//!
 //! A dialled socket (the direct rung) is one ask's and is never lent, so it
 //! only ends the dial. An entry that does not rove has no gate: its dial is
 //! a plain connect, as it always was.
@@ -59,11 +69,20 @@ pub(crate) enum Turn {
 }
 
 /// The one dial in flight. Dropped, it ends the dial having lent nothing.
-pub(crate) struct Dialling(Arc<Gate>);
+/// `beside` says the dial was admitted past [`LENT`] with a line still out:
+/// the entry HAS a line, so what this dial wants is a second one.
+pub(crate) struct Dialling {
+    gate: Arc<Gate>,
+    pub(crate) beside: bool,
+}
 
 /// **A punched line out with one caller.** Dropped — after the line went
 /// back to the pool, or with the line — it is back, and the waiters look.
-pub struct Lease(Arc<Gate>);
+pub struct Lease {
+    gate: Arc<Gate>,
+    /// Whether its return is a change: a look that found nothing is not.
+    returned: bool,
+}
 
 impl Gate {
     pub(crate) fn new() -> Arc<Gate> {
@@ -82,7 +101,7 @@ impl Gate {
         let dial = self.0.wait(
             &mut |s| {
                 if s.changes != seen {
-                    return Some(false);
+                    return Some(None);
                 }
                 if s.dialling {
                     since = None;
@@ -94,37 +113,49 @@ impl Gate {
                     return None;
                 }
                 s.dialling = true;
-                Some(true)
+                Some(Some(s.lent > 0))
             },
             TICK,
         );
-        if dial {
-            Turn::Dial(Dialling(Arc::clone(self)))
-        } else {
-            Turn::Look
+        match dial {
+            Some(beside) => Turn::Dial(Dialling {
+                gate: Arc::clone(self),
+                beside,
+            }),
+            None => Turn::Look,
         }
     }
 
-    /// A held line taken out of the pool is out with this caller.
+    /// A line out with this caller — counted before the caller looks in the
+    /// pool, so the look itself is never an idle entry. Going out is not a
+    /// change: no waiter waits for a line to leave.
     pub(crate) fn lend(self: &Arc<Self>) -> Lease {
-        self.0.with(&mut |s| {
-            s.lent += 1;
-            s.changes += 1;
-        });
-        Lease(Arc::clone(self))
+        self.0.with(&mut |s| s.lent += 1);
+        Lease {
+            gate: Arc::clone(self),
+            returned: true,
+        }
     }
 }
 
 impl Dialling {
     /// The dial landed a punched line: it is out with the dialler.
     pub(crate) fn punched(self) -> Lease {
-        self.0.lend()
+        self.gate.lend()
+    }
+}
+
+impl Lease {
+    /// The look found the pool empty: the count goes back, and nothing
+    /// changed that a waiter was waiting for.
+    pub(crate) fn missed(mut self) {
+        self.returned = false;
     }
 }
 
 impl Drop for Dialling {
     fn drop(&mut self) {
-        self.0.0.with(&mut |s| {
+        self.gate.0.with(&mut |s| {
             s.dialling = false;
             s.changes += 1;
         });
@@ -133,9 +164,10 @@ impl Drop for Dialling {
 
 impl Drop for Lease {
     fn drop(&mut self) {
-        self.0.0.with(&mut |s| {
+        let returned = u64::from(self.returned);
+        self.gate.0.with(&mut |s| {
             s.lent = s.lent.saturating_sub(1);
-            s.changes += 1;
+            s.changes += returned;
         });
     }
 }

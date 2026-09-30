@@ -157,11 +157,12 @@ impl Seat {
             None => hello::confirm(&mut tls).map_err(Wire::Unusable)?,
         };
         let keep = lease.map(|lease| (Arc::clone(&self.ladder), lease));
-        Ok((Open::new(tls, edition, keep), hangup))
+        let (open, kept) = Open::new(tls, edition, keep);
+        Ok((open, Hangup::new(hangup, kept)))
     }
 
-    /// The connection with the request written, and the hang-up handle on it
-    /// — a second descriptor on the same socket, taken here so that a clone
+    /// The connection with the request written, and what the hang-up handle
+    /// is made from — a second descriptor on the same socket, taken here so that a clone
     /// that cannot be had is the same sentence as a socket that would not
     /// open: both are the channel failing before a byte of the act left. The
     /// third answer is the edition a HELD stream already carries, `None` for
@@ -179,7 +180,7 @@ impl Seat {
                 let _ = tls.sock.set_read_timeout(Some(ASK_TIMEOUT));
                 frame::write_frame(&mut tls, request.to_string().as_bytes())
                     .map_err(|e| Wire::Transport(format!("send: {e}")))?;
-                return Ok((tls, Hangup::new(hangup), Some(held.edition), Some(lease)));
+                return Ok((tls, hangup, Some(held.edition), Some(lease)));
             }
             Conn::Punched(tcp, lease) => (tcp, Some(lease)),
             Conn::Dialled(tcp) => (tcp, None),
@@ -204,16 +205,16 @@ impl Seat {
         // therefore begins where the write ENDS, which is why the class here
         // is the same one a socket that would not open earns.
         send(&mut tls, request).map_err(|e| Wire::Transport(format!("send: {e}")))?;
-        Ok((tls, Hangup::new(hangup), None, lease))
+        Ok((tls, hangup, None, lease))
     }
 }
 
 /// What [`Seat::dial`] hands up: the stream with the request on it, the
-/// hang-up handle, the edition if the preface is already spent, and the
+/// hang-up handle's descriptor, the edition if the preface is already spent, and the
 /// lease a punched line is out on.
 type Dialled = (
     StreamOwned<ClientConnection, TcpStream>,
-    Hangup,
+    TcpStream,
     Option<u32>,
     Option<Lease>,
 );

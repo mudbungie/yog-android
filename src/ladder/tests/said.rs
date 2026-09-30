@@ -6,7 +6,11 @@ use super::*;
 use crate::test_support::{Beat, serve_held};
 
 /// A seat like [`seat`], whose rungs say their lines to the returned sink.
-fn heard_seat(dir: &std::path::Path, node: &Commons, clock: Arc<FakeClock>) -> (Seat, Heard) {
+pub(super) fn heard_seat(
+    dir: &std::path::Path,
+    node: &Commons,
+    clock: Arc<FakeClock>,
+) -> (Seat, Heard) {
     let heard = Heard::default();
     let mut rove = rove(vec![node.addr.to_string()]);
     rove.say = heard.sink();
