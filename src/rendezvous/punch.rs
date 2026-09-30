@@ -170,7 +170,8 @@ fn reusable(v6: bool, port: u16) -> std::io::Result<Socket> {
 }
 
 /// The addresses this box would send from, one per family it has a route
-/// on: a UDP socket "connected" to a global address sends nothing and reads
+/// on — the ladder's fallback until the platform reports its default
+/// network (`ladder::Network`, bl-792e): a UDP socket "connected" to a global address sends nothing and reads
 /// back the local end the route would use — so the address only has to
 /// select the default route, and the documentation ranges (RFC 5737, RFC
 /// 3849) do that as well as any real host would. Loopback never appears — a

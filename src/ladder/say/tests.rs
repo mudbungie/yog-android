@@ -60,7 +60,7 @@ fn every_line_is_the_house_shape_and_names_no_address() {
     );
     assert_eq!(
         lines[9],
-        "yog.rendezvous: call written — nonce 7, seq 11, 3 endpoint(s) (1 v6, 2 v4), 2 ack(s)"
+        "yog.rendezvous: call written — nonce 7, seq 11, 3 endpoint(s) (1 v6 loopback, 2 v4), 2 ack(s)"
     );
     assert_eq!(
         lines[13],
@@ -88,8 +88,26 @@ fn a_dial_error_is_said_as_its_class() {
 #[test]
 fn families_count_v6_first_and_say_none_for_nothing() {
     assert_eq!(families(&[]), "none");
-    assert_eq!(families(&[IpAddr::V6(Ipv6Addr::LOCALHOST)]), "1 v6");
+    assert_eq!(
+        families(&[IpAddr::V6(Ipv6Addr::LOCALHOST)]),
+        "1 v6 loopback"
+    );
     assert_eq!(families(&[IpAddr::V4(Ipv4Addr::LOCALHOST)]), "1 v4");
+}
+
+/// Which v6 a line counted is its scope, grouped, and never its address
+/// (bl-792e): the overlay's ULA and the internet's global read apart.
+#[test]
+fn a_v6_is_counted_by_its_scope_and_v4_after() {
+    let ip = |s: &str| s.parse::<IpAddr>().unwrap();
+    let said = families(&[
+        ip("2001:db8::1"),
+        ip("fd7a::1"),
+        ip("192.0.2.1"),
+        ip("2001:db8::2"),
+    ]);
+    assert_eq!(said, "2 v6 global, 1 v6 ula, 1 v4");
+    assert!(!said.contains("2001"));
 }
 
 #[test]

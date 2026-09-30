@@ -26,7 +26,8 @@ use std::sync::{Arc, OnceLock, Weak};
 
 /// The entry's punch port and the engine endpoints the last call from it
 /// found — one value, because the endpoints are worth re-punching only from
-/// the port the call named. A network change drops both (`notice_network`).
+/// the port the call named. A network change drops both: a port is the
+/// entry's only in the network generation it was bound in (`network`).
 ///
 /// **A re-punch is spent by trying it** (`armed`). A re-punch can land a
 /// TCP stream the engine never serves — its listener completes the
@@ -39,6 +40,7 @@ pub(crate) struct Port {
     pub(crate) punch: Arc<Punch>,
     pub(crate) cached: Vec<SocketAddr>,
     pub(crate) armed: bool,
+    pub(crate) generation: u64,
 }
 
 /// An entry's port, shared by every ladder that climbs it.
@@ -81,6 +83,9 @@ pub(crate) fn ladder(address: String, rove: Option<Rove>, clock: Arc<dyn Clock>)
             Arc::clone(port),
         ));
         *live = Arc::downgrade(&fresh);
+        if let Some(rove) = &fresh.rove {
+            rove.network.watch(&fresh);
+        }
         fresh
     })
 }

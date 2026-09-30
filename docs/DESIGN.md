@@ -612,6 +612,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
 | `src/ladder.rs` + `src/ladder/{rove,backoff,climb}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), the rest between failed climbs, and the two seconds-scale rungs behind it (`climb`, split at the cap) | landed (bl-3d62, split bl-2ba5) |
 | `src/ladder/awake.rs` | §21.10: whether this process may climb at all — the one predicate a roving ladder parks on (activity in front, pocket service holding, a job's run) — and the return that clears the rest and re-arms the re-punch | landed (bl-c21d) |
+| `src/ladder/network.rs` | §21.11: where this box sends from and when that changed — the platform's default-network report (fallback: the routing-table read), the reachable-address filter, the scope classes the lines say, and the generation that drops held lines, rest and punch port at once | landed (bl-792e) |
 | `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port with the endpoints its last call found (held for the run) | landed (bl-58a0, port bl-97ed) |
 | `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
 | `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
@@ -5882,16 +5883,21 @@ forgotten after its window (§21.9). The wait is on the injected clock
 rove has no gate and no table. The punch port and the endpoints its last
 call found are the entry's too, held for the run rather than weakly (§21.9).
 
-**A network change is the addresses moving.** Every dial reads the addresses
-this box would send from (`punch::local_ips`, a UDP "connect" that sends
-nothing) — the same list the call names — and a set that differs from the
-last dial's drops every held stream (dead mappings), clears the backoff,
-and lets the punch port go with the endpoints cached beside it: the
-engine's NAT holds a mapping toward the address and port the last call
-named, and this box no longer sends from that address, so the next dial
-binds afresh and writes a call (§21.9). No platform callback is
-needed: the routing table is the one source, and a flap back to the same
-address is caught by the held stream's own reader instead.
+**A network change is a new network generation** (§21.11). The platform
+reports it — `ConnectivityManager`'s default-network callback, through
+`dev.yog.App` — with the default network's own addresses, and a report whose
+reachable set differs from the last is a new generation. Until the platform
+reports (the host suite, a process a job started) the routing table is read
+instead (`punch::local_ips`, a UDP "connect" that sends nothing), and a read
+that differs from the last moves the generation the same way. A new
+generation drops every held stream (dead mappings) and clears the backoff
+**at once**, on the platform's thread, for every ladder alive; and the punch
+port with the endpoints cached beside it is the entry's only in the
+generation it was bound in, so the next dial binds afresh and writes a call
+(§21.9): the engine's NAT holds a mapping toward the address and port the
+last call named, and this box no longer sends from that address. The call's
+own addresses are read as it is written, not at the dial's start. A flap
+back to the same set is caught by the held stream's own reader instead.
 
 **The call carries the observed address** (bl-544b, porting yog bl-efae;
 yog REMOTE §13.2). The addresses this box sends from are route-local, and on
@@ -5970,7 +5976,7 @@ tag, for `shell::app::probe`'s reason):
     yog.rendezvous: direct rung — <n> address(es) tried: v6 timed out, v4 refused
     yog.rendezvous: direct rung — the entry's name did not resolve
     yog.rendezvous: climb skipped — resting after the last failed climb
-    yog.rendezvous: network changed — this box now sends from 1 v6, 1 v4; <h> held stream(s) dropped, rest cleared
+    yog.rendezvous: network changed — this box now sends from 1 v6 global, 1 v4; <h> held stream(s) dropped, rest cleared
     yog.rendezvous: re-punch at <k> cached endpoint(s) (1 v4), window <w>s
     yog.rendezvous: rendezvous not started — no bootstrap node resolved
     yog.rendezvous: presence read — seq <s>, <k> endpoint(s) (1 v6, 1 v4)
@@ -5987,7 +5993,8 @@ tag, for `shell::app::probe`'s reason):
 A drop's reason is one of five classes: two minutes of silence, the engine
 ended it, a frame that is not a ping, the stream closed or failed, or released
 (the network changed or the ladder went away). A line carries counts,
-sequence numbers, nonces and address families — **never an address, a key, a
+sequence numbers, nonces and address families, each v6 counted by its scope
+(`global`, `ula`, `link-local`, `loopback` — bl-792e, §21.11) — **never an address, a key, a
 salt or a sealed byte**; a DHT failure's own text names the target walked
 toward, a derivation of the key and salt, so it is withheld. Pings are
 counted into the held stream's closing line rather than said one per 25 s.
@@ -6181,3 +6188,66 @@ the only one the fake engine accepts — and writes no call; a beside call names
 a port of its own and the entry keeps the landed one; and the predicate's
 three reporters, alone and together. **Not yet re-verified live**: the return
 dial should move the engine's `/doctor` accepted count from 0 to 1.
+
+### 21.11 The network is the platform's fact, and the call names only its link (bl-792e)
+
+Measured on cellular (bl-65dc's leg): after wifi went down the ladder said
+*network changed* 34 s and 53 s later — it learned of the change by diffing
+the routing table at its next dial — and the first call after the drop named
+the wifi addresses, the first after wifi returned the cellular ones, each a
+wasted rendezvous. Every call also named a v6 the internet network did not
+own: the UDP "connect" read the source address of whichever interface the v6
+route happened to leave by (the overlay's ULA, or the IMS network), not the
+default network's.
+
+**One source, `ladder::Network`**, on `Rove::network` (the process's own on
+the device, one per test on the bench):
+
+- **The platform reports.** `dev.yog.App.follow` registers
+  `ConnectivityManager.registerDefaultNetworkCallback` once per process, from
+  `MainActivity`'s create or `Pocket`'s start, whichever comes first.
+  `onAvailable` and `onLinkPropertiesChanged` hand the default network's
+  `LinkProperties.getLinkAddresses()` — its own link, never every
+  interface's — to the native `App.network` as one string, an address a
+  line; `onLost` hands the empty string. The door
+  (`shell/sys/doors.rs`, `Java_dev_yog_App_network`) calls
+  `Network::changed`, where everything is decided and host-tested.
+- **Only an address a peer outside could reach is kept** (`network::reachable`):
+  `fc00::/7`, `fe80::/10`, `169.254/16`, `100.64/10` (carrier-grade NAT and
+  the overlay's v4) and `192.0.0/24` (the 464XLAT translator's side) are
+  dropped whatever the source; a line that does not parse (a link-local's
+  `%zone`) is dropped too. yog bl-f612 rules what an overlay should do; a
+  ULA is unreachable from outside regardless. **A carrier's own
+  unroutable v4 on the default link (the 25.x measured) is not a reserved
+  range, and stays** — the call's observed address (§21.3) is what a peer
+  reaches on that path.
+- **A generation is a moved set.** A report or a read whose sorted,
+  de-duplicated reachable set differs from the last is a new generation; the
+  first set ever read is not a change, and a report of the same set (a DNS
+  change, a reordering) is none. Once the platform has reported it is the one
+  source, and the routing-table read is only the fallback before it.
+- **A new generation acts at once.** Every ladder alive on the network
+  (registered weakly by `ladder::entries`) hears it on the reporting thread:
+  its held streams drop, its rest clears, and the move is said then —
+  `network changed — this box now sends from …` — rather than at the next
+  dial. The entry's punch port carries the generation it was bound in, and a
+  port of another is let go at the next climb. The call reads the addresses
+  as it is written.
+- **Which v6 is said, never which address**: §21.7's family counts carry
+  each v6's scope class (`1 v6 global`, `1 v6 ula`).
+
+**Proved on the fake bench** (`ladder/tests/network.rs`): a report drops the
+held line and says the change with no ask in flight; the next call names
+only the report's reachable address (plus what the commons observed), from a
+port of the new generation, and the change is not said twice; the platform
+overrides the fallback, an unchanged or reordered report is no change, an
+empty one is; a report reaches no ladder that has gone; the scope table and
+the filter. **Not built by the gate**: the Java half (`App.java`,
+`Pocket.java`) is compiled by the APK build, not by `make check`.
+**Not yet re-verified live**: the drop should now be said within a second of
+`svc wifi disable`, and the first call after it should name the cellular
+link. **Open:** a line out with an ask (a parked read) is not cut by the
+report — it ends on its own read — and a climb whose punch window is open
+when the report lands finishes that window; with a VPN as the default
+network the report is the VPN's link, which the filter may leave empty, so
+the call then names only its observed address.

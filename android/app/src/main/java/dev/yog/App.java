@@ -2,6 +2,10 @@ package dev.yog;
 
 import android.app.Activity;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.LinkAddress;
+import android.net.LinkProperties;
+import android.net.Network;
 
 /**
  * The app's own two handles, and the one fact only the platform knows: is
@@ -49,9 +53,67 @@ public final class App {
     private static volatile Context app;
     private static volatile Activity front;
 
+    /** Whether this process already follows the default network. */
+    private static boolean following;
+
     /** This app's process is up; hold the context that outlives every screen. */
     static void created(Activity activity) {
         app = activity.getApplicationContext();
+        follow(app);
+    }
+
+    /**
+     * The default network's addresses, one per line, or nothing when there is
+     * none (bl-792e): what a roving ladder's call names and the moment every
+     * cache it keeps goes stale. Decided in Rust ({@code ladder::Network}).
+     */
+    private static native void network(String addresses);
+
+    /**
+     * Follow the default network for the life of the process, once — from
+     * whichever of {@link MainActivity} and {@link Pocket} starts it first
+     * (bl-792e, DESIGN §21.11). The platform's callback, not a periodic read
+     * of the routing table, is when a change is known: measured, the read
+     * learned of a wifi drop 34–53 s late. The addresses are the default
+     * network's own link, not every interface's, so an overlay or an IMS
+     * network never lends a call its v6.
+     */
+    static synchronized void follow(Context context) {
+        if (following) {
+            return;
+        }
+        ConnectivityManager cm = context.getSystemService(ConnectivityManager.class);
+        if (cm == null) {
+            return;
+        }
+        following = true;
+        cm.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network n) {
+                report(cm.getLinkProperties(n));
+            }
+
+            @Override
+            public void onLinkPropertiesChanged(Network n, LinkProperties lp) {
+                report(lp);
+            }
+
+            @Override
+            public void onLost(Network n) {
+                network("");
+            }
+        });
+    }
+
+    /** One report: every address on the link, as the platform spells it. */
+    private static void report(LinkProperties lp) {
+        StringBuilder out = new StringBuilder();
+        if (lp != null) {
+            for (LinkAddress address : lp.getLinkAddresses()) {
+                out.append(address.getAddress().getHostAddress()).append('\n');
+            }
+        }
+        network(out.toString());
     }
 
     /**

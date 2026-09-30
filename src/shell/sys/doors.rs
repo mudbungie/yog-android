@@ -80,6 +80,24 @@ extern "system" fn Java_dev_yog_App_pocketed(
     crate::ladder::Awake::process().service(held != 0);
 }
 
+/// **The default network changed** (bl-792e; `dev.yog.App`, from
+/// `ConnectivityManager`'s default-network callback): its addresses, one per
+/// line, or nothing when there is none. The decision — what is reachable,
+/// whether the set moved, which ladders hear of it — is
+/// [`crate::ladder::Network::changed`]'s and is tested on the host.
+#[unsafe(no_mangle)]
+extern "system" fn Java_dev_yog_App_network(
+    mut env: jni::JNIEnv<'_>,
+    _class: jni::objects::JClass<'_>,
+    addresses: jni::objects::JString<'_>,
+) {
+    let addresses: String = env
+        .get_string(&addresses)
+        .map(Into::into)
+        .unwrap_or_default();
+    crate::ladder::Network::process().changed(&addresses);
+}
+
 /// **Whether there is an attention lane to hold** (DESIGN §17.6; yog REMOTE
 /// §14 rung 2), asked by the same service. The two-line protocol again, and
 /// an empty answer means what it means everywhere here: nothing to hold.

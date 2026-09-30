@@ -1,11 +1,10 @@
 //! What a roving entry climbs with, and the clock it climbs on — split from
 //! the ladder so the rungs are the policy and this is only its inputs.
 
-use super::Awake;
 use super::say::{self, Say};
+use super::{Awake, Network};
 use crate::dht::Config;
-use crate::rendezvous::{Pairing, punch};
-use std::net::IpAddr;
+use crate::rendezvous::Pairing;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -39,10 +38,11 @@ pub struct Rove {
     pub config: Config,
     /// How long a punch keeps sending SYNs.
     pub window: Duration,
-    /// The addresses this box would send from — what the call names and
-    /// what a network change moves (DESIGN §21.3). A function so the suite
-    /// can move it; the device's is [`punch::local_ips`].
-    pub addresses: fn() -> Vec<IpAddr>,
+    /// Where this box sends from and when that changed — what the call
+    /// names and what every cache is keyed by (`ladder::network`, DESIGN
+    /// §21.11); the device's is [`Network::process`], the suite's one it
+    /// reports to and whose fallback it moves.
+    pub network: Arc<Network>,
     /// Where the rungs' lines go (`ladder::say`); the device's is
     /// [`say::logcat`], the suite's a sink it reads back.
     pub say: Say,
@@ -75,7 +75,7 @@ impl Rove {
             .to_vec(),
             config: Config::default(),
             window: WINDOW,
-            addresses: punch::local_ips,
+            network: Network::process(),
             say: say::logcat(),
             awake: Awake::process(),
         }

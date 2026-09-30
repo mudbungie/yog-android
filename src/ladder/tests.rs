@@ -25,6 +25,7 @@ mod awake;
 mod entry;
 mod fallthrough;
 mod held;
+mod network;
 mod port;
 mod rungs;
 mod said;
@@ -106,7 +107,7 @@ fn rove(bootstrap: Vec<String>) -> Rove {
             max_queries: 64,
         },
         window: Duration::from_secs(2),
-        addresses,
+        network: Network::new(addresses),
         say: say::quiet(),
         awake: Awake::new(),
     }
@@ -232,7 +233,8 @@ fn the_mainline_shape_is_the_engines() {
     let r = Rove::mainline(pairing().1);
     assert_eq!(r.bootstrap.len(), 4);
     assert_eq!(r.window, Duration::from_secs(35));
-    assert!((r.addresses)().iter().all(|ip| !ip.is_loopback()));
+    assert!(r.network.now().1.iter().all(|ip| !ip.is_loopback()));
+    assert!(Arc::ptr_eq(&r.network, &Network::process()));
     assert_eq!(r.config.k, 8);
     assert!(Arc::ptr_eq(&r.awake, &Awake::process()));
     assert!(SystemClock.unix() > 1_700_000_000);

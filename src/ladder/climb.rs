@@ -7,7 +7,7 @@ use super::{Ladder, Rove, say};
 use crate::dht::{Dht, Udp};
 use crate::rendezvous::call;
 use crate::rendezvous::punch::Punch;
-use std::net::{IpAddr, SocketAddr, TcpStream, ToSocketAddrs};
+use std::net::{SocketAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
@@ -27,14 +27,9 @@ impl Ladder {
     /// whose call landed, whose mapping the engine's NAT holds — replacing
     /// it with the beside port was measured live leaving no later re-punch a
     /// mapping to ride.
-    pub(super) fn climb(
-        &self,
-        rove: &Rove,
-        mine: Vec<IpAddr>,
-        repunch: bool,
-    ) -> Result<TcpStream, String> {
+    pub(super) fn climb(&self, rove: &Rove, repunch: bool) -> Result<TcpStream, String> {
         let (punch, cached) = if repunch {
-            self.bound()?
+            self.bound(rove)?
         } else {
             (Arc::new(Punch::bind(0)?), Vec::new())
         };
@@ -52,6 +47,9 @@ impl Ladder {
             .clock
             .unix()
             .max(self.last_seq.load(Ordering::Relaxed) + 1);
+        // The addresses are read now, as the call names them — not at the
+        // dial's start, a walk of the commons ago (bl-792e).
+        let (generation, mine) = self.notice(rove);
         let called = call::call(&mut dht, &rove.pairing, seq, mine, punch.port())
             .inspect_err(|_| self.voice.say(&say::not_called()))?;
         self.voice.say(&say::called(&called, seq));
@@ -65,6 +63,7 @@ impl Ladder {
                     punch: Arc::clone(&punch),
                     cached: endpoints.clone(),
                     armed: true,
+                    generation,
                 });
             });
         }
@@ -77,10 +76,12 @@ impl Ladder {
     /// run (bl-97ed), with the endpoints to re-punch — the last call's, if
     /// the re-punch is armed, and it is disarmed by being handed out
     /// (`entries::Port`). A port bound here has no call behind it yet, so it
-    /// caches nothing.
-    fn bound(&self) -> Result<(Arc<Punch>, Vec<SocketAddr>), String> {
+    /// caches nothing; a port of another network generation is not the
+    /// entry's any more, and is let go (`network`).
+    fn bound(&self, rove: &Rove) -> Result<(Arc<Punch>, Vec<SocketAddr>), String> {
+        let generation = rove.network.generation();
         self.port.with(&mut |port| {
-            if let Some(port) = port {
+            if let Some(port) = port.as_mut().filter(|p| p.generation == generation) {
                 let cached = if port.armed {
                     port.cached.clone()
                 } else {
@@ -94,6 +95,7 @@ impl Ladder {
                 punch: Arc::clone(&punch),
                 cached: Vec::new(),
                 armed: false,
+                generation,
             });
             Ok((punch, Vec::new()))
         })

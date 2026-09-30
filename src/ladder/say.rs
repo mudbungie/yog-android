@@ -19,6 +19,7 @@
 //! [`MARKER`] — in the message, not the tag, for `shell::app::probe`'s
 //! reason: `android_logger` tags a record by module path.
 
+use super::network::Scope;
 use crate::rendezvous::call;
 use crate::state::Slot;
 use std::io;
@@ -236,20 +237,27 @@ fn family(ip: IpAddr) -> &'static str {
     if ip.is_ipv6() { "v6" } else { "v4" }
 }
 
-/// How many of `ips` are of each family, v6 first — `1 v6, 2 v4`, or `none`.
+/// How many of `ips` are of each family, v6 first and each v6 by its scope
+/// (bl-792e: which v6 a call named is the question, never its address) —
+/// `1 v6 global, 2 v4`, or `none`.
 fn families(ips: &[IpAddr]) -> String {
-    let v6 = ips.iter().filter(|ip| ip.is_ipv6()).count();
-    let v4 = ips.len() - v6;
-    let parts: Vec<String> = [(v6, "v6"), (v4, "v4")]
-        .into_iter()
-        .filter(|(n, _)| *n > 0)
-        .map(|(n, family)| format!("{n} {family}"))
-        .collect();
-    if parts.is_empty() {
-        "none".to_owned()
-    } else {
-        parts.join(", ")
+    let mut parts: Vec<(String, usize)> = Vec::new();
+    let (v6, v4): (Vec<&IpAddr>, Vec<&IpAddr>) = ips.iter().partition(|ip| ip.is_ipv6());
+    for ip in v6 {
+        let label = format!("v6 {}", Scope::of(*ip).word());
+        match parts.iter_mut().find(|(l, _)| *l == label) {
+            Some((_, n)) => *n += 1,
+            None => parts.push((label, 1)),
+        }
     }
+    if !v4.is_empty() {
+        parts.push(("v4".to_owned(), v4.len()));
+    }
+    if parts.is_empty() {
+        return "none".to_owned();
+    }
+    let parts: Vec<String> = parts.iter().map(|(l, n)| format!("{n} {l}")).collect();
+    parts.join(", ")
 }
 
 #[cfg(test)]

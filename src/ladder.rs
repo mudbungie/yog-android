@@ -21,10 +21,11 @@
 //! both is not climbed again until it expires, doubling to a minute, so a
 //! phone with no network settles instead of walking a dark commons per dial.
 //! Three things reset it, each the evidence it wants: a rung that connected,
-//! a stream that served, and the addresses this box sends from moving —
-//! which also drops every held stream (dead mappings after an address
-//! change) and the punch port with its cached endpoints, so the next dial
-//! rendezvouses afresh from a fresh port.
+//! a stream that served, and the network changing (`network`: the platform's
+//! report, or the addresses this box sends from moving) — which also drops
+//! every held stream (dead mappings after a change) and the punch port with
+//! its cached endpoints, so the next dial rendezvouses afresh from a fresh
+//! port.
 //!
 //! **One climb per entry at a time** (bl-58a0): every seat on an entry
 //! holds the same ladder (`entries`), and every caller passes its gate
@@ -43,6 +44,7 @@ mod climb;
 mod entries;
 mod gate;
 pub mod held;
+mod network;
 mod rove;
 pub mod say;
 
@@ -50,6 +52,7 @@ pub use awake::{Awake, Hold};
 pub(crate) use entries::ladder as entry;
 pub use gate::Lease;
 pub use held::Held;
+pub use network::Network;
 pub use rove::{Clock, Rove, SystemClock};
 pub use say::Say;
 
@@ -59,7 +62,7 @@ use gate::{Gate, Turn};
 use say::Voice;
 use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
-use std::sync::atomic::{AtomicI64, AtomicU64};
+use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use std::time::Duration;
 
 /// How long a direct dial is given before the ladder moves on. Only spent
@@ -82,8 +85,8 @@ pub struct Ladder {
     address: String,
     rove: Option<Rove>,
     clock: Arc<dyn Clock>,
-    /// The addresses the last dial saw this box send from.
-    seen: Slot<Option<Vec<IpAddr>>>,
+    /// The network generation this ladder last acted on (`network`).
+    seen: AtomicU64,
     /// The entry's punch port and what a call from it found (`entries`).
     port: entries::Bound,
     backoff: Slot<Backoff>,
@@ -113,11 +116,12 @@ impl Ladder {
             .as_ref()
             .map_or_else(say::quiet, |r| Arc::clone(&r.say));
         let returns = rove.as_ref().map_or(0, |r| r.awake.returns());
+        let seen = rove.as_ref().map_or(0, |r| r.network.generation());
         Ladder {
             address,
             rove,
             clock,
-            seen: Slot::new(None),
+            seen: AtomicU64::new(seen),
             port,
             backoff: Slot::new(Backoff::new()),
             held: held::Pool::new(),
@@ -138,8 +142,7 @@ impl Ladder {
         };
         // Nothing climbs while the process sleeps (`awake`, bl-c21d).
         self.wake(rove);
-        let mine = (rove.addresses)();
-        self.notice_network(&mine);
+        self.notice(rove);
         // Rung 1, then the gate: a caller that is not the one dialling looks
         // in the pool again after every change, until a line is there for it
         // or the dial is its own.
@@ -168,7 +171,7 @@ impl Ladder {
             return Err(format!("{direct}; {said}"));
         }
         self.voice.forget("rest");
-        match self.climb(rove, mine, !dialling.beside) {
+        match self.climb(rove, !dialling.beside) {
             Ok(tcp) => {
                 self.settle();
                 Ok(Conn::Punched(tcp, dialling.punched()))
@@ -205,27 +208,30 @@ impl Ladder {
         self.backoff.with(&mut Backoff::settle);
     }
 
-    /// **A network change is the addresses moving** (DESIGN §21.3): the
-    /// set this box would send from differs from the last dial's. That drops
-    /// every held stream — a dead mapping after an address change — clears
-    /// the backoff, and lets the punch port go with the endpoints cached
-    /// beside it (bl-97ed): the engine's NAT holds a mapping toward the
-    /// address and port the last call named, and this box no longer sends
-    /// from that address, so a re-punch from here could never be answered.
-    /// The next climb binds afresh and writes a call. The first dial has
-    /// nothing to compare against and changes nothing.
-    fn notice_network(&self, mine: &[IpAddr]) {
-        let moved = self.seen.with(&mut |seen| {
-            let moved = seen.as_deref().is_some_and(|was| was != mine);
-            *seen = Some(mine.to_vec());
-            moved
-        });
-        if moved {
+    /// **A network change** (DESIGN §21.3, §21.11): the generation moved
+    /// since this ladder last looked (`network`). That drops every held
+    /// stream — a dead mapping after a change — and clears the backoff; the
+    /// punch port goes with the endpoints cached beside it by being of the
+    /// old generation (`entries::Port`): the engine's NAT holds a mapping
+    /// toward the address and port the last call named, and this box no
+    /// longer sends from that address. Called on every dial, just before a
+    /// call names the addresses, and at once when the platform reports;
+    /// answers the generation now and the addresses in it.
+    fn notice(&self, rove: &Rove) -> (u64, Vec<IpAddr>) {
+        let (generation, mine) = rove.network.now();
+        if self.seen.swap(generation, Ordering::Relaxed) != generation {
             let held = self.held.len();
             self.held.clear();
-            self.port.with(&mut |port| *port = None);
             self.settle();
-            self.voice.say(&say::moved(mine, held));
+            self.voice.say(&say::moved(&mine, held));
+        }
+        (generation, mine)
+    }
+
+    /// The platform said the network changed (`Network::changed`).
+    pub(crate) fn noticed(&self) {
+        if let Some(rove) = &self.rove {
+            self.notice(rove);
         }
     }
 }
