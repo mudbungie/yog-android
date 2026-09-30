@@ -1,9 +1,0 @@
-+++
-title = "rung 3 becomes a RE-CALL (yog REMOTE ruling, one walk from cached presence), and two drifts from bl-c21d: a climb already in flight after HOME still writes a fresh call and lands it in the background, and a concurrent ask climbs to a beside call while the only held stream is checked out"
-created = 1790734017
-updated = 1790734111
-claimant = "Urinalyses-B4"
-priority = 2
-root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
-+++
-Measured 2026-09-29 on three wifi dials (engine 0.0.74, build with bl-c21d): the re-punch fired correctly from the landed port and could not land (the engine's NAT holds no mapping after the served stream ends; yog ball 'REMOTE §13.3 rung 3 … RE-CALL' records the ruling). Deliver (a) replace rung 3: on return, with cached presence (endpoints + engine punch port, from the last read), write a fresh call (skip the presence walk) and punch from the entry's port; a call that expires unanswered invalidates the presence cache so the next climb reads presence again; the 'back in the foreground' line then says 're-call armed'. (b) Parking must stop an in-flight climb too: a climb that reaches a rung boundary while the app is not awake stops there (no call written in the background; a punch already in its window may finish); test: HOME during the presence walk → no 'call written' line. (c) A concurrent ask while the entry's only held stream is checked out waits for it (the gate's lent-out path) and never climbs beside it unless the line is gone; the 10 s give-up exit stays for a parked read but must not write a call while another ask is mid-climb. Tests on the fake bench for each. Land AFTER bl-792e (network change), which touches the same files; merge it in before closing.
