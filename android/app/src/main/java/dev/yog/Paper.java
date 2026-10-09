@@ -66,7 +66,7 @@ public final class Paper {
             return App.ERR + "this device has no clipboard service.";
         }
         try {
-            clipboard.setPrimaryClip(ClipData.newPlainText("yog", text));
+            clipboard.setPrimaryClip(ClipData.newPlainText("lernie", text));
         } catch (RuntimeException e) {
             return App.ERR + "this device refused the clipboard write: " + e;
         }

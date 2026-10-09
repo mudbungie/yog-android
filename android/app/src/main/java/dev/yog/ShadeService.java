@@ -72,7 +72,7 @@ public class ShadeService extends NotificationListenerService {
 
     /** The act that turns this on, named wherever a refusal is earned. */
     private static final String ENABLE_ACT =
-            "enable \"yog\" under Settings > Apps > Special app access > Notification access, "
+            "enable \"lernie\" under Settings > Apps > Special app access > Notification access, "
                     + "or have a trusted device enable it over the debug bridge with "
                     + "`cmd notification allow_listener dev.yog/dev.yog.ShadeService`";
 
@@ -136,7 +136,7 @@ public class ShadeService extends NotificationListenerService {
 
     /** The sentence a read earns when the access was never granted. */
     static String notEnabled() {
-        return "yog may not read this device's notifications: " + ENABLE_ACT + ". " + RESTRICTED_ACT;
+        return "lernie may not read this device's notifications: " + ENABLE_ACT + ". " + RESTRICTED_ACT;
     }
 
     /**

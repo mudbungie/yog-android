@@ -75,7 +75,7 @@ fn a_foot_with_no_host_says_so_rather_than_going_quiet() {
     let notice = line(&provisioned("phone", true), None).expect("hands still answer");
     assert_eq!(notice.title, "this phone is not serving");
     assert!(
-        notice.text.contains("Open yog to see why"),
+        notice.text.contains("Open lernie to see why"),
         "{}",
         notice.text
     );
@@ -213,7 +213,7 @@ fn a_device_with_no_material_holds_no_lane() {
 fn the_held_lane_states_its_price_and_the_act_that_ends_it() {
     let seat = provisioned("phone", false);
     let notice = super::attending(&seat).unwrap();
-    assert_eq!(notice.title, "yog is listening for your turn");
+    assert_eq!(notice.title, "lernie is listening for your turn");
     assert!(notice.text.contains("radio wakes"), "{}", notice.text);
     assert!(notice.text.contains("unrestricted"), "{}", notice.text);
     assert!(notice.text.contains("Attention"), "{}", notice.text);

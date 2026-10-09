@@ -54,7 +54,7 @@ final class Fix {
 
     /** The one act that fixes a location refusal, wherever it is met. */
     private static final String SETTINGS_ACT =
-            "turn Location on for yog under Settings > Apps > yog > Permissions, then call again.";
+            "turn Location on for lernie under Settings > Apps > lernie > Permissions, then call again.";
 
     /** Whether the system's dialog has been answered this run. */
     private static volatile boolean answered;
@@ -192,9 +192,9 @@ final class Fix {
                     + "quick settings, then call again.";
         }
         if (App.front() == null) {
-            return "no fix arrived and this device has recorded none. yog is not on screen, and "
+            return "no fix arrived and this device has recorded none. lernie is not on screen, and "
                     + "Android gives no location to an app in the background without the "
-                    + "background-location grant this app does not ask for: open yog on the "
+                    + "background-location grant this app does not ask for: open lernie on the "
                     + "device — the notify tool can ask the operator to — then call again.";
         }
         return "no fix arrived in "

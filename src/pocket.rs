@@ -91,11 +91,11 @@ pub fn footed(files: &Path) -> Result<crate::foot::Foot, String> {
 /// device is both.
 pub fn attending(files: &Path) -> Option<Notice> {
     seated(files).then(|| Notice {
-        title: "yog is listening for your turn".to_owned(),
-        text: "yog holds one connection open so a workspace that wants you reaches this \
+        title: "lernie is listening for your turn".to_owned(),
+        text: "lernie holds one connection open so a workspace that wants you reaches this \
                phone while it is pocketed. The connection stays up and the radio wakes with \
                it — this is the battery cost of being told promptly. Take back unrestricted \
-               battery under Settings > Apps > yog > Battery, or silence the Attention \
+               battery under Settings > Apps > lernie > Battery, or silence the Attention \
                channel, and it stops."
             .to_owned(),
     })
@@ -116,7 +116,8 @@ fn seated(files: &Path) -> bool {
 fn idle() -> Notice {
     Notice {
         title: "this phone is not serving".to_owned(),
-        text: "yog is enrolled as hands and no tool lane is up. Open yog to see why.".to_owned(),
+        text: "lernie is enrolled as hands and no tool lane is up. Open lernie to see why."
+            .to_owned(),
     }
 }
 
@@ -142,13 +143,13 @@ fn notice(standing: &Standing) -> Notice {
     let (title, mut text) = match (&standing.health, &standing.last) {
         (Health::Stopped(why), _) => (
             "this phone has stopped serving".to_owned(),
-            format!("{why}. Nothing is on the network now — open yog to start again."),
+            format!("{why}. Nothing is on the network now — open lernie to start again."),
         ),
         (Health::Redialling(why), _) => (
             "this phone is reconnecting".to_owned(),
             format!(
                 "{why}. No tool call reaches it until the connection returns; \
-                 yog keeps trying, more slowly each time."
+                 lernie keeps trying, more slowly each time."
             ),
         ),
         (Health::Serving, _) if !standing.advertised => (

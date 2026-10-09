@@ -79,7 +79,7 @@ final class Notify {
 
     /** The one act that fixes a notification refusal, wherever it is met. */
     private static final String SETTINGS_ACT =
-            "turn notifications on for yog under Settings > Apps > yog > Notifications, "
+            "turn notifications on for lernie under Settings > Apps > lernie > Notifications, "
                     + "then call again.";
 
     /** Whether the system's dialog has been answered this run. */
@@ -114,7 +114,7 @@ final class Notify {
      * Build one, without posting it. The foreground service (DESIGN §18) needs
      * the Notification itself rather than an id — {@code startForeground} takes
      * the object — and this is the one builder either caller uses, so a
-     * notification from yog looks like a notification from yog wherever it
+     * notification from lernie looks like a notification from lernie wherever it
      * came from.
      *
      * <p>{@code ongoing} is the standing kind: it is not dismissed by a tap and
@@ -202,12 +202,12 @@ final class Notify {
                             HOLDING_ATTENTION, "Listening for your turn",
                             NotificationManager.IMPORTANCE_LOW);
             held.setDescription(
-                    "Shown while yog is holding one connection open so a workspace that wants"
+                    "Shown while lernie is holding one connection open so a workspace that wants"
                         + " you reaches this phone promptly rather than at the next scheduled"
                         + " check. That connection stays up and the radio wakes with it — this"
                         + " is the battery cost of being told in seconds instead of in"
-                        + " quarter-hours. It runs only while yog is allowed unrestricted"
-                        + " battery under Settings > Apps > yog > Battery; take that back, or"
+                        + " quarter-hours. It runs only while lernie is allowed unrestricted"
+                        + " battery under Settings > Apps > lernie > Battery; take that back, or"
                         + " turn the Attention channel off, and it stops.");
             return held;
         }
@@ -221,7 +221,7 @@ final class Notify {
                         + " connection stays up, and the radio wakes with it — this is the"
                         + " battery cost of being reachable. It starts because this device"
                         + " carries a Thrall (foot-grade) leaf; provision it a Lernie leaf"
-                        + " instead, or stop yog under Settings > Apps > Active apps, and it"
+                        + " instead, or stop lernie under Settings > Apps > Active apps, and it"
                         + " does not.");
             return foot;
         }
@@ -233,7 +233,7 @@ final class Notify {
                 new NotificationChannel(
                         ATTENTION, "Attention", NotificationManager.IMPORTANCE_DEFAULT);
         attention.setDescription(
-                "When a workspace wants you. yog checks on the system's own schedule — no "
+                "When a workspace wants you. lernie checks on the system's own schedule — no "
                     + "sooner than every 15 minutes, and hours apart when the phone is in deep"
                     + " sleep. Each check is one short connection over the network you are"
                     + " already on, and nothing runs in between. Turning this off also stops"

@@ -81,7 +81,7 @@ public class InterfaceService extends AccessibilityService {
     static String notEnabled() {
         return ERR
                 + "the accessibility service is not enabled on this device. Enable "
-                + "\"yog\" under Settings > Accessibility > Installed apps, or have a "
+                + "\"lernie\" under Settings > Accessibility > Installed apps, or have a "
                 + "trusted device enable it over the debug bridge.";
     }
 

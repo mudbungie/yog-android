@@ -135,7 +135,7 @@ public final class Update {
         }
         Activity front = App.front();
         if (front == null) {
-            return "yog left the screen before the installer could open: tap update again.";
+            return "lernie left the screen before the installer could open: tap update again.";
         }
         Uri uri =
                 FileProvider.getUriForFile(front, front.getPackageName() + AUTHORITY, apk);
@@ -150,7 +150,7 @@ public final class Update {
         } catch (ActivityNotFoundException e) {
             return "this device has no package installer to hand the update to.";
         }
-        return "the installer has the update — tap install, then open yog again.";
+        return "the installer has the update — tap install, then open lernie again.";
     }
 
     /** One named background thread. Both doors start work the frame may not wait on. */

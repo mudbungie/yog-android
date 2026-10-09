@@ -26,7 +26,7 @@ pub(crate) fn run(app: AndroidApp) {
         ..Default::default()
     };
     if let Err(e) = eframe::run_native(
-        "yog",
+        "lernie",
         options,
         Box::new(move |cc| {
             // The language, installed once and before the first frame

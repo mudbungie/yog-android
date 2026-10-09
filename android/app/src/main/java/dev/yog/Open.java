@@ -34,7 +34,7 @@ final class Open {
         if (front == null) {
             return App.ERR
                     + "Android refuses an activity launch from an app that is not in front, "
-                    + "and yog is not on this device's screen right now: bring yog to the "
+                    + "and lernie is not on this device's screen right now: bring lernie to the "
                     + "front — notify can ask the operator to — and call again.";
         }
         Intent intent;

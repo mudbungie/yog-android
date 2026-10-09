@@ -1,11 +1,17 @@
 # yog-android
 
-**yog on Android** (`dev.yog`): the app ships all three of the harness's
+**lernie on Android** (`dev.yog`): the app ships all three of the harness's
 runnable components — the **seat**, the **foot** (tool host) and the
 **server** — each gated behind an explicit bootstrap rather than auto-started
 (DESIGN §9). The default path is mTLS client enrollment: a leaf provisioned out
 of channel, and this app dialling a host engine with it. Agents run on that
 engine; seats attach and detach, and the work does not.
+
+**The app is named lernie** (operator ruling 2026-10-08, bl-5331): the program
+an operator runs, on a desk or on a phone, is the user interface, and that is
+the seat; yog is the server it dials. The package id stays `dev.yog` — the
+release channel (DESIGN §20) made it a one-way door, and a phone keeps its
+update path only under the id it was installed with.
 
 The **server** bootstrap is offered and does not start: the engine
 cross-compiles and links for this architecture, but Android ships no `git` and

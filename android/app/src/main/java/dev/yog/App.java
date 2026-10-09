@@ -48,7 +48,7 @@ public final class App {
 
     /** The sentence a tool earns before this app's own activity has started. */
     static final String NO_CONTEXT =
-            "this app has not finished starting: open yog on the device once, and call again.";
+            "this app has not finished starting: open lernie on the device once, and call again.";
 
     private static volatile Context app;
     private static volatile Activity front;

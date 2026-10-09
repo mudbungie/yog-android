@@ -8,9 +8,11 @@ replace prose and cite the ball id; the path to a ruling is not narrated.
 
 ## 1. What this is
 
-**The app is yog** (operator ruling 2026-08-30, yog bl-15bd), and it ships all
-three of REMOTE §12's runnable components — the seat, the foot and the server
-— **each gated behind an explicit bootstrap rather than auto-started**. The
+**The app is lernie** (operator ruling 2026-10-08, bl-5331, reversing the
+naming half of yog bl-15bd: the program an operator runs is the user interface,
+that is the seat, and the seat is lernie wherever it runs — yog names the
+server), and it ships all three of REMOTE §12's runnable components — the
+seat, the foot and the server — **each gated behind an explicit bootstrap rather than auto-started**. The
 default path is mTLS client enrollment; running the engine on the phone is
 allowed but is the deliberate, non-default choice. §9 is that ruling made
 structural.
@@ -1205,9 +1207,9 @@ rather than pinning the field at whatever height it was first handed.
 
 ## 9. One app, three components, three bootstraps (bl-15bd, landed bl-7714)
 
-**The ruling** (operator, 2026-08-30): the Android app is named **yog** and
-ships all three runnable components, each gated behind an explicit bootstrap
-rather than auto-started. The default bootstrap is mTLS client enrollment — the
+**The ruling** (operator, 2026-08-30; the NAME amended 2026-10-08, bl-5331):
+the Android app ships all three runnable components, each gated behind an
+explicit bootstrap rather than auto-started. The default bootstrap is mTLS client enrollment — the
 seat or the foot dialing a host engine, material provisioned out of channel
 per REMOTE §1.4. Running the yog server locally on the phone is allowed but is
 the deliberate, non-default choice. The old development client is superseded:
@@ -1220,6 +1222,17 @@ is `dev.yog.InterfaceService` rather than a class whose name repeated the
 app's. The app has never left the box that builds it and has no upgrade path
 to preserve, which is exactly why the id moved now: an install channel makes
 it a one-way door.
+
+**The 2026-10-08 rename moved the label and not the id** (bl-5331). The app is
+named **lernie**: what an operator runs on a desk or a phone is the user
+interface, that is the seat, and the seat is lernie wherever it runs — so the
+launcher label, the window name and every sentence the app says about itself
+name lernie, while **Yog** stays the brand of the server bootstrap because the
+server is yog. By then §20's release channel existed, the door the paragraph
+above foresaw had closed, and a phone on the channel keeps its update path only
+under the id it was installed with: `applicationId`, the Java package, the JNI
+class names, the notification-channel ids and the crate stay `dev.yog` /
+`yog_android`, and the wire tags stay yog's because they are the protocol's.
 
 **The component is derived, never stored.** This is the design's whole shape
 and it dissolves the first-run special case rather than answering it:

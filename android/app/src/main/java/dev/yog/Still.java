@@ -18,7 +18,7 @@ import android.content.pm.PackageManager;
  * Android has refused the camera to a process that is not in front since
  * Android 9, and what a caller gets back is a failed open on a callback long
  * after the call returned. Asking {@link App#front} first turns that into one
- * sentence naming the act — bring yog to the screen — which is the difference
+ * sentence naming the act — bring lernie to the screen — which is the difference
  * between a priced capability and a decoy (§16.1's corpus rule).
  *
  * <h2>The scanner holds the same camera</h2>
@@ -49,7 +49,7 @@ final class Still {
 
     /** The one act that fixes a camera refusal, wherever it is met. */
     private static final String SETTINGS_ACT =
-            "turn Camera on for yog under Settings > Apps > yog > Permissions, then call again.";
+            "turn Camera on for lernie under Settings > Apps > lernie > Permissions, then call again.";
 
     /** Whether the system's dialog has been answered this run. */
     private static volatile boolean answered;
@@ -60,7 +60,7 @@ final class Still {
         if (front == null) {
             return App.ERR
                     + "Android refuses the camera to an app that is not on screen, so nothing "
-                    + "was photographed: open yog on the device — the notify tool can ask the "
+                    + "was photographed: open lernie on the device — the notify tool can ask the "
                     + "operator to — then call again.";
         }
         if (ctx.checkSelfPermission(Manifest.permission.CAMERA)
