@@ -28,8 +28,9 @@
 //! decision half is what the payload leads with, and the input follows it
 //! whole.
 
-use super::build::{GEAR, key, row};
-use super::{Row, RowClass, Tone};
+use super::build::{as_, key, row};
+use super::call::head;
+use super::{Kind, Row, RowClass, Tone};
 use crate::codec::{Block, Entry, EntryKind, Held};
 
 /// One parked call as a row: the attention label, the decision, and the call's
@@ -42,13 +43,16 @@ pub(super) fn held_row(key: String, tool: &str, reason: &str, input: &str) -> Ro
     } else {
         format!("{}\n{input}", folded.why)
     };
-    row(
-        key,
-        format!("{GEAR} {tool} — held for you"),
-        &payload,
-        RowClass::Other,
-        Tone::Held,
-        None,
+    as_(
+        row(
+            key,
+            format!("{} — held for you", head(tool, input)),
+            &payload,
+            RowClass::Other,
+            Tone::Held,
+            None,
+        ),
+        Kind::Call,
     )
 }
 

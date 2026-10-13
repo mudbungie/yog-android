@@ -32,6 +32,7 @@ pub mod live;
 pub mod material;
 pub mod outbox;
 pub mod overlay;
+pub mod panel;
 pub mod parity;
 pub mod pocket;
 pub mod rendezvous;

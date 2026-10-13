@@ -178,6 +178,53 @@ if depth in ("conversations", "transcript", "running"):
             row = next(r for r in rows if r.get("flight") is None)
         body["focus"]["agent"] = row["root_id"]
         body["transcript"] = frame("transcript")
+        # **A long, tool-heavy turn after the corpus's rows** (DESIGN §22
+        # item 4, bl-18da): the corpus answer proves every entry kind decodes
+        # and nothing about what a working conversation LOOKS like — one call,
+        # no answer after it. So the transcript seed appends two turns built
+        # from copies of the corpus's own entries with only their words and
+        # ids moved: calls met by results (one failed), a remark between
+        # them, the answer, a second prompt and a call still running. No field
+        # is invented, the rule the conversations seed keeps.
+        #
+        # The running seed keeps the corpus's first four entries alone, so the
+        # `headed` beat's transcript is short enough to show the panel at its
+        # head (§22 item 4).
+        if depth == "running":
+            body["transcript"]["rows"] = body["transcript"]["rows"][:4]
+        if depth == "transcript":
+            said = body["transcript"]["rows"]
+            user = next(e for e in said if e.get("sender") == "user")
+            turn = next(e for e in said if e["kind"] == "model")
+            back = next(e for e in said if e["kind"] == "tool-result")
+            def ask(name, words):
+                return dict(user, name=name, body=words)
+            def model(name, blocks, spent):
+                return dict(turn, name=name, blocks=blocks,
+                            usage={"input_tokens": spent, "output_tokens": 120})
+            def use(at, tool, args):
+                return {"kind": "tool-use", "id": at, "name": tool, "input": json.dumps(args)}
+            def answer(name, at, words, failed=False):
+                return dict(back, name=name, tool_use_id=at, content=words, is_error=failed)
+            log = "\n".join(f"   Compiling crate-{n} v0.{n}.0" for n in range(1, 9))
+            said += [
+                ask("010-user.md", "the build on the second box is red \u2014 find out why and fix it"),
+                model("011-claude.json", [
+                    {"kind": "thinking", "text": "start with the failing job's log"},
+                    use("t-a", "bash", {"command": "tail -n 40 build.log"})], 1840),
+                answer("012-tool.json", "t-a", log + "\nerror: linking with `cc` failed: exit status: 1"),
+                model("013-claude.json", [
+                    {"kind": "text", "text": "the linker cannot find libssl; checking what is installed"},
+                    use("t-b", "bash", {"command": "dpkg -l | grep ssl"})], 2210),
+                answer("014-tool.json", "t-b", "exit 1", True),
+                model("015-claude.json", [use("t-c", "Read", {"path": "Cargo.toml"})], 2400),
+                answer("016-tool.json", "t-c", "[package]\nname = \"agent\"\n[dependencies]\nopenssl = \"0.10\""),
+                model("017-claude.json", [{"kind": "text", "text":
+                    "Fixed. The second box had no libssl headers, so the openssl crate could not link. "
+                    "I installed them and the build is green again.\n\nNothing in the tree changed."}], 2650),
+                ask("018-user.md", "run the tests too"),
+                model("019-claude.json", [use("t-d", "bash", {"command": "cargo test --all"})], 2700),
+            ]
         # **The conversation's own row** (bl-a7ec), which the pass reads
         # beside the transcript and the rule paints its spend and `context N%`
         # from. The corpus's first answer states both; it is re-addressed at

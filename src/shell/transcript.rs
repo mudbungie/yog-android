@@ -14,6 +14,7 @@ use eframe::egui;
 
 use super::app::Shell;
 use crate::rows::rows;
+
 use crate::seat::Snapshot;
 
 impl Shell {
@@ -37,6 +38,9 @@ impl Shell {
             self.auto,
             &self.folds,
         );
+        let lines = crate::rows::lines(&painted, &self.folds);
+        let facts =
+            crate::panel::conversation(&snap.conversations, agent, workspace, &snap.transcript);
         let mut flipped = None;
         // **The floor's order** (bl-192c): what is anchored to the platform's
         // floor claims its space FIRST, and the chrome and the transcript
@@ -86,9 +90,12 @@ impl Shell {
                         // about where the composer sits, not about which way
                         // a transcript reads.
                         ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                            for row in &painted {
-                                if super::chat::row(ui, row) {
-                                    flipped = Some(row.key.clone());
+                            // **The conversation's card at the head** (§22
+                            // item 4), then the lines in the idiom.
+                            super::chat::panel::card(ui, &facts);
+                            for line in &lines {
+                                if super::chat::line(ui, line) {
+                                    flipped = Some(line.row.key.clone());
                                 }
                             }
                             // The message this seat has sent and the engine

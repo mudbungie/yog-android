@@ -4,17 +4,18 @@
 //! blocks a turn committed. The two change for unrelated reasons — a new entry
 //! kind on the wire touches only the match, a new block kind only this file.
 
-use super::super::build::GEAR;
-use super::super::build::row;
-use super::super::{Role, Row, RowClass, Tone};
-use crate::codec::{Block, Entry, EntryKind};
+use super::super::build::{as_, row};
+use super::super::call::{head, result_of};
+use super::super::{Kind, Role, Row, RowClass, Tone};
+use crate::codec::{Block, Entry};
 
 /// One model content block as a row. A tool call still awaiting its result
-/// says so in words beside the pulse — the hue is never the only carrier.
-///
-/// A tool call's payload is the input the wire already capped; this seat does
-/// not summarize a second time, because two truncations of one string are two
-/// answers to one question.
+/// says so in words beside the pulse — the hue is never the only carrier —
+/// and its payload is the input the wire already capped. **A call its result
+/// has met is one row** ([`super::super::call`]): its head names the call and
+/// the result is its payload, folded to its first line and unfolded in place;
+/// a failed one wears the error accent and nothing else does, because how a
+/// call ended is the trail's mark, not a hue over the whole step.
 pub(super) fn block_row(
     entries: &[Entry],
     key: String,
@@ -34,24 +35,42 @@ pub(super) fn block_row(
                 Some(Role::Model),
             )
         },
-        Block::Thinking(text) => row(
-            key,
-            "thinking:".to_string(),
-            text,
-            RowClass::Other,
-            Tone::Weak,
-            None,
+        Block::Thinking(text) => as_(
+            row(
+                key,
+                "thinking:".to_string(),
+                text,
+                RowClass::Other,
+                Tone::Weak,
+                None,
+            ),
+            Kind::Thinking,
         ),
-        Block::ToolUse { id, name, input } => {
-            let running = unresolved(entries, id);
-            let prefix = if running {
-                format!("{GEAR} {name} — running")
-            } else {
-                format!("{GEAR} {name}")
-            };
-            let tone = if running { Tone::InFlight } else { Tone::Plain };
-            row(key, prefix, input, RowClass::Other, tone, None)
-        }
+        Block::ToolUse { id, name, input } => match result_of(entries, id) {
+            None => as_(
+                row(
+                    key,
+                    format!("{} — running", head(name, input)),
+                    input,
+                    RowClass::Other,
+                    Tone::InFlight,
+                    None,
+                ),
+                Kind::Call,
+            ),
+            Some((content, failed)) => {
+                let tone = if failed { Tone::Bad } else { Tone::Plain };
+                let said = row(
+                    key,
+                    head(name, input),
+                    &content,
+                    RowClass::Other,
+                    tone,
+                    None,
+                );
+                as_(said, Kind::Answered)
+            }
+        },
         // A block kind a newer engine of this major spells (REMOTE §3.2). The
         // word is the whole of what this build knows about it, and it is said
         // rather than dropped: a turn missing a row is a turn misread.
@@ -64,16 +83,6 @@ pub(super) fn block_row(
             None,
         ),
     }
-}
-
-/// Has no result retired this call yet? A question about the *rest* of the
-/// transcript, not about the call — which is why the whole list comes down
-/// here. Byte equality on an opaque id: the shape is the provider's and this
-/// seat assumes nothing about it.
-fn unresolved(entries: &[Entry], tool_use_id: &str) -> bool {
-    !entries.iter().any(|entry| {
-        matches!(&entry.kind, EntryKind::ToolResult { tool_use_id: id, .. } if id == tool_use_id)
-    })
 }
 
 /// What a model turn's speaker label stands for: the model that ran it. The

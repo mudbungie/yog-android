@@ -35,12 +35,16 @@ use std::collections::BTreeSet;
 use crate::codec::{Entry, Held};
 
 mod build;
+mod call;
 mod compacted;
 mod held;
 mod project;
+mod trail;
 mod turns;
 mod windowed;
 mod wounded;
+
+pub use trail::{Before, Line, Part, glyph, lines, mark};
 
 /// The tone vocabulary, re-exported rather than restated: the wire already
 /// spells six of these for a conversation row ([`crate::codec::Tone`]) and two
@@ -117,12 +121,44 @@ pub enum Role {
     Ended,
 }
 
+/// **What a row is to the transcript's idiom** (DESIGN §22 item 4): something
+/// said, which stands at the gutter, or a step of a trail, which stands on a
+/// stem under the trail's fold head. The glass groups by it ([`lines`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Kind {
+    /// Something said: a message, the model's prose, the machinery's own word.
+    Said,
+    /// A trail's fold head: a finished turn's rollup, or [`lines`]' own head
+    /// over a run of steps that did not roll up.
+    Trail,
+    /// A call no result has met on this read: running, held, or the follow
+    /// window's.
+    Call,
+    /// **A call met with its result on one row** (lernie bl-eb4e): the call's
+    /// name and the head of its input, the result as the payload.
+    Answered,
+    /// A result whose call is not on this read.
+    Result,
+    /// Reasoning.
+    Thinking,
+    /// The model's own words between two steps of a rolled-up turn — a step
+    /// of that turn's trail rather than something the turn said.
+    Remark,
+}
+
+impl Kind {
+    /// Whether a row of this kind stands on a trail's stem.
+    pub fn is_step(self) -> bool {
+        !matches!(self, Self::Said | Self::Trail)
+    }
+}
+
 /// One transcript line.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
     /// Stable identity across the stateless re-read: `tx/<entry name>#<n>`.
     pub key: String,
-    /// The always-visible label — `sender:`, `⚙ Read`, `✔ tool result — ok`.
+    /// The always-visible label — `sender:`, `Read("a.rs")`, `tool calls (2)`.
     pub prefix: String,
     /// The payload's first line, shown while contracted.
     pub preview: String,
@@ -140,6 +176,8 @@ pub struct Row {
     pub role: Option<Role>,
     /// What the toggle reveals.
     pub fold: Fold,
+    /// Said, a head, or a step — see [`Kind`].
+    pub kind: Kind,
     /// The derived answer, recomputed every projection — never stored.
     pub expanded: bool,
 }

@@ -8,17 +8,12 @@
 //! — it takes a prefix, a payload and a class — which is why the two change
 //! for unrelated reasons.
 
-use super::{Fold, Role, Row, RowClass, Tone};
+use super::{Fold, Kind, Role, Row, RowClass, Tone};
 
 /// Key namespace for a transcript row's fold override. A namespace and not a
 /// bare filename so the set the caller keeps can hold other surfaces' keys
 /// without a collision being possible.
 const KEY_ROOT: &str = "tx";
-/// **The machinery glyph**, worn by a committed tool call ([`super::project`]),
-/// by the follow window's own row ([`super::windowed`]) and by a rolled-up turn
-/// ([`super::turns`]). It sits here with the other shared parts a row's label
-/// is made of: three spellings of one mark is three places for it to drift.
-pub(super) const GEAR: &str = "⚙";
 /// Characters of payload a contracted row previews before the ellipsis.
 const PREVIEW_CAP: usize = 160;
 
@@ -29,7 +24,8 @@ pub(super) fn key(name: &str, block: usize) -> String {
 
 /// Build a row, splitting `payload` into its one-line preview and the body
 /// that folding reveals. `expanded` is filled in by [`super::rows`]; `role` is
-/// who the row speaks for — `None` on machinery, where nobody is.
+/// who the row speaks for — `None` on machinery, where nobody is. A row is
+/// [`Kind::Said`] until its caller names it a step ([`as_`]).
 pub(super) fn row(
     key: String,
     prefix: String,
@@ -49,8 +45,15 @@ pub(super) fn row(
         tone,
         role,
         fold: Fold::Payload,
+        kind: Kind::Said,
         expanded: false,
     }
+}
+
+/// The same row as another [`Kind`].
+pub(super) fn as_(mut row: Row, kind: Kind) -> Row {
+    row.kind = kind;
+    row
 }
 
 /// State in the prefix how big the fold is, in **characters**. Characters and

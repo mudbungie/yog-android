@@ -225,7 +225,8 @@ width it has. A turn's calls stand under one fold head `+ tool calls (N)` in
 `INK_WEAK`, each on a painted stem (the threaded row's rails) with `•` in the
 brand, `✔` in `INK_WEAK` or `✖` in the error accent; a `HAIRLINE` parts
 turns. A tool row's state is its words' ink; a folded one's
-preview is dimmed ink, so *there is more* reads before the triangle does.
+preview is dimmed ink, so *there is more* reads before the fold glyph does;
+an unfolded tool answer is in the code face (`MONO`).
 
 **The composer** (DESIGN §13.2; **retired by §22 — the prompt line above
 replaces it**): a `SURFACE` field with no stroke at rest and

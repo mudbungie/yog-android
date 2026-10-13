@@ -29,8 +29,7 @@
 
 use std::collections::BTreeSet;
 
-use super::build::GEAR;
-use super::{AutoExpand, Fold, Row, RowClass, Tone, expanded_for, showing};
+use super::{AutoExpand, Fold, Kind, Row, RowClass, Tone, expanded_for, showing};
 
 mod counts;
 mod steps;
@@ -120,7 +119,15 @@ fn push_turn(
             let open = parent.expanded;
             out.push(parent);
             if open {
-                out.extend_from_slice(run);
+                // **The turn's own remarks are steps of its trail** (§22 item
+                // 4): under an open rollup they stand on its stem, so the
+                // turn's answer is the one thing it said.
+                out.extend(run.iter().cloned().map(|mut step| {
+                    if step.kind == Kind::Said {
+                        step.kind = Kind::Remark;
+                    }
+                    step
+                }));
             }
             out.push(answer.clone());
         }
@@ -128,7 +135,9 @@ fn push_turn(
     }
 }
 
-/// The turn's aggregate row: machinery, so it answers the same auto-knob every
+/// The turn's aggregate row — **its trail's fold head**, `tool calls (N)` with
+/// the census beside it in the preview's seat (§22 item 4; the fold counts
+/// calls, lernie bl-eb4e): machinery, so it answers the same auto-knob every
 /// other machinery row does — one line by default, and the operator who set
 /// that knob open gets every turn opened, steps and all. No separate knob,
 /// because a third setting for the same question is a setting that can
@@ -136,8 +145,8 @@ fn push_turn(
 fn aggregate(first_key: &str, counts: &Counts, auto: AutoExpand, folds: &BTreeSet<String>) -> Row {
     let mut row = Row {
         key: turn_key(first_key),
-        prefix: format!("{GEAR} {}", counts.say()),
-        preview: String::new(),
+        prefix: super::trail::head_word(counts.tools),
+        preview: counts.say(),
         body: String::new(),
         hover: TURN_HOVER.to_string(),
         class: RowClass::Other,
@@ -146,6 +155,7 @@ fn aggregate(first_key: &str, counts: &Counts, auto: AutoExpand, folds: &BTreeSe
         // aggregate wears the empty role seat.
         role: None,
         fold: Fold::Steps,
+        kind: Kind::Trail,
         expanded: false,
     };
     row.expanded = expanded_for(&row, auto, folds.contains(&row.key));

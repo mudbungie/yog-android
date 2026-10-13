@@ -7,7 +7,7 @@
 //! the exhaustive match so a new kind touches the match and nothing else.
 //!
 //! **The label is the committed block's, word for word.** A tool call the
-//! record already carries reads `⚙ <tool> — running` until a result retires
+//! record already carries reads `<tool>(<input>) — running` until a result retires
 //! it ([`super::project::blocks`]), and a call the window is ahead of reads
 //! the same — one call reads one way on either side of the commit, which is
 //! §13.3's vocabulary rule applied to the two sides of one cadence.
@@ -41,8 +41,9 @@
 //! the label, the accent and the split of the control's sentence are all
 //! decided there, and this arm only says which key and which input.
 
-use super::build::{GEAR, key, row};
-use super::{Row, RowClass, Tone};
+use super::build::{as_, key, row};
+use super::call::head;
+use super::{Kind, Row, RowClass, Tone};
 
 pub(super) fn windowed_row(
     name: &str,
@@ -55,8 +56,11 @@ pub(super) fn windowed_row(
         return super::held::held_row(key(name, 0), tool, reason, input);
     }
     let (prefix, tone) = match exit_code {
-        None => (format!("{GEAR} {tool} — running"), Tone::InFlight),
-        Some(code) => (format!("{GEAR} {tool} — exit {code}"), Tone::Plain),
+        None => (format!("{} — running", head(tool, input)), Tone::InFlight),
+        Some(code) => (format!("{} — exit {code}", head(tool, input)), Tone::Plain),
     };
-    row(key(name, 0), prefix, input, RowClass::Other, tone, None)
+    as_(
+        row(key(name, 0), prefix, input, RowClass::Other, tone, None),
+        Kind::Call,
+    )
 }

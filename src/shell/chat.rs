@@ -1,34 +1,42 @@
-//! **The chat screen**: one conversation, painted from [`crate::rows`].
+//! **The chat screen**: one conversation, painted from [`crate::rows`] in the
+//! transcript's idiom (DESIGN §22 item 4; lernie `ui::chat`).
 //!
-//! The projection is pure and tested elsewhere; this file is the paint and
-//! the one piece of state a projection cannot hold — which rows the operator
-//! has flipped by hand. That split is the whole design: what a row IS answers
-//! to the suite, and what it looks like answers to the glass.
+//! The projection and its grouping are pure and tested elsewhere
+//! (`crate::rows::lines`); this file is the paint and the one piece of state
+//! a projection cannot hold — which rows the operator has flipped by hand.
+//! That split is the whole design: what a line IS answers to the suite, and
+//! what it looks like answers to the glass.
+//!
+//! **Every block starts at one left edge with its glyph in the gutter** — `›`
+//! in the brand for the operator, `¦` for the model, `·` for a peer, a tool's
+//! answer or the machinery — then who spoke in their weight, then the words
+//! at the gutter's edge. No stripe, no bubble. A trail and its stems are
+//! [`trail`]; the card at the head is [`panel`].
 //!
 //! **The fold overrides are ephemeral, as they are upstream.** The two auto
-//! knobs are policy and would be durable if this seat had a durable place to
-//! put them (REMOTE §7 puts per-seat state on the engine, which is a later
-//! ball); a hand-flip is a viewport fact and dies with the screen.
-//!
-//! **Two lines for a speaking row, one for machinery** — the desktop's own
-//! shape. Line one is the coloured stripe and the speaker; line two is the
-//! toggle and the payload. Both lines allocate the stripe seat so the
-//! toggles stay in one column, which is what makes a tool-heavy transcript
-//! scannable at a phone's width.
-//!
-//! The composer is `super::composer`: this file is the picture of what was
-//! said, and that one is the control that says it.
+//! knobs are policy (`/full`, `/steps`); a hand-flip is a viewport fact and
+//! dies with the screen.
 
 use eframe::egui;
 
+use super::theme::rgb;
 use crate::outbox::Fate;
-use crate::rows::{Fold, Role, Row};
+use crate::rows::{Before, Line, Part, Role, Row};
 use crate::seat::Snapshot;
+use crate::theme::{glyph, space};
+
+/// The card at the head of a transcript.
+pub(super) mod panel;
+/// A line that is its own touch target, with a glyph in the gutter.
+mod tap;
+/// A trail's head, its steps on their stems, and the `response` elbow.
+mod trail;
 
 /// **The outbox's echo** (bl-66fb): the message this seat has sent, painted
-/// where the row it will become is going to be. Muted while the engine has
-/// not answered, ordinary ink with a rule under it once it has — the rule is
-/// the "not yet in the transcript" mark, and it goes when the echo does.
+/// where the row it will become is going to be — behind the prompt's glyph,
+/// muted while the engine has not answered, ordinary ink with a rule under it
+/// once it has. The rule is the "not yet in the transcript" mark, and it goes
+/// when the echo does.
 ///
 /// **The third state is in doubt** (yog REMOTE §3, bl-07b1): the reply was
 /// lost, so the engine may have taken this message and may not have. It keeps
@@ -42,8 +50,9 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, fate: Fate) {
     } else {
         ui.visuals().weak_text_color()
     };
-    ui.horizontal(|ui| {
-        stripe(ui, Some(Role::User));
+    ui.add_space(space::S);
+    ui.horizontal_top(|ui| {
+        tap::glyph(ui, glyph::PROMPT, rgb(crate::theme::BRAND));
         super::clip::copyable(
             ui,
             egui::Label::new(egui::RichText::new(text).color(ink)).wrap(),
@@ -51,8 +60,8 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, fate: Fate) {
         );
     });
     if fate == Fate::InDoubt {
-        ui.horizontal(|ui| {
-            stripe(ui, None);
+        ui.horizontal_top(|ui| {
+            ui.add_space(tap::GUTTER);
             super::clip::copyable(
                 ui,
                 egui::Label::new(
@@ -75,127 +84,102 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, fate: Fate) {
 /// long as the doubt lasts.
 const IN_DOUBT: &str = "the reply was lost — this may or may not have been taken.     It was not sent again; the transcript will show it if it landed.";
 
-/// The fold triangles, and the mark a row with nothing to fold shows in their
-/// place so every payload starts at the same x.
-pub(super) const GLYPH_COLLAPSED: &str = "▶";
-pub(super) const GLYPH_EXPANDED: &str = "▼";
-const NO_FOLD_MARK: &str = "·";
-
-/// The speaker's rule, in points (STYLE.md: a block is aligned and ruled,
-/// never boxed).
-const STRIPE: f32 = crate::theme::RULE;
-
 /// How dim an abridged preview paints — the desktop's own solidity for a
 /// payload that is not all there, so "there is more" is visible before the
-/// triangle is read.
+/// fold glyph is read.
 const ABRIDGED: f32 = 0.55;
 
-/// Paint one row and answer whether its toggle was pressed. The caller owns
-/// the override set, so this function stays a pure paint over a `&Row`.
-pub(crate) fn row(ui: &mut egui::Ui, row: &Row) -> bool {
-    let inline = row.fold == Fold::Steps || row.body.is_empty() || !row.expanded;
-    let abridged = inline && !row.body.is_empty();
-    if let Some(role) = row.role {
-        ui.horizontal(|ui| {
-            stripe(ui, Some(role));
-            prefix(ui, &row.prefix, role_hue(role));
-        });
+/// **One line of the idiom** (§22 item 4): what parts it from the line above,
+/// then the line itself — something said at the gutter, a trail's head, or a
+/// step on its stem. Answers whether its fold was tapped; the caller owns the
+/// override set, so this stays a paint over a `&Line`.
+pub(crate) fn line(ui: &mut egui::Ui, line: &Line) -> bool {
+    match line.before {
+        Before::Nothing => {}
+        Before::Gap => ui.add_space(space::S),
+        Before::Parting => parting(ui),
+        Before::Response => trail::response(ui),
     }
-    let mut toggled = false;
-    ui.horizontal(|ui| {
-        stripe(ui, None);
-        toggled = toggle(ui, row);
-        if row.role.is_none() {
-            let ink = tone_hue(ui, &row.tone);
-            prefix(ui, &row.prefix, ink);
-        }
-        if inline && !row.preview.is_empty() {
-            preview(ui, &row.preview, abridged);
+    match line.part {
+        Part::Said => said(ui, &line.row),
+        Part::Head => trail::head(ui, &line.row),
+        Part::Step { last } => trail::step(ui, &line.row, last),
+    }
+}
+
+/// **The hairline between turns** (STYLE §5), a fill the probe can count.
+fn parting(ui: &mut egui::Ui) {
+    ui.add_space(space::M);
+    let (rect, _) =
+        ui.allocate_exact_size(egui::vec2(ui.available_width(), 1.0), egui::Sense::hover());
+    ui.painter()
+        .rect_filled(rect, 0.0, rgb(crate::theme::HAIRLINE));
+    ui.add_space(space::S);
+}
+
+/// **One thing said**: the glyph in the gutter and who said it in their
+/// weight on one line, the words under it at the gutter's edge. A row with a
+/// fold says so at the line's end and the whole line is its toggle, the touch
+/// floor tall; one with nothing to fold is a plain line.
+fn said(ui: &mut egui::Ui, row: &Row) -> bool {
+    let foldable = !row.body.is_empty();
+    let who = match row.role {
+        Some(role) => role_hue(role),
+        None => tone_hue(ui, &row.tone),
+    };
+    let mut parts = vec![(row.prefix.clone(), who)];
+    if foldable {
+        let fold = if row.expanded {
+            glyph::OPEN
+        } else {
+            glyph::SHUT
+        };
+        parts.push((format!("  {fold}"), rgb(crate::theme::INK_WEAK)));
+    }
+    let tall = if foldable { crate::theme::TOUCH } else { 0.0 };
+    let runs = [tap::Run::body(parts)];
+    let (mark, ink) = gutter(ui, row);
+    let toggled = tap::line(ui, 0.0, (&mark, ink), &runs, tall).clicked() && foldable;
+    ui.horizontal_top(|ui| {
+        ui.add_space(tap::GUTTER);
+        // Something said is prose: whole and wrapped unless it is folded,
+        // when its first line stands dimmed for it.
+        if foldable && row.expanded {
+            body(ui, &row.body);
+        } else if foldable {
+            preview(ui, &row.preview);
+        } else if !row.preview.is_empty() {
+            body(ui, &row.preview);
         }
     });
-    if !inline {
-        ui.horizontal(|ui| {
-            stripe(ui, None);
-            body(ui, &row.body);
-        });
-    }
     toggled
 }
 
-/// **An expanded payload, wrapped at the width it actually has** (bl-b62b).
-/// A bare `ui.label` inside a horizontal layout does NOT wrap — egui reads a
-/// non-wrapping horizontal row as *extend*, because a wrapping child there is
-/// ambiguous — so a model's answer ran straight off the glass and was clipped
-/// mid-word by the transcript's scroller: measured at 1017 points of label in
-/// a 400-point display. The row is horizontal for the stripe's sake, so the
-/// wrap has to be asked for, and asking for it is the whole fix: the label
-/// then takes the width left after the stripe and grows downward.
-///
-/// **Prose wraps and never scrolls sideways** (§13.2). A body is text a
-/// person reads; a horizontal scroller under a paragraph is a paragraph
-/// nobody finishes.
-fn body(ui: &mut egui::Ui, text: &str) {
-    // Copyable (bl-7781): an expanded payload — a model's answer, a tool's
-    // whole output — is the surface an operator most wants off the glass, and
-    // the long press that takes it is `shell::clip`'s.
+/// The glyph a row stands behind, in its ink: the prompt and a call in the
+/// brand, a failure in the error accent, the rest in weak ink.
+pub(super) fn gutter(ui: &egui::Ui, row: &Row) -> (String, egui::Color32) {
+    let mark = crate::rows::glyph(row);
+    let ink = match mark.as_str() {
+        glyph::PROMPT | glyph::CALL => rgb(crate::theme::BRAND),
+        glyph::FAILED => ui.visuals().error_fg_color,
+        _ => rgb(crate::theme::INK_WEAK),
+    };
+    (mark, ink)
+}
+
+/// **An expanded payload, wrapped at the width it actually has** (bl-b62b,
+/// bl-e86c): a label inside a horizontal layout does not wrap unless asked,
+/// and one that overflows widens every label after it — so every label here
+/// asks. Prose wraps and never scrolls sideways (§13.2).
+pub(super) fn body(ui: &mut egui::Ui, text: &str) {
     super::clip::copyable(ui, egui::Label::new(text).wrap(), text);
 }
 
-/// **A row's label, bounded** (bl-e86c). A bare label inside a horizontal
-/// layout does not wrap — but the damage is worse than the label itself: a
-/// widget that overflows EXPANDS the enclosing `Ui`'s `max_rect`
-/// (`Placer::advance_after_rects`), so every wrapped label painted after it
-/// in the same stack wraps at the widened width and runs off the glass too.
-/// Measured: one extending prefix took a 390-point column to 495 and a
-/// correctly-wrapped body under it then wrapped at 474. That is why
-/// bl-b62b's fix to the body alone did not hold, and why the rule is ALL of
-/// them: nothing in a horizontal row may extend, or nothing below it can be
-/// bounded.
-fn prefix(ui: &mut egui::Ui, text: &str, ink: egui::Color32) {
-    super::clip::copyable(
-        ui,
-        egui::Label::new(egui::RichText::new(text).color(ink)).wrap(),
-        text,
-    );
-}
-
-/// The role stripe, or the blank seat of the same width that keeps every
-/// later line's toggle in the same column.
-fn stripe(ui: &mut egui::Ui, role: Option<Role>) {
-    let height = ui.text_style_height(&egui::TextStyle::Body);
-    let (rect, _) = ui.allocate_exact_size(egui::vec2(STRIPE, height), egui::Sense::hover());
-    if let Some(role) = role {
-        ui.painter().rect_filled(rect, 0.0, role_hue(role));
-    }
-}
-
-/// The fold triangle — a touch target, not a glyph: a phone has no hover and
-/// no Tab, so the whole mark is the button and it is sized for a fingertip.
-fn toggle(ui: &mut egui::Ui, row: &Row) -> bool {
-    if row.body.is_empty() && row.fold != Fold::Steps {
-        ui.monospace(NO_FOLD_MARK);
-        return false;
-    }
-    let glyph = if row.expanded {
-        GLYPH_EXPANDED
-    } else {
-        GLYPH_COLLAPSED
-    };
-    ui.add(egui::Button::new(egui::RichText::new(glyph).monospace()).frame(false))
-        .clicked()
-}
-
-/// The contracted payload. An abridged one is dimmed, so a run that ends in
-/// `…` reads as incomplete before its triangle is noticed — the desktop's own
-/// invariant that anything hidden is hidden behind a triangle.
-fn preview(ui: &mut egui::Ui, text: &str, abridged: bool) {
-    let mut rich = egui::RichText::new(text);
-    if abridged {
-        rich = rich.color(ui.visuals().text_color().gamma_multiply(ABRIDGED));
-    }
-    // **What is copied is the whole line, not the ellipsis** (bl-7781): a
-    // contracted row shows a clip of its payload, and a copy of the clip is
-    // the one thing nobody wants. The caller hands the untruncated text.
+/// The contracted payload, one line, dimmed so a run that ends in `…` reads
+/// as incomplete before its fold glyph is noticed. **What is copied is the
+/// whole line, not the ellipsis** (bl-7781).
+fn preview(ui: &mut egui::Ui, text: &str) {
+    let rich = egui::RichText::new(text).color(ui.visuals().text_color().gamma_multiply(ABRIDGED));
     super::clip::copyable(ui, egui::Label::new(rich).truncate(), text);
 }
 

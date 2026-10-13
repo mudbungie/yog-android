@@ -8,11 +8,12 @@
 //! Where the two disagree one of them is a bug, so they are pinned by the
 //! suite rather than trusted to stay in step.
 
-use super::build::{key, row, with_size};
+use super::build::{as_, key, row, with_size};
+use super::call::asked;
 use super::compacted::compacted_row;
 use super::windowed::windowed_row;
 use super::wounded::wounded_row;
-use super::{Role, Row, RowClass, Tone};
+use super::{Kind, Role, Row, RowClass, Tone};
 use crate::codec::{Entry, EntryKind};
 use blocks::{block_row, model_hover};
 
@@ -109,6 +110,9 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
         // does not have) and the preview is not (it is the payload's own first
         // line) — and it trails the outcome, so the row still leads with what
         // it is.
+        // **A result whose call is on this read stands on the call's row**
+        // ([`super::call`]), so it has none of its own.
+        EntryKind::ToolResult { tool_use_id, .. } if asked(entries, tool_use_id) => {}
         EntryKind::ToolResult {
             content, is_error, ..
         } => {
@@ -117,14 +121,17 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             } else {
                 (OK_RESULT, Tone::Good)
             };
-            out.push(with_size(row(
-                key(&entry.name, 0),
-                prefix.to_string(),
-                content,
-                RowClass::Other,
-                tone,
-                None,
-            )));
+            out.push(as_(
+                with_size(row(
+                    key(&entry.name, 0),
+                    prefix.to_string(),
+                    content,
+                    RowClass::Other,
+                    tone,
+                    None,
+                )),
+                Kind::Result,
+            ));
         }
         EntryKind::Streaming { thinking, text } => {
             push_streaming(&entry.name, speaker, thinking, text, out);
@@ -240,13 +247,16 @@ fn message_role(sender: &str, has_epitaph: bool) -> Role {
 /// different people saying the same thing.
 fn push_streaming(name: &str, speaker: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
     if !thinking.is_empty() {
-        out.push(row(
-            key(name, 0),
-            "thinking:".to_string(),
-            thinking,
-            RowClass::Other,
-            Tone::Live,
-            None,
+        out.push(as_(
+            row(
+                key(name, 0),
+                "thinking:".to_string(),
+                thinking,
+                RowClass::Other,
+                Tone::Live,
+                None,
+            ),
+            Kind::Thinking,
         ));
     }
     if !text.is_empty() {

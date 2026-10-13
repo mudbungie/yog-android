@@ -213,7 +213,12 @@ capture files files
 #    app says `transcript` for both — but the controls row is a different set
 #    of controls under it, and the parity gate below can only see a control a
 #    walked screen actually painted.
+#    Captured first at rest as `headed` (DESIGN §22 item 4, bl-18da): this
+#    seed is the corpus's first four entries, so the conversation panel at the
+#    head of the scroller is on the glass, where the `transcript` beat's long
+#    seed has scrolled it away.
 seed_cache running; relaunch
+capture headed transcript
 tap_control prompt
 capture running transcript
 

@@ -12,7 +12,9 @@ use super::{Row, Step, TERM_SEP, Usage, turn_key};
 pub(super) struct Counts {
     /// Distinct model entries the run's rows came from.
     pub(super) inference: usize,
-    tools: usize,
+    /// The calls the run made — the trail head's count, and so not a term of
+    /// the census beside it.
+    pub(super) tools: usize,
     thinking: usize,
     /// Per-counter token sums over the counted entries' committed records,
     /// under the counters' own committed names.
@@ -64,8 +66,8 @@ impl Counts {
         }
     }
 
-    /// The aggregate line in the operator's own phrasing — `9 inference calls
-    /// · 14 tool calls · 3 thinking blocks · 3150 output tokens` — with a zero
+    /// The census in the operator's own phrasing — `9 inference calls · 3
+    /// thinking blocks · 3150 output tokens` — with a zero
     /// term left unsaid. The inference term always survives, so the line is
     /// never empty. Token terms state each committed counter's sum under its
     /// own name; **a mixed turn** (some counted entries record-bearing, some
@@ -74,7 +76,6 @@ impl Counts {
     pub(super) fn say(&self) -> String {
         let terms = [
             (self.inference, "inference call"),
-            (self.tools, "tool call"),
             (self.thinking, "thinking block"),
         ];
         let mut said: Vec<String> = terms

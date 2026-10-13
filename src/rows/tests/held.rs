@@ -53,13 +53,13 @@ fn a_call() -> Vec<Entry> {
 #[test]
 fn the_parked_call_becomes_the_held_row() {
     let plain = go(&a_call(), None);
-    assert_eq!(plain[1].prefix, "⚙ Bash — running");
+    assert_eq!(plain[1].prefix, "Bash(\"rm -rf build\") — running");
     assert_eq!(plain[1].tone, Tone::InFlight);
 
     let marked = go(&a_call(), Some(&held("toolu_1")));
     assert_eq!(marked.len(), plain.len(), "the mark adds no row");
     assert_eq!(marked[1].key, plain[1].key, "and moves none");
-    assert_eq!(marked[1].prefix, "⚙ Bash — held for you");
+    assert_eq!(marked[1].prefix, "Bash(\"rm -rf build\") — held for you");
     assert_eq!(marked[1].tone, Tone::Held);
 }
 
@@ -90,7 +90,7 @@ fn the_held_row_leads_with_the_decision_and_folds_onto_the_command() {
 #[test]
 fn a_hold_naming_an_uncommitted_call_marks_nothing() {
     let marked = go(&a_call(), Some(&held("toolu_other")));
-    assert_eq!(marked[1].prefix, "⚙ Bash — running");
+    assert_eq!(marked[1].prefix, "Bash(\"rm -rf build\") — running");
     assert_eq!(marked[1].tone, Tone::InFlight);
 }
 
@@ -109,7 +109,7 @@ fn a_turn_with_a_parked_call_does_not_roll_up() {
     let marked = go(&turn, Some(&held("toolu_1")));
     let prefixes: Vec<&str> = marked.iter().map(|row| row.prefix.as_str()).collect();
     assert!(
-        prefixes.contains(&"⚙ Bash — held for you"),
+        prefixes.contains(&"Bash() — held for you"),
         "the parked call is on the glass: {prefixes:?}"
     );
 }

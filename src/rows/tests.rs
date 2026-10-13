@@ -10,12 +10,14 @@ use serde_json::Value;
 use super::{AutoExpand, Row, rows};
 use crate::codec::{Block, Entry, EntryKind};
 
+mod call;
 mod census;
 mod compaction;
 mod folds;
 mod held;
 mod labels;
 mod split;
+mod trail;
 mod turns;
 mod wound;
 

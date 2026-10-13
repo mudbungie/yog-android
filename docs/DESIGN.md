@@ -6532,6 +6532,45 @@ is a client of one engine (entries are an upstream ask, §13.4).
    `tap › for commands`, `tap the name for conversations`. The records and
    files band goes: `/records`, `/files` (5).
 
+   **As landed (bl-18da).** The vocabulary is `crate::rows`, pure and
+   host-tested: a row carries a `Kind` (said, a trail's head, a call, a met
+   call, a lone result, reasoning, a remark), and `rows::lines` groups the
+   projected rows into what the glass paints — something said at the
+   gutter, a head, or a step on its stem — with what parts each from the line
+   above; `rows::glyph` and `rows::mark` say the glyph and the call's ending.
+   `shell/chat.rs` and `shell/chat/{tap,trail,panel}.rs` paint it. Readings
+   decided here: **a call and its result meet at the projection**, keyed on
+   the tool-use id (`rows::call`): the row's head is the desktop's
+   `name("first argument")` (bl-eb4e, its sixty-character elision byte for
+   byte), the result is its payload, folded to its first line and unfolded
+   in place in the code face; a result whose call is not on the read keeps
+   its own `✔ tool result — ok · N chars` row, and a call no result met says
+   `bash("ls") — running` / `— held for you` / `— exit N` in words as before.
+   The `⚙` gear is gone from every label (the stem's `•` says *call*), and a
+   met call drops §7's `· N chars` hint, as the desktop's met row did.
+   **The rollup is kept and IS the head**: a finished turn's aggregate reads
+   `tool calls (N)` with the census beside it in faint (its tool-call term
+   dropped, the head counting calls), and under it the turn's own remarks
+   stand on the stem behind `¦`. A run that did not roll up — a turn still
+   running, or one that ended on machinery — gets a head of its own, **open**
+   until shut, keyed `#trail` beside the rollup's `#turn`. **A blank stands
+   only where the gutter's glyph changes** or a trail starts; the hairline
+   stands before the operator's second and later prompts, and `response`
+   after a trail. **Touch**: a head, a step with a fold and a said row with a
+   fold are touch-tall lines whose whole width is the toggle (`+`/`−` at the
+   end of a said row's name line); a row with nothing to fold is a plain
+   line, so short exchanges keep their density. **The conversation panel**
+   is `crate::panel`: the name in `INK`, then `on <workspace>`, `<model> ·
+   <in> in · <out> out` (the model that last answered — the wire's
+   conversation row names none — and the turns' own counters, the rule's
+   `status::tokens`), and `under <root> / <parent>` read off the descent;
+   a fact over 36 characters stands behind `+`. It is the first thing in the
+   transcript's scroller, so on a long conversation it scrolls away with the
+   head, as the desktop's does. The seat panel stays the switcher's
+   (bl-3edc). The knob row was already gone (bl-0d15). The walk's
+   `transcript` seed appends two tool-heavy turns built from copies of the
+   corpus's own entries (`scripts/screens-seed.sh`).
+
 5. **The slash verbs → a verb sheet, opened by typing `/` or by tapping `›`.**
    Typing `/` costs a keyboard-layer switch on most IMEs, so the way in is
    also a tap, and the tap is on the glyph that already says *prompt*.

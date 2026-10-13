@@ -7,7 +7,7 @@ use super::{
     SPEAKER, call, compacted, delivered, go, go_open, model, prefixes, raw, result, text, thought,
 };
 use crate::codec::Entry;
-use crate::rows::{AutoExpand, Fold, RowClass, Tone, rows};
+use crate::rows::{AutoExpand, Fold, Kind, RowClass, Tone, rows};
 
 /// One finished turn: a message in, machinery, then the agent talking.
 fn a_turn() -> Vec<Entry> {
@@ -19,7 +19,8 @@ fn a_turn() -> Vec<Entry> {
     ]
 }
 
-const AGGREGATE: &str = "⚙ 1 inference call · 1 tool call · 1 thinking block";
+const AGGREGATE: &str = "tool calls (1)";
+const CENSUS: &str = "1 inference call · 1 thinking block";
 
 #[test]
 fn a_finished_turn_folds_its_machinery_to_one_line() {
@@ -38,14 +39,7 @@ fn a_shut_aggregate_omits_its_steps_rather_than_hiding_them() {
 fn an_open_aggregate_re_emits_every_step_after_it() {
     assert_eq!(
         prefixes(&go_open(&a_turn())),
-        [
-            "user:",
-            AGGREGATE,
-            "thinking:",
-            "⚙ Read",
-            "✔ tool result — ok",
-            "yog:",
-        ]
+        ["user:", AGGREGATE, "thinking:", "Read()", "yog:",]
     );
 }
 
@@ -53,7 +47,7 @@ fn an_open_aggregate_re_emits_every_step_after_it() {
 fn an_override_opens_one_turn_without_touching_the_knob() {
     let folds: BTreeSet<String> = ["tx/002#turn".to_string()].into_iter().collect();
     let out = rows(&a_turn(), SPEAKER, None, AutoExpand::default(), &folds);
-    assert_eq!(prefixes(&out).len(), 6);
+    assert_eq!(prefixes(&out).len(), 5);
     assert!(out[1].expanded);
 }
 
@@ -61,8 +55,9 @@ fn an_override_opens_one_turn_without_touching_the_knob() {
 fn the_aggregate_is_machinery_with_nothing_of_its_own_to_show() {
     let out = go(&a_turn());
     assert_eq!(out[1].key, "tx/002#turn");
-    assert_eq!(out[1].preview, "");
+    assert_eq!(out[1].preview, CENSUS);
     assert_eq!(out[1].body, "");
+    assert_eq!(out[1].kind, Kind::Trail);
     assert_eq!(out[1].class, RowClass::Other);
     assert_eq!(out[1].tone, Tone::Weak);
     assert_eq!(out[1].role, None);
@@ -83,7 +78,7 @@ fn a_delivered_message_bounds_the_turns_on_either_side() {
         model("005", vec![thought("b")]),
         model("006", vec![text("second")]),
     ];
-    let one = "⚙ 1 inference call · 1 thinking block";
+    let one = "tool calls (0)";
     assert_eq!(
         prefixes(&go(&entries)),
         ["user:", one, "yog:", "user:", one, "yog:"]
@@ -120,7 +115,7 @@ fn anything_in_flight_makes_the_whole_turn_the_show() {
     ];
     assert_eq!(
         prefixes(&go(&entries)),
-        ["thinking:", "⚙ Read — running", "yog:"]
+        ["thinking:", "Read() — running", "yog:"]
     );
 }
 
