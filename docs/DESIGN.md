@@ -6400,8 +6400,9 @@ is a client of one engine (entries are an upstream ask, §13.4).
    provider's row takes the lane; then **this conversation's diagnostics**:
    tokens in and out (the transcript's model turns' own `input_tokens` /
    `output_tokens`, summed), spend (absent: this seat reads no price), the
-   state and how long since it acted, context-window use (absent: the wire
-   cannot state it, and it is not invented); then the name, the switcher's
+   state and how long since it acted, context-window use (*amended by
+   bl-96fc: the wire does state it — the `agent` row's `context` object,
+   which `codec::records` already decodes; see the note below*); then the name, the switcher's
    door, where it fits. **Only facts about this conversation**: `N waiting`
    leaves the rule (the switcher's head and `/attention` carry it) and
    there is no engines count. **Drop order**: the name, then the diagnostics
@@ -6438,6 +6439,33 @@ is a client of one engine (entries are an upstream ask, §13.4).
    The probe names `rule-workspace`, `rule-provider`, `rule-model`,
    `rule-effort`, `rule-priority` and `rule-name`; `rule-waiting` is not
    named, the count having left the rule.
+
+   **As landed (bl-96fc) — the second line.** At the walk's 411-point
+   emulator only the mark and four selectors fit on the rule, so the drop
+   order above took the conversation's state, tokens and name off every
+   phone — the facts the ruling says the bottom is for. So **the band is two
+   lines where one will not hold both halves**: the mark and the selectors on
+   the 48-point rule, and the diagnostics on a `SMALL`-type line directly
+   under it, half a touch target tall; one line where everything fits (a
+   tablet, landscape). The decision is `status::layout`, pure and
+   host-tested beside `fit`: one line exactly when `fit` drops nothing,
+   else the selectors fitted alone and the diagnostics on their own line.
+   **The diagnostics' order is the state and how long since it acted, the
+   tokens in and out, `context N%`, the name** — the state first because
+   it is the one word in its state's ink. **The second line lets go of the
+   context, then the tokens**, and never of the state or the name, which
+   elide inside what is left; "from the right" in the ruling would have
+   dropped the name first, which is the defect this note exists to close.
+   The name is still the switcher's door, a target the line's height —
+   below the touch floor, accepted because back and `/conversations` are
+   touch-tall ways to the same overlay. **Context:** the wire states it on
+   the `agent` row (`context`: the model, the prompt tokens, the window and
+   the engine's own unclamped percent; lernie bl-d74b paints it on the
+   desktop); this seat paints `context N%` from the `agent` row the records
+   read holds about the focused conversation, and nothing where no row is
+   held or the row states none — absent is never `0%`. The transcript's
+   pass does not read that row yet, so the figure stands once the records
+   have been read (bl-a7ec, filed to put the read on the pass).
 
 3. **The prompt line → the `EditText` behind `›`, with a `send` word.** `›`
    in the brand at the left edge plus `M` (the body face carries U+203A; the

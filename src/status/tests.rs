@@ -119,8 +119,8 @@ fn turn(usage: serde_json::Value) -> Entry {
 
 #[test]
 fn the_diagnostics_are_this_conversations_alone() {
-    assert!(diagnostics(None, &[], 0).is_empty());
-    let said = diagnostics(Some(&row()), &[], 160);
+    assert!(diagnostics(None, &[], Some(40), 0).is_empty());
+    let said = diagnostics(Some(&row()), &[], None, 160);
     let texts: Vec<(Slot, &str)> = said.iter().map(|s| (s.slot, s.text.as_str())).collect();
     assert_eq!(
         texts,
@@ -131,9 +131,19 @@ fn the_diagnostics_are_this_conversations_alone() {
         turn(json!({ "input_tokens": 1200, "output_tokens": 30 })),
         turn(json!({ "input_tokens": 5 })),
     ];
-    let said = diagnostics(Some(&row()), &turns, 160);
-    assert_eq!(said[0].slot, Slot::Tokens);
-    assert_eq!(said[0].text, "1.2k in · 30 out");
+    let said = diagnostics(Some(&row()), &turns, Some(140), 160);
+    let texts: Vec<(Slot, &str)> = said.iter().map(|s| (s.slot, s.text.as_str())).collect();
+    // The state first, then the tokens, then the context — the engine's own
+    // percent, unclamped — then the name.
+    assert_eq!(
+        texts,
+        [
+            (Slot::State, "in-flight · 1m"),
+            (Slot::Tokens, "1.2k in · 30 out"),
+            (Slot::Context, "context 140%"),
+            (Slot::Name, "fixer")
+        ]
+    );
 }
 
 #[test]

@@ -9,15 +9,16 @@
 //! **Left to right**: the mark (the shell's, outside these segments), then
 //! the four selectors — workspace, provider, model, effort — and priority
 //! where the provider's row takes it; then this conversation's diagnostics —
-//! tokens in and out, its state and how long since it acted — and its name,
-//! the switcher's door. **Only facts about this conversation**: the
-//! seat-wide waiting count and the engines count are not here. Spend and
-//! context-window use are not here either, because the wire states neither
-//! to this seat; the rule says nothing rather than `$0`.
+//! its state and how long since it acted, tokens in and out, how full its
+//! context is where the engine's `agent` row says — and its name, the
+//! switcher's door. **Only facts about this conversation**: the seat-wide
+//! waiting count and the engines count are not here, and spend is not yet
+//! (the rule says nothing rather than `$0`).
 //!
-//! **Drop order**: the name, then the diagnostics from the right, then
-//! priority, then effort. Workspace, provider and model never drop: they
-//! share what is left and elide inside it.
+//! **One line where everything fits, else two** (bl-96fc, [`layout`]): the
+//! selectors on the touch-tall rule, the diagnostics on a small line under
+//! it. Workspace, provider and model never drop: they share what is left and
+//! elide inside it; priority, then effort, leave the rule before them.
 
 use crate::codec::{ConvRow, Entry, EntryKind};
 use crate::theme::{self, Rgb, State, TOUCH};
@@ -31,14 +32,17 @@ pub enum Slot {
     Effort,
     Priority,
     Tokens,
+    Context,
     State,
     Name,
 }
 
-/// The order segments leave the rule in as the width runs out.
-pub const DROPS: [Slot; 5] = [
+/// The order segments leave a one-line rule in as the width runs out — and a
+/// diagnostic leaving is what puts the diagnostics on a line of their own.
+pub const DROPS: [Slot; 6] = [
     Slot::Name,
     Slot::State,
+    Slot::Context,
     Slot::Tokens,
     Slot::Priority,
     Slot::Effort,
@@ -63,21 +67,20 @@ pub struct Said {
     pub ink: Rgb,
 }
 
-/// **The conversation's diagnostics and name**, in rule order. Nothing
-/// focused is nothing said.
-pub fn diagnostics(row: Option<&ConvRow>, transcript: &[Entry], now_unix: i64) -> Vec<Said> {
+/// **The conversation's diagnostics and name**, in rule order: the state and
+/// how long since it acted, the tokens, the context's fullness where the
+/// engine stated it (`context`, the `agent` row's own percent — absent is
+/// not painted, never `0%`), the name. Nothing focused is nothing said.
+pub fn diagnostics(
+    row: Option<&ConvRow>,
+    transcript: &[Entry],
+    context: Option<i64>,
+    now_unix: i64,
+) -> Vec<Said> {
     let Some(row) = row else {
         return Vec::new();
     };
-    let mut out = Vec::new();
-    if let Some((input, output)) = tokens(transcript) {
-        out.push(Said {
-            slot: Slot::Tokens,
-            text: format!("{} in · {} out", count(input), count(output)),
-            ink: theme::INK_WEAK,
-        });
-    }
-    out.push(Said {
+    let mut out = vec![Said {
         slot: Slot::State,
         text: format!(
             "{} · {}",
@@ -85,7 +88,21 @@ pub fn diagnostics(row: Option<&ConvRow>, transcript: &[Entry], now_unix: i64) -
             crate::roster::stamp(row.last_active_unix, now_unix)
         ),
         ink: theme::tone(&row.tone),
-    });
+    }];
+    if let Some((input, output)) = tokens(transcript) {
+        out.push(Said {
+            slot: Slot::Tokens,
+            text: format!("{} in · {} out", count(input), count(output)),
+            ink: theme::INK_WEAK,
+        });
+    }
+    if let Some(percent) = context {
+        out.push(Said {
+            slot: Slot::Context,
+            text: format!("context {percent}%"),
+            ink: theme::INK_WEAK,
+        });
+    }
     out.push(Said {
         slot: Slot::Name,
         text: row.display.clone(),
@@ -219,6 +236,9 @@ pub fn reload(asked_at: usize, now: usize) -> Reload {
         Reload::Reloading
     }
 }
+
+mod lines;
+pub use lines::{Place, layout};
 
 #[cfg(test)]
 mod tests;

@@ -25,7 +25,7 @@ use super::place::Band;
 use super::theme::{ink, rgb};
 use crate::overlay::Overlay;
 use crate::seat::Snapshot;
-use crate::status::{Reload, Said, Slot};
+use crate::status::{Place, Reload, Said, Slot};
 use crate::theme::{self, State, TOUCH, glyph, space};
 
 /// What the rule holds between frames: which knob's list was asked for and
@@ -36,6 +36,21 @@ pub(crate) struct Rule {
     asked: Option<(Slot, Option<usize>)>,
     dismissed: Option<String>,
     pub(crate) verb: Option<Slot>,
+}
+
+/// **The diagnostics' own line's height**, where they stand under the rule:
+/// small type with room to breathe. The name on it is still the switcher's
+/// door, a target this tall — the back gesture and `/conversations` are the
+/// touch-tall ways to the same place.
+const LOW: f32 = TOUCH / 2.0;
+
+/// **How full the focused conversation's context is**, where the engine's
+/// `agent` row about it is held (the records read) and states it.
+fn context(snap: &Snapshot) -> Option<i64> {
+    let records = snap.records.as_ref()?;
+    let focused = snap.focus.workspace.as_deref() == Some(records.workspace.as_str())
+        && snap.focus.agent.as_deref() == Some(records.agent.as_str());
+    focused.then_some(records.head.context.as_ref()?.percent)
 }
 
 /// One segment of the band, before it is given a width.
@@ -65,40 +80,62 @@ impl Shell {
         };
         ui.scope(|ui| {
             ui.spacing_mut().interact_size.y = TOUCH;
-            band(ui, |ui| {
-                // The rule's type is `SMALL` (STYLE §4's band exception,
-                // kept): five knobs and the diagnostics share one line.
-                ui.style_mut().text_styles.insert(
-                    egui::TextStyle::Button,
-                    egui::FontId::proportional(theme::type_scale::SMALL),
-                );
-                ui.spacing_mut().button_padding.x = space::S;
-                self.mark(ui);
-                self.segments(ui, snap, area);
-            });
+            // The rule's type is `SMALL` (STYLE §4's band exception, kept):
+            // five knobs and the diagnostics share one line where they fit.
+            ui.style_mut().text_styles.insert(
+                egui::TextStyle::Button,
+                egui::FontId::proportional(theme::type_scale::SMALL),
+            );
+            ui.spacing_mut().button_padding.x = space::S;
+            self.segments(ui, snap, area);
         });
         self.banner_line(ui, snap);
     }
 
-    /// The knobs and the diagnostics, fitted to what the mark left.
+    /// The knobs and the diagnostics: on the rule beside the mark where one
+    /// line holds them, else the diagnostics on a small line under it
+    /// (`status::layout`, bl-96fc) — added first, the block being bottom-up.
     fn segments(&mut self, ui: &mut egui::Ui, snap: &Snapshot, area: Band) {
         let row = super::controls::focused_row(snap);
         let now = crate::roster::now_unix();
         let mut segments: Vec<Segment> = self.chips(snap).into_iter().map(Segment::Knob).collect();
-        let said = crate::status::diagnostics(row.as_ref(), &snap.transcript, now);
+        let said = crate::status::diagnostics(row.as_ref(), &snap.transcript, context(snap), now);
         segments.extend(said.into_iter().map(Segment::Said));
         let slots: Vec<Slot> = segments.iter().map(slot).collect();
         let wants: Vec<f32> = segments.iter().map(|s| want(ui, s)).collect();
         let held = self.rule.verb.or(self.rule.asked.map(|(slot, _)| slot));
         let gap = ui.spacing().item_spacing.x;
-        let widths = crate::status::fit(&slots, &wants, ui.available_width(), gap, held);
-        for (segment, wide) in segments.into_iter().zip(widths) {
-            let Some(wide) = wide else { continue };
-            match segment {
-                Segment::Knob(chip) => self.knob_on_rule(ui, snap, chip, wide, area),
-                Segment::Said(said) => self.said(ui, &said, wide),
-            }
+        let under = ui.available_width();
+        let places = crate::status::layout(&slots, &wants, under - TOUCH - gap, under, gap, held);
+        let low: Vec<(Said, f32)> = segments
+            .iter()
+            .zip(&places)
+            .filter_map(|(segment, place)| match (segment, place) {
+                (Segment::Said(said), Place::Under(wide)) => Some((said.clone(), *wide)),
+                _ => None,
+            })
+            .collect();
+        if !low.is_empty() {
+            ui.allocate_ui_with_layout(
+                egui::vec2(under, LOW),
+                egui::Layout::left_to_right(egui::Align::Center),
+                |ui| {
+                    for (said, wide) in &low {
+                        self.said(ui, said, *wide, LOW);
+                    }
+                },
+            );
         }
+        band(ui, |ui| {
+            self.mark(ui);
+            for (segment, place) in segments.into_iter().zip(places) {
+                let Place::Rule(wide) = place else { continue };
+                match segment {
+                    Segment::Knob(chip) => self.knob_on_rule(ui, snap, chip, wide, area),
+                    Segment::Said(said) => self.said(ui, &said, wide, TOUCH),
+                }
+            }
+        });
     }
 
     /// One knob: painted, its list asked for when it opens, its reload mark.
@@ -158,13 +195,13 @@ impl Shell {
 
     /// One diagnostic: its words in its ink, elided to its width. The name is
     /// the switcher's door.
-    fn said(&mut self, ui: &mut egui::Ui, said: &Said, wide: f32) {
+    fn said(&mut self, ui: &mut egui::Ui, said: &Said, wide: f32, tall: f32) {
         let sense = if said.slot == Slot::Name {
             egui::Sense::click()
         } else {
             egui::Sense::hover()
         };
-        let (rect, hit) = ui.allocate_exact_size(egui::vec2(wide, TOUCH), sense);
+        let (rect, hit) = ui.allocate_exact_size(egui::vec2(wide, tall), sense);
         let pad = ui.spacing().button_padding.x;
         let text = egui::RichText::new(&said.text).color(rgb(said.ink));
         let galley = egui::WidgetText::from(text).into_galley(
