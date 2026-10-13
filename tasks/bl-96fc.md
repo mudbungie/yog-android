@@ -1,7 +1,8 @@
 +++
 title = "phone hermes: at the phone's own width the rule drops the conversation's state, tokens and name — the diagnostics stand on a second, small line under the selectors so the conversation's facts are never off the glass"
 created = 1791869872
-updated = 1791869872
+updated = 1791870484
+claimant = "PhoneDock"
 parent = "bl-92d3"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
