@@ -169,10 +169,13 @@ impl Shell {
         // opaque surface — so the rectangle the app states is how a walk
         // reaches it: tap here, then `adb shell input text`.
         self.note_control("composer", ui, rect);
-        if self
+        let caret = self
             .field
-            .frame(&self.android, hint, at, skin, &mut self.composer)
-        {
+            .frame(&self.android, hint, at, skin, &mut self.composer);
+        if std::mem::take(&mut self.summon) {
+            super::field::Native::summon(&self.android);
+        }
+        if caret {
             // A native view's edits wake no egui frame, so the mirror is
             // read at the repaint cadence while the caret is in the field —
             // the same focus-gated poll DESIGN §3 rules for the IME bridge,

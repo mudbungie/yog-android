@@ -116,6 +116,23 @@ impl Native {
         self.mirror.handed("");
     }
 
+    /// Put the caret in the field and the keyboard up (§22 item 7's `+ new`).
+    /// Called after this frame's `frame`, so the view is already showing.
+    pub(crate) fn summon(app: &AndroidApp) {
+        let Ok(mut env) = attached() else {
+            return;
+        };
+        let (Ok(bridge), Ok(object)) = (field(&mut env), activity(app)) else {
+            return;
+        };
+        drop(bridge.string(
+            &mut env,
+            "summon",
+            "(Landroid/app/Activity;)Ljava/lang/String;",
+            &[JValue::Object(&object)],
+        ));
+    }
+
     /// End of the pass: a field this frame did not place comes off the glass,
     /// keeping its text — the draft outlives a screen change.
     pub(crate) fn rest(&mut self, app: &AndroidApp) {

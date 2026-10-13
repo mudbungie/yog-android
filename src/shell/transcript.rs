@@ -68,8 +68,10 @@ impl Shell {
                 if self.sheet(ui, snap) {
                     return;
                 }
+                // Back from the chat opens the switcher (§22 item 7): the
+                // focus stays where it is until a row in it is chosen.
                 if self.bar(ui, &speaker, &Back::To("conversations")) {
-                    self.focus_workspace(Some(workspace.to_owned()));
+                    self.open(crate::overlay::Overlay::Switcher);
                 }
                 super::screens::banner(ui, snap);
                 // The records/files band and the knob row are verbs now

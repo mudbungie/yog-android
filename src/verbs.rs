@@ -27,8 +27,6 @@ pub const LEAD: char = '/';
 pub enum Does {
     /// Float an overlay (§22 item 6).
     Open(Overlay),
-    /// Walk to the workspaces — `/conversations` until the switcher (3/7).
-    Roster,
     /// Search for the words (§13.6).
     Find,
     /// Stop the focused turn, or every turn under it.

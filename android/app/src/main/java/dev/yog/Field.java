@@ -148,6 +148,30 @@ public final class Field {
         return App.OK + "given";
     }
 
+    /**
+     * Put the caret in the field and the keyboard up — the switcher's
+     * {@code + new}, which closes onto the chat in start mode, where what the
+     * operator does next is type (DESIGN §22 item 7). Posted after the
+     * frame's own {@code place}, so the view it finds is already showing.
+     */
+    public static String summon(Activity activity) {
+        if (activity == null) {
+            return App.ERR + NO_ACTIVITY;
+        }
+        activity.runOnUiThread(() -> {
+            if (view == null || view.getVisibility() != View.VISIBLE) {
+                return;
+            }
+            view.requestFocus();
+            InputMethodManager imm = (InputMethodManager)
+                    view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+        return App.OK + "summoned";
+    }
+
     /** Build the field on first use, then dress, place and show it. */
     private static void seat(
             Activity activity, String hint, int left, int top, int width, int height,

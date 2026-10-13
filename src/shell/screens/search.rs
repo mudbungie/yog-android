@@ -34,20 +34,9 @@ use eframe::egui;
 use crate::codec::{Address, Found, Hit};
 use crate::seat::Snapshot;
 use crate::shell::app::{NEEDLE, Shell};
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 
 impl Shell {
-    /// **The top depth**: the workspace roster. The hits are an overlay over
-    /// it (DESIGN §22 item 6) whose standing is the answer's
-    /// (`crate::overlay::standing`), so this paints only the roster.
-    pub(super) fn top(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        self.note_screen("roster");
-        self.bar(ui, &crate::bootstrap::Component::Seat.brand(), &Back::None);
-        self.needle(ui);
-        super::banner(ui, snap);
-        self.roster(ui, snap);
-    }
-
     /// **The hits, inside the overlay frame**: the field again — the question
     /// is editable wherever its answer is shown — then the answer. Closing it
     /// is the frame's, and drops the question with the answer.

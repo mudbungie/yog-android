@@ -70,8 +70,8 @@ pub fn rows(gates: &Gates) -> Vec<Row> {
     let mut out = vec![row(
         "conversations",
         &["workspaces"],
-        Does::Roster,
-        "every workspace",
+        Does::Open(Overlay::Switcher),
+        "every workspace and its conversations",
     )];
     if gates.conversation.is_some() {
         out.push(row(

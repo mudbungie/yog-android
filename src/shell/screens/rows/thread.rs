@@ -27,7 +27,7 @@ use eframe::egui;
 /// The box starts at the row's indent, so its left edge is where the parent's
 /// TEXT begins less the connector column — which is what makes the elbow
 /// point at something.
-pub(super) fn threaded(
+pub(in crate::shell) fn threaded(
     ui: &mut egui::Ui,
     rails: &[bool],
     lines: &[String],

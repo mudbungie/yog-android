@@ -31,6 +31,15 @@ tap_control() {        # tap_control <name>
 # reads better for it.
 tap_mark() { tap_control mark; }
 
+# The platform's back, which on the chat opens the switcher (DESIGN §22 item
+# 7). A key event rather than a rectangle: back is the platform's gesture and
+# has no control of its own on the glass.
+press_back() {
+  settle
+  "${ADB[@]}" logcat -c || true
+  "${ADB[@]}" shell input keyevent KEYCODE_BACK
+}
+
 # slash <typed>: open the verb sheet by typing `/<typed>` into the composer
 # (DESIGN §22 item 5) — the narrowing a thumb does, so the row the walk taps
 # next is on the glass however long the sheet is. The door itself (`prompt`)

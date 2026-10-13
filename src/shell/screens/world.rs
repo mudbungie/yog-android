@@ -1,12 +1,10 @@
 //! **The two world surfaces** (DESIGN §13.8, bl-35bd): the attention queue as
 //! a queue, and the ops trail with the two acts over it.
 //!
-//! **They sit at the top depth for the search's reason** (§13.6). Neither read
-//! names a workspace or a conversation — the queue is every workspace's and
-//! the trail is the engine's — so the screen that reaches them is the one
-//! where the whole world is already what is on the glass. An entry on a
-//! workspace's conversation list would say the trail was that workspace's,
-//! which is a scope the wire does not carry and §8 forbids this app to imply.
+//! **They are reached by verb, from any prompt line** (§22 items 5 and 7,
+//! bl-3edc): `/attention` and `/trail`. They sat at the top depth for the
+//! search's reason (§13.6) — neither read names a workspace or a conversation
+//! — and the verb keeps that reason: a sheet row names no scope either.
 //!
 //! **The trail is asked for when it is opened, and the queue is never asked
 //! at all.** The trail is read by nothing standing, so a surface nobody has
@@ -54,30 +52,6 @@ mod trail;
 mod waiting;
 
 impl Shell {
-    /// **The one control that reaches one of the pane's reads**, painted where
-    /// that read's subject is: `balls` and `board` on the roster, because
-    /// neither names a workspace, and `workspace-balls` on a workspace's own
-    /// conversation list. The name the harness taps it by is the op's own
-    /// (§15.2), which is also the screen it opens.
-    pub(in crate::shell) fn balls_entry(&mut self, ui: &mut egui::Ui, view: crate::codec::View) {
-        let control = super::tap(ui, view.screen().into(), view.screen());
-        self.note_control(view.screen(), ui, control.rect);
-        if control.clicked() {
-            self.open(Overlay::Balls(view));
-        }
-    }
-
-    /// **The op table's entry** (§13.14), on the roster beside the queue and
-    /// the trail: what it is about is not a workspace and not a conversation.
-    pub(in crate::shell) fn help_entry(&mut self, ui: &mut egui::Ui) {
-        let name = help::SCREEN;
-        let control = super::tap(ui, name.into(), name);
-        self.note_control(name, ui, control.rect);
-        if control.clicked() {
-            self.open(Overlay::Help);
-        }
-    }
-
     /// Paint the standing overlay's body, inside its frame. One arm each, and
     /// each names its own screen (`app/probe.rs` — the name lives at the
     /// branch, never derived a second time from the same state).
@@ -98,6 +72,7 @@ impl Shell {
             Overlay::Records => self.records(ui, snap, &workspace, &agent),
             Overlay::Files => self.files(ui, snap, &workspace, &agent),
             Overlay::Search => self.searched(ui, snap),
+            Overlay::Switcher => self.switcher(ui, snap),
         }
     }
 }

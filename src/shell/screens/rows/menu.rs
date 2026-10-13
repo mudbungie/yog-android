@@ -80,7 +80,7 @@ impl Shell {
     /// **One row's context menu.** Answers whether a menu stood over this row
     /// as the frame began — a tap that closed one is not also a navigation
     /// into it, which is the one thing a menu owes the screen under it.
-    pub(super) fn menu(
+    pub(in crate::shell) fn menu(
         &mut self,
         ui: &mut egui::Ui,
         area: Band,

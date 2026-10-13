@@ -1,6 +1,6 @@
 use super::*;
 
-const ALL: [Overlay; 15] = [
+const ALL: [Overlay; 16] = [
     Overlay::Queue,
     Overlay::Trail,
     Overlay::Candidates,
@@ -16,6 +16,7 @@ const ALL: [Overlay; 15] = [
     Overlay::Records,
     Overlay::Files,
     Overlay::Search,
+    Overlay::Switcher,
 ];
 
 fn under() -> Under {
@@ -77,6 +78,7 @@ fn closing_leaves_except_where_something_else_is_standing() {
             Close::Leave
         };
         assert_eq!(line.close, want, "{overlay:?}");
+        assert_eq!(line.back, overlay != Overlay::Switcher, "{overlay:?}");
     }
     let minted = Overlay::Admin.line(true, &at);
     assert_eq!(
@@ -89,10 +91,19 @@ fn closing_leaves_except_where_something_else_is_standing() {
 
 #[test]
 fn a_conversation_depth_stands_only_over_its_conversation() {
-    for depth in [Depth::Roster, Depth::Workspace] {
-        assert_eq!(standing(Some(Overlay::Records), depth, false), None);
-        assert_eq!(standing(Some(Overlay::Files), depth, false), None);
-    }
+    assert_eq!(
+        standing(Some(Overlay::Records), Depth::Workspace, false),
+        None
+    );
+    assert_eq!(
+        standing(Some(Overlay::Files), Depth::Workspace, false),
+        None
+    );
+    // Over nothing focused, the switcher is what stands instead.
+    assert_eq!(
+        standing(Some(Overlay::Files), Depth::Roster, false),
+        Some(Overlay::Switcher)
+    );
     assert_eq!(
         standing(Some(Overlay::Files), Depth::Conversation, false),
         Some(Overlay::Files)
@@ -112,7 +123,7 @@ fn a_world_surface_stands_at_every_depth_and_over_a_search() {
 #[test]
 fn the_hits_stand_over_the_roster_while_an_answer_does() {
     assert_eq!(standing(None, Depth::Roster, true), Some(Overlay::Search));
-    assert_eq!(standing(None, Depth::Roster, false), None);
+    assert_eq!(standing(None, Depth::Workspace, false), None);
     assert_eq!(standing(None, Depth::Workspace, true), None);
     // A held records screen the focus has left gives way to the hits.
     assert_eq!(
@@ -120,5 +131,27 @@ fn the_hits_stand_over_the_roster_while_an_answer_does() {
         Some(Overlay::Search)
     );
     // Search is never held: holding it is nothing.
-    assert_eq!(standing(Some(Overlay::Search), Depth::Roster, false), None);
+    assert_eq!(
+        standing(Some(Overlay::Search), Depth::Workspace, false),
+        None
+    );
+}
+
+#[test]
+fn nothing_focused_is_the_switchers_screen_and_closing_it_there_leaves() {
+    assert_eq!(
+        standing(None, Depth::Roster, false),
+        Some(Overlay::Switcher)
+    );
+    // Held, it stands over the chat at every depth.
+    for depth in [Depth::Workspace, Depth::Conversation] {
+        assert_eq!(
+            standing(Some(Overlay::Switcher), depth, false),
+            Some(Overlay::Switcher)
+        );
+    }
+    let roster = Overlay::Switcher.line(false, &Under::default());
+    assert_eq!((roster.name, roster.close), ("conversations", Close::Exit));
+    assert!(!roster.back);
+    assert_eq!(Overlay::Switcher.line(false, &under()).close, Close::Leave);
 }

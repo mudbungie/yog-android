@@ -128,7 +128,6 @@ impl Shell {
             Does::Open(overlay) => return self.open(overlay),
             Does::Full => return self.auto.responses = !self.auto.responses,
             Does::Steps => return self.auto.others = !self.auto.others,
-            Does::Roster => return self.focus_workspace(None),
             Does::Find => {
                 self.needle.clone_from(&words);
                 self.focus_workspace(None);

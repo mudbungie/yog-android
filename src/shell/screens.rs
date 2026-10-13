@@ -1,5 +1,6 @@
 //! The screens above the transcript: the bootstrap gate, the foot's standing,
-//! the workspace roster and the conversation list. Pure presentation over the
+//! the chat in start mode, and the overlay standing over any of them — the
+//! switcher among them (DESIGN §22 item 7). Pure presentation over the
 //! model's snapshot — every wire crossing already happened on the model's
 //! worker thread, and a tap is a command sent, never a call waited on.
 //!
@@ -33,6 +34,7 @@ mod search;
 mod world;
 
 pub(super) use banner::banner;
+pub(super) use rows::threaded;
 
 pub(in crate::shell) use world::{CAP, FLOOR};
 
@@ -79,26 +81,25 @@ impl Shell {
             self.floating(ui, &snap, overlay);
             return;
         }
-        // Back walks exactly one focus depth — the bar returns the tap and
-        // this match is the one place a depth is spelled.
+        // **Nothing focused never reaches here**: the switcher stands over it
+        // (`crate::overlay::standing`). The two depths left are the chat —
+        // in start mode, and on a conversation — and back from either opens
+        // the switcher (§22 item 7).
+        //
+        // **They anchor controls to the floor and paint their own bar**
+        // (bl-192c): the acts and the composer claim from the floor and the
+        // chrome takes what is left above them, so the bar is painted inside
+        // that remainder rather than before it.
         match (snap.focus.workspace.clone(), snap.focus.agent.clone()) {
-            (None, _) => self.top(ui, &snap),
-            // **The two screens that anchor controls to the floor paint their
-            // own bar** (bl-192c). Everywhere else the bar goes first because
-            // nothing below it can be pushed anywhere; here the floor's order
-            // is the opposite — the acts and the composer claim from the
-            // floor and the chrome takes what is left above them — so the bar
-            // is painted inside that remainder rather than before it. It is
-            // still the first thing in the screen's body, which is what §13.2
-            // says.
             (Some(workspace), None) => {
-                self.note_screen("conversations");
-                self.conversations(ui, &snap, &workspace);
+                self.note_screen("start");
+                self.start(ui, &snap, &workspace);
             }
             (Some(workspace), Some(agent)) => {
                 self.note_screen("transcript");
                 self.transcript(ui, &snap, &workspace, &agent);
             }
+            (None, _) => {}
         }
     }
 
@@ -136,49 +137,14 @@ impl Shell {
         );
     }
 
-    pub(super) fn roster(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        ui.weak("workspaces");
-        ui.weak(self.identity());
-        Self::hosting(ui);
-        // **The release channel's one affordance** (§20), beside the two
-        // other structural things this screen says about the device rather
-        // than about the world. It paints nothing when nothing is newer,
-        // which is every launch but the one after a release.
-        self.update_entry(ui);
-        ui.separator();
-        self.world_entries(ui, snap);
-        ui.separator();
-        egui::ScrollArea::vertical().show(ui, |ui| {
-            for row in &snap.workspaces {
-                // The name in ink, the count in weak ink, and the mark — when
-                // there is one — in the attention accent: one line, three
-                // inks, and the hierarchy is the ink (STYLE.md).
-                let mut parts = vec![(row.workspace.clone(), ui.visuals().text_color())];
-                if row.attention > 0 {
-                    parts.push((ATTENTION_MARK.to_owned(), ink(State::Attention)));
-                }
-                parts.push((
-                    format!("  {} agents", row.agents),
-                    ui.visuals().weak_text_color(),
-                ));
-                let label = theme::line(ui, &parts);
-                // Tapping a workspace focuses it, and the focus is what the
-                // worker asks `conversations` at.
-                if tap(ui, label.into(), "conversations").clicked() {
-                    self.focus_workspace(Some(row.workspace.clone()));
-                }
-            }
-        });
-    }
-
     /// What this device offers a session, one line (REMOTE §5). It rides the
-    /// roster because that is the screen an operator lands on, and a tool host
-    /// nobody can see is one nobody can tell has stopped.
+    /// switcher's seat panel because that is the screen every back lands on,
+    /// and a tool host nobody can see is one nobody can tell has stopped.
     ///
     /// It takes no `self`: since bl-8bd0 the host belongs to the PROCESS and
     /// this reads `state::standing()`, so a receiver here would be a claim
     /// that the frame owns the fact.
-    fn hosting(ui: &mut egui::Ui) {
+    pub(super) fn hosting(ui: &mut egui::Ui) {
         let Some(standing) = crate::state::standing() else {
             return;
         };
@@ -219,37 +185,6 @@ impl Shell {
                 format!("{} (×{})", crate::host::RESTORED, standing.restored),
             );
         }
-    }
-
-    /// **The way to the two world surfaces** (§13.8), above the workspaces
-    /// because neither is one: the queue spans every workspace and the trail
-    /// is the engine's own record. The mark on the queue entry is the roster
-    /// rows' own reading — *any workspace is waiting on you* — and not a
-    /// second count derived here.
-    fn world_entries(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        let waiting = snap.workspaces.iter().any(|row| row.attention > 0);
-        let mark = if waiting { ATTENTION_MARK } else { "" };
-        let control = tap(ui, format!("waiting{mark}").into(), "attention");
-        // Where the harness finds them (§15.2): neither carries a node it
-        // could be addressed by, and they are the only way to two screens.
-        self.note_control("waiting", ui, control.rect);
-        if control.clicked() {
-            self.open(Overlay::Queue);
-        }
-        let control = tap(ui, "trail".into(), "ops");
-        self.note_control("trail", ui, control.rect);
-        if control.clicked() {
-            self.open(Overlay::Trail);
-        }
-        // The two ball reads that name no workspace (§13.9). They are here for
-        // the queue's and the trail's reason exactly: what they are about is
-        // everything this seat can see, and this is the screen where that is
-        // already what is on the glass.
-        self.balls_entry(ui, crate::codec::View::Everywhere);
-        self.balls_entry(ui, crate::codec::View::Board);
-        // The op table (§13.14). It names no place either — what it is about
-        // is the vocabulary — and it costs no wire read at all.
-        self.help_entry(ui);
     }
 
     pub(super) fn focus_workspace(&self, workspace: Option<String>) {

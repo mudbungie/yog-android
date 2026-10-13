@@ -19,63 +19,55 @@ wipe_app; relaunch
 capture cold configuration
 
 
-# 2. A leaf, and this device is a seat. The roster is "main".
+# 2. A leaf, and this device is a seat. Nothing is focused, so the switcher
+#    stands (DESIGN §22 item 7): the seat panel at its head, every workspace a
+#    folded heading under it.
 mint_material; seed_cache roster; relaunch
-capture roster roster
+capture seated conversations
 
 
 # 3. THE STANDING ASSERTION: the configuration surface is reachable from the
-#    roster, by the one control that leads there. Then the mark toggles back —
-#    a way in with no way out is the same defect wearing the other face.
+#    first screen, by the one control that leads there — the mark, on the
+#    switcher's seat panel until the rule carries it. Then the mark toggles
+#    back — a way in with no way out is the same defect wearing the other face.
 tap_mark
 capture settings configuration
 tap_mark
-capture back-to-roster roster
+capture back-to-roster conversations
 
-# 3b. THE TWO WORLD SURFACES (DESIGN §13.8, bl-35bd). Neither is a depth of the
-#     focus — the queue spans every workspace and the trail is the engine's own
-#     record — so both are reached from the roster's own entries and both leave
-#     the focus where it was. Each is walked from a fresh launch rather than by
-#     backing out of the other: the way back is the bar's back control, which
-#     carries no rectangle, and a relaunch is the harness's existing door.
-tap_control waiting
+# 4. A workspace focused and no conversation: the chat in start mode.
+seed_cache conversations; relaunch
+capture start start
+
+# 4w. THE WORLD SURFACES (DESIGN §13.8, §13.9, §13.14), by verb now (§22
+#     items 5 and 7): the roster's entries went with the roster, and every
+#     chat has a prompt line to open the sheet from. Each from a fresh launch,
+#     the harness's existing door. `/balls all` is a two-word row the probe
+#     does not name; its tag is read off the sheet in the slashing beat.
+slash att
+tap_control attention
 capture waiting attention
 
 relaunch
+slash tra
 tap_control trail
 capture trail trail
 
-# 3c. THE BALL PANE'S TWO WORLD READS (DESIGN §13.9, bl-d587). Neither names a
-#     workspace, so both are the roster's entries beside the two above — and
-#     each is walked from a fresh launch for the same reason. The pane dials an
-#     engine that is not there, so what these two capture is a screen that
-#     opened and said so; what the parity gate wants from them is the control,
-#     and the control is on the roster either way.
 relaunch
-tap_control balls
-capture balls balls
-
-relaunch
+slash boa
 tap_control board
 capture board board
 
-# 3d. THE OP TABLE (DESIGN §13.14). The fifth roster entry, and the only screen
-#     in this app that works with nothing dialled and nothing seeded — the
-#     table is compiled in. So this beat is what proves `act:help` is on the
-#     glass, and the picture is the vocabulary itself.
 relaunch
+slash hel
 tap_control help
 capture help help
-
-# 4. The two deeper screens, each selected by the focus stored beside its rows.
-seed_cache conversations; relaunch
-capture conversations conversations
 
 # 4a. THE BALL PANE'S AIMED READ (DESIGN §13.9). The one of the three that
 #     names a place, and it is offered on the screen that names it — a
 #     workspace's conversation list — so this is the only depth it can be
-#     reached from. Walked before the row menu, because a menu left open would
-#     be over the entry.
+#     reached from.
+relaunch
 slash bal
 tap_control balls
 capture workspace-balls workspace-balls
@@ -144,9 +136,13 @@ slash log
 tap_control login
 capture signin login
 
-# Back to the list the menu opens from: the seed has not changed, so this is a
-# relaunch and not a re-seed.
+# 4s. THE SWITCHER (DESIGN §22 item 7, bl-3edc): back from the chat opens
+#     it, the focused workspace open under its heading with its conversations
+#     as the §13.20 tree and `+ new` under them. The seed has not changed, so
+#     this is a relaunch and not a re-seed.
 relaunch
+press_back
+capture switching conversations
 
 # 4e. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
 #     `conversations` with a menu up, exactly as it says `transcript` with the
@@ -157,6 +153,13 @@ relaunch
 #     the gate goes red naming all three ops.
 long_press_row
 capture row-menu conversations
+
+# 4t. `+ new` closes the switcher onto the chat in start mode, the caret in
+#     the field.
+relaunch
+press_back
+tap_control new
+capture started start
 
 seed_cache transcript; relaunch
 capture transcript transcript

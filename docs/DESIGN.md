@@ -6553,6 +6553,36 @@ is a client of one engine (entries are an upstream ask, §13.4).
    left to walk). The mark is on the rule and toggles the configuration
    surface exactly as before (W5).
 
+   **As landed (bl-3edc).** The rows, their order and what a tap yields are
+   `crate::switcher`, pure and host-tested (`entries`, `Entry::taken`), over
+   `crate::roster`'s order and rails unchanged; `shell/switcher.rs` paints
+   them in the overlay's frame as `Overlay::Switcher`, whose screen name is
+   `conversations`. Readings decided here: **nothing focused is the
+   switcher's screen** — `overlay::standing` puts it over the roster depth
+   whenever no search answer stands, so the roster screen is gone rather than
+   kept beside it, and its name line's `close` there leaves the app
+   (`Close::Exit`, back's own act at that depth); everywhere else the line
+   closes onto the chat and **back is not taken by the line** (`Line::back`
+   is false for this one overlay), so it falls through to leaving. A tap on a
+   folded heading focuses it and holds the switcher open; the open heading
+   does nothing (re-focusing it would drop the conversation under the
+   switcher). **The rows are §13.20's, unchanged**: the wire's conversation
+   row carries no model, so a row says its name, stamp, preview and failure
+   in its tone's ink and nothing more. **The mark stands on the seat panel**,
+   beside the identity, until the rule carries it (4/7) — the switcher has no
+   bar and the configuration surface must stay one tap from the first
+   screen. `+ new` puts the caret in the field and the keyboard up through
+   one more `dev.yog.Field` call (`summon`), taken by the next pass that
+   places the field. The update offer's check starts on the first paint of
+   the seat panel. The chat with a workspace and no conversation is the
+   `start` screen (bar, banner, one line, the starter), and its bar's `<` and
+   the transcript's open the switcher. The walk: `seated` (nothing focused,
+   headings folded), `settings`/`back-to-roster` from its mark, `start`, the
+   world surfaces by verb (`/attention`, `/trail`, `/board`, `/help` — the
+   two-word `/balls all` row is not named by the probe, so its picture is
+   gone and its tag is read off the sheet), `switching` (back from the chat),
+   `row-menu` inside it, and `started` (`+ new`, keyboard up).
+
 8. **The ask above the field → §13.7's held band, re-shaped as a box above
    the rule.** While the focused conversation asks (`Standing::asking` — the
    queue's read stands), a box framed and named in the attention accent

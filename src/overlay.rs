@@ -48,14 +48,18 @@ pub enum Overlay {
     Files,
     /// The hits a standing search answer carries (§13.6).
     Search,
+    /// **The switcher** (§22 item 7): the workspaces and the focused one's
+    /// conversations, fused — what back from the chat opens, and what stands
+    /// whenever nothing is focused.
+    Switcher,
 }
 
 /// How deep the focus is — what the overlay floats over.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Depth {
-    /// No workspace focused: the roster.
+    /// No workspace focused: the switcher stands over it.
     Roster,
-    /// A workspace and no conversation: its list.
+    /// A workspace and no conversation: the chat in start mode.
     Workspace,
     /// A conversation: the chat.
     Conversation,
@@ -76,6 +80,9 @@ pub enum Close {
     Forget,
     /// Drop the search answer and its question: leaving a search leaves it.
     Unsearch,
+    /// Leave the app: the switcher over nothing has nothing under it, so
+    /// closing it is what back does there (§22 item 7).
+    Exit,
 }
 
 /// The first line of the frame, in words: the overlay's name, what it is open
@@ -87,6 +94,9 @@ pub struct Line {
     pub subject: String,
     pub reaches: &'static str,
     pub close: Close,
+    /// Whether the platform's back closes it. Every overlay but the switcher:
+    /// back there leaves the app, because it is where every back lands.
+    pub back: bool,
 }
 
 /// What a frame's subject names, read off the focus.
@@ -115,6 +125,7 @@ impl Overlay {
             Self::Records => "records",
             Self::Files => "files",
             Self::Search => "search",
+            Self::Switcher => "conversations",
         }
     }
 
@@ -123,7 +134,12 @@ impl Overlay {
     /// was.
     pub(crate) const fn reaches(self) -> &'static str {
         match self {
-            Self::Queue | Self::Trail | Self::Help | Self::Balls(_) | Self::Search => "workspaces",
+            Self::Queue
+            | Self::Trail
+            | Self::Help
+            | Self::Balls(_)
+            | Self::Search
+            | Self::Switcher => "workspaces",
             Self::Records | Self::Files => "transcript",
             Self::Candidates
             | Self::Fleet
@@ -148,6 +164,7 @@ impl Overlay {
             Self::Queue
             | Self::Trail
             | Self::Help
+            | Self::Switcher
             | Self::Balls(View::Everywhere | View::Board) => String::new(),
             Self::Records | Self::Files => under.conversation.clone(),
             Self::Search => under.needle.clone(),
@@ -156,6 +173,9 @@ impl Overlay {
         let (name, reaches, close) = match self {
             Self::Admin if minted => (MINTED, Self::Admin.name(), Close::Forget),
             Self::Search => (self.name(), self.reaches(), Close::Unsearch),
+            Self::Switcher if under.workspace.is_empty() => {
+                (self.name(), self.reaches(), Close::Exit)
+            }
             _ => (self.name(), self.reaches(), Close::Leave),
         };
         Line {
@@ -163,6 +183,7 @@ impl Overlay {
             subject,
             reaches,
             close,
+            back: self != Self::Switcher,
         }
     }
 }
@@ -171,12 +192,19 @@ impl Overlay {
 /// a search answer is standing. A conversation's depth stands only over its
 /// conversation; anything else held stands wherever the focus is (it names no
 /// focus, so it leaves the focus alone); and with nothing held the search
-/// hits stand over the roster while an answer does. `Search` held is not a
-/// state anything sets, and reads as nothing held.
+/// hits stand over the roster while an answer does, and otherwise the
+/// switcher does — nothing focused is the switcher's screen (§22 item 7).
+/// `Search` held is not a state anything sets, and reads as nothing held.
 pub fn standing(held: Option<Overlay>, depth: Depth, searched: bool) -> Option<Overlay> {
     held.filter(|overlay| *overlay != Overlay::Search)
         .filter(|overlay| !overlay.of_conversation() || depth == Depth::Conversation)
-        .or_else(|| (searched && depth == Depth::Roster).then_some(Overlay::Search))
+        .or_else(|| {
+            (depth == Depth::Roster).then_some(if searched {
+                Overlay::Search
+            } else {
+                Overlay::Switcher
+            })
+        })
 }
 
 #[cfg(test)]

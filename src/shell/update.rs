@@ -1,7 +1,7 @@
 //! **The update row, and the three JNI calls under it** (bl-7a68, DESIGN
 //! §20): the one affordance this app carries for its own release channel.
 //!
-//! **It is a row on the roster and never a modal.** The phone seat is a
+//! **It is a row on the switcher's seat panel and never a modal** (§22 item 7). The phone seat is a
 //! working surface, and an update prompt in front of a live conversation is
 //! exactly the interruption this suite's notice discipline exists to avoid.
 //! So the offer sits beside the other structural things the roster already
@@ -42,7 +42,7 @@ impl Shell {
     /// installer.
     ///
     /// The check itself is started by the first call: `Update.state` fetches
-    /// once per process, so painting the roster IS the cadence. That is the
+    /// once per process, so painting the seat panel IS the cadence. That is the
     /// right one for a phone — there is no timer worth the battery, and
     /// opening the app is the only moment an offer could be seen anyway.
     pub(super) fn update_entry(&mut self, ui: &mut egui::Ui) {

@@ -196,6 +196,9 @@ pub(crate) struct Shell {
     /// belongs (`shell::back`). A frame-scoped fact, not state: it is
     /// rewritten every pass.
     pub(crate) back: bool,
+    /// The switcher's `+ new` asked for the caret: taken by the next pass
+    /// that places the field (§22 item 7).
+    pub(crate) summon: bool,
     /// **What the render-and-see probe says about this pass** (`app/probe.rs`,
     /// bl-243b): the screen the dispatch chose, and where each control the
     /// harness has to reach was painted, in device pixels — the mark, the
@@ -252,6 +255,7 @@ impl Shell {
             tuning_said: None,
             tuned_at: 0,
             back: false,
+            summon: false,
             screen: None,
             at: Vec::new(),
             probed: String::new(),
