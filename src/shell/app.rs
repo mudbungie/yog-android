@@ -109,6 +109,10 @@ pub(crate) struct Shell {
     /// navigation for its reason exactly.
     pub(crate) step: Option<String>,
     pub(crate) composer: String,
+    /// **What the verb sheet said when a line could not fire** (§22 item 5):
+    /// a verb missing its words, or a line naming no verb. Stands at the
+    /// sheet's head until a fire replaces it or the sheet closes.
+    pub(crate) verb_said: Option<String>,
     /// **The composer's native field** (bl-8bbb, `shell::field`): the
     /// platform `EditText` overlaid at the rectangle the composer row lays
     /// out, and the standing this side keeps between frames. The DRAFT above
@@ -228,6 +232,7 @@ impl Shell {
             android,
             bridge: Bridge::default(),
             composer: String::new(),
+            verb_said: None,
             field: Native::default(),
             needle: String::new(),
             envelope: String::new(),

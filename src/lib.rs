@@ -44,6 +44,7 @@ pub mod theme;
 pub mod tools;
 pub mod transport;
 pub mod update;
+pub mod verbs;
 
 pub(crate) mod tls;
 

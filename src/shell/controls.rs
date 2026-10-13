@@ -26,9 +26,10 @@
 //!
 //! This file is the row itself — where it sits, what it drops when the focus
 //! moves and the one read it asks for. WHICH controls the row has and what
-//! each is showing is `controls/chip.rs`; the acts that are only offered
-//! while something is running are `controls/stops.rs`, the two selectors are
-//! `controls/pick.rs` and the §9.4 tuning pair is `controls/tune.rs`.
+//! each is showing is `controls/chip.rs`; the two selectors are
+//! `controls/pick.rs` and the §9.4 tuning pair is `controls/tune.rs`. The
+//! stops that rode here are verbs of the sheet now (§22 items 5 and 10,
+//! `shell/slash.rs`), under the same engine gates.
 
 use eframe::egui;
 
@@ -41,7 +42,6 @@ mod chip;
 mod drop;
 mod held;
 mod pick;
-mod stops;
 mod tune;
 
 /// One row of controls, given its own height for the reason every row in this
@@ -200,7 +200,7 @@ impl Shell {
 /// gate rides (REMOTE §9.4). A conversation the list has not caught up with
 /// yet has no row and therefore no gates — the honest reading, and the same
 /// one the roster's own display name falls back through.
-fn focused_row(snap: &Snapshot) -> Option<crate::codec::ConvRow> {
+pub(super) fn focused_row(snap: &Snapshot) -> Option<crate::codec::ConvRow> {
     let agent = snap.focus.agent.as_deref()?;
     snap.conversations
         .iter()

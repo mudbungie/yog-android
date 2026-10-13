@@ -40,7 +40,6 @@ use crate::seat::Snapshot;
 use crate::shell::app::Shell;
 
 mod admin;
-mod aimed;
 mod balls;
 mod candidates;
 mod clients;

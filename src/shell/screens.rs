@@ -34,7 +34,6 @@ mod world;
 
 pub(super) use banner::banner;
 
-pub(crate) use files::SCREEN as FILES;
 pub(in crate::shell) use world::{CAP, FLOOR};
 
 impl Shell {

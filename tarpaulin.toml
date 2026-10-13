@@ -52,8 +52,8 @@
 # and the bridge vocabulary it spends live in `src/scan.rs`, which is pure and
 # stays UNDER the floor — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
-# `src/shell/controls/chip.rs` and `src/shell/controls/stops.rs` are the
-# controls row split at bl-0691, and both inherit `controls.rs`'s entry
+# `src/shell/controls/chip.rs` is the controls row split at bl-0691 (its
+# `stops.rs` sibling became verbs at bl-0d15), and it inherits `controls.rs`'s entry
 # exactly: a `match` from a chip to the widget that paints it, and three
 # `ui.button` calls under the engine's own gates, `cfg(target_os = "android")`
 # to the last line. Both halves that can be decided elsewhere are: WHAT each
@@ -105,11 +105,11 @@
 # makes one view's answer unpaintable under another is `Pane::view`, all
 # asserted by host tests. What is left here is which widget shows which of them.
 #
-# `src/shell/screens/world/aimed.rs` is the aimed bar (bl-6e8a), the same class
-# again: one `allocate_ui_with_layout` per chip and a `Button` inside it,
-# `cfg(target_os = "android")` to the last line. What it decides is a division
-# of the available width by a constant table, and the table is the file — there
-# is no reading of the world in it at all.
+# `src/shell/slash.rs` is the verb sheet (bl-0d15, DESIGN §22 item 5), the
+# same class again: a framed `ScrollArea` of rows and the match from what a
+# row does to the model call that performs it, `cfg(target_os = "android")` to
+# the last line. Which rows stand, how a line is read and what a tap or a send
+# yields are `crate::verbs`, pure and under the floor.
 #
 # `src/shell/overlay.rs` is the overlay frame (bl-3f9a, DESIGN §22 item 6),
 # the same class again: a `Frame` over a child `Ui`, one click-sensed row and
@@ -294,7 +294,6 @@ exclude-files = [
     "src/shell/controls/drop.rs",
     "src/shell/controls/held.rs",
     "src/shell/controls/pick.rs",
-    "src/shell/controls/stops.rs",
     "src/shell/controls/tune.rs",
     "src/shell/enroll.rs",
     "src/shell/field.rs",
@@ -314,10 +313,10 @@ exclude-files = [
     "src/shell/screens/rows.rs",
     "src/shell/screens/rows/menu.rs",
     "src/shell/overlay.rs",
+    "src/shell/slash.rs",
     "src/shell/screens/rows/thread.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",
-    "src/shell/screens/world/aimed.rs",
     "src/shell/screens/world/admin.rs",
     "src/shell/screens/world/admin/acts.rs",
     "src/shell/screens/world/admin/minted.rs",

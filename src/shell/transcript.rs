@@ -58,53 +58,23 @@ impl Shell {
             // Closest to the floor: the acts on this conversation, then the
             // composer that rides above the keyboard.
             self.controls(ui, snap);
-            if let Some(taken) = self.compose(ui, "message", &["message"]) {
+            if let Some(taken) = self.compose(ui, snap, "message", &["message"]) {
                 self.deposit(snap, taken);
             }
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                // **The verb sheet takes this room while the draft is a slash
+                // line** (§22 item 5): above the composer, never over it.
+                if self.sheet(ui, snap) {
+                    return;
+                }
                 if self.bar(ui, &speaker, &Back::To("conversations")) {
                     self.focus_workspace(Some(workspace.to_owned()));
                 }
                 super::screens::banner(ui, snap);
-                // **The two ways one depth deeper** (§13.11, §13.15), a row
-                // of their own for a width reason rather than a taste one:
-                // the two knobs below carry ~23-character labels apiece and a
-                // phone's row holds both and nothing else, so a third control
-                // in that band would be pushed off the glass — which is
-                // bl-f36e's finding at a new site, and a control off the
-                // glass is one the parity inventory cannot record and a thumb
-                // cannot reach. Both fit in one band of their own, which is
-                // the aimed band's shape (§13.14) at this depth: the reads
-                // each opens named on it, and its rectangle said for the
-                // harness (§15.2).
-                self.depth_entries(ui);
-                // The two auto knobs, the desktop's own pair: which KINDS
-                // open by default. They are policy; a hand-flipped row is the
-                // override set below and dies with the screen.
-                //
-                // **Right-aligned, in a row of their own, and named in the
-                // operator's words** (bl-f165). They sat at the left edge
-                // directly under the bar's back control, one thumb-width from
-                // the one gesture that leaves the screen — and were labelled
-                // `talk` and `steps`, which are this file's words for them
-                // and nobody else's. The row is allocated its own height for
-                // the reason every row in this app now is (bl-193c): a
-                // `right_to_left(Center)` layout handed the whole remaining
-                // screen centres its widgets in it. The 44 is §13.2's floor,
-                // spent here as the minimum interact size so each checkbox is
-                // a target rather than a glyph.
-                ui.scope(|ui| {
-                    ui.spacing_mut().interact_size.y = super::mark::TOUCH;
-                    ui.allocate_ui_with_layout(
-                        egui::vec2(ui.available_width(), super::mark::TOUCH),
-                        egui::Layout::right_to_left(egui::Align::Center),
-                        |ui| {
-                            ui.checkbox(&mut self.auto.others, "show intermediate steps");
-                            ui.checkbox(&mut self.auto.responses, "show full response");
-                        },
-                    );
-                });
+                // The records/files band and the knob row are verbs now
+                // (§22 items 4 and 5): `/records`, `/files`, `/full`,
+                // `/steps` — the transcript keeps the room.
                 ui.separator();
                 // **The transcript is what gives way** (bl-192c): it takes
                 // whatever the two above it left, down to nothing.
@@ -168,42 +138,5 @@ impl Shell {
             crate::outbox::Settled::Gone => {}
             crate::outbox::Settled::Draft(text) => self.composer = text,
         }
-    }
-}
-
-impl Shell {
-    /// **The two depths behind the transcript**, in one band: the
-    /// conversation's machinery, and the worktree its work is in. Each
-    /// control carries the reads its opening asks (PARITY §2) and its own
-    /// rectangle, which is the only way a harness reaches a control this app
-    /// paints (§15.2). `step` is not among the records tags — that read is
-    /// posted off a row on the screen this control opens, and the control
-    /// that fires it carries its own tag there.
-    fn depth_entries(&mut self, ui: &mut egui::Ui) {
-        let band = egui::vec2(ui.available_width(), super::mark::TOUCH);
-        ui.allocate_ui_with_layout(
-            band,
-            egui::Layout::left_to_right(egui::Align::Center),
-            |ui| {
-                let tall = egui::vec2(0.0, super::mark::TOUCH);
-                let control = ui.add(egui::Button::new("records").min_size(tall));
-                super::act::acts(
-                    ui,
-                    &control,
-                    &["agent", "steps", "rail", "governing", "inbox", "lineages"],
-                );
-                self.note_control("records", ui, control.rect);
-                if control.clicked() {
-                    self.open(crate::overlay::Overlay::Records);
-                }
-                let name = super::screens::FILES;
-                let control = ui.add(egui::Button::new(name).min_size(tall));
-                super::act::act(ui, &control, name);
-                self.note_control(name, ui, control.rect);
-                if control.clicked() {
-                    self.open(crate::overlay::Overlay::Files);
-                }
-            },
-        );
     }
 }

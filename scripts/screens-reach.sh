@@ -31,6 +31,15 @@ tap_control() {        # tap_control <name>
 # reads better for it.
 tap_mark() { tap_control mark; }
 
+# slash <typed>: open the verb sheet by typing `/<typed>` into the composer
+# (DESIGN §22 item 5) — the narrowing a thumb does, so the row the walk taps
+# next is on the glass however long the sheet is. The door itself (`prompt`)
+# is proven by its own beat.
+slash() {
+  tap_control composer
+  "${ADB[@]}" shell input text "/$1"
+}
+
 # Press and HOLD the first conversation row, which is the one way the row menu
 # opens (DESIGN §13.5). The rectangle is the app's own answer, for the mark's
 # reason exactly: a row carries no accessibility node either.

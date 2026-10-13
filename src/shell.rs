@@ -50,6 +50,8 @@ mod overlay;
 #[cfg(target_os = "android")]
 mod screens;
 #[cfg(target_os = "android")]
+mod slash;
+#[cfg(target_os = "android")]
 pub(crate) mod sys;
 #[cfg(target_os = "android")]
 mod theme;

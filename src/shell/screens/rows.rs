@@ -49,20 +49,21 @@ impl Shell {
             // so it is picked from the screen that lists it as readily as from
             // a conversation inside it.
             self.controls(ui, snap);
-            self.starter(ui);
+            self.starter(ui, snap);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                // The verb sheet, while the draft is a slash line (§22 item
+                // 5) — the start shares the prompt line and its door.
+                if self.sheet(ui, snap) {
+                    return;
+                }
                 if self.bar(ui, workspace, &Back::To("workspaces")) {
                     self.focus_workspace(None);
                 }
                 super::banner(ui, snap);
-                // **The four surfaces that name THIS workspace** (§13.14):
-                // the balls it holds, what its attempts cost, its two armings,
-                // and the machines that may execute for it. All four are
-                // offered where that workspace is what the operator is
-                // standing in, and they share two bands rather than taking
-                // four full-width rows off the list below them.
-                self.aimed_entries(ui);
+                // The seven surfaces that name THIS workspace are verbs now
+                // (§22 item 5): `/balls`, `/science`, `/diff`, `/fleet`,
+                // `/clients`, `/config`, `/login`.
                 ui.separator();
                 egui::ScrollArea::vertical()
                     .min_scrolled_height(0.0)
@@ -116,8 +117,8 @@ impl Shell {
     /// widget id with the chat screen's, and deliberately: only one of the two
     /// is ever on screen, they are the same gesture at two depths, and the IME
     /// bridge addresses exactly one field by that id (bl-014e).
-    fn starter(&mut self, ui: &mut egui::Ui) {
-        if let Some(goal) = self.compose(ui, "start a conversation", &["prepare", "prompt"])
+    fn starter(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
+        if let Some(goal) = self.compose(ui, snap, "start a conversation", &["prepare", "prompt"])
             && let Some(model) = self.model()
         {
             model.start_conversation(goal);

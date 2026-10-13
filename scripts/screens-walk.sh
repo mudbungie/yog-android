@@ -76,7 +76,8 @@ capture conversations conversations
 #     workspace's conversation list — so this is the only depth it can be
 #     reached from. Walked before the row menu, because a menu left open would
 #     be over the entry.
-tap_control workspace-balls
+slash bal
+tap_control balls
 capture workspace-balls workspace-balls
 
 # 4b. THE CANDIDATES SCREEN (DESIGN §13.12). The other read that names a
@@ -85,6 +86,7 @@ capture workspace-balls workspace-balls
 #     was read; what the parity gate wants from it is the four controls, and
 #     all four paint — three of them disabled, saying which row to tap first.
 relaunch
+slash sci
 tap_control science
 capture candidates science
 
@@ -94,6 +96,7 @@ capture candidates science
 #     answer to show and four controls, two of them dark and saying which word
 #     would light them, which is what the parity gate asks of them.
 relaunch
+slash fle
 tap_control fleet
 capture fleet fleet
 
@@ -102,6 +105,7 @@ capture fleet fleet
 #     other op in REMOTE §5 is a machine's. The engine is not dialled, so this
 #     captures a screen that opened and said nothing was read.
 relaunch
+slash cli
 tap_control clients
 capture clients clients
 
@@ -111,7 +115,8 @@ capture clients clients
 #      captures a screen that opened and said nothing was read; what the parity
 #      gate wants from it is the entry, which is on the band either way.
 relaunch
-tap_control work-diff
+slash dif
+tap_control diff
 capture work work-diff
 
 # 4db. THE ADMIN SCREEN (DESIGN §13.17). The sixth aimed entry: the config
@@ -123,6 +128,7 @@ capture work work-diff
 #      them, which is what puts `act:proposal` on the glass with nothing
 #      staged.
 relaunch
+slash con
 tap_control config
 capture admin config
 
@@ -134,6 +140,7 @@ capture admin config
 #      `act:login` on the glass enabled AND dark. The tail under them is
 #      empty, because nothing is dialled and nobody has tapped a row.
 relaunch
+slash log
 tap_control login
 capture signin login
 
@@ -154,6 +161,13 @@ capture row-menu conversations
 seed_cache transcript; relaunch
 capture transcript transcript
 
+# 4ea. THE VERB SHEET (DESIGN §22 item 5, bl-0d15). The prompt glyph is the
+#      door: a tap puts `/` at the head of the draft and the sheet stands while
+#      it does. At rest, so `nudge` is among its rows — the parity gate reads
+#      the stop chips' tags off the sheet now, here and in the running beat.
+tap_control prompt
+capture slashing transcript
+
 # 4f. THE RECORDS SCREEN (DESIGN §13.11). One drill-down depth behind the
 #     transcript, reached by the one control that opens it — which is also the
 #     affordance for the five reads it asks (PARITY §2). The engine is not
@@ -169,6 +183,7 @@ capture records records
 #     from a relaunch rather than by backing out of the records screen, which is
 #     the harness's existing door.
 relaunch
+tap_control prompt
 tap_control files
 capture files files
 
@@ -177,6 +192,7 @@ capture files files
 #    of controls under it, and the parity gate below can only see a control a
 #    walked screen actually painted.
 seed_cache running; relaunch
+tap_control prompt
 capture running transcript
 
 fetch_beats

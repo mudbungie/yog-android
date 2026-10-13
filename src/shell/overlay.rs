@@ -40,6 +40,39 @@ pub(super) fn boxed(ui: &egui::Ui) -> Option<egui::Rect> {
     ui.data(|data| data.get_temp::<egui::Rect>(slot()))
 }
 
+/// **The box itself**, at `rect`: `SURFACE` with a `HAIRLINE` frame, `body`
+/// laid top-down inside it, and the box's rect held in memory while `body`
+/// lays out — so a control scrolled out of it still counts as reachable. The
+/// overlay and the verb sheet both float in it (§22 items 5 and 6).
+pub(super) fn framed(
+    ui: &mut egui::Ui,
+    rect: egui::Rect,
+    salt: &str,
+    body: impl FnOnce(&mut egui::Ui),
+) {
+    let mut child = ui.new_child(
+        egui::UiBuilder::new()
+            .max_rect(rect)
+            .layout(egui::Layout::top_down(egui::Align::Min))
+            .id_salt(("framed", salt)),
+    );
+    let margin = egui::Margin::symmetric(space::S as i8, space::XS as i8);
+    egui::Frame::NONE
+        .fill(rgb(theme::SURFACE))
+        .stroke(egui::Stroke::new(1.0, rgb(theme::HAIRLINE)))
+        .corner_radius(theme::RADIUS)
+        .inner_margin(margin)
+        .show(&mut child, |ui| {
+            let inner = rect.size() - margin.sum();
+            ui.set_min_size(inner);
+            ui.set_max_size(inner);
+            ui.data_mut(|data| data.insert_temp(slot(), ui.max_rect()));
+            body(ui);
+            ui.data_mut(|data| data.remove::<egui::Rect>(slot()));
+        });
+    ui.advance_cursor_after_rect(rect);
+}
+
 impl Shell {
     /// Paint the frame over everything this `ui` was given, the name line at
     /// its head, and `body` in what is left. Closing is performed after the
@@ -53,29 +86,11 @@ impl Shell {
     ) {
         let room = ui.available_rect_before_wrap();
         let rect = egui::Rect::from_min_max(room.min + egui::vec2(0.0, space::S), room.max);
-        let mut child = ui.new_child(
-            egui::UiBuilder::new()
-                .max_rect(rect)
-                .layout(egui::Layout::top_down(egui::Align::Min))
-                .id_salt(("overlay", line.name)),
-        );
-        let margin = egui::Margin::symmetric(space::S as i8, space::XS as i8);
         let mut closed = false;
-        egui::Frame::NONE
-            .fill(rgb(theme::SURFACE))
-            .stroke(egui::Stroke::new(1.0, rgb(theme::HAIRLINE)))
-            .corner_radius(theme::RADIUS)
-            .inner_margin(margin)
-            .show(&mut child, |ui| {
-                let inner = rect.size() - margin.sum();
-                ui.set_min_size(inner);
-                ui.set_max_size(inner);
-                ui.data_mut(|data| data.insert_temp(slot(), ui.max_rect()));
-                closed = self.name_line(ui, line);
-                body(self, ui);
-                ui.data_mut(|data| data.remove::<egui::Rect>(slot()));
-            });
-        ui.advance_cursor_after_rect(rect);
+        framed(ui, rect, line.name, |ui| {
+            closed = self.name_line(ui, line);
+            body(self, ui);
+        });
         if closed {
             self.close(line.close);
         }

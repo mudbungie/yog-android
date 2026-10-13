@@ -6471,6 +6471,31 @@ is a client of one engine (entries are an upstream ask, §13.4).
    conversation in the switcher still acts on THAT row, which no verb on the
    focus can.
 
+   **As landed (bl-0d15).** The table, the line parser and what a tap or a
+   send yields are `crate::verbs`, pure and host-tested; `shell/slash.rs`
+   paints the sheet in the overlay's frame (so a row scrolled out of view
+   records its tags, item 6) and performs what a row does. Readings the list
+   above left open, now decided: **the narrowing is by the line's first
+   word**, and a first word no row begins shows every row, because then the
+   line is the words of a verb not yet chosen (the *type the reason, tap `›`*
+   path); **a tap's words** are what follows the verb when the line names it,
+   what follows a partial word of it, or else the whole line; **`/interrupt`
+   stands under the `stop` gate** (`stoppable`), the desktop's reading, while
+   `/retarget`, `/flag`, `/revoke` and `/restore` stand whenever a
+   conversation is focused; **`/model` is not yet a row** — the model
+   overlay arrives with the rule (4/7) and the controls band keeps the
+   selectors until then; **`/conversations` focuses the workspaces** until
+   the switcher (3/7). `›` toggles: tapped with the sheet open it takes the
+   `/` back off, the back gesture's own act. A refusal (a verb missing its
+   words, a line naming no verb) is said at the sheet's head until the state
+   slot exists (4/7). The roster's world entries are deleted with the
+   switcher (3/7), not here: the roster has no prompt line to open a sheet
+   from. The walk's probe names a sheet row by its word (`balls`, `diff`,
+   `records`, …; two-word rows are not named), `prompt` is the door, and the
+   walk reaches a surface by typing `/<prefix>` into the composer and tapping
+   the narrowed row; `slashing` is the transcript with the sheet open, and
+   `running` now opens the sheet to prove the stops.
+
 6. **An overlay, not a covering pane → a framed sheet over the transcript,
    full width.** Every screen that painted its own bar over a depth — the
    world screens (queue, trail, balls, science, diff, fleet, clients, config,

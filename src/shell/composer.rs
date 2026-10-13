@@ -15,6 +15,7 @@
 use eframe::egui;
 
 use super::app::Shell;
+use super::theme::rgb;
 
 /// **The field's own padding, and with it the field's own resting height**
 /// (bl-01a6). A field at rest is one text row inside a two-point margin —
@@ -73,6 +74,7 @@ impl Shell {
     pub(super) fn compose(
         &mut self,
         ui: &mut egui::Ui,
+        snap: &crate::seat::Snapshot,
         hint: &str,
         acts: &[&str],
     ) -> Option<String> {
@@ -81,33 +83,62 @@ impl Shell {
         ui.allocate_ui_with_layout(
             band,
             // **Centred, and that is where the send's own word comes from**
-            // (bl-0691). A `Button` positions its text with
-            // `Layout::align_size_within_rect` — the ENCLOSING ui's layout,
-            // not the button's — so under a `BOTTOM` cross-align the word
-            // `send` was laid on the floor of its own box while the field's
-            // hint beside it was centred in its (measured on the emulator:
-            // nineteen device pixels low). Nothing else in the row moves: the
-            // field takes the band whatever the cross-alignment is.
+            // (bl-0691): a `Button` positions its text by the ENCLOSING ui's
+            // layout, so under a `BOTTOM` cross-align the word sat on the
+            // floor of its box while the field's hint beside it was centred.
             egui::Layout::right_to_left(egui::Align::Center),
             |ui| {
-                // Laid right-to-left so the button claims its seat first and
-                // the field takes what remains, not the whole row.
-                let control =
-                    egui::Button::new("send").min_size(egui::vec2(0.0, super::mark::TOUCH));
-                let send = ui.add(control);
-                super::act::acts(ui, &send, acts);
-                let pressed = send.clicked();
+                // Laid right-to-left so `send` claims its seat first, the
+                // prompt door its square at the far left, and the field what
+                // is left between them. **`send` is a word in the brand on
+                // bare ground, painted only while the draft holds text**
+                // (§22 item 3): with nothing to send there is no control.
+                let pressed = !self.composer.is_empty() && {
+                    let word = egui::RichText::new("send").color(rgb(crate::theme::BRAND));
+                    let control = egui::Button::new(word)
+                        .frame(false)
+                        .min_size(egui::vec2(super::mark::TOUCH, super::mark::TOUCH));
+                    let send = ui.add(control);
+                    super::act::acts(ui, &send, acts);
+                    send.clicked()
+                };
+                let wide = (ui.available_width() - super::mark::TOUCH).max(0.0);
+                let (rect, _) = ui.allocate_exact_size(
+                    egui::vec2(wide, ui.available_height()),
+                    egui::Sense::hover(),
+                );
+                self.door(ui);
                 // What is left of the band is the field's, and egui paints
                 // nothing in it: the platform's own view stands there.
-                let (rect, _) = ui.allocate_exact_size(ui.available_size(), egui::Sense::hover());
                 self.overlay(ui, hint, rect);
-                if pressed && !self.composer.trim().is_empty() {
+                if pressed && crate::verbs::slashing(&self.composer) {
+                    self.send_line(snap);
+                } else if pressed && !self.composer.trim().is_empty() {
                     taken = Some(std::mem::take(&mut self.composer));
                     self.field.took(&self.android);
                 }
             },
         );
         taken
+    }
+
+    /// **`›`, the verb door** (§22 items 3 and 5): the prompt glyph in the
+    /// brand, a touch-floor square, and a tap puts `/` at the head of the
+    /// draft — or takes it back off — which is what opens the sheet.
+    fn door(&mut self, ui: &mut egui::Ui) {
+        let square = egui::vec2(super::mark::TOUCH, super::mark::TOUCH);
+        let (rect, hit) = ui.allocate_exact_size(square, egui::Sense::click());
+        ui.painter().text(
+            rect.center(),
+            egui::Align2::CENTER_CENTER,
+            crate::theme::glyph::PROMPT,
+            egui::FontId::proportional(crate::theme::type_scale::HEADING),
+            rgb(crate::theme::BRAND),
+        );
+        self.note_control("prompt", ui, rect);
+        if hit.clicked() {
+            self.composer = crate::verbs::door(&self.composer);
+        }
     }
 
     /// Put the native field where the row put it, and take the draft back.

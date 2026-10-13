@@ -160,6 +160,9 @@ pub fn speaker(role: Role) -> Rgb {
     }
 }
 
+/// The glyph set, pinned to the desktop's (DESIGN §22 item 12).
+pub mod glyph;
+
 /// The spacing scale, in points. Every gap on the glass is one of these.
 pub mod space {
     pub const XS: f32 = 4.0;

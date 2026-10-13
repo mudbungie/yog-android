@@ -11,7 +11,7 @@
 use eframe::egui;
 
 use super::super::app::Shell;
-use super::{pick, stops};
+use super::pick;
 use crate::codec::pick::knob::Knob;
 use crate::seat::Snapshot;
 
@@ -20,10 +20,6 @@ use crate::seat::Snapshot;
 /// asks for the width of its own words, and the row cannot ask until it knows
 /// what every chip says.
 pub(super) enum Chip {
-    /// Stop this turn, or every turn under it (`true`).
-    Stop(bool, String),
-    /// Wake a branch that stopped advancing.
-    Nudge,
     /// The §9.4 tuning pair, each with what the provider row said about it.
     /// The priority chip carries the state it stands in as well as its face:
     /// the tap is a flip, and what it flips FROM is the workspace's own
@@ -39,11 +35,10 @@ impl Chip {
     /// What this chip is showing.
     pub(super) fn face(&self) -> String {
         match self {
-            Self::Stop(_, face) | Self::Effort(face, _) | Self::Priority(face, _, _) => {
-                face.clone()
-            }
-            Self::Nudge => "nudge".to_owned(),
-            Self::Provider(face) | Self::Model(face) => face.clone(),
+            Self::Effort(face, _)
+            | Self::Priority(face, _, _)
+            | Self::Provider(face)
+            | Self::Model(face) => face.clone(),
         }
     }
 
@@ -89,7 +84,7 @@ impl Shell {
         let provider = pick::provider(self, set);
         let (effort, priority) =
             crate::codec::pick::knob::tunable(&snap.providers, provider.as_deref());
-        let mut chips = stops::chips(snap);
+        let mut chips = vec![];
         chips.push(Chip::Effort(
             crate::codec::pick::face::effort(self.effort.clone(), set),
             effort,
@@ -118,8 +113,6 @@ impl Shell {
         area: crate::shell::place::Band,
     ) {
         match chip {
-            Chip::Stop(children, _) => self.stop(ui, face, wide, children),
-            Chip::Nudge => self.nudge(ui, face, wide),
             Chip::Effort(_, knob) => self.effort(ui, face, wide, area, &knob),
             Chip::Priority(_, knob, on) => self.priority(ui, face, wide, &knob, on),
             Chip::Provider(_) => self.providers(ui, snap, face, wide, area),
