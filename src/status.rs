@@ -55,8 +55,12 @@ const KEPT: [Slot; 3] = [Slot::Workspace, Slot::Provider, Slot::Model];
 
 /// **The narrowest a selector is let fall to before a knob leaves**: a few
 /// letters and the drop caret. Below it a selector says nothing worth reading,
-/// and a knob is the cheaper thing to lose.
-pub const SHARE: f32 = TOUCH * 1.5;
+/// and a knob is the cheaper thing to lose. Measured, not rounded to touch
+/// targets (bl-9817): the button's padding either side (16), the caret's room
+/// (20) and four letters with their ellipsis at `SMALL` type (`clau…` is
+/// 33.5 in the bundled face) — which at the walk's 411 points keeps effort
+/// on the rule, where one and a half touch targets (72) dropped it by two.
+pub const SHARE: f32 = 70.0;
 
 /// The banner's word while the wire is being re-dialled.
 pub const RECONNECTING: &str = "reconnecting…";

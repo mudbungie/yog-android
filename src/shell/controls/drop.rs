@@ -121,7 +121,12 @@ pub(super) fn drop_down(
                     // at once; the items widen the menu instead. `ComboBox`
                     // does the same, for the same reason.
                     ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                    add(ui);
+                    // **Every row is a touch target** (bl-9817, §13.2's
+                    // floor): `TOUCH` tall and the list's full width, its
+                    // words at the left — a column of text-tall rows is a
+                    // fingertip's worth of wrong taps.
+                    ui.spacing_mut().interact_size.y = crate::theme::TOUCH;
+                    ui.with_layout(egui::Layout::top_down_justified(egui::Align::Min), add);
                 });
         });
     face

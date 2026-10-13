@@ -6485,6 +6485,24 @@ is a client of one engine (entries are an upstream ask, §13.4).
    and a one-line rule drops it after the state — so the ruled order of the
    two that were there stands as it was.
 
+   **As amended (bl-9817) — the rows and the share.** **Every row of a
+   dropup is a touch target**: `TOUCH` tall and the list's full width, its
+   words at the left edge (`controls/drop.rs` lays the rows top-down,
+   justified); the list still caps to the room above the rule and scrolls
+   inside it (`shell::place::fit`). Round 2 measured them at about 28
+   points. **`status::SHARE` is 70 points, measured, not one and a half
+   touch targets**: the padding either side, the caret's room and four
+   letters with their ellipsis at `SMALL` (`clau…`). At the walk's 411
+   points 72 dropped effort by two points (`effort: high` with its caret
+   wants 97); 70 keeps it, the selectors at about 71 each (`alba`,
+   `ant…`, `clau…`). **All five do not fit at 411 at any readable share**:
+   with priority (`priority: on`, 75) beside effort, the three selectors
+   would get 44 points each — 8 points of type, under one letter — and even
+   with the faces stripped to their bare values (`high`, `on`) they would
+   get 65, under `anth…`'s 72. So priority stays the first knob the width
+   lets go of (`/priority` still reaches it); on the walk's measured faces
+   effort stands from about 407 points of glass.
+
 3. **The prompt line → the `EditText` behind `›`, with a `send` word.** `›`
    in the brand at the left edge plus `M` (the body face carries U+203A; the
    baseline's `❯` paints as tofu, as on the desktop), the platform field

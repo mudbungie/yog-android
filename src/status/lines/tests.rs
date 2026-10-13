@@ -2,6 +2,7 @@
 //! line keeps.
 
 use super::*;
+use crate::status::SHARE;
 use crate::theme::TOUCH;
 
 const ALL: [Slot; 10] = [
@@ -37,6 +38,21 @@ fn on(places: &[Place], under: bool) -> Vec<Slot> {
         })
         .map(|(_, slot)| slot)
         .collect()
+}
+
+/// **The walk's own figures** (bl-9817): a 411-point glass, the pass's gap,
+/// and the knobs' wants measured in the bundled face at `SMALL` —
+/// `effort: high` with padding and caret, `priority: on` with padding.
+#[test]
+fn at_411_points_effort_stands_and_every_selector_keeps_its_letters() {
+    use Slot::*;
+    let wants = [0.0, 0.0, 0.0, 96.8, 74.5, 90.0, 100.0, 50.0, 80.0, 80.0];
+    let under = 411.0 - 20.0;
+    let places = layout(&ALL, &wants, under - TOUCH - 8.0, under, 8.0, None);
+    assert_eq!(on(&places, false), [Workspace, Provider, Model, Effort]);
+    for place in &places[..3] {
+        assert!(matches!(place, Place::Rule(w) if *w >= SHARE), "{place:?}");
+    }
 }
 
 #[test]
