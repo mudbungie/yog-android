@@ -1,7 +1,8 @@
 +++
 title = "the ask box takes about 38% of the phone's screen, leaving six lines of transcript: the row's words fold to their first line behind the name line's fold, and the six cells stand three to a row where the width allows"
 created = 1791872485
-updated = 1791872485
+updated = 1791872870
+claimant = "PhoneFix"
 parent = "bl-92d3"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
