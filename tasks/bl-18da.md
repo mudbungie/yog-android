@@ -1,7 +1,8 @@
 +++
 title = "phone hermes 6/7: the transcript idiom and the panels — gutter glyphs, the trail tree under one fold, the conversation and seat panels at the head"
 created = 1791867723
-updated = 1791867723
+updated = 1791869883
+claimant = "PhoneChat"
 parent = "bl-92d3"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
