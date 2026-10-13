@@ -1,7 +1,8 @@
 +++
 title = "phone hermes 1/7: the overlay frame — every bar-painting depth becomes one framed sheet over the chat, closed by its name line or back"
 created = 1791867720
-updated = 1791867720
+updated = 1791867860
+claimant = "PhoneOne"
 parent = "bl-92d3"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
