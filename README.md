@@ -43,6 +43,17 @@ transport, key material, the Android shell (egui via GameActivity — DESIGN
 composer) are landed. On-device verification is operator-assisted; an
 unregistered leaf correctly sees empty rows.
 
+**The screens are being re-shaped to the desktop seat's Hermes shape**
+(DESIGN §22, epic bl-92d3). Today the seat is three depths — workspaces →
+conversations → transcript — under a standing bar, with a band of controls
+under the composer. The shape it is moving to is one chat screen: the
+transcript, a one-line status rule (state, waiting count, model, name — each
+a tap target), and a prompt line whose `›` opens a sheet of verbs. The
+conversation list becomes a switcher the rule's name or the back gesture
+opens, and every other screen an overlay that a tap opens and back closes.
+Each step lands on `main` on its own and reaches a phone through the release
+channel below, so the app is whole between steps.
+
 **Wire v1.** Every connection opens with the version preface REMOTE §3
 defines, and a skew is fail-closed with a sentence naming both versions. The
 vocabulary is judged by yog's **conformance corpus** — generated from the

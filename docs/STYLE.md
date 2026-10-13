@@ -19,7 +19,11 @@ defect, and the fix is here or in `src/theme.rs`, never on the screen.
    ground by a tint (§2, the elevation ladder); rows are separated by
    spacing and at most a hairline; a control at rest is bare ground and
    tints only under a thumb. The one stroke that remains is the brand focus
-   ring on the field that holds the caret.
+   ring on the field that holds the caret. **Amended by DESIGN §22
+   (bl-bf74), the desktop's one exception adopted:** a `HAIRLINE` frame
+   marks what FLOATS — an overlay, the verb sheet, the ask (its frame in the
+   attention accent) — and the panel at the head of a transcript. A stroke on
+   a thing that floats says what is over what; nothing else is boxed.
 3. **One module.** Every colour, size and gap on the glass is read from
    `src/theme.rs` — the palette as bytes, the state accents, the spacing,
    type and touch scales — through `src/shell/theme.rs`, the one adapter
@@ -119,7 +123,10 @@ controls band under the composer** (bl-0691), whose six controls at body size
 spend two hundred points of a phone's row on three verbs and leave the two
 selectors nothing to read a provider name in; its words are `SMALL` and its
 chips are padded at `S`, and that is the whole of the exception — an opened
-list is body size like every other list.
+list is body size like every other list. **The exception goes with the band
+(DESIGN §22 item 10)**: its controls move to the model overlay at a full row
+each, where body size fits. The status rule's segments are `SMALL` ink inside
+a `TOUCH`-tall band, which is a line of facts and not a control's words.
 
 Touch: every row and every control stands at least **48 points** tall
 (`theme::TOUCH`, DESIGN §13.2), full width where it lists. A block's corner
@@ -127,8 +134,72 @@ is `RADIUS 10`; a speaker's rule is `RULE 3` wide.
 
 ## 5. Anatomy
 
-**The bar** (DESIGN §13.2): the mark, the back control, the title in
-`HEADING` ink. No fill, no rule under it; the gap below it is the boundary.
+**The shape, whole** (DESIGN §22, bl-bf74 — the desktop's Hermes shape at a
+phone's width): the chat is the home screen; the transcript fills it; above
+the floor, bottom-up, stand the prompt line, the status rule, and — only while
+they have something to say — the ask and the dock. Everything else is an
+overlay, asked for by a tap on the rule or on `›`, and closed by its name line
+or the back gesture.
+
+**The status rule** (`status`): one band `TOUCH` tall, `SMALL` runs parted by
+`|` in `INK_FAINT`: the mark drawn at the band's height at the left edge plus
+`M`, then the state word in its state's ink (`ready` in `INK_WEAK`; the
+banner's sentence in its own accent while one stands), `· elapsed` in
+`INK_WEAK`, the waiting count in the attention accent while it is non-zero,
+the model in `INK_WEAK`, and `— name` at the right end in `INK`. Spend, then
+model, then elapsed drop as the width runs out; the state, the count and the
+name never drop, and the name elides. Every segment is its own target, at
+least `TOUCH` wide; bare ground at rest, `RAISED` under a thumb.
+
+**The prompt line** (`composer`): `›` in the brand at the left edge plus `M`,
+a `TOUCH`-square target of its own (it opens the verb sheet); the platform
+field beside it, dressed by `shell::theme::skin` — `SURFACE`, the one-point
+brand ring while it holds the caret, the attention tint while the
+conversation asks, resting at `TOUCH` and growing to its cap only while
+focused; `send` at the right end in the brand on bare ground, painted only
+while the draft holds text. No chip, no band and no selector under it.
+
+**The verb sheet** (`slash`): a `SURFACE` box with a `HAIRLINE` frame and
+`RADIUS` corners, laid out directly above the rule — never over the field —
+as tall as its rows or the room above the rule, whichever is less, and
+scrolling inside that. One `SMALL` line of what it is narrowed to, then rows
+`TOUCH` tall: `/word` in `INK`, the summary in `INK_WEAK`, elided at the row's
+width; a verb's glyph (`■ stop`, `▶ nudge`, `⚡ interrupt`) before its word; a
+toggle's state (`on`/`off`) at the right end in `INK_WEAK`; `RAISED` under a
+thumb.
+
+**An overlay** (`overlay`): a `SURFACE` box with a `HAIRLINE` frame, full
+width less `S` each side, from `S` under the top inset to the floor. Its
+first line is a `TOUCH`-tall row — the name in `INK` at `BODY`, what it is
+open on beside it in `INK_WEAK`, `close` at the other end in `INK_WEAK` — and
+the whole line is the close. Its body under that, scrolling inside the box.
+The rule and the prompt stand down beneath it.
+
+**The switcher** (`switcher`): the overlay above, named `conversations`. At
+its head the seat panel's lines; then one heading row per workspace (name in
+`INK`, the attention mark in its accent, the agent count in `INK_WEAK`), the
+focused one open beneath it as the threaded rows below, `+ new` in the brand
+as the last row under it.
+
+**The ask** (`ask`): the overlay's box with its frame and name line in the
+attention accent, laid out directly above the rule (or the dock): the held
+line in the attention accent with `why +` beside it, then the choices as
+numbered cells two to a row, each `TOUCH` tall and half the width, `RAISED`
+under a thumb; `1. seen` alone when nothing is parked.
+
+**The dock** (`dock`): one `TOUCH`-tall row above the rule, `+ N running ·
+<name>` in `INK_WEAK` with the count in the working accent; unfolded, one row
+apiece beneath the head, name in `INK`, state in its ink, age in `INK_WEAK`.
+
+**The panel at the head** (`chat::panel`): a `SURFACE` card with a
+`HAIRLINE` frame and `RADIUS` corners, `M` across and `S` down inside, one
+fact a line — the name in `INK`, the rest in `INK_WEAK`, the long ones behind
+`+`; the seat's card the same, the update offer in the brand.
+
+**The bar** (DESIGN §13.2; **since §22, only on the whole-window surfaces** —
+the configuration surface, the foot's screen and the enrollment screens): the
+mark, the back control, the title in `HEADING` ink. No fill, no rule under it;
+the gap below it is the boundary.
 
 **A row** (`shell::theme::row`) — any list's line: full width, `TOUCH` tall,
 its words at the left edge plus `M`, vertically centred, elided at the
@@ -143,13 +214,19 @@ its own indent, its lines elided against the width it has — the first line
 (name, mark, stamp) in the row's tone, every line after it in `INK_WEAK` —
 with the connector rails in `INK_FAINT`. No fill at rest, no stroke ever.
 
-**A block** (the transcript, DESIGN §7): aligned, ruled, never bubbled. Every
-block starts at the same left edge; a `RULE`-wide vertical line in the
-speaker's weight (§3) stands beside its header line, and the body wraps at
-the width it has. A tool row's state is its words' ink; a folded one's
+**A block** (the transcript, DESIGN §7; **gutter since §22 item 4**):
+aligned, guttered, never bubbled. Every block starts at the same left edge
+with its glyph in the gutter — `›` in the brand for the operator, `¦` in
+`INK_WEAK` for the model, `·` in `INK_WEAK` for a peer, a tool's answer or the
+machinery — then who spoke in their weight (§3), and the body wraps at the
+width it has. A turn's calls stand under one fold head `+ tool calls (N)` in
+`INK_WEAK`, each on a painted stem (the threaded row's rails) with `•` in the
+brand, `✔` in `INK_WEAK` or `✖` in the error accent; a `HAIRLINE` parts
+turns. A tool row's state is its words' ink; a folded one's
 preview is dimmed ink, so *there is more* reads before the triangle does.
 
-**The composer** (DESIGN §13.2): a `SURFACE` field with no stroke at rest and
+**The composer** (DESIGN §13.2; **retired by §22 — the prompt line above
+replaces it**): a `SURFACE` field with no stroke at rest and
 the brand ring when it holds the caret, resting at `TOUCH` and **growing to
 its cap only while it holds the caret** (bl-0691); beside it the send, its
 word in the brand and centred in its own box like every other control's.
@@ -160,7 +237,9 @@ wearing its other face: packed ARGB and device pixels where egui takes a
 most a boundary may be (§2) — because what a focused field changes is the
 brand, never the weight.
 
-**The controls band** (DESIGN §13.2, bl-0691): ONE band of chips under the
+**The controls band** (DESIGN §13.2, bl-0691; **retired by §22 item 10** —
+its stops are verbs, its selectors and knobs are the model overlay's rows):
+ONE band of chips under the
 composer, `TOUCH` tall, holding every conversation-level control — the stop
 acts under the engine's own gates, the tuning pair, and the two selectors.
 Its width is divided by `shell::place::row` rather than equally: a chip that
@@ -181,11 +260,13 @@ its reason is a sentence and not two words, so the tap is what says it, in
 attention accent, because an armed control is asking you. Disabled, its
 words are `INK_FAINT` and it stays on the glass.
 
-**A banner** — a sentence about what just happened, under the bar: the
+**A banner** — a sentence about what just happened (**since §22, in the
+rule's state slot**, and a tap puts it down): the
 state's accent as ink, no fill, no box. An error is `Error` ink; a note is
 `Annotation` ink; nothing about the shape changes with the state.
 
-**The held band** (DESIGN §13.7): the three rows a parked call stands on,
+**The held band** (DESIGN §13.7; **retired by §22 item 8 — the ask above
+replaces it**): the three rows a parked call stands on,
 directly under the composer. One line in the attention accent saying what is
 held and which class the control put it in, with a `why` chip beside it that
 opens the control's own decision above the line; then the scope chips; then

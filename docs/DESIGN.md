@@ -922,6 +922,8 @@ verifies.
 
 ## 7. The chat screen, and where its mechanics live (bl-0ed6)
 
+**Superseded in part by §22** (bl-bf74): the gutter, the trail, the knob row and the panel (§22 items 1, 4). Where they disagree, §22 wins; this section stays as the record.
+
 The transcript is painted the way the window paints it — collapsing
 included — because a tool-heavy conversation is unreadable at a phone's width
 without it, and because two clients of one engine showing the same
@@ -1124,6 +1126,8 @@ lane: it holds a connection open, but its answer is one frame of rows rather
 than a text fold, so §5.5's rule does not reach it.
 
 ## 8. Starting a conversation (bl-b64e)
+
+**Superseded in part by §22** (bl-bf74): the send control and where the start's field stands (§22 items 3, 7). Where they disagree, §22 wins; this section stays as the record.
 
 A client that can read every conversation and speak into one, and cannot make
 one, is a chat app whose first screen is a list you can only watch. The
@@ -1615,6 +1619,8 @@ here is a defect.
   choice and reads like one.
 
 ### 13.2 The chrome contract
+
+**Superseded in part by §22** (bl-bf74): the standing bar, the back rule on the chat, the send, the controls row and the banner (§22 items 1–3, 7, 10). Where they disagree, §22 wins; this section stays as the record.
 
 - **One standing bar**, painted before every screen: the mark (the drawn
   application mark, not a wordmark — the walk ported from the yog crate),
@@ -2138,6 +2144,8 @@ What stays here is the shape of the ledger and nothing that can go stale in it:
 
 ### 13.5 The conversation row's acts, and the menu that carries them (bl-f97c)
 
+**Superseded in part by §22** (bl-bf74): where the row stands — the switcher (§22 items 5, 7); the menu itself is kept. Where they disagree, §22 wins; this section stays as the record.
+
 `src/codec/row.rs`, `src/seat/acts/row.rs`, `src/shell/screens/rows.rs`.
 **The first surface in this app that is opened by a gesture rather than by a
 tap**, and the first act that addresses something other than the focus. The
@@ -2301,6 +2309,8 @@ seat instead.
 
 ### 13.7 The parked tool call, and the two ways to answer one (bl-b39d)
 
+**Superseded in part by §22** (bl-bf74): the band's shape and the scope chooser (§22 item 8); the reading of the queue is kept. Where they disagree, §22 wins; this section stays as the record.
+
 `src/codec/queue.rs`, `src/codec/hold.rs`, `src/seat/acts/held.rs`,
 `src/shell/controls/held.rs`.
 
@@ -2444,6 +2454,8 @@ stayed one ball longer, re-cited — no gesture asked for that read — and went
 with the queue surface below.
 
 ### 13.8 The trail and the queue: two surfaces over the depths (bl-35bd), and the act that answers a mark (bl-2889)
+
+**Superseded in part by §22** (bl-bf74): the roster's two entries — they are verbs (§22 item 5); the surfaces are kept as overlays. Where they disagree, §22 wins; this section stays as the record.
 
 `src/codec/trail.rs`, `src/seat/asks.rs`, `src/seat/acts/trail.rs`,
 `src/seat/acts/seen.rs`, `src/shell/screens/world.rs`.
@@ -3040,6 +3052,8 @@ either way.
 
 ### 13.14 Roster and discovery: which machines, which lineages, and what every op does (bl-3685)
 
+**Superseded in part by §22** (bl-bf74): the aimed bar — its chips are verbs (§22 item 5). Where they disagree, §22 wins; this section stays as the record.
+
 `src/codec/clients.rs`, `src/codec/lineages.rs`, `src/help.rs`,
 `src/shell/screens/world/clients.rs`, `world/help.rs`. The phone's twin of
 lernie's §4.28 and half of its §4.30, plus the surface neither seat had: the
@@ -3632,6 +3646,8 @@ URL and the user code paint, the human finishes in any browser, and bz polls
 the token endpoint from the engine.
 
 ### 13.20 The conversation list is a tree, and the recency order is taken over it (bl-06d3)
+
+**Superseded in part by §22** (bl-bf74): where the tree stands — inside the switcher (§22 item 7); the tree itself is kept. Where they disagree, §22 wins; this section stays as the record.
 
 `src/roster.rs` (pure, under the floor), painted by `src/shell/screens/rows.rs`.
 
@@ -6295,3 +6311,314 @@ return on wifi should now say `re-call armed`, write one call and land.
 **Open**: a lane is marked parked for its whole life, so an ask behind a
 lane that happens to answer at once still waits its 10 s before climbing;
 the lane's line comes back first in practice.
+
+## 22. The Hermes shape on the phone (bl-bf74, under bl-92d3)
+
+Operator ruling 2026-10-12: the desktop seat was rebuilt to ape the Hermes
+Agent terminal UI (lernie DESIGN §4.42, its `docs/STYLE.md` §2 and §5), and
+this seat is to get *an android analogue, with good updates — emulating the
+design decisions while aware that the screen is smaller and touchier*. This
+section is that analogue: every part of §4.42, in its order, mapped to what it
+becomes under a thumb, with the reason. **Where it contradicts §7, §8, §13.2,
+§13.5, §13.7, §13.8, §13.14 and §13.20, this section wins**, and each of those
+carries a line at its head saying so; their paragraphs stay as the record of
+what was tried and why, and the rulings in them that are about the wire (the
+engine states, the seat never derives; the queue is the engine's statement;
+the row acts address the row; the outbox; the floor's order; the inset spent
+once) are untouched.
+
+**The two facts every item below bends around.** A phone has no chords and no
+Esc: every key in §4.42 becomes a *tap target at least 48 points tall*
+(§13.2's floor), and Esc becomes the platform's back gesture, which §13.2
+already rules *taken by whatever has a depth to walk*. And **the field is a
+platform `EditText` composited over the GL surface** (§13.2, bl-8bbb): egui
+can paint nothing over its rectangle, so anything that stands near the prompt
+is LAID OUT beside it — above it, never on top of it — and anything that must
+cover the window hides the field (a field nothing placed is hidden, keeping
+its text).
+
+**Words are the phone's own** (§13.3): a *workspace* where the desktop says
+*wall*; *conversations* for the list; no *engines* level, because this device
+is a client of one engine (entries are an upstream ask, §13.4).
+
+1. **One column → the chat is the home screen.** The transcript fills the
+   glass; under it, in the floor's order (§13.2, bl-192c — claimed bottom-up,
+   the transcript is what gives way): the prompt line, the status rule above
+   it, and — only while they have something to say — the ask and the dock
+   above the rule. **The standing bar goes from this screen**: the rule
+   carries the name (2), the mark moves onto the rule (2), and the back
+   control is the platform's gesture (7). The bar stays where there is no
+   rule: the configuration surface the mark opens (W1, W5), the foot's screen
+   and the enrollment screens — whole-window surfaces, as §4.42 keeps
+   enrollment whole-window. Reason: on a 360-point portrait screen the bar,
+   the records/files band, the knob row and the controls band were 192 points
+   of chrome over a transcript that had four lines left with the keyboard up
+   (round-3 shot `a9-after-keyboard`); one 48-point rule is the whole of what
+   replaces them.
+
+2. **The status rule → a 48-point band of tappable segments, above the
+   prompt.** Left to right: **the mark** (drawn small, the §13.2 mark, still
+   the one way to the configuration surface and still the walk's `mark`
+   rectangle), then `<state> · <elapsed> | <N waiting> | <model> | <spend>`,
+   then `— <name>` at the right end. The state is the wire's word for the
+   focused conversation in its state's ink, `ready` in weak ink with nothing
+   selected; **the banner stands in the state slot** (§13.2's *status where
+   it happened*: a refusal in the error accent, *reconnecting…* in the working
+   accent, a note in the annotation accent) and a tap on it puts it down,
+   which is the Esc the desktop spends. `N engines` is deleted: it is always
+   one here. `spend` is absent until this seat reads what a conversation
+   spent (it reads no price today) — the rule says nothing rather than `$0`.
+   **Order, and the drop:** `N waiting` stands before the model because it is
+   the one green on a resting screen and must outlive the model at 360
+   points; segments drop from the right of the facts — spend, then model,
+   then elapsed — and the state, the waiting count and the name never drop:
+   the name elides inside what is left. **Above the prompt, not under a
+   bar**, for two reasons: it is a row of tap targets and the thumb lives at
+   the bottom of a phone, and it rides the keyboard with the prompt, so the
+   state of the conversation is beside the words being typed about it.
+   **Each segment is a door** (mirroring lernie bl-4e55's controls, which make
+   the same segments clickable on the desktop): the name opens the switcher
+   (7); `N waiting` opens the queue (`/attention`); the model opens the
+   **model overlay** (10) — the phone's `/roles`; the state slot dismisses a
+   banner and otherwise does nothing. A segment narrower than 48 points is
+   padded to 48: the floor is the target, not the ink.
+
+3. **The prompt line → the `EditText` behind `›`, with a `send` word.** `›`
+   in the brand at the left edge plus `M` (the body face carries U+203A; the
+   baseline's `❯` paints as tofu, as on the desktop), the platform field
+   after it, the hint in weak ink while it is empty — *say it*, *begin a
+   conversation on `<workspace>`* in start mode, *it is waiting on you* while
+   it asks — and the attention tint while the conversation asks. It rests at
+   the touch floor and grows only while it holds the caret (§13.2, bl-0691,
+   kept). **There is a send, and it is the word `send` in the brand at the
+   field's right end, bare ground, painted only while the draft holds
+   text**: enter is a newline on this stack (§13.2 — the field is declared
+   multi-line and the IME's action key is the keyboard's), so the desktop's
+   *the field is the control* has no phone reading, and Shift+Enter has no
+   phone meaning at all. A word and not a glyph because the glyph set the
+   bundled faces carry has no arrow anyone has measured, and a word cannot be
+   misread. `send` fires the line whatever it is: prose deposits, `/word …`
+   fires the verb (5). **`›` is the verb door** (5): a tap on it opens the
+   verb sheet. The start shares the same line and the same field (§8's one
+   widget id), and `✎ plan` has no phone predecessor to become, so no
+   `/plan` is added.
+
+4. **The transcript idiom → the desktop's gutter and trail, at the phone's
+   width.** A block's `RULE`-wide speaker stripe (STYLE §5) becomes the
+   gutter glyph: `›` in the brand for the operator, `¦` in weak ink for the
+   model, `·` for a peer, a tool's answer or the machinery; who spoke still
+   reads by weight (`theme::speaker`). A turn's tool calls stand under one
+   fold head `+ tool calls (3)` (`−` open), each call a stem line `• name("preview")`
+   with `✔` in weak ink or `✖` in the error accent, the result folded to its
+   head and unfolded in place; a `response` elbow parts the trail from the
+   prose after it; a `HAIRLINE` parts turns. **The stems are painted strokes**
+   — the conversation tree's own rails (`shell/screens/rows/thread.rs`,
+   §13.20), because `├ └ │` are in none of the bundled faces. **Kept from §7
+   unchanged**: the projection (`crate::rows`), derived expansion, the held
+   row in the attention accent, the turn rollup, the outbox echo, the
+   `running` word with no pulse, block-unit copy by long press. **The knob
+   row goes** (*show full response*, *show intermediate steps*): they become
+   two toggle rows of the verb sheet, `/full` and `/steps`, shown with their
+   state — 48 points back to the transcript, and policy reached the way every
+   other policy is. The fold toggle stays a 48-point target (a fingertip, not
+   a glyph). **At the head of the transcript, the conversation panel** — a
+   framed card (the outline amendment, 12): the name, the workspace, the
+   model, where it hangs (the §13.20 subtree path), one line each, the long
+   ones behind `+` folds; with nothing focused, **the seat panel**: this
+   device's identity line (`<name> · Lernie`), the `tools:` line (W3's
+   proof), the update offer (§20.4) when one stands, and the two ways in —
+   `tap › for commands`, `tap the name for conversations`. The records and
+   files band goes: `/records`, `/files` (5).
+
+5. **The slash verbs → a verb sheet, opened by typing `/` or by tapping `›`.**
+   Typing `/` costs a keyboard-layer switch on most IMEs, so the way in is
+   also a tap, and the tap is on the glyph that already says *prompt*.
+   **The sheet is open exactly while the draft begins with `/`** — derived
+   from the field, never a flag beside it (one home: the field's text). A
+   tap on `›` puts `/` at the head of the draft; whatever was already typed
+   stays after it, and **that remainder is the verb's words** — §13.5's *the
+   composer is the parameter*, kept: type the reason, tap `›`, tap `flag`.
+   The sheet is a box laid out above the rule (never over the field), as tall
+   as the room between the top inset and the rule, **scrolling** — the
+   desktop's non-scrolling window of rows around a cursor is an arrow-key
+   idiom and a phone has no arrows — of 48-point rows, each `/word  summary`,
+   narrowed as the operator types after the slash. **A tap on a row**: a noun
+   opens its overlay; a verb that takes no words fires; a verb that takes
+   words completes the line to `/word <remainder>` and fires on `send`, or
+   at once when the remainder already holds the words. A verb missing its
+   words fires nothing and says why in the state slot (the dark-chip rule of
+   bl-0691, kept). The back gesture with the sheet open removes the `/` and
+   leaves the remainder. **The rows are the words the phone's controls
+   carried** (§4.42's own rule — nothing renamed, the `act:` tags move with
+   the words), filtered by what the engine offers on the focused row:
+   - nouns: `/conversations` (the switcher, 7), `/records`, `/files`,
+     `/attention` (the queue — the roster's `waiting`), `/trail`, `/balls`
+     (this workspace's — the aimed chip's word) and `/balls all` (the
+     roster's — both controls said `balls`, so the wider one takes a word
+     rather than a new name), `/board`, `/science`, `/diff`, `/fleet`, `/clients`, `/config`,
+     `/login`, `/model` (10), `/help`, `/find <needle>` (§13.6's field);
+   - verbs on the focused conversation, listed under the engine's own gates
+     (REMOTE §3.1, §9.4): `/stop`, `/stop all`, `/nudge`, `/interrupt
+     <words>`, `/retarget`, `/flag <reason>`, `/revoke`, `/restore`;
+   - toggles: `/full`, `/steps` (4).
+   The desktop's `/doctor`, `/prices`, `/enroll`, `/roles`, `/unmake`,
+   `/refresh`, `/pin`, `/delete` and `/plan` are not added: the phone has no
+   such control today (its minting, unmaking and deletion live inside
+   `/config`, §13.17–13.18; its reads refresh at cadence), and a port does
+   not grow surface. **What is deleted**: the aimed bar (§13.14), the
+   roster's world entries (§13.8), the records/files band, the knob row and
+   the stop chips. **The row menu stays** (§13.5): a long press on a
+   conversation in the switcher still acts on THAT row, which no verb on the
+   focus can.
+
+6. **An overlay, not a covering pane → a framed sheet over the transcript,
+   full width.** Every screen that painted its own bar over a depth — the
+   world screens (queue, trail, balls, science, diff, fleet, clients, config,
+   login, help), search hits, records, files and the model overlay — keeps
+   its body and loses its bar: it stands in a `SURFACE` box with a
+   `HAIRLINE` frame, full width less `S` (the desktop's `L` side margin is
+   a third of a phone's line), from `S` under the top inset to the floor. Its
+   first line is a 48-point row — the name, what it is open on in weak ink,
+   and `close` at the line's other end — and the whole line closes it, as
+   does the back gesture. **One stands at a time**: `Shell`'s `opened`,
+   `records` and `files` fold into one `Overlay` value, which is the
+   desktop's rule and a subtraction here. **The rule and the prompt stand
+   down under an overlay** and the field is hidden (the keyboard goes with
+   it) unless the overlay holds a field of its own — the single-purpose
+   fields (§13.2) are egui's and ride the IME mirror as they do today. A
+   body longer than the box scrolls inside it; a control laid inside the
+   scroll is *reachable*, and `shell::act` records its tag (the desktop's
+   bl-eb29 reading, adopted for the parity walk, 13).
+
+7. **The switcher → the roster and the conversation list, fused into one
+   overlay; the platform back walks to it.** Opened by tapping the rule's
+   name, by `/conversations`, or by the back gesture from the chat. One
+   heading row per workspace (name, agent count, the attention mark), the
+   focused workspace open under its heading with its conversations as the
+   §13.20 tree — threaded rows, rails, recency over subtrees — and `+ new`
+   under it; the others folded, because their conversations are a read this
+   seat makes only at the focused workspace (§14), and a tap on a heading
+   is what focuses one. A tap on a conversation focuses it and closes the
+   switcher; `+ new` closes it with the field in start mode (§8). **Its head
+   is the seat panel** (4): the identity, the `tools:` line and the update
+   offer, because this is the screen every back lands on. **The back rule**:
+   with an overlay or the sheet open, back closes it; on the chat, back opens
+   the switcher — the list is the parent of a chat in every phone chat app,
+   and §13.1's *roster → conversations → transcript* survives as the one
+   depth above the chat; in the switcher, back leaves the app (nothing is
+   left to walk). The mark is on the rule and toggles the configuration
+   surface exactly as before (W5).
+
+8. **The ask above the field → §13.7's held band, re-shaped as a box above
+   the rule.** While the focused conversation asks (`Standing::asking` — the
+   queue's read stands), a box framed and named in the attention accent
+   stands between the transcript and the rule: one line of the queue row's
+   words, folded at the engine's own clause (`codec::queue::folded`,
+   bl-8c94 — `held: <tool> · <class>`, with `why +` unfolding the decision
+   above it, the call's input never here), then the choices. **Six rows at 48
+   points is 288 points, more than the room above a keyboard on a 360-wide
+   phone, so the fold is a grid**: the choices are numbered cells two to a
+   row — `1. seen` · `2. pass` / `3. pass · conversation` · `4. pass ·
+   workspace` / `5. refuse` · `6. hold` — 144 points for all six, one row
+   when nothing is parked (`1. seen` alone). The numbers are kept for the
+   desktop's spelling (§7's *byte for byte*) and carry no input meaning here;
+   a tap answers. **The scope chooser goes**: reach is a cell, so the verdict
+   and its scope are one tap, and the *reset when the parked call changes*
+   rule (§13.7) dissolves with the state it guarded. The engine still decides
+   whether a wide answer is allowed. `go to it` is not among them, as on the
+   desktop: the operator is there.
+
+9. **The live dock → one tap line above the rule.** While any conversation
+   under the focused workspace is live or in flight (the conversation rows'
+   own word — the dock asks nothing of its own): `+ 2 running · <the first's
+   name>`, 48 points tall; a tap unfolds one 48-point row apiece (name, state,
+   age), a tap on which focuses it; a tap on the head folds it. `Ctrl+T` has
+   no phone meaning and is not spelled. Whether it is unfolded is viewport
+   state and dies with the process, like a fold.
+
+10. **The controls band under the composer → deleted, and spent three ways.**
+    Its stops (`stop`, `stop all`, `nudge`) are verbs (5) under the same
+    engine gates. Its two selectors and the tuning pair (§13.2, bl-0267,
+    bl-dfbb, bl-809d, bl-0691) move, whole and unchanged in rule — tap is the
+    act, the read is truth, the dark knob says why, `effort: <level>` —
+    into **the model overlay**, opened by the rule's model segment or
+    `/model`: provider, model, effort and priority as four 48-point rows
+    with their drop lists, each list still placed by `shell::place` (the
+    one popup left on that screen). The band's `SMALL` type exception
+    (STYLE §4) is deleted with it: at a full row each, body size fits. The
+    `act:` tags (`providers`, `models`, `model`, `effort`, `priority`,
+    `stop`, `nudge`) move with their controls. Reason: one 48-point band of
+    six elided chips was the phone's version of the strip the desktop
+    deleted, and the model belongs on the rule — the fact read at a glance —
+    with its setting one tap behind it.
+
+11. **What stays the phone's, untouched.** The first-run three-bootstrap
+    surface (§9, W1), the two enrollment screens and the scan (§11–§12), the
+    foot's screen (W4), the minting seat (§13.18, inside `/config`), the
+    pocketed foot's service (§18), the scheduled fetch and its held lane
+    (§17), the punched wire (§21), the lost-reply fates (§19) and the
+    release row's behaviour (§20.4 — it moves to the seat panel, 4 and 7;
+    its check now starts on the first seat paint rather than the first
+    roster paint, the same once-per-process `OnceLock`).
+
+12. **Colour, touch and glyphs.** The six-state soft-neon palette stands
+    (STYLE §3): the brand on `›` and `send`, the attention accent on the
+    ask, the waiting count and asking rows, every other accent read off the
+    wire's words. The touch floor stands at 48 points for every segment, row
+    and cell. **STYLE §1's *no outlines* is amended by the desktop's one
+    exception**: a `HAIRLINE` frame marks what FLOATS — an overlay, the verb
+    sheet, the ask (in the attention accent) — and the panel at the head of
+    a transcript; nothing else is boxed. **The glyph set is the desktop's
+    table** (lernie `ui::theme::glyph`), moved into the pure
+    `crate::theme::glyph` here so its spellings are host-tested and pinned to
+    the desktop's, with the substitutions it already made against the same
+    bundled egui faces: `❯`→`›`, `┊`→`¦`, `─`→`—`, `│`→`|`, `●`→`•`,
+    `✓`→`✔`, `✗`→`✖`, `▾ ▸`→`− +`, and the stems drawn as strokes. The
+    phone cannot run the desktop's `has_glyphs` assertion on the host (egui
+    is compiled for android only, Cargo.toml's shell set), so the proof is
+    two-sided: the desktop's test proves the table against the same
+    `default_fonts` faces, and this crate's test refuses any glyph this tree
+    has already measured as tofu (`●`, `└`, `│`, `▼` outside monospace —
+    `roster::ATTENTION_MARK`, `rows/thread.rs`, `theme/anatomy.rs`); the
+    walk's pictures are the eyes on it.
+
+13. **What is proven, and how it stays proven.** The walk (§15.4) keeps its
+    shape and changes its beats with the ball that changes each screen:
+    `roster` and `conversations` become `switching` (the switcher, focused
+    workspace open); `transcript` and `running` stay (the chat, at rest and
+    under the stop gates — `running` now proves the stop VERBS by opening
+    the sheet); new beats `slashing` (tap `›`: the sheet), `overlaid`
+    (`/records` from the sheet), `modelled` (the model overlay), `asked`
+    (the seeded held row — the ask box) and `docked` (the `running` seed
+    with the dock unfolded). The probe's control vocabulary (§15.2) gains
+    `prompt` (the `›` door), `rule-name`, `rule-model`, `rule-waiting` and
+    one rectangle per sheet row the walk taps; the `mark` keeps its name.
+    The parity gate (§15.5) must be green at every landing: each `act:` tag
+    a deleted control carried must be observed on its new home in the same
+    ball. **The reach bound tightens**: every overlay is two taps from the
+    chat — `›`, the row.
+
+**The order it lands in, and why each lands on main.** Each step is its own
+ball with `--parent bl-92d3` — **not** nested as subtasks delivering into the
+epic's worktree, as the desktop's were — because the operator wants the
+updates to flow: a ball that closes lands on `main`, release-plz cuts a
+version, `release-apk` attaches the signed APK, and the phone's update row
+offers it (§20). So every step must leave a whole, usable app behind it:
+
+1. (bl-3f9a) **The overlay frame** — one `Overlay` value, every bar-painting depth
+   re-homed into the framed sheet, back and the name line close it. Reached
+   by today's entries; nothing else moves.
+2. (bl-0d15) **The verb sheet** — `crate::theme::glyph`, the pure verb table and line
+   parser, `›` as the door, `send` as a word, the sheet; the aimed bar, the
+   records/files band, the knob row and the stop chips deleted.
+3. (bl-3edc) **The switcher** — roster and conversation list fused into one overlay,
+   the seat panel at its head with the update row, back opens it from the
+   chat, the roster's world entries deleted.
+4. (bl-79bb) **The rule** — the bar deleted from the chat, the mark and the segments
+   and their doors, the banner in the state slot, the controls band moved
+   into the model overlay.
+5. (bl-289f) **The ask** — §13.7's band re-shaped (8).
+6. (bl-18da) **The transcript idiom and the panels** (4).
+7. (bl-365c) **The dock** (9).
+
+One to four each need the one before; five to seven need the rule and not each other (the `--needs` edges on the balls say the same).
