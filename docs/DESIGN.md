@@ -6692,6 +6692,22 @@ is a client of one engine (entries are an upstream ask, §13.4).
    no phone meaning and is not spelled. Whether it is unfolded is viewport
    state and dies with the process, like a fold.
 
+   **As landed (bl-365c).** Which rows and what they say are `crate::dock`,
+   pure and host-tested (`running`, `line`, `row_words`): the focused
+   workspace's conversation rows the pass already holds, filtered to the
+   engine's `live` and `in-flight`, in the switcher's order
+   (`roster::ordered`), so the first named is the newest subtree's. A row
+   says its name in ink, its state in its tone's ink and its age as the
+   switcher spells it (`roster::stamp`). `shell/dock.rs` paints it between
+   the rule and the ask box — the rows between the line and the rule, so
+   the line keeps its place as it unfolds — and the line is the working
+   accent, the one hue that says *running*. The fold is egui temporary
+   memory. A tap on a row focuses that conversation, as a switcher row does;
+   the dock carries no `act:` tag, because it is a second door onto the
+   switcher's focus and no deleted control's op moved onto it. The walk:
+   the `running` seed puts a second row the engine calls `live`, and
+   `docked` is that screen with the line tapped open (probe name `dock`).
+
 10. **The controls band under the composer → deleted, and spent three ways.**
     Its stops (`stop`, `stop all`, `nudge`) are verbs (5) under the same
     engine gates. Its two selectors and the tuning pair (§13.2, bl-0267,

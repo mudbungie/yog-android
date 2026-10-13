@@ -16,6 +16,7 @@ pub mod bootstrap;
 pub mod cache;
 pub mod codec;
 pub mod dht;
+pub mod dock;
 pub mod draft;
 pub mod envelope;
 pub mod foot;

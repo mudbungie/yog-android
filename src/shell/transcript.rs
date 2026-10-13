@@ -55,13 +55,14 @@ impl Shell {
         // lives.
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
             // Closest to the floor: the prompt line, then the status rule
-            // above it, then the ask above the rule (§22 items
-            // 1, 2 and 8). **No bar** (§22 item 1): the rule carries the
+            // above it, then the live dock and the ask above the rule (§22
+            // items 1, 2, 9 and 8). **No bar** (§22 item 1): the rule carries the
             // mark and the name, and back is the platform's.
             if let Some(taken) = self.compose(ui, snap, "message", &["message"]) {
                 self.deposit(snap, taken);
             }
             self.rule(ui, snap);
+            self.dock(ui, snap);
             self.asked(ui, snap);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {

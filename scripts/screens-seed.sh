@@ -169,6 +169,11 @@ if depth in ("conversations", "transcript", "running"):
             row = rows[0]
             row["stoppable"] = True
             row["stop_children"] = True
+            # **Two running, so the dock says a plural** (§22 item 9): a
+            # second row the engine calls live — its own lawful word, on
+            # the row's own two fields.
+            rows[2]["state"] = "live"
+            rows[2]["tone"] = "live"
         else:
             row = next(r for r in rows if r.get("flight") is None)
         body["focus"]["agent"] = row["root_id"]

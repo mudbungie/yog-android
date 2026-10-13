@@ -217,6 +217,13 @@ seed_cache running; relaunch
 tap_control prompt
 capture running transcript
 
+# 5a. THE LIVE DOCK (DESIGN §22 item 9, bl-365c). The running seed holds two
+#     conversations the engine calls live or in flight, so the tap line stands
+#     over the rule; a tap unfolds it into one row apiece.
+relaunch
+tap_control dock
+capture docked transcript
+
 fetch_beats
 # The shade beats last of all: the third one posts a notification, which puts a
 # row in the status bar of every picture taken after it.
