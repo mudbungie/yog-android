@@ -204,3 +204,16 @@ fn a_controls_read_the_engine_refuses_is_silent() {
     assert!(snap.roles.is_empty() && snap.providers.is_empty());
     assert_eq!(snap.roles_read, 0, "nothing was read, so nothing overtakes");
 }
+
+/// **A refresh is a pass, sooner** (§22 item 2): the workspace dropup's
+/// reload asks nothing of its own, and the pass after it moves the watermark.
+#[test]
+fn a_refresh_is_answered_by_one_more_pass() {
+    let (mut model, served) = super::model_against(vec![vec![ws_reply()], vec![ws_reply()]]);
+    let first = settle(&mut model, &|s| s.passed == 1);
+    model.refresh();
+    let snap = settle(&mut model, &|s| s.passed == 2);
+    assert_eq!(snap.workspaces, first.workspaces);
+    drop(model);
+    assert_eq!(ops(&served.join().unwrap()), ["workspaces", "workspaces"]);
+}

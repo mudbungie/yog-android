@@ -26,6 +26,7 @@ pub(super) fn learned(
             standing
                 .options
                 .learned(&workspace, provider.as_deref(), envelope);
+            standing.listed += 1;
             None
         }
         Err(why) => Some(why),

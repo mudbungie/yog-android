@@ -50,6 +50,7 @@ pub(super) fn drop_down(
     id: &str,
     shown: String,
     width: f32,
+    open: bool,
     add: impl FnOnce(&mut egui::Ui),
 ) -> egui::Response {
     // `push_id` rather than the button's own: a widget id derived from
@@ -72,7 +73,14 @@ pub(super) fn drop_down(
         })
         .inner;
     caret(ui, face.rect);
+    // `open` is a verb asking for the list (`/model`, `/effort`): the same
+    // memory a tap toggles, set rather than toggled.
     let popup = egui::Popup::menu(&face)
+        .open_memory(if open {
+            Some(egui::SetOpenCommand::Bool(true))
+        } else {
+            face.clicked().then_some(egui::SetOpenCommand::Toggle)
+        })
         .width(width)
         .gap(GAP)
         .close_behavior(egui::PopupCloseBehavior::CloseOnClick);

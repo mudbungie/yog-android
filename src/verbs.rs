@@ -41,6 +41,10 @@ pub enum Does {
     Flag,
     Revoke,
     Restore,
+    /// Open one of the rule's knobs (§22 item 2): the model's or effort's
+    /// dropup, or flip priority — each reachable here however narrow the
+    /// rule is.
+    Knob(crate::status::Slot),
     /// Flip a transcript policy: show full responses, show steps.
     Full,
     Steps,

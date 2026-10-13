@@ -6383,6 +6383,61 @@ is a client of one engine (entries are an upstream ask, §13.4).
    banner and otherwise does nothing. A segment narrower than 48 points is
    padded to 48: the floor is the target, not the ink.
 
+   **Operator ruling 2026-10-12 (bl-79bb) — this replaces the segment list,
+   the drop order and the model overlay above.** The knobs stand ON the rule
+   as **dropups**, and there is no model overlay: a tap on a knob opens its
+   list upward from the segment inside the tappable area (§13.2's popup rule,
+   `shell::place`, the `controls/drop.rs` idiom), shows the cached list at
+   once and asks for a fresh one; a small mark stands on the segment while
+   the ask is out — `…` in the annotation accent, because the palette has no
+   yellow (STYLE §3's six accents) — and turns into `✔` in the attention
+   accent once the answer lands; a tap on a row sets it and closes the list,
+   as does back. **Left to right**: the mark, then **workspace, provider,
+   model, effort, priority** — the operator said *context* for the third
+   knob; the wire's role rows carry provider, model, effort and priority and
+   no context knob, so effort takes that slot — priority only where the
+   provider's row takes the lane; then **this conversation's diagnostics**:
+   tokens in and out (the transcript's model turns' own `input_tokens` /
+   `output_tokens`, summed), spend (absent: this seat reads no price), the
+   state and how long since it acted, context-window use (absent: the wire
+   cannot state it, and it is not invented); then the name, the switcher's
+   door, where it fits. **Only facts about this conversation**: `N waiting`
+   leaves the rule (the switcher's head and `/attention` carry it) and
+   there is no engines count. **Drop order**: the name, then the diagnostics
+   from the right, then priority, then effort; workspace, provider and model
+   never drop and elide inside their share. The selectors set the worker
+   role on the focused workspace through the acts the controls band spent
+   (`codec::pick`). `/model` opens the model dropup.
+
+   **As landed (bl-79bb).** The segments, their words, the drop and the
+   reload mark's reading are `crate::status`, pure and host-tested (`fit` at
+   320, 360, 420 and 480 points: the three selectors alone up to about 400,
+   effort from about 420, priority from about 480 on the walk's fixture
+   widths); `shell/status.rs` paints the band and `controls/*` keep the
+   knobs. Readings decided here: **a selector is not let fall below one and a
+   half touch targets** (`status::SHARE`) before a knob leaves, because a
+   provider elided to one letter says nothing; **`/effort` and `/priority`
+   are verbs** beside `/model`, because a knob the width dropped must still
+   be reachable — a verb-opened knob is held on the rule while its list is
+   open, whatever the drop says; the **workspace dropup** lists the cached
+   workspaces, a tap focuses one (start mode there), and its reload is a
+   pass, sooner (`Cmd::Refresh`, the `passed` watermark); provider and model
+   are fresh when an options list lands (`listed`); effort and priority read
+   nothing, so they carry no mark. **The banner is a line of its own over the
+   rule**, not a slot in it: at a phone's width the three selectors that
+   never drop leave no room for a sentence. It says, in order, the
+   operator's own act's sentence (a verb's refusal, a dark knob's reason) in
+   the annotation accent, the engine's failure in the error accent, or the
+   redial in the working accent; a tap puts it down (a failure stays down
+   until a different sentence replaces it). The rule's type stays `SMALL`
+   (STYLE §4's band exception, carried over from the band it replaces). The
+   mark stays on the switcher's seat panel too, for the switcher has no rule.
+   The walk: `settings`/`back-to-roster` tap the mark on the rule from the
+   start screen, and `modelled` is the model dropup open on the transcript.
+   The probe names `rule-workspace`, `rule-provider`, `rule-model`,
+   `rule-effort`, `rule-priority` and `rule-name`; `rule-waiting` is not
+   named, the count having left the rule.
+
 3. **The prompt line → the `EditText` behind `›`, with a `send` word.** `›`
    in the brand at the left edge plus `M` (the body face carries U+203A; the
    baseline's `❯` paints as tofu, as on the desktop), the platform field
@@ -6625,6 +6680,12 @@ is a client of one engine (entries are an upstream ask, §13.4).
     six elided chips was the phone's version of the strip the desktop
     deleted, and the model belongs on the rule — the fact read at a glance —
     with its setting one tap behind it.
+
+    **Superseded by the operator's ruling of 2026-10-12 under item 2**: the
+    band is not spent into a model overlay; its selectors and tuning pair
+    move onto the rule as dropups, whole and unchanged in rule otherwise
+    (tap is the act, the read is truth, a dark effort knob says why), and
+    the `act:` tags ride them there.
 
 11. **What stays the phone's, untouched.** The first-run three-bootstrap
     surface (§9, W1), the two enrollment screens and the scan (§11–§12), the

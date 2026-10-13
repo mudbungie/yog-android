@@ -111,6 +111,21 @@ pub enum Tone {
     Unknown(String),
 }
 
+impl AgentState {
+    /// The wire's own word for the state (§5.1), the catch-all's included —
+    /// what the status rule says, never a word this seat made up.
+    pub fn word(&self) -> String {
+        match self {
+            Self::Unknown(word) => word.clone(),
+            known => STATES
+                .iter()
+                .find(|(_, state)| state == known)
+                .map(|(word, _)| (*word).to_owned())
+                .unwrap_or_default(),
+        }
+    }
+}
+
 pub(super) const STATES: [(&str, AgentState); 4] = [
     ("live", AgentState::Live),
     ("in-flight", AgentState::InFlight),

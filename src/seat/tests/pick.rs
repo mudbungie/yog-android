@@ -57,8 +57,15 @@ fn the_selectors_read_their_options_and_the_pick_states_the_assignment_whole() {
     model.focus_workspace(Some("home".into()));
     settle(&mut model, &|s| !s.conversations.is_empty());
 
+    let before = settle(&mut model, &|s| s.passed > 0);
+    assert_eq!(before.listed, 0);
     model.list_providers();
     let snap = settle(&mut model, &|s| !s.providers.is_empty());
+    assert_eq!(snap.listed, 1, "a list that landed moves the watermark");
+    assert!(
+        snap.passed > before.passed,
+        "and the pass after it is answered"
+    );
     assert_eq!(snap.providers[0].name, "acme");
     assert_eq!(snap.providers[0].fact, "credential present");
     assert_eq!(snap.providers[1].blocked.as_deref(), Some("no login flow"));

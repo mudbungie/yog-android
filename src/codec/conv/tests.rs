@@ -175,3 +175,10 @@ fn the_stamp_is_required_and_the_clause_is_not() {
     let mistyped = with(base(), "failure", json!(7));
     assert!(row(&mistyped).unwrap_err().contains("failure"));
 }
+
+#[test]
+fn a_state_says_the_wires_own_word() {
+    assert_eq!(AgentState::InFlight.word(), "in-flight");
+    assert_eq!(AgentState::Quiescent.word(), "quiescent");
+    assert_eq!(AgentState::Unknown("parked".into()).word(), "parked");
+}

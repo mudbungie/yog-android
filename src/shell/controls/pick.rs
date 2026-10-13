@@ -35,9 +35,10 @@ impl Shell {
         face: String,
         wide: f32,
         area: Band,
-    ) {
+        open: bool,
+    ) -> egui::Response {
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "provider", face, wide, |ui| {
+        let opened = super::drop::drop_down(ui, area, "provider", face, wide, open, |ui| {
             for row in &snap.providers {
                 let label = format!("{} · {}", row.name, row.fact);
                 let label = if row.blocked.is_some() {
@@ -58,11 +59,45 @@ impl Shell {
         // The read is asked for by the tap that opened the list, not by the
         // frame: a read per frame while a popup is open would be a gesture
         // per frame. What was already known paints meanwhile (§14).
-        if opened.clicked()
+        if (open || opened.clicked())
             && let Some(model) = self.model()
         {
             model.list_providers();
         }
+        opened
+    }
+
+    /// **The workspace selector** (§22 item 2): every workspace the cached
+    /// roster holds, and a tap focuses one — the chat in start mode there.
+    /// Its reload is a pass, sooner (`Model::refresh`).
+    pub(super) fn workspaces(
+        &mut self,
+        ui: &mut egui::Ui,
+        snap: &Snapshot,
+        face: String,
+        wide: f32,
+        area: Band,
+    ) -> egui::Response {
+        let mut picked = None;
+        let opened = super::drop::drop_down(ui, area, "workspace", face, wide, false, |ui| {
+            for row in &snap.workspaces {
+                if ui.selectable_label(false, &row.workspace).clicked() {
+                    picked = Some(row.workspace.clone());
+                }
+            }
+        });
+        act::act(ui, &opened, "workspaces");
+        if let Some(workspace) = picked
+            && snap.focus.workspace.as_deref() != Some(workspace.as_str())
+        {
+            self.focus_workspace(Some(workspace));
+        }
+        if opened.clicked()
+            && let Some(model) = self.model()
+        {
+            model.refresh();
+        }
+        opened
     }
 
     /// The model selector: this provider's models, and the tap that assigns
@@ -77,12 +112,13 @@ impl Shell {
         face: String,
         wide: f32,
         area: Band,
-    ) {
+        open: bool,
+    ) -> egui::Response {
         let Some(provider) = provider(self, crate::codec::pick::worker(&snap.roles).as_ref())
         else {
             let control = crate::shell::theme::chip(ui, face.into(), wide, false);
             act::acts(ui, &control, &["models", "model"]);
-            return;
+            return control;
         };
         // **What this conversation is actually ON** (bl-809d) is the face the
         // row handed in: `codec::pick::face` made it, under the coverage
@@ -90,7 +126,7 @@ impl Shell {
         // workspace's own provider, because a model belongs to the provider
         // that serves it.
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "model", face, wide, |ui| {
+        let opened = super::drop::drop_down(ui, area, "model", face, wide, open, |ui| {
             for name in snap.models.get(&provider).into_iter().flatten() {
                 if ui.selectable_label(false, name).clicked() {
                     picked = Some(name.clone());
@@ -103,13 +139,14 @@ impl Shell {
             if let Some(model) = self.model() {
                 model.pick_model(provider.clone(), name);
             }
-            return;
+            return opened;
         }
-        if opened.clicked()
+        if (open || opened.clicked())
             && let Some(model) = self.model()
         {
             model.list_models(provider);
         }
+        opened
     }
 }
 

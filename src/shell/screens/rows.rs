@@ -10,7 +10,6 @@ use eframe::egui;
 use crate::overlay::Overlay;
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::Back;
 
 mod menu;
 mod thread;
@@ -21,13 +20,13 @@ impl Shell {
     pub(crate) fn start(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str) {
         // The starter rides the BOTTOM of this screen, where the composer sits
         // on a conversation: starting one and speaking into one are the same
-        // gesture to a thumb, so they are in the same place. **What claims the
-        // floor first is what may never be pushed off it** (bl-192c).
+        // gesture to a thumb. **What claims the floor first is what may never
+        // be pushed off it** (bl-192c).
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            // The same controls row as the transcript's, under the same
-            // composer (§13.2, bl-0267): a model is picked for the WORKSPACE.
-            self.controls(ui, snap);
+            // The prompt line in start mode, and the rule above it (§22
+            // items 1 and 2) — no bar: the rule carries the mark.
             self.starter(ui, snap);
+            self.rule(ui, snap);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 // The verb sheet, while the draft is a slash line (§22 item
@@ -35,18 +34,20 @@ impl Shell {
                 if self.sheet(ui, snap) {
                     return;
                 }
-                // Back from the chat opens the switcher (§22 item 7): the
-                // bar's control and the platform's gesture, one rule.
-                if self.bar(ui, workspace, &Back::To("workspaces")) {
-                    self.open(Overlay::Switcher);
-                }
-                super::banner(ui, snap);
-                ui.separator();
                 ui.weak(format!(
                     "begin a conversation on {workspace} below — back for the others"
                 ));
             });
         });
+        self.back_to_switcher();
+    }
+
+    /// **Back from the chat opens the switcher** (§22 item 7), once nothing
+    /// painted on it — the sheet, an open list — took the press first.
+    pub(in crate::shell) fn back_to_switcher(&mut self) {
+        if std::mem::take(&mut self.back) {
+            self.open(Overlay::Switcher);
+        }
     }
 
     /// The one field that starts a conversation. It shares the composer's

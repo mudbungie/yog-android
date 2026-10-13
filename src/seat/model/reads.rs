@@ -22,6 +22,11 @@ impl Model {
         let _ = self.cmds.send(Cmd::Workspace(workspace));
     }
 
+    /// Re-read the standing set now rather than at the cadence.
+    pub fn refresh(&self) {
+        let _ = self.cmds.send(Cmd::Refresh);
+    }
+
     /// Focus one conversation: its transcript joins the standing set.
     pub fn focus_conversation(&self, workspace: String, agent: String) {
         let _ = self.cmds.send(Cmd::Conversation(workspace, agent));

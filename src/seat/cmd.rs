@@ -24,6 +24,10 @@ pub(super) enum Cmd {
     /// that needs the answer, and a surface asking twice for one thing is
     /// where a second reading comes from.
     Options,
+    /// **Ask nothing but the pass that follows every command** — the
+    /// workspace dropup's reload (§22 item 2): the workspaces are a standing
+    /// read, so re-reading them is a pass, sooner.
+    Refresh,
     /// **Sign one provider in** (§13.19) — the act, fired at the focused
     /// workspace. Its answer is the run's standing rather than a receipt, so
     /// it seeds the tail as well as starting the run.

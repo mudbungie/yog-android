@@ -110,8 +110,9 @@ pub(crate) struct Shell {
     pub(crate) step: Option<String>,
     pub(crate) composer: String,
     /// **What the verb sheet said when a line could not fire** (§22 item 5):
-    /// a verb missing its words, or a line naming no verb. Stands at the
-    /// sheet's head until a fire replaces it or the sheet closes.
+    /// a verb missing its words, or a line naming no verb. Stands on the
+    /// rule's banner line until a fire replaces it, a tap puts it down, or
+    /// the sheet closes.
     pub(crate) verb_said: Option<String>,
     /// **The composer's native field** (bl-8bbb, `shell::field`): the
     /// platform `EditText` overlaid at the rectangle the composer row lays
@@ -199,6 +200,8 @@ pub(crate) struct Shell {
     /// The switcher's `+ new` asked for the caret: taken by the next pass
     /// that places the field (§22 item 7).
     pub(crate) summon: bool,
+    /// The status rule's between-frames state (`shell/status.rs`).
+    pub(crate) rule: super::status::Rule,
     /// **What the render-and-see probe says about this pass** (`app/probe.rs`,
     /// bl-243b): the screen the dispatch chose, and where each control the
     /// harness has to reach was painted, in device pixels — the mark, the
@@ -256,6 +259,7 @@ impl Shell {
             tuned_at: 0,
             back: false,
             summon: false,
+            rule: super::status::Rule::default(),
             screen: None,
             at: Vec::new(),
             probed: String::new(),

@@ -13,7 +13,6 @@
 use eframe::egui;
 
 use super::app::Shell;
-use super::mark::Back;
 use crate::rows::rows;
 use crate::seat::Snapshot;
 
@@ -55,29 +54,22 @@ impl Shell {
         // re-runs. `shell::place` is where the geometry that IS asserted
         // lives.
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            // Closest to the floor: the acts on this conversation, then the
-            // composer that rides above the keyboard.
-            self.controls(ui, snap);
+            // Closest to the floor: the prompt line, then the status rule
+            // above it, then a parked call's band above the rule (§22 items
+            // 1, 2 and 8). **No bar** (§22 item 1): the rule carries the
+            // mark and the name, and back is the platform's.
             if let Some(taken) = self.compose(ui, snap, "message", &["message"]) {
                 self.deposit(snap, taken);
             }
+            self.rule(ui, snap);
+            self.capability(ui, snap);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 // **The verb sheet takes this room while the draft is a slash
-                // line** (§22 item 5): above the composer, never over it.
+                // line** (§22 item 5): above the rule, never over the field.
                 if self.sheet(ui, snap) {
                     return;
                 }
-                // Back from the chat opens the switcher (§22 item 7): the
-                // focus stays where it is until a row in it is chosen.
-                if self.bar(ui, &speaker, &Back::To("conversations")) {
-                    self.open(crate::overlay::Overlay::Switcher);
-                }
-                super::screens::banner(ui, snap);
-                // The records/files band and the knob row are verbs now
-                // (§22 items 4 and 5): `/records`, `/files`, `/full`,
-                // `/steps` — the transcript keeps the room.
-                ui.separator();
                 // **The transcript is what gives way** (bl-192c): it takes
                 // whatever the two above it left, down to nothing.
                 // `min_scrolled_height` is why that is not automatic — a
@@ -108,6 +100,7 @@ impl Shell {
                     });
             });
         });
+        self.back_to_switcher();
         // Applied after the walk: flipping mid-iteration would re-project the
         // rows the loop is still reading.
         if let Some(key) = flipped

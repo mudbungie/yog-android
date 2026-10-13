@@ -69,7 +69,7 @@ use crate::shell::app::Shell;
 
 impl Shell {
     /// The band, or nothing at all.
-    pub(super) fn capability(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
+    pub(in crate::shell) fn capability(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         let (Some(workspace), Some(agent)) =
             (snap.focus.workspace.as_deref(), snap.focus.agent.as_deref())
         else {

@@ -52,14 +52,9 @@ impl Shell {
         let shown = crate::verbs::matching(&all, &self.composer);
         let rect = ui.available_rect_before_wrap();
         let mut took = None;
+        // A refusal is said on the rule's banner line, under the sheet (§22
+        // item 2), not at the sheet's head.
         super::overlay::framed(ui, rect, "verbs", |ui| {
-            if let Some(said) = &self.verb_said {
-                crate::shell::clip::tinted(
-                    ui,
-                    super::theme::ink(crate::theme::State::Annotation),
-                    said.clone(),
-                );
-            }
             egui::ScrollArea::vertical()
                 .min_scrolled_height(0.0)
                 .auto_shrink(false)
@@ -128,6 +123,8 @@ impl Shell {
             Does::Open(overlay) => return self.open(overlay),
             Does::Full => return self.auto.responses = !self.auto.responses,
             Does::Steps => return self.auto.others = !self.auto.others,
+            Does::Knob(crate::status::Slot::Priority) => return self.priority_verb(snap),
+            Does::Knob(slot) => return self.rule.verb = Some(slot),
             Does::Find => {
                 self.needle.clone_from(&words);
                 self.focus_workspace(None);

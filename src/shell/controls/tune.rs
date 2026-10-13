@@ -46,13 +46,17 @@ impl Shell {
         wide: f32,
         area: Band,
         knob: &Knob,
-    ) {
+        open: bool,
+    ) -> egui::Response {
         if !knob.taken {
-            self.dark(ui, face, wide, knob, "effort");
-            return;
+            let control = self.dark(ui, face, wide, knob, "effort");
+            if open {
+                self.tuning_said.clone_from(&knob.why);
+            }
+            return control;
         }
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "effort", face, wide, |ui| {
+        let opened = super::drop::drop_down(ui, area, "effort", face, wide, open, |ui| {
             for level in crate::codec::pick::LEVELS {
                 let label = crate::codec::Effort::label(level);
                 if ui.selectable_label(false, &label).clicked() {
@@ -68,6 +72,7 @@ impl Shell {
                 model.set_effort(level);
             }
         }
+        opened
     }
 
     /// **The priority toggle**: ask the provider's priority lane for this
@@ -86,19 +91,27 @@ impl Shell {
         wide: f32,
         knob: &Knob,
         on: bool,
-    ) {
-        if !knob.taken {
-            self.dark(ui, face, wide, knob, "priority");
-            return;
-        }
+    ) -> egui::Response {
         let control = crate::shell::theme::chip(ui, face.into(), wide, true);
         act::act(ui, &control, "priority");
         if control.clicked() {
-            self.tuning_said = None;
-            self.priority = Some(!on);
-            if let Some(model) = self.model() {
-                model.set_priority(!on);
-            }
+            self.flip_priority(knob, on);
+        }
+        control
+    }
+
+    /// **Flip priority, or say why it cannot be** — the chip's tap and
+    /// `/priority`'s. The chip stands only where the provider takes the lane
+    /// (operator ruling 2026-10-12), so the refusal is the verb's alone.
+    pub(in crate::shell) fn flip_priority(&mut self, knob: &Knob, on: bool) {
+        if !knob.taken {
+            self.tuning_said.clone_from(&knob.why);
+            return;
+        }
+        self.tuning_said = None;
+        self.priority = Some(!on);
+        if let Some(model) = self.model() {
+            model.set_priority(!on);
         }
     }
 
@@ -106,11 +119,19 @@ impl Shell {
     /// target — the tap is what says why (bl-0691). The `act:` tag rides it
     /// in this state too, because a disabled control is still the
     /// discoverable affordance for the act (PARITY §4).
-    fn dark(&mut self, ui: &mut egui::Ui, face: String, wide: f32, knob: &Knob, op: &str) {
+    fn dark(
+        &mut self,
+        ui: &mut egui::Ui,
+        face: String,
+        wide: f32,
+        knob: &Knob,
+        op: &str,
+    ) -> egui::Response {
         let control = crate::shell::theme::dark_chip(ui, face, wide);
         act::act(ui, &control, op);
         if control.clicked() {
             self.tuning_said.clone_from(&knob.why);
         }
+        control
     }
 }

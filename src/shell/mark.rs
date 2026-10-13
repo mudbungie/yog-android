@@ -30,23 +30,16 @@ use crate::icon::Shape;
 /// name every paint site already spends it by.
 pub(crate) const TOUCH: f32 = crate::theme::TOUCH;
 
-/// What a screen's back control is, if it has one — and, where the depth it
-/// walks to is a screen the engine populates, which read that is.
-///
-/// The third case exists for the parity gate (yog `docs/PARITY.md` §2): *"the
-/// owed interactable for a read is the affordance that reaches the view it
-/// populates"*. Walking back out of a conversation list is what reaches the
-/// workspace roster, so that control is where `act:workspaces` belongs — and
-/// the bar cannot know which read that is, because the bar has no idea what a
-/// depth means and must not grow one.
+/// What a screen's back control is, if it has one. The bar stands only on
+/// the whole-window surfaces now (§22 item 1) — configuration, the foot,
+/// enrollment — and none of their back controls reaches a view a read
+/// populates; the chat's back is the platform's, and opens the switcher.
 pub(super) enum Back {
     /// A screen with no parent: the roster, the foot, a cold device.
     None,
     /// A back control that walks somewhere the wire did not fill — out of the
     /// configuration surface, or out of an offer inside it.
     Plain,
-    /// A back control that reaches a view this read populates.
-    To(&'static str),
 }
 
 impl Shell {
@@ -67,12 +60,9 @@ impl Shell {
         let mut back = false;
         ui.horizontal(|ui| {
             self.mark(ui);
-            if let Back::Plain | Back::To(_) = backable {
+            if let Back::Plain = backable {
                 let control = egui::Button::new("<").min_size(egui::vec2(TOUCH, TOUCH));
                 let response = ui.add(control);
-                if let Back::To(op) = backable {
-                    super::act::act(ui, &response, op);
-                }
                 back = response.clicked() || std::mem::take(&mut self.back);
             }
             ui.heading(title);

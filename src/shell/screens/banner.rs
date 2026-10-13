@@ -3,8 +3,8 @@
 //!
 //! Its own file since bl-7781 took [`super`] to the cap — and on a real seam
 //! rather than a line count: every other thing in that module is a screen or
-//! a row of one, and this is neither. It is painted by four surfaces, under
-//! the bar, wherever the operator happens to be.
+//! a row of one, and this is neither. It is painted by the overlays, which
+//! have no rule; the chat says it on the rule's banner line (§22 item 2).
 
 use eframe::egui;
 
@@ -12,10 +12,9 @@ use crate::seat::Snapshot;
 use crate::shell::theme::ink;
 use crate::theme::State;
 
-/// **What a wire being re-dialled says** (bl-eec1). The lower-case is the
-/// banner's own register, and the ellipsis is the whole of the claim: it is
-/// happening, it has not failed, and nothing is being asked of the operator.
-const RECONNECTING: &str = "reconnecting…";
+/// **What a wire being re-dialled says** (bl-eec1): one spelling, the rule's
+/// (`crate::status`), so the chat's banner line and this one cannot differ.
+use crate::status::RECONNECTING;
 
 /// The connection banner: what the worker is standing on, under the bar and
 /// above whatever screen it interrupted (§13.2).

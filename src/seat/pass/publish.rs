@@ -53,6 +53,7 @@ impl Standing {
         let mut out = self.last.clone();
         (out.landed, out.refused, out.doubted) = self.posted;
         out.roles_read = self.reads;
+        (out.passed, out.listed) = (self.passed, self.listed);
         self.world(&mut out);
         // One tail on the glass, and none at rest (bl-e3d1). The gate is the
         // row's own flight, so the transcript's tail obeys exactly what the

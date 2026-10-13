@@ -39,6 +39,7 @@ pub mod scan;
 pub mod seat;
 pub mod shell;
 pub mod state;
+pub mod status;
 pub mod switcher;
 pub mod symbol;
 pub mod theme;

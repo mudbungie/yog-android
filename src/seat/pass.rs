@@ -86,6 +86,10 @@ pub(super) struct Standing {
     /// How many times the assignments have been read (bl-e9f9) — the
     /// controls' watermark for "your optimistic value has been overtaken".
     pub(super) reads: usize,
+    /// Passes the engine answered, and option lists it answered — the
+    /// dropups' freshness watermarks (§22 item 2).
+    pub(super) passed: usize,
+    pub(super) listed: usize,
     /// The deposits the engine took, refused, and **left in doubt** (bl-66fb,
     /// widened in bl-07b1). Carried between passes because a deposit is a
     /// gesture, not a pass — and painted into every published snapshot for the
@@ -164,6 +168,8 @@ impl Standing {
             failure: None,
             note: None,
             reads: 0,
+            passed: 0,
+            listed: 0,
             posted: (0, 0, 0),
             // The cached queue is an answer the engine gave, so it is held as
             // one: the band paints from the file on the way to the first pass
@@ -258,6 +264,7 @@ impl Standing {
         self.lanes.tend(seat, &wanted, tx, failed.is_none());
         if failed.is_none() {
             self.failed = 0;
+            self.passed += 1;
         } else {
             self.failed += 1;
         }

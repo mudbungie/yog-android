@@ -45,6 +45,11 @@ pub struct Snapshot {
     /// move to know their optimistic value has been overtaken by truth —
     /// they never read the number.
     pub roles_read: usize,
+    /// **How many passes the engine has answered, and how many option lists
+    /// it has** (§22 item 2's reload mark): a dropup remembers the count when
+    /// it asks and reads *fresh* once it moves. Watermarks, never numbers.
+    pub passed: usize,
+    pub listed: usize,
     /// **What this seat's deposits have earned** (bl-66fb): how many the
     /// engine took, and how many it refused, since the worker started. The
     /// composer's echo reads the CHANGE and never the number — it remembers

@@ -26,18 +26,18 @@ mint_material; seed_cache roster; relaunch
 capture seated conversations
 
 
-# 3. THE STANDING ASSERTION: the configuration surface is reachable from the
-#    first screen, by the one control that leads there — the mark, on the
-#    switcher's seat panel until the rule carries it. Then the mark toggles
-#    back — a way in with no way out is the same defect wearing the other face.
-tap_mark
-capture settings configuration
-tap_mark
-capture back-to-roster conversations
-
 # 4. A workspace focused and no conversation: the chat in start mode.
 seed_cache conversations; relaunch
 capture start start
+
+# 4m. THE STANDING ASSERTION: the configuration surface is reachable from the
+#     chat, by the one control that leads there — the mark, at the left of
+#     the status rule (DESIGN §22 item 2). Then the mark toggles back — a way
+#     in with no way out is the same defect wearing the other face.
+tap_mark
+capture settings configuration
+tap_mark
+capture back-to-roster start
 
 # 4w. THE WORLD SURFACES (DESIGN §13.8, §13.9, §13.14), by verb now (§22
 #     items 5 and 7): the roster's entries went with the roster, and every
@@ -163,6 +163,15 @@ capture started start
 
 seed_cache transcript; relaunch
 capture transcript transcript
+
+# 4e2. THE MODEL DROPUP (DESIGN §22 items 2 and 10; operator ruling
+#      2026-10-12): the rule's model segment opens its list upward from the
+#      rule, the cached models at once and a reload asked; the mark on the
+#      segment says which. Relaunched after, so the open list is not over the
+#      door the next beat taps.
+tap_control rule-model
+capture modelled transcript
+relaunch
 
 # 4ea. THE VERB SHEET (DESIGN §22 item 5, bl-0d15). The prompt glyph is the
 #      door: a tap puts `/` at the head of the draft and the sheet stands while

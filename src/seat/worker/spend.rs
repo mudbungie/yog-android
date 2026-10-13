@@ -166,7 +166,7 @@ pub(super) fn spend(
         }
         // The two the loop keeps: `Stop` ends it and a lane's frame is adopted
         // inside `wait`, so neither reaches here — and neither has a sentence.
-        Cmd::Stop | Cmd::Lane(_) => None,
+        Cmd::Stop | Cmd::Lane(_) | Cmd::Refresh => None,
     }
 }
 

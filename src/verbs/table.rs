@@ -8,6 +8,7 @@ use std::sync::OnceLock;
 use super::{Does, Row};
 use crate::codec::View;
 use crate::overlay::Overlay;
+use crate::status::Slot;
 
 /// What the rows are gated on, read off the focus and the focused row.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -90,6 +91,11 @@ pub fn rows(gates: &Gates) -> Vec<Row> {
             out.push(row(word, ops, Does::Open(overlay), ""));
         }
     }
+    if gates.workspace {
+        for (word, ops, slot, own) in KNOBS {
+            out.push(row(word, ops, Does::Knob(slot), own));
+        }
+    }
     out.push(row("help", &["help"], Does::Open(Overlay::Help), ""));
     out.push(wanting(
         row("find", &["search"], Does::Find, ""),
@@ -126,6 +132,29 @@ const AIMED: [(&str, &[&str], Overlay); 7] = [
     ("clients", &["clients"], Overlay::Clients),
     ("config", &["config", "proposals"], Overlay::Admin),
     ("login", &["login"], Overlay::SignIn),
+];
+
+/// The rule's knobs, by verb (§22 items 2 and 10): the model's list, the
+/// effort's, and the priority toggle, under the tags their controls carry.
+const KNOBS: [(&str, &[&str], Slot, &str); 3] = [
+    (
+        "model",
+        &["models", "model"],
+        Slot::Model,
+        "the worker's model",
+    ),
+    (
+        "effort",
+        &["effort"],
+        Slot::Effort,
+        "how hard the worker thinks",
+    ),
+    (
+        "priority",
+        &["priority"],
+        Slot::Priority,
+        "the worker's priority, on or off",
+    ),
 ];
 
 /// The acts on the focused conversation, under the engine's own gates: the

@@ -52,6 +52,8 @@ mod screens;
 #[cfg(target_os = "android")]
 mod slash;
 #[cfg(target_os = "android")]
+mod status;
+#[cfg(target_os = "android")]
 mod switcher;
 #[cfg(target_os = "android")]
 pub(crate) mod sys;
