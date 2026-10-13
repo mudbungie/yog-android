@@ -77,8 +77,12 @@ impl Shell {
                 band,
                 egui::Layout::left_to_right(egui::Align::Center),
                 |ui| {
+                    // Two chips sharing the row, each elided at its share:
+                    // laid at their own widths the starters' dark labels ran
+                    // the overlay's frame off the glass (bl-3f9a narrowed it).
+                    let wide = crate::shell::theme::share(ui, 2);
                     for act in row {
-                        self.fleet_item(ui, &act);
+                        self.fleet_item(ui, &act, wide);
                     }
                 },
             );
@@ -112,7 +116,7 @@ impl Shell {
     /// One control. The label is the wire's own op token and so is the `act:`
     /// tag it carries — one name, so the paint cannot show a word and post
     /// another — and while the act is dark the label says what would light it.
-    fn fleet_item(&mut self, ui: &mut egui::Ui, act: &FleetAct) {
+    fn fleet_item(&mut self, ui: &mut egui::Ui, act: &FleetAct, wide: f32) {
         let typed = !self.composer.trim().is_empty();
         let wants = act.wants();
         let live = wants.is_none_or(|_| typed);
@@ -120,10 +124,7 @@ impl Shell {
             Some(ask) if !typed => format!("{} — {ask}", act.op()),
             _ => act.op().to_owned(),
         };
-        let control = ui.add_enabled(
-            live,
-            egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
-        );
+        let control = crate::shell::theme::chip(ui, label.into(), wide, live);
         crate::shell::act::act(ui, &control, act.op());
         if !control.clicked() {
             return;

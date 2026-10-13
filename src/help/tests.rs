@@ -58,3 +58,19 @@ fn a_row_with_no_prose_reads_as_a_thin_row_rather_than_a_broken_table() {
         ("", "", "")
     );
 }
+
+#[test]
+fn the_tables_prose_carries_no_glyph_the_bundled_face_paints_as_tofu() {
+    let rows = super::rows(super::TABLE).unwrap();
+    for row in &rows {
+        for words in [&row.summary, &row.usage, &row.detail] {
+            for (tofu, _) in crate::theme::glyph::SWAPPED {
+                assert!(!words.contains(tofu), "{}: {words}", row.verb);
+            }
+        }
+    }
+    assert!(
+        rows.iter()
+            .any(|row| row.verb == "balls" && row.summary.contains('↔'))
+    );
+}

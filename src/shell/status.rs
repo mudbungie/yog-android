@@ -63,11 +63,15 @@ impl Shell {
         } else if self.rule.verb.is_none() {
             self.rule.asked = None;
         }
-        // The tappable area a list may open into (bl-78c2): what `app::pass`
-        // left after the inset, read before this block narrows it.
+        // The tappable area a list may open into (bl-78c2): from the top of
+        // what `app::pass` left down to the top of the prompt line, which
+        // this bottom-up block has already laid. **A knob's list opens
+        // upward** (§22 item 2): with the prompt line out of its area the
+        // room below a selector is the diagnostics line at most, so the list
+        // never covers the field or the facts under the rule.
         let area = Band {
             top: ui.max_rect().top(),
-            bottom: ui.max_rect().bottom(),
+            bottom: ui.available_rect_before_wrap().bottom(),
         };
         ui.scope(|ui| {
             ui.spacing_mut().interact_size.y = TOUCH;

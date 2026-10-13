@@ -27,6 +27,8 @@ use crate::theme::{glyph, space};
 
 /// The card at the head of a transcript.
 pub(super) mod panel;
+/// A model's prose with its markdown read (bl-7355).
+mod prose;
 /// A line that is its own touch target, with a glyph in the gutter.
 mod tap;
 /// A trail's head, its steps on their stems, and the `response` elbow.
@@ -144,10 +146,17 @@ fn said(ui: &mut egui::Ui, row: &Row) -> bool {
         ui.add_space(tap::GUTTER);
         // Something said is prose: whole and wrapped unless it is folded,
         // when its first line stands dimmed for it.
-        if foldable && row.expanded {
+        // A model's words are read for their marks (bl-7355); everything
+        // else is painted as the bytes it is.
+        let model = row.role == Some(Role::Model);
+        if foldable && row.expanded && model {
+            prose::paint(ui, &row.key, &row.body);
+        } else if foldable && row.expanded {
             body(ui, &row.body);
         } else if foldable {
             preview(ui, &row.preview);
+        } else if model && !row.preview.is_empty() {
+            prose::paint(ui, &row.key, &row.preview);
         } else if !row.preview.is_empty() {
             body(ui, &row.preview);
         }

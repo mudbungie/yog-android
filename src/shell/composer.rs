@@ -102,7 +102,12 @@ impl Shell {
                     super::act::acts(ui, &send, acts);
                     send.clicked()
                 };
-                let wide = (ui.available_width() - super::mark::TOUCH).max(0.0);
+                // The door's square AND the gap before it: a right-to-left
+                // row that forgets the gap lays the door that far past the
+                // left edge, and the bottom-up block above widens to it —
+                // the whole chat lost its left gutter that way.
+                let gap = ui.spacing().item_spacing.x;
+                let wide = (ui.available_width() - super::mark::TOUCH - gap).max(0.0);
                 let (rect, _) = ui.allocate_exact_size(
                     egui::vec2(wide, ui.available_height()),
                     egui::Sense::hover(),

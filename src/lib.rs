@@ -29,6 +29,7 @@ pub mod ladder;
 pub mod leaf;
 pub mod ledger;
 pub mod live;
+pub mod markdown;
 pub mod material;
 pub mod outbox;
 pub mod overlay;

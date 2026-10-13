@@ -62,8 +62,15 @@ impl Shell {
 
     /// The two acts. `ack` is a tap; the truncation takes two, and says so in
     /// its own label.
+    ///
+    /// The row is allocated its own touch-tall band first (`balls/acts.rs`'s
+    /// reading, bl-9cfd): a bare `horizontal` in this bottom-up layout hung
+    /// below the floor, and the overlay's frame (bl-3f9a) followed it into
+    /// the gesture bar.
     fn acts(&mut self, ui: &mut egui::Ui) {
-        ui.horizontal(|ui| {
+        let band = egui::vec2(ui.available_width(), crate::shell::mark::TOUCH);
+        let row = egui::Layout::left_to_right(egui::Align::Center);
+        ui.allocate_ui_with_layout(band, row, |ui| {
             let ack = ui.button("ack");
             crate::shell::act::act(ui, &ack, "ack");
             if ack.clicked() {

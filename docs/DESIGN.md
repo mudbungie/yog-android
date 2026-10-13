@@ -6679,9 +6679,11 @@ is a client of one engine (entries are an upstream ask, §13.4).
    overlay; the platform back walks to it.** Opened by tapping the rule's
    name, by `/conversations`, or by the back gesture from the chat. One
    heading row per workspace (name, agent count, the attention mark), the
-   focused workspace open under its heading with its conversations as the
-   §13.20 tree — threaded rows, rails, recency over subtrees — and `+ new`
-   under it; the others folded, because their conversations are a read this
+   focused workspace open under its heading with `+ new` first under it
+   (*amended by bl-a3b6: after the tree it stood below the fold of any
+   workspace with a few conversations, so founding one needed a scroll*) and
+   then its conversations as the §13.20 tree — threaded rows, rails, recency
+   over subtrees; the others folded, because their conversations are a read this
    seat makes only at the focused workspace (§14), and a tap on a heading
    is what focuses one. A tap on a conversation focuses it and closes the
    switcher; `+ new` closes it with the field in start mode (§8). **Its head
@@ -6860,6 +6862,43 @@ is a client of one engine (entries are an upstream ask, §13.4).
     a deleted control carried must be observed on its new home in the same
     ball. **The reach bound tightens**: every overlay is two taps from the
     chat — `›`, the row.
+
+**Round 2 (bl-c509) — the whole walked once, after all seven landed.**
+Each step was judged by its own beats; walked end to end on a 411-point
+emulator, these were wrong and are fixed here: **the chat had lost its
+left gutter** — the prompt line is laid right-to-left and the field's
+width forgot the gap before `›`, so the door hung 8 points past the edge
+and the bottom-up block widened to it (every chat line, the rule and the
+ask box painted 2 points from the glass); **the rule's dropups opened
+downward** over the diagnostics and the field — item 2 says upward, so the
+knobs' tappable area now ends at the top of the prompt line; **the verb
+sheet shared its room with the ask box and the dock** — four rows over a
+six-cell box, with the stop verbs `running` exists to prove scrolled out
+of sight — so while the draft is a slash line the dock and the ask step
+aside and the sheet has all the room above the rule (item 5's *as tall as
+the room between the top inset and the rule*); **the fleet overlay ran off
+the glass** — its starters were laid at their own widths, which the
+overlay's frame (item 6) narrowed past, so they share the row as chips now;
+**the trail overlay's frame ran into the gesture bar** — its acts row was a
+bare `horizontal` in a bottom-up layout (bl-9cfd's defect, a new site), so
+it is allocated its touch-tall band first, as the ball pane's is;
+and **the `headed` beat never showed the panel** — the running seed's
+queue row put an ask box over the rule and scrolled the panel away, so the
+held row is the transcript seed's alone. **Glyphs** (item 12): an engine
+sentence can carry what the bundled proportional face lacks — the op
+table's `balls` summary says `ball⇄workspace` — so `theme::glyph::SWAPPED`
+stands `↔` (in the emoji face the family falls back to, as `✔` is) for `⇄`
+where the table is read; the corpus is the engine's and is not edited.
+**Model prose** (item 4, bl-7355): `crate::markdown` reads a model's
+fenced blocks (the code face on the surface, scrolled sideways — the
+desktop's bl-beef block), `#` headings (the heading size), code spans (the
+code face on the surface) and `*` italics (egui's skew), each without its
+marks; a mark that does not close is a literal. `**strong**` loses its
+marks and keeps the body's face and ink: the bundled set has no bold face,
+a font file cannot enter this tree, and a brighter ink would be a colour
+claiming a state. Spans and headings lead the desktop, which reads fences
+alone today (lernie bl-f5a7 is the same defect filed there), so §7's *one
+reading of one transcript* holds again when that lands.
 
 **The order it lands in, and why each lands on main.** Each step is its own
 ball with `--parent bl-92d3` — **not** nested as subtasks delivering into the

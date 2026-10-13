@@ -59,8 +59,8 @@ pub fn rows(help: &str) -> Result<Vec<Row>, String> {
 /// One row, with the two load-bearing columns required and the prose optional
 /// — an op that says nothing about itself is a thin row, not a broken table.
 fn row(v: &Value) -> Result<Row, String> {
-    let verb = said(v, "verb").ok_or_else(|| "a help row states no verb".to_owned())?;
-    let surface = said(v, "surface").ok_or_else(|| {
+    let verb = raw(v, "verb").ok_or_else(|| "a help row states no verb".to_owned())?;
+    let surface = raw(v, "surface").ok_or_else(|| {
         format!(
             "{verb}: a help row states no surface — re-vendor the corpus from a yog at \
              protocol 7 or later"
@@ -75,8 +75,15 @@ fn row(v: &Value) -> Result<Row, String> {
     })
 }
 
-/// A string column the row may not carry.
+/// A prose column, made paintable (`theme::glyph::paintable`, bl-8353): the
+/// engine's words, with what the bundled face cannot draw stood in for. The
+/// verb and the surface are tokens and are read raw.
 fn said(v: &Value, key: &str) -> Option<String> {
+    raw(v, key).map(|words| crate::theme::glyph::paintable(&words))
+}
+
+/// A string column the row may not carry.
+fn raw(v: &Value, key: &str) -> Option<String> {
     v.get(key).and_then(Value::as_str).map(str::to_owned)
 }
 

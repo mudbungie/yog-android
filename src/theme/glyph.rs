@@ -41,5 +41,23 @@ pub const ALL: [&str; 11] = [
 /// mark of `theme/anatomy.rs`). No glyph in the table may be one of them.
 pub const TOFU: [&str; 4] = ["●", "└", "│", "▼"];
 
+/// **What an engine sentence carries that the bundled proportional face
+/// paints as tofu, and what stands in for it** (bl-8353). Measured against
+/// `epaint_default_fonts`' charsets: `⇄` (U+21C4) is in the monospace face
+/// alone, while `↔` (U+2194) is in the emoji face the proportional family
+/// falls back to — the face `✔` and `✖` already come from.
+pub const SWAPPED: [(&str, &str); 1] = [("⇄", "↔")];
+
+/// **The engine's words, made paintable**: each [`SWAPPED`] glyph replaced,
+/// everything else byte for byte. The corpus is never edited — the word is
+/// the engine's — so the substitution is made where the words are read for
+/// the glass.
+#[must_use]
+pub fn paintable(words: &str) -> String {
+    SWAPPED.iter().fold(words.to_owned(), |out, (tofu, stand)| {
+        out.replace(tofu, stand)
+    })
+}
+
 #[cfg(test)]
 mod tests;

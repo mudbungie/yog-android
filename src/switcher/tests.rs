@@ -62,7 +62,7 @@ fn only_the_focused_workspace_opens_and_its_tree_keeps_the_roster_order() {
     let order: Vec<String> = all.iter().map(said).collect();
     assert_eq!(
         order,
-        [">a", "vmain", "new:0", "old:0", "kid:1", "+main", ">z"]
+        [">a", "vmain", "+main", "new:0", "old:0", "kid:1", ">z"]
     );
     assert!(matches!(
         &all[1],
@@ -103,11 +103,11 @@ fn a_tap_focuses_a_folded_heading_opens_a_conversation_and_new_starts() {
         [
             Some(Taken::Focus("a".into())),
             None,
+            Some(Taken::Start("main".into())),
             Some(Taken::Open {
                 workspace: "main".into(),
                 agent: "c1".into()
             }),
-            Some(Taken::Start("main".into())),
         ]
     );
 }

@@ -66,8 +66,13 @@ impl Shell {
                 self.deposit(snap, taken);
             }
             self.rule(ui, snap);
-            self.dock(ui, snap);
-            self.asked(ui, snap);
+            // **The sheet takes the whole room above the rule** (§22 item
+            // 5): the dock and the ask step aside while the draft is a slash
+            // line, or the sheet is four rows over a six-cell box.
+            if !crate::verbs::slashing(&self.composer) {
+                self.dock(ui, snap);
+                self.asked(ui, snap);
+            }
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 // **The verb sheet takes this room while the draft is a slash

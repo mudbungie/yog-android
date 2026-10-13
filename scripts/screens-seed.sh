@@ -220,8 +220,9 @@ if depth in ("conversations", "transcript", "running"):
                 model("015-claude.json", [use("t-c", "Read", {"path": "Cargo.toml"})], 2400),
                 answer("016-tool.json", "t-c", "[package]\nname = \"agent\"\n[dependencies]\nopenssl = \"0.10\""),
                 model("017-claude.json", [{"kind": "text", "text":
-                    "Fixed. The second box had no libssl headers, so the openssl crate could not link. "
-                    "I installed them and the build is green again.\n\nNothing in the tree changed."}], 2650),
+                    "## Fixed\nThe second box had no `libssl` headers, so the **openssl** crate "
+                    "could not link. I installed them:\n```\napt install libssl-dev\n```\n"
+                    "The build is *green* again; nothing in the tree changed."}], 2650),
                 ask("018-user.md", "run the tests too"),
                 model("019-claude.json", [use("t-d", "bash", {"command": "cargo test --all"})], 2700),
             ]
@@ -237,11 +238,17 @@ if depth in ("conversations", "transcript", "running"):
         # row is the corpus's, and only the two keys that name a conversation
         # are moved onto the ones this cache is focused at — the same thing
         # the running seed does to the two stop gates.
-        queue = frame("attention")
-        held = dict(queue["rows"][0], workspace=workspace,
-                    agent=body["focus"]["agent"])
-        queue["rows"] = [held]
-        body["attention"] = queue
+        #
+        # The transcript seed only: the running seed's `headed` beat is the
+        # panel at the transcript's head, and an ask box standing over the
+        # rule scrolls it off the glass. Its queue stays the corpus's own,
+        # addressed elsewhere.
+        if depth == "transcript":
+            queue = frame("attention")
+            held = dict(queue["rows"][0], workspace=workspace,
+                        agent=body["focus"]["agent"])
+            queue["rows"] = [held]
+            body["attention"] = queue
 with open(out, "w") as fh:
     json.dump(body, fh)
 PY

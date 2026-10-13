@@ -8,9 +8,9 @@
 //! **One heading per workspace, and only the focused one is open.** Its
 //! conversations are a read this seat makes only at the focused workspace
 //! (§14), so the others are folded and a tap on a heading is what focuses
-//! one. Under the open heading stand its conversations as §13.20's tree —
-//! `crate::roster`'s order and rails, reused rather than restated — and then
-//! `+ new`.
+//! one. Under the open heading stands `+ new`, then its conversations as
+//! §13.20's tree — `crate::roster`'s order and rails, reused rather than
+//! restated.
 
 use crate::codec::{ConvRow, WsRow};
 
@@ -52,8 +52,8 @@ pub enum Taken {
 }
 
 /// **The rows, in order**: every workspace in the engine's order, and under
-/// the focused one its conversations — newest subtree first, each in the
-/// engine's descent — then `+ new`.
+/// the focused one `+ new`, then its conversations — newest subtree first,
+/// each in the engine's descent.
 pub fn entries(
     workspaces: &[WsRow],
     focused: Option<&str>,
@@ -73,6 +73,13 @@ pub fn entries(
         if !open {
             continue;
         }
+        // **`+ new` stands first** (bl-a3b6): after the tree it was pushed
+        // below the fold by any workspace with a few conversations, so
+        // beginning one needed a scroll the first-time thumb does not know
+        // to make.
+        out.push(Entry::New {
+            workspace: ws.workspace.clone(),
+        });
         for (row, rails) in listed.iter().zip(&rails) {
             out.push(Entry::Conversation {
                 workspace: ws.workspace.clone(),
@@ -80,9 +87,6 @@ pub fn entries(
                 rails: rails.clone(),
             });
         }
-        out.push(Entry::New {
-            workspace: ws.workspace.clone(),
-        });
     }
     out
 }
