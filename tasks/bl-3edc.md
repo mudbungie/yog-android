@@ -1,7 +1,8 @@
 +++
 title = "phone hermes 3/7: the switcher — roster and conversation list fused into one overlay, the seat panel and the update row at its head, back from the chat opens it"
 created = 1791867721
-updated = 1791867721
+updated = 1791868731
+claimant = "PhoneTwo"
 parent = "bl-92d3"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
