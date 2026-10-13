@@ -2,8 +2,8 @@
 //! and every way an answer can be the wrong one.
 
 use super::{
-    Model, cache_in, conv_reply, material, model_against, nothing_set, ops, pki, serve_many,
-    settle, tr_reply, ws_reply,
+    Model, ag_reply, cache_in, conv_reply, material, model_against, nothing_set, ops, pki,
+    serve_many, settle, tr_reply, ws_reply,
 };
 use crate::transport::Seat;
 use serde_json::{Value, json};
@@ -30,7 +30,8 @@ fn focus_deepens_and_backs_out_of_the_standing_set() {
         vec![conv_reply()], // …now two questions deep
         vec![ws_reply()],   // focus_conversation: refresh…
         vec![conv_reply()], // …
-        vec![tr_reply()],   // …three questions deep (the queue is the lane's)
+        vec![tr_reply()],   // …three questions deep (the queue is the lane's)…
+        vec![ag_reply()],   // …and the conversation's own row beside it
         vec![ws_reply()],   // back out: the roster alone again
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
@@ -43,10 +44,18 @@ fn focus_deepens_and_backs_out_of_the_standing_set() {
     let snap = settle(&mut model, &|s| !s.transcript.is_empty());
     assert_eq!(snap.focus.agent.as_deref(), Some("a1"));
     assert_eq!(snap.transcript[0].name, "001");
+    // The rule's figures stand on the first pass a conversation is focused
+    // (bl-a7ec), off its own row rather than the records screen's.
+    let head = snap.head.as_ref().unwrap();
+    assert_eq!(
+        (head.usd.as_str(), head.context.as_ref().unwrap().percent),
+        ("$0.25", 10)
+    );
     model.focus_workspace(None);
-    settle(&mut model, &|s| {
+    let snap = settle(&mut model, &|s| {
         s.focus.workspace.is_none() && !s.workspaces.is_empty()
     });
+    assert_eq!(snap.head, None);
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
@@ -59,6 +68,7 @@ fn focus_deepens_and_backs_out_of_the_standing_set() {
             "workspaces",
             "conversations",
             "transcript",
+            "agent",
             "workspaces"
         ]
     );

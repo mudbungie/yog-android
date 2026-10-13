@@ -8,7 +8,9 @@
 
 mod table;
 
-use super::{Turn, conv_reply, model_turns, nothing_set, ops, settle, tr_reply, ws_reply};
+use super::{
+    Turn, ag_reply, conv_reply, model_turns, nothing_set, ops, settle, tr_reply, ws_reply,
+};
 
 /// The five turns every case here shares: the first pass, the assignments
 /// preload a focus change makes, and the pass that follows it. What comes
@@ -20,6 +22,7 @@ pub(super) fn focused() -> Vec<Turn> {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![ag_reply()]),
     ]
 }
 
@@ -29,6 +32,7 @@ pub(super) fn refresh() -> Vec<Turn> {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![ag_reply()]),
     ]
 }
 

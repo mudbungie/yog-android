@@ -5,6 +5,9 @@
 //! the grace, the cache write and the published snapshot are the pass's, and
 //! a new read is only ever a new arm in this walk.
 //!
+//! **Four since bl-a7ec**: the focused conversation's `agent` row joined
+//! its transcript, so the rule's context and spend move as it works.
+//!
 //! **Three again since bl-8e3c.** The queue read left this walk when
 //! `attention` became follow-class (REMOTE §14.1): the intake this seat
 //! dials holds it, so a pass that asked it would wait a hold. It is the
@@ -53,11 +56,24 @@ pub(super) fn fill(
     let Some(agent) = focus.agent.clone() else {
         return Ok(());
     };
-    let (reply, envelope) = wired(seat, &Ask::Transcript { workspace, agent })?;
+    let ask = Ask::Transcript {
+        workspace: workspace.clone(),
+        agent: agent.clone(),
+    };
+    let (reply, envelope) = wired(seat, &ask)?;
     snap.transcript = match reply {
         Reply::Transcript(rows) => rows,
         other => return Err(Wire::Unusable(kind_err("transcript", &other))),
     };
     kept.transcript = Some(envelope);
+    // **The conversation's own row, at the transcript's cadence** (bl-a7ec):
+    // the rule's context and spend are its figures, and a row read only when
+    // the records screen opened left them off the glass until then.
+    let (reply, envelope) = wired(seat, &Ask::Agent { workspace, agent })?;
+    snap.head = match reply {
+        Reply::Agent(head) => Some(head),
+        other => return Err(Wire::Unusable(kind_err("agent", &other))),
+    };
+    kept.agent = Some(envelope);
     Ok(())
 }

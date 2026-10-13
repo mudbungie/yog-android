@@ -9,7 +9,7 @@
 
 use serde_json::{Value, json};
 
-use super::{conv_reply, nothing_set, ops, settle, tr_reply, ws_reply};
+use super::{ag_reply, conv_reply, nothing_set, ops, settle, tr_reply, ws_reply};
 
 fn agent() -> Vec<u8> {
     json!({ "ok": true, "kind": "agent", "display": "Pennant", "root": "a1",
@@ -70,6 +70,7 @@ pub(super) fn opened() -> Vec<Vec<Vec<u8>>> {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![agent()],
         vec![steps()],
         vec![rail()],
@@ -79,6 +80,7 @@ pub(super) fn opened() -> Vec<Vec<Vec<u8>>> {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]
 }
 
@@ -115,11 +117,11 @@ fn opening_the_records_asks_the_six_and_they_land_as_one_value() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        ops(&requests)[5..11],
+        ops(&requests)[6..12],
         ["agent", "steps", "rail", "governing", "inbox", "lineages"]
     );
     assert_eq!(
-        serde_json::from_slice::<Value>(&requests[5]).unwrap(),
+        serde_json::from_slice::<Value>(&requests[6]).unwrap(),
         json!({ "op": "agent", "workspace": "home", "agent": "a1" })
     );
 }
@@ -135,6 +137,7 @@ fn one_steps_drill_in_lands_under_the_sequence_it_names() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]);
     let (mut model, served) = super::model_against(scripts);
     focused(&mut model);
@@ -152,7 +155,7 @@ fn one_steps_drill_in_lands_under_the_sequence_it_names() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        serde_json::from_slice::<Value>(&requests[14]).unwrap(),
+        serde_json::from_slice::<Value>(&requests[16]).unwrap(),
         json!({ "op": "step", "workspace": "home", "agent": "a1", "seq": "001" })
     );
 }
@@ -167,17 +170,19 @@ fn a_drill_in_with_no_records_under_it_is_dropped_rather_than_held() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![step()],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]);
     focused(&mut model);
     model.drill_step("001".into());
     let snap = settle(&mut model, &|s| s.focus.agent.is_some());
     assert!(snap.records.is_none());
     drop(model);
-    assert_eq!(ops(&served.join().unwrap())[5], "step");
+    assert_eq!(ops(&served.join().unwrap())[6], "step");
 }
 
 /// **Asked with no conversation focused, it is refused here and crosses
@@ -228,6 +233,7 @@ fn a_wrong_kind_at_any_of_the_six_names_that_read_and_keeps_what_was_there() {
             vec![ws_reply()],
             vec![conv_reply()],
             vec![tr_reply()],
+            vec![ag_reply()],
         ]);
         let (mut model, served) = super::model_against(scripts);
         focused(&mut model);
@@ -259,6 +265,7 @@ fn a_wrong_kind_for_one_step_names_that_read() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]);
     let (mut model, served) = super::model_against(scripts);
     focused(&mut model);

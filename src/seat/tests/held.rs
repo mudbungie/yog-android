@@ -12,7 +12,8 @@ use std::sync::mpsc;
 use serde_json::{Value, json};
 
 use super::{
-    REST, Turn, conv_reply, model_lanes, nothing_set, queue_quiet, settle, tr_reply, ws_reply,
+    REST, Turn, ag_reply, conv_reply, model_lanes, nothing_set, queue_quiet, settle, tr_reply,
+    ws_reply,
 };
 use crate::codec::{Scope, Verdict};
 
@@ -64,10 +65,12 @@ fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation()
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![answered("pass", true)],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -87,7 +90,7 @@ fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation()
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        serde_json::from_slice::<Value>(&requests[5]).unwrap(),
+        serde_json::from_slice::<Value>(&requests[6]).unwrap(),
         json!({ "op": "answer", "workspace": "home", "agent": "a1",
                 "verdict": "pass", "scope": "call" })
     );
@@ -104,10 +107,12 @@ fn a_widened_answer_carries_its_reach_and_the_receipt_states_one() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![answered_at("pass", "conversation", true)],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -119,7 +124,7 @@ fn a_widened_answer_carries_its_reach_and_the_receipt_states_one() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        serde_json::from_slice::<Value>(&requests[5]).unwrap(),
+        serde_json::from_slice::<Value>(&requests[6]).unwrap(),
         json!({ "op": "answer", "workspace": "home", "agent": "a1",
                 "verdict": "pass", "scope": "conversation" })
     );
@@ -136,10 +141,12 @@ fn a_release_that_drove_nothing_says_so() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![answered("pass", false)],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -166,10 +173,12 @@ fn keeping_it_parked_is_silent() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![answered("hold", false)],
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
@@ -201,6 +210,7 @@ fn an_answer_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![ws_reply()], // the answer, answered with a roster
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());

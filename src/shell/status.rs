@@ -44,15 +44,6 @@ pub(crate) struct Rule {
 /// touch-tall ways to the same place.
 const LOW: f32 = TOUCH / 2.0;
 
-/// **How full the focused conversation's context is**, where the engine's
-/// `agent` row about it is held (the records read) and states it.
-fn context(snap: &Snapshot) -> Option<i64> {
-    let records = snap.records.as_ref()?;
-    let focused = snap.focus.workspace.as_deref() == Some(records.workspace.as_str())
-        && snap.focus.agent.as_deref() == Some(records.agent.as_str());
-    focused.then_some(records.head.context.as_ref()?.percent)
-}
-
 /// One segment of the band, before it is given a width.
 enum Segment {
     Knob(Chip),
@@ -99,7 +90,8 @@ impl Shell {
         let row = super::controls::focused_row(snap);
         let now = crate::roster::now_unix();
         let mut segments: Vec<Segment> = self.chips(snap).into_iter().map(Segment::Knob).collect();
-        let said = crate::status::diagnostics(row.as_ref(), &snap.transcript, context(snap), now);
+        let said =
+            crate::status::diagnostics(row.as_ref(), &snap.transcript, snap.head.as_ref(), now);
         segments.extend(said.into_iter().map(Segment::Said));
         let slots: Vec<Slot> = segments.iter().map(slot).collect();
         let wants: Vec<f32> = segments.iter().map(|s| want(ui, s)).collect();

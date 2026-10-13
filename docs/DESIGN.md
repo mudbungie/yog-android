@@ -6399,7 +6399,9 @@ is a client of one engine (entries are an upstream ask, §13.4).
    no context knob, so effort takes that slot — priority only where the
    provider's row takes the lane; then **this conversation's diagnostics**:
    tokens in and out (the transcript's model turns' own `input_tokens` /
-   `output_tokens`, summed), spend (absent: this seat reads no price), the
+   `output_tokens`, summed), spend (*amended by bl-a7ec: the `agent` row's
+   `spend.usd`, the ledger's own words, absent where unpriced — never
+   `$0`*), the
    state and how long since it acted, context-window use (*amended by
    bl-96fc: the wire does state it — the `agent` row's `context` object,
    which `codec::records` already decodes; see the note below*); then the name, the switcher's
@@ -6461,11 +6463,27 @@ is a client of one engine (entries are an upstream ask, §13.4).
    touch-tall ways to the same overlay. **Context:** the wire states it on
    the `agent` row (`context`: the model, the prompt tokens, the window and
    the engine's own unclamped percent; lernie bl-d74b paints it on the
-   desktop); this seat paints `context N%` from the `agent` row the records
-   read holds about the focused conversation, and nothing where no row is
-   held or the row states none — absent is never `0%`. The transcript's
-   pass does not read that row yet, so the figure stands once the records
-   have been read (bl-a7ec, filed to put the read on the pass).
+   desktop); this seat paints `context N%` from the focused conversation's
+   `agent` row, and nothing where no row is held or the row states none —
+   absent is never `0%`.
+
+   **As landed (bl-a7ec) — the row on the pass.** The standing pass (§14)
+   asks the focused conversation's `agent` row right after its transcript,
+   one more read at the same cadence, and the answer is `Snapshot::head` —
+   so the rule's figures stand on the first pass a conversation is focused
+   and move with every pass after, the one each act wakes included; the
+   records screen is no longer what puts them there. The §14 cache stores
+   the envelope beside the transcript on the transcript's pairing (absent is
+   ordinary, present without a focused conversation discards the file), so
+   a resumed seat paints them before the wire answers, and the walk's
+   transcript seed carries the corpus's row re-addressed at the conversation
+   it opens. **Spend joins the diagnostics** off the same row: the `usd`
+   the ledger rendered, after the tokens and before the context
+   (`state · tokens · spend · context · name`, the desktop's order), absent
+   where the workspace has no price table. **It is the first to leave** —
+   the second line lets go of the spend, then the context, then the tokens,
+   and a one-line rule drops it after the state — so the ruled order of the
+   two that were there stands as it was.
 
 3. **The prompt line → the `EditText` behind `›`, with a `send` word.** `›`
    in the brand at the left edge plus `M` (the body face carries U+203A; the

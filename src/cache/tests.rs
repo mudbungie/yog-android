@@ -31,6 +31,18 @@ pub(super) fn transcript() -> Value {
             "rows": [{ "name": "001", "raw": "", "kind": "raw" }] })
 }
 
+/// The conversation's own row (bl-a7ec): what the rule's context and spend
+/// are painted from, stored so a resumed seat paints them before the wire.
+pub(super) fn agent() -> Value {
+    json!({ "ok": true, "kind": "agent", "agent": "a1", "root": "a1",
+            "display": "d", "display_only": false, "tip": "", "state": "quiescent",
+            "refused": false, "present": true, "nudgeable": true,
+            "stoppable": false, "stop_children": false,
+            "spend": { "usd": "$4.00" },
+            "context": { "model": "m", "prompt_tokens": 4, "window": 200,
+                         "percent": 2 } })
+}
+
 pub(super) fn deep() -> Focus {
     Focus {
         workspace: Some("home".to_owned()),
@@ -53,6 +65,7 @@ pub(super) fn all() -> Envelopes {
         workspaces: Some(ws()),
         conversations: Some(convs()),
         transcript: Some(transcript()),
+        agent: Some(agent()),
         attention: Some(queue()),
         ..Envelopes::default()
     }
@@ -74,6 +87,11 @@ fn a_stored_pass_reads_back_as_the_snapshot_it_was() {
     assert_eq!(snap.workspaces[0].workspace, "home");
     assert_eq!(snap.conversations[0].root_id, "a1");
     assert_eq!(snap.transcript[0].name, "001");
+    let head = snap.head.as_ref().unwrap();
+    assert_eq!(
+        (head.usd.as_str(), head.context.as_ref().unwrap().percent),
+        ("$4.00", 2)
+    );
     assert_eq!(snap.error, None);
     // **The queue rides back too** (§13.7): a resumed seat paints a parked
     // call it already knew about instead of an empty band.
@@ -189,6 +207,10 @@ fn a_depth_that_disagrees_with_its_focus_is_refused() {
     // The transcript half of the same law.
     orphan["conversations"] = convs();
     orphan["transcript"] = transcript();
+    assert!(with(orphan.clone()).is_none());
+    // …and a conversation's own row with no conversation focused (bl-a7ec).
+    orphan["transcript"] = json!(null);
+    orphan["agent"] = agent();
     assert!(with(orphan).is_none());
 }
 
@@ -203,6 +225,10 @@ fn a_deep_envelope_of_the_wrong_kind_discards() {
     assert!(read(&at).is_none());
     let mut kept = all();
     kept.transcript = Some(convs());
+    write(&at, &deep(), &kept).unwrap();
+    assert!(read(&at).is_none());
+    let mut kept = all();
+    kept.agent = Some(transcript());
     write(&at, &deep(), &kept).unwrap();
     assert!(read(&at).is_none());
 }

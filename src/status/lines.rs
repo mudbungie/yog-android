@@ -6,9 +6,10 @@
 //! on a small line directly under it; where it will (a tablet, landscape),
 //! everything stays on one line.
 //!
-//! **The second line lets go of the context, then the tokens**; the state
-//! and the name never leave it and elide inside what is left, because they
-//! are what the line exists to keep.
+//! **The second line lets go of the spend, then the context, then the
+//! tokens** — the spend (bl-a7ec) first, so the ruled order of the other two
+//! stands as it was; the state and the name never leave it and elide inside
+//! what is left, because they are what the line exists to keep.
 
 use super::{Slot, fit};
 
@@ -24,14 +25,14 @@ pub enum Place {
 }
 
 /// The order the second line lets diagnostics go in.
-const UNDER_DROPS: [Slot; 2] = [Slot::Context, Slot::Tokens];
+const UNDER_DROPS: [Slot; 3] = [Slot::Spend, Slot::Context, Slot::Tokens];
 
 /// Whether a segment is one of the conversation's diagnostics (or its name)
 /// rather than a selector.
 fn diagnostic(slot: Slot) -> bool {
     matches!(
         slot,
-        Slot::Tokens | Slot::Context | Slot::State | Slot::Name
+        Slot::Tokens | Slot::Spend | Slot::Context | Slot::State | Slot::Name
     )
 }
 
@@ -76,7 +77,7 @@ pub fn layout(
         .collect()
 }
 
-/// The second line: the context, then the tokens, leave while what stands
+/// The second line: the spend, the context, then the tokens, leave while what stands
 /// would overrun `room`; what is left shares it, the longest eliding first.
 fn below(slots: &[Slot], wants: &[f32], room: f32, gap: f32) -> Vec<Option<f32>> {
     let need = |shown: &[bool]| -> f32 {

@@ -117,9 +117,33 @@ fn turn(usage: serde_json::Value) -> Entry {
     }
 }
 
+/// The conversation's own `agent` row, saying what it spent and how full
+/// its context is — or, with neither, a workspace with no price table and a
+/// context nothing measured.
+fn head(usd: &str, percent: Option<i64>) -> Agent {
+    Agent {
+        display: "fixer".into(),
+        root: "c1".into(),
+        state: "in-flight".into(),
+        flight: String::new(),
+        present: true,
+        refused: false,
+        failure: None,
+        marks: Vec::new(),
+        tip: String::new(),
+        strip: None,
+        seats: Vec::new(),
+        usd: usd.into(),
+        context: percent.map(|percent| crate::codec::Context {
+            model: "opus".into(),
+            percent,
+        }),
+    }
+}
+
 #[test]
 fn the_diagnostics_are_this_conversations_alone() {
-    assert!(diagnostics(None, &[], Some(40), 0).is_empty());
+    assert!(diagnostics(None, &[], Some(&head("$4.00", Some(40))), 0).is_empty());
     let said = diagnostics(Some(&row()), &[], None, 160);
     let texts: Vec<(Slot, &str)> = said.iter().map(|s| (s.slot, s.text.as_str())).collect();
     assert_eq!(
@@ -131,19 +155,27 @@ fn the_diagnostics_are_this_conversations_alone() {
         turn(json!({ "input_tokens": 1200, "output_tokens": 30 })),
         turn(json!({ "input_tokens": 5 })),
     ];
-    let said = diagnostics(Some(&row()), &turns, Some(140), 160);
+    let held = head("$4.00", Some(140));
+    let said = diagnostics(Some(&row()), &turns, Some(&held), 160);
     let texts: Vec<(Slot, &str)> = said.iter().map(|s| (s.slot, s.text.as_str())).collect();
-    // The state first, then the tokens, then the context — the engine's own
-    // percent, unclamped — then the name.
+    // The state first, then the tokens, then the spend in the ledger's own
+    // words, then the context — the engine's own percent, unclamped — then
+    // the name.
     assert_eq!(
         texts,
         [
             (Slot::State, "in-flight · 1m"),
             (Slot::Tokens, "1.2k in · 30 out"),
+            (Slot::Spend, "$4.00"),
             (Slot::Context, "context 140%"),
             (Slot::Name, "fixer")
         ]
     );
+    // A row that states no price and no fullness paints neither: never `$0`,
+    // never `0%`.
+    let said = diagnostics(Some(&row()), &[], Some(&head("", None)), 160);
+    let slots: Vec<Slot> = said.iter().map(|s| s.slot).collect();
+    assert_eq!(slots, [Slot::State, Slot::Name]);
 }
 
 #[test]

@@ -11,7 +11,7 @@
 
 use serde_json::{Value, json};
 
-use super::{conv_reply, nothing_set, ops, settle, tr_reply, ws_reply};
+use super::{ag_reply, conv_reply, nothing_set, ops, settle, tr_reply, ws_reply};
 
 fn files(preview: bool) -> Vec<u8> {
     let mut body = json!({ "ok": true, "kind": "files", "worktree": true,
@@ -51,11 +51,17 @@ fn opened() -> Vec<Vec<Vec<u8>>> {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
     ]
 }
 
 fn after() -> Vec<Vec<Vec<u8>>> {
-    vec![vec![ws_reply()], vec![conv_reply()], vec![tr_reply()]]
+    vec![
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![tr_reply()],
+        vec![ag_reply()],
+    ]
 }
 
 fn focused(model: &mut super::Model) {
@@ -89,7 +95,7 @@ fn opening_the_files_asks_the_bare_listing_for_the_focused_conversation() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        frame(&requests, 5),
+        frame(&requests, 6),
         json!({ "op": "files", "workspace": "home", "agent": "a1" })
     );
 }
@@ -114,7 +120,7 @@ fn a_files_ask_carries_its_path_into_the_value_because_the_answer_does_not() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        frame(&requests, 5),
+        frame(&requests, 6),
         json!({ "op": "files", "workspace": "home", "agent": "a1", "path": "src/a.rs" })
     );
 }
@@ -194,11 +200,11 @@ fn the_work_diff_is_aimed_and_its_patch_ask_names_the_file_it_is_for() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        frame(&requests, 5),
+        frame(&requests, 6),
         json!({ "op": "work-diff", "workspace": "home" })
     );
     assert_eq!(
-        frame(&requests, 9),
+        frame(&requests, 11),
         json!({ "op": "work-diff", "workspace": "home",
                 "file": { "ball": "bl-1", "path": "src/a.rs", "handle": "at-1" } })
     );

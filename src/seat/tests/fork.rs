@@ -10,7 +10,7 @@
 use serde_json::{Value, json};
 
 use super::records::opened;
-use super::{conv_reply, outcome, settle, tr_reply, ws_reply};
+use super::{ag_reply, conv_reply, outcome, settle, tr_reply, ws_reply};
 
 fn governing(oid: &str) -> Vec<u8> {
     json!({ "ok": true, "kind": "governing", "oid": oid, "short_oid": "bbbb",
@@ -20,7 +20,12 @@ fn governing(oid: &str) -> Vec<u8> {
 }
 
 fn after() -> Vec<Vec<Vec<u8>>> {
-    vec![vec![ws_reply()], vec![conv_reply()], vec![tr_reply()]]
+    vec![
+        vec![ws_reply()],
+        vec![conv_reply()],
+        vec![tr_reply()],
+        vec![ag_reply()],
+    ]
 }
 
 fn focused(model: &mut super::Model) {
@@ -59,10 +64,10 @@ fn picking_a_fork_point_asks_the_config_governing_it() {
     assert_eq!(governing.follows.as_deref(), Some("strict"));
     drop(model);
     let requests = served.join().unwrap();
-    // Five for the focus and its preload, six for the records opening, three
-    // for the pass that opening woke: the fifteenth frame is the pick's read.
+    // Six for the focus and its preload, six for the records opening, four
+    // for the pass that opening woke: the seventeenth frame is the pick's read.
     assert_eq!(
-        frame(&requests, 14),
+        frame(&requests, 16),
         json!({ "op": "governing", "workspace": "home", "agent": "a1",
                 "at": "abcdef1234567890" })
     );
@@ -79,6 +84,7 @@ fn an_anchor_with_no_records_standing_is_dropped_and_a_failure_is_a_sentence() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![governing("cafe")],
     ];
     scripts.extend(after());
@@ -109,6 +115,7 @@ fn a_fork_names_the_point_the_role_and_no_skills() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![outcome(true, "")],
     ];
     scripts.extend(after());
@@ -121,7 +128,7 @@ fn a_fork_names_the_point_the_role_and_no_skills() {
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
-        frame(&requests, 5),
+        frame(&requests, 6),
         json!({ "op": "fork", "workspace": "home", "parent": "a1",
                 "from": "config/strict", "role": "worker", "skills": [],
                 "goal": "try it the other way" })
@@ -138,6 +145,7 @@ fn a_fork_refused_says_why_and_one_with_no_conversation_crosses_nothing() {
         vec![ws_reply()],
         vec![conv_reply()],
         vec![tr_reply()],
+        vec![ag_reply()],
         vec![outcome(false, "no such ref")],
     ];
     scripts.extend(after());

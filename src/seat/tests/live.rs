@@ -11,7 +11,8 @@
 use std::sync::mpsc;
 
 use super::{
-    Turn, conv_flying, conv_reply, model_turns, nothing_set, ops, settle, tr_reply, ws_reply,
+    Turn, ag_reply, conv_flying, conv_reply, model_turns, nothing_set, ops, settle, tr_reply,
+    ws_reply,
 };
 use crate::codec::EntryKind;
 use serde_json::json;
@@ -42,6 +43,7 @@ fn writing() -> (Vec<Turn>, mpsc::Sender<Vec<u8>>) {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_flying()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![ag_reply()]),
         Turn::Feed(frames),
     ];
     (turns, feed)
@@ -77,7 +79,8 @@ fn a_writing_conversation_streams_its_tail_and_the_frames_fold() {
         tail(&snap).unwrap_or_default(),
         ("first I".to_owned(), "then this, and more".to_owned())
     );
-    // The lane is the pass's own dial, right after the transcript.
+    // The lane is the pass's own dial, right after the transcript and the
+    // conversation's own row.
     drop(model);
     assert_eq!(
         ops(&served.join().unwrap()),
@@ -87,6 +90,7 @@ fn a_writing_conversation_streams_its_tail_and_the_frames_fold() {
             "workspaces",
             "conversations",
             "transcript",
+            "agent",
             "follow"
         ]
     );
@@ -104,6 +108,7 @@ fn a_finished_turn_drops_the_fold_it_was_writing() {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![ag_reply()]),
     ]);
     let (mut model, _served) = model_turns(turns);
     settle(&mut model, &|s| !s.workspaces.is_empty());
@@ -129,6 +134,7 @@ fn the_streams_end_empties_the_fold_and_the_next_pass_reopens_the_lane() {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_flying()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![ag_reply()]),
         Turn::Feed(frames),
     ]);
     let (mut model, _served) = model_turns(turns);
@@ -156,6 +162,7 @@ fn a_lane_frame_of_the_wrong_kind_reaches_the_banner_and_the_lane_goes_on() {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_flying()]),
         Turn::Answer(vec![tr_reply()]),
+        Turn::Answer(vec![ag_reply()]),
     ]);
     let (mut model, _served) = model_turns(turns);
     settle(&mut model, &|s| !s.workspaces.is_empty());

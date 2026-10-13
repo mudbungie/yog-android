@@ -52,6 +52,10 @@ pub struct Envelopes {
     pub workspaces: Option<Value>,
     pub conversations: Option<Value>,
     pub transcript: Option<Value>,
+    /// The focused conversation's `agent` row (bl-a7ec), on the transcript's
+    /// pairing: present only under a focused conversation, and absent is
+    /// ordinary (a file written before the pass read it).
+    pub agent: Option<Value>,
     /// **The composer selectors' offerings** (bl-0267), stored the same way
     /// and under the same rules: the workspace they were read for, the
     /// `providers` reply, and each provider's `models` reply. They are not
@@ -89,6 +93,7 @@ pub fn write(path: &Path, focus: &Focus, kept: &Envelopes) -> Result<(), String>
         "workspaces": kept.workspaces,
         "conversations": kept.conversations,
         "transcript": kept.transcript,
+        "agent": kept.agent,
         "attention": kept.attention,
         "options": { "workspace": kept.options_workspace,
                      "providers": kept.providers,
@@ -125,6 +130,7 @@ pub fn read(path: &Path) -> Option<(Focus, Snapshot, Envelopes)> {
     // them is a file written by something this build does not understand.
     if held(&value, "conversations").is_some() != focus.workspace.is_some()
         || held(&value, "transcript").is_some() != focus.agent.is_some()
+        || (held(&value, "agent").is_some() && focus.agent.is_none())
     {
         return None;
     }
@@ -146,6 +152,12 @@ pub fn read(path: &Path) -> Option<(Focus, Snapshot, Envelopes)> {
     if let Some(held) = held(&value, "transcript") {
         match reply::decode(&held).ok()?.ok()? {
             Reply::Transcript(rows) => snap.transcript = rows,
+            _ => return None,
+        }
+    }
+    if let Some(held) = held(&value, "agent") {
+        match reply::decode(&held).ok()?.ok()? {
+            Reply::Agent(head) => snap.head = Some(head),
             _ => return None,
         }
     }

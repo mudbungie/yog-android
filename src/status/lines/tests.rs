@@ -4,7 +4,7 @@
 use super::*;
 use crate::theme::TOUCH;
 
-const ALL: [Slot; 9] = [
+const ALL: [Slot; 10] = [
     Slot::Workspace,
     Slot::Provider,
     Slot::Model,
@@ -12,12 +12,13 @@ const ALL: [Slot; 9] = [
     Slot::Priority,
     Slot::State,
     Slot::Tokens,
+    Slot::Spend,
     Slot::Context,
     Slot::Name,
 ];
 
 /// Roughly what each segment wants at the rule's small type.
-const WANTS: [f32; 9] = [0.0, 0.0, 0.0, 80.0, 70.0, 90.0, 100.0, 80.0, 80.0];
+const WANTS: [f32; 10] = [0.0, 0.0, 0.0, 80.0, 70.0, 90.0, 100.0, 50.0, 80.0, 80.0];
 
 fn placed(wide: f32) -> Vec<Place> {
     // Less the pass's gutters; the rule also less the mark and its gap.
@@ -50,7 +51,13 @@ fn at_the_walks_width_the_diagnostics_stand_under_the_selectors() {
     use Slot::*;
     let places = placed(411.0);
     assert_eq!(on(&places, false), [Workspace, Provider, Model, Effort]);
+    // The spend is the first to leave the second line (bl-a7ec)…
     assert_eq!(on(&places, true), [State, Tokens, Context, Name]);
+    // …and stands where the line holds all five.
+    assert_eq!(
+        on(&placed(450.0), true),
+        [State, Tokens, Spend, Context, Name]
+    );
     // The second line fits what it was given.
     let gaps = 4.0 * 3.0;
     let sum: f32 = places
@@ -61,9 +68,9 @@ fn at_the_walks_width_the_diagnostics_stand_under_the_selectors() {
 }
 
 #[test]
-fn a_narrow_second_line_lets_the_context_then_the_tokens_go_and_keeps_state_and_name() {
+fn a_narrow_second_line_lets_the_spend_the_context_then_the_tokens_go_and_keeps_state_and_name() {
     use Slot::*;
-    // 90 + 100 + 80 + 80 + gaps is 362: at 320 the context goes.
+    // Less the spend, 90 + 100 + 80 + 80 + gaps is 362: at 320 the context goes.
     assert_eq!(on(&placed(340.0), true), [State, Tokens, Name]);
     // At 240 the tokens go too; the state and the name elide and stay.
     assert_eq!(on(&placed(240.0), true), [State, Name]);

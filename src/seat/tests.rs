@@ -145,6 +145,21 @@ pub(super) fn tr_reply() -> Vec<u8> {
     .into_bytes()
 }
 
+/// **The focused conversation's own row** (bl-a7ec): every pass that reads a
+/// transcript reads this beside it, so every script that answers one answers
+/// the other next.
+pub(super) fn ag_reply() -> Vec<u8> {
+    json!({ "ok": true, "kind": "agent", "agent": "a1", "root": "a1",
+            "display": "d", "display_only": false, "tip": "", "state": "quiescent",
+            "refused": false, "present": true, "nudgeable": true,
+            "stoppable": false, "stop_children": false,
+            "spend": { "usd": "$0.25", "tokens": { "input": 1, "output": 1 } },
+            "context": { "model": "m", "prompt_tokens": 10, "window": 100,
+                         "percent": 10 } })
+    .to_string()
+    .into_bytes()
+}
+
 /// **The decision queue with nothing parked in it** — what the attention
 /// lane (§14.1) is fed when a test wants the queue to empty, and what the
 /// harness holds the lane on when a test says nothing about it.

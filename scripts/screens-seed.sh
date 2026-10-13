@@ -92,7 +92,7 @@ workspaces = frame("workspaces")
 body = {"yog-seat-cache": version, "protocol": protocol,
         "focus": {"workspace": None, "agent": None},
         "workspaces": workspaces, "conversations": None, "transcript": None,
-        "attention": None,
+        "agent": None, "attention": None,
         "options": {"workspace": None, "providers": None, "models": {}}}
 # **The queue rides beside the depths and pairs with nothing** (DESIGN §13.7):
 # it names no workspace and no conversation, so a cache written at the top
@@ -178,6 +178,11 @@ if depth in ("conversations", "transcript", "running"):
             row = next(r for r in rows if r.get("flight") is None)
         body["focus"]["agent"] = row["root_id"]
         body["transcript"] = frame("transcript")
+        # **The conversation's own row** (bl-a7ec), which the pass reads
+        # beside the transcript and the rule paints its spend and `context N%`
+        # from. The corpus's first answer states both; it is re-addressed at
+        # the conversation this seed opened, the queue row's treatment below.
+        body["agent"] = dict(frame("agent"), agent=row["root_id"])
         # **The parked tool call** (DESIGN §13.7): the capability band paints
         # only where the engine says a call is held, so the walk seeds the
         # engine's own queue answer with its one held row addressed at the

@@ -9,18 +9,18 @@
 //! **Left to right**: the mark (the shell's, outside these segments), then
 //! the four selectors — workspace, provider, model, effort — and priority
 //! where the provider's row takes it; then this conversation's diagnostics —
-//! its state and how long since it acted, tokens in and out, how full its
-//! context is where the engine's `agent` row says — and its name, the
-//! switcher's door. **Only facts about this conversation**: the seat-wide
-//! waiting count and the engines count are not here, and spend is not yet
-//! (the rule says nothing rather than `$0`).
+//! its state and how long since it acted, tokens in and out, what it has
+//! spent and how full its context is where the engine's `agent` row says —
+//! and its name, the switcher's door. **Only facts about this conversation**:
+//! the seat-wide waiting count and the engines count are not here, and an
+//! unpriced spend says nothing rather than `$0`.
 //!
 //! **One line where everything fits, else two** (bl-96fc, [`layout`]): the
 //! selectors on the touch-tall rule, the diagnostics on a small line under
 //! it. Workspace, provider and model never drop: they share what is left and
 //! elide inside it; priority, then effort, leave the rule before them.
 
-use crate::codec::{ConvRow, Entry, EntryKind};
+use crate::codec::{Agent, ConvRow, Entry, EntryKind};
 use crate::theme::{self, Rgb, State, TOUCH};
 
 /// Where a segment stands on the rule, which is also what it is.
@@ -32,6 +32,7 @@ pub enum Slot {
     Effort,
     Priority,
     Tokens,
+    Spend,
     Context,
     State,
     Name,
@@ -39,9 +40,10 @@ pub enum Slot {
 
 /// The order segments leave a one-line rule in as the width runs out — and a
 /// diagnostic leaving is what puts the diagnostics on a line of their own.
-pub const DROPS: [Slot; 6] = [
+pub const DROPS: [Slot; 7] = [
     Slot::Name,
     Slot::State,
+    Slot::Spend,
     Slot::Context,
     Slot::Tokens,
     Slot::Priority,
@@ -68,13 +70,15 @@ pub struct Said {
 }
 
 /// **The conversation's diagnostics and name**, in rule order: the state and
-/// how long since it acted, the tokens, the context's fullness where the
-/// engine stated it (`context`, the `agent` row's own percent — absent is
-/// not painted, never `0%`), the name. Nothing focused is nothing said.
+/// how long since it acted, the tokens, then off the conversation's own
+/// `agent` row (`head`) the spend in the ledger's words and the context's
+/// fullness as the engine's own percent — each absent where the row is not
+/// held or states none, never `$0` or `0%` — and the name. Nothing focused is
+/// nothing said.
 pub fn diagnostics(
     row: Option<&ConvRow>,
     transcript: &[Entry],
-    context: Option<i64>,
+    head: Option<&Agent>,
     now_unix: i64,
 ) -> Vec<Said> {
     let Some(row) = row else {
@@ -96,7 +100,14 @@ pub fn diagnostics(
             ink: theme::INK_WEAK,
         });
     }
-    if let Some(percent) = context {
+    if let Some(usd) = head.map(|h| h.usd.as_str()).filter(|usd| !usd.is_empty()) {
+        out.push(Said {
+            slot: Slot::Spend,
+            text: usd.to_owned(),
+            ink: theme::INK_WEAK,
+        });
+    }
+    if let Some(percent) = head.and_then(|h| h.context.as_ref()).map(|c| c.percent) {
         out.push(Said {
             slot: Slot::Context,
             text: format!("context {percent}%"),

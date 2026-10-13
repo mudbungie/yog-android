@@ -1,7 +1,7 @@
 //! The seat's view model (bl-5a98): the phone's equivalent of the window's
 //! asker — it owns the `Seat`, re-asks the standing set (workspaces, the
-//! focused workspace's conversations, the focused conversation's transcript)
-//! at human cadence off the UI thread, publishes decoded rows for the frame
+//! focused workspace's conversations, the focused conversation's transcript
+//! and its own `agent` row) at human cadence off the UI thread, publishes decoded rows for the frame
 //! to paint, and posts Acts (the message deposit) from the composer.
 //!
 //! Mirrors the server side's asker/poster split; one connection per ask
@@ -25,6 +25,10 @@ pub struct Snapshot {
     pub conversations: Vec<ConvRow>,
     /// The focused conversation's transcript; empty when none is focused.
     pub transcript: Vec<Entry>,
+    /// **The focused conversation's own `agent` row** (bl-a7ec), read beside
+    /// its transcript on every pass — what the rule's context and spend are
+    /// painted from. `None` when none is focused.
+    pub head: Option<crate::codec::Agent>,
     /// **The focused workspace's providers**, as the engine last listed them
     /// (bl-0267). Empty until the selectors have been opened once, and empty
     /// again the moment the focus moves to another workspace: a sign-in is a
