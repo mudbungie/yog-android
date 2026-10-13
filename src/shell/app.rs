@@ -84,21 +84,9 @@ pub(crate) struct Shell {
     /// by the control that moves it: a cap of zero is a loop that spawns
     /// nothing and still reaps, which upstream refuses to spell as a cap.
     pub(crate) cap: usize,
-    /// **How far the next capability answer stands** (§13.7, PROTOCOL 18).
-    /// Navigation like the picks above and no more durable than a scroll
-    /// position: it is reset to the narrow reading by the band that offers it
-    /// the moment the parked call changes, because a scope carried from one
-    /// call to the next would widen an answer nobody widened.
-    pub(crate) scope: crate::codec::Scope,
-    /// Which parked call the scope above was chosen for. The band compares it
-    /// to the call the engine now says is held, and a change resets the reach
-    /// — so a width chosen for one call cannot be spent on the next.
-    pub(crate) picked_for: Option<String>,
-    /// **Whether the held band's `why` is open** (§13.7, bl-8c94): the
-    /// control's decision paragraph, which the band folds away so what stands
-    /// under the composer is one line. Reset with the reach above and by the
-    /// same comparison, because a fold opened for one call says nothing about
-    /// the next.
+    /// **Whether the ask's `why` is open** (§22 item 8, §13.7, bl-8c94):
+    /// the control's decision about the parked call, folded away so the box
+    /// says one line about it. A fold, and no more durable than one.
     pub(crate) why: bool,
     /// **Which proposal the admin screen's settle addresses** (§13.17) — the
     /// id off the row that was tapped. `ball`'s twin, and navigation for its
@@ -224,8 +212,6 @@ impl Shell {
             armed: false,
             ball: None,
             step: None,
-            scope: crate::codec::Scope::default(),
-            picked_for: None,
             why: false,
             proposal: None,
             from: None,

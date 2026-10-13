@@ -2312,7 +2312,8 @@ seat instead.
 **Superseded in part by §22** (bl-bf74): the band's shape and the scope chooser (§22 item 8); the reading of the queue is kept. Where they disagree, §22 wins; this section stays as the record.
 
 `src/codec/queue.rs`, `src/codec/hold.rs`, `src/seat/acts/held.rs`,
-`src/shell/controls/held.rs`.
+`src/ask.rs` and `src/shell/ask.rs` (§22 item 8, bl-289f; the band's
+`src/shell/controls/held.rs` is deleted).
 
 The capability boundary parks a tool call before it runs and waits for a
 person. That is the one thing on this wire an operator must **answer** rather
@@ -6656,6 +6657,32 @@ is a client of one engine (entries are an upstream ask, §13.4).
    rule (§13.7) dissolves with the state it guarded. The engine still decides
    whether a wide answer is allowed. `go to it` is not among them, as on the
    desktop: the operator is there.
+
+   **As landed (bl-289f).** Which cells, their words, their order, the op
+   each fires and the row's words above them are `crate::ask`, pure and
+   host-tested off the corpus's own queue rows; `shell/ask.rs` paints the box
+   and spends a tap through the two acts §13.7 already had (`answer` with the
+   cell's verdict and scope, `seen` with the row's two keys), unchanged on the
+   wire. Departures from the text above: **the cells say the desktop's words
+   byte for byte** — `3. pass for this conversation`, `4. pass for this
+   workspace` (lernie `ui::ask`, `queue::wider`), not `pass · conversation`
+   — and a cell wraps its words onto a second line inside its 48 points
+   rather than eliding them, because half a 360-point glass cannot hold them
+   on one. **The box stands while the focused conversation has a row in the
+   queue at all** (`ask::asking`, both keys), not only while a call is
+   parked: that is the desktop's `Standing::asking`, and a row with nothing
+   parked offers `1. seen` alone. **The queue's read already stands here**:
+   the attention lane is held at every depth (§14.1), so nothing new is
+   asked. **The box's first line is its name** — `it is asking` in the
+   attention accent — **with the `why +` fold at its other end** (only where a
+   call is parked); under it the held line `held: <tool> · <class>`, the
+   decision when the fold is open, then the queue pane's own words for the
+   flag, the firing sentence (`says`, else the signal tokens), the failure and
+   the preview, one line each, in the annotation, weak, error and plain inks.
+   The fold is viewport state with no reset: the comparison against the
+   parked call's id went with the scope it guarded. The probe names the fold
+   `ask-why`; the walk's `asked` beat is the transcript seed (its queue row
+   holds a call at the focused conversation) with that fold opened.
 
 9. **The live dock → one tap line above the rule.** While any conversation
    under the focused workspace is live or in flight (the conversation rows'

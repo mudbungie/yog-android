@@ -13,9 +13,10 @@
 //! This file is what the knobs FORGET when the focus moves and the one read
 //! they ask for. Which knobs stand and what each shows is `controls/chip.rs`;
 //! the selectors are `controls/pick.rs`, the §9.4 tuning pair
-//! `controls/tune.rs`, the list they open `controls/drop.rs`, and the band a
-//! parked call stands in `controls/held.rs` (§13.7). The stops that rode the
-//! old band are verbs of the sheet (§22 items 5 and 10, `shell/slash.rs`).
+//! `controls/tune.rs` and the list they open `controls/drop.rs`; a parked
+//! call is answered in the ask (`shell/ask.rs`, §22 item 8). The stops that
+//! rode the old band are verbs of the sheet (§22 items 5 and 10,
+//! `shell/slash.rs`).
 
 use eframe::egui;
 
@@ -26,7 +27,6 @@ pub(super) use chip::Chip;
 
 mod chip;
 mod drop;
-mod held;
 mod pick;
 mod tune;
 

@@ -67,8 +67,8 @@ pub struct Envelopes {
     /// resumed seat's controls are seeded before the wire answers.
     pub roles: Option<Value>,
     /// **The decision queue** (§13.7, bl-b39d): the parked tool call the
-    /// capability band answers, kept so a resumed seat paints one it already
-    /// knew about instead of an empty band.
+    /// ask answers (§22 item 8), kept so a resumed seat paints one it already
+    /// knew about instead of no box at all.
     ///
     /// **It rides beside the depths rather than inside them, and pairs with
     /// nothing.** Every other envelope here is paintable only under the focus

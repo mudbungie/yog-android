@@ -164,6 +164,16 @@ capture started start
 seed_cache transcript; relaunch
 capture transcript transcript
 
+# 4tq. THE ASK (DESIGN §22 item 8, bl-289f): the transcript seed's queue row
+#      holds a call at the focused conversation, so the box stands above the
+#      rule at rest — the row's words and all six cells, two to a row, with
+#      the keyboard down. The `why` fold on its name line opened, so the
+#      control's decision is on the glass too; relaunched after, so the open
+#      fold is not under the door the next beat taps.
+tap_control ask-why
+capture asked transcript
+relaunch
+
 # 4e2. THE MODEL DROPUP (DESIGN §22 items 2 and 10; operator ruling
 #      2026-10-12): the rule's model segment opens its list upward from the
 #      rule, the cached models at once and a reload asked; the mark on the

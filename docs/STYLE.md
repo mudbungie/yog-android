@@ -182,10 +182,12 @@ focused one open beneath it as the threaded rows below, `+ new` in the brand
 as the last row under it.
 
 **The ask** (`ask`): the overlay's box with its frame and name line in the
-attention accent, laid out directly above the rule (or the dock): the held
-line in the attention accent with `why +` beside it, then the choices as
-numbered cells two to a row, each `TOUCH` tall and half the width, `RAISED`
-under a thumb; `1. seen` alone when nothing is parked.
+attention accent, laid out directly above the rule (or the dock): the name
+line `it is asking` with `why +` at its other end, the held line in the
+attention accent under it, the row's other words one line each in their
+inks, then the choices as numbered cells two to a row, each `TOUCH` tall and
+half the width, their words wrapping to a second line rather than eliding,
+`RAISED` under a thumb; `1. seen` alone when nothing is parked.
 
 **The dock** (`dock`): one `TOUCH`-tall row above the rule, `+ N running ·
 <name>` in `INK_WEAK` with the count in the working accent; unfolded, one row

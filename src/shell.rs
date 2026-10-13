@@ -20,6 +20,8 @@ mod act;
 #[cfg(target_os = "android")]
 mod app;
 #[cfg(target_os = "android")]
+mod ask;
+#[cfg(target_os = "android")]
 mod back;
 #[cfg(target_os = "android")]
 mod boot;
