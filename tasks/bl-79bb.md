@@ -1,7 +1,8 @@
 +++
 title = "phone hermes 4/7: the status rule — the bar leaves the chat; mark, state, waiting, model and name as tappable segments above the prompt; the controls band becomes the model overlay"
 created = 1791867722
-updated = 1791867722
+updated = 1791869476
+claimant = "PhoneTwo"
 parent = "bl-92d3"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
