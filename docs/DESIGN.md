@@ -6490,6 +6490,25 @@ is a client of one engine (entries are an upstream ask, §13.4).
    scroll is *reachable*, and `shell::act` records its tag (the desktop's
    bl-eb29 reading, adopted for the parity walk, 13).
 
+   **As landed (bl-3f9a).** The decisions are pure and host-tested in
+   `crate::overlay`: the `Overlay` value (the ten world surfaces, the ball
+   pane's three views, records, files and the search hits), `standing` —
+   records and files stand only while their conversation is the focus, a
+   world surface stands at any depth, and with nothing held the hits stand
+   over the roster while a search answer does (the hits are never *held*:
+   their standing is the answer's) — and the name line's words, including the
+   parity tag the line carries in place of the bar's back control
+   (`workspaces`, `conversations` or `transcript`, unchanged per screen) and
+   what a close yields: put it down, *forget* when minted material covers the
+   admin surface (§13.18 — closing drops the key and stays on `config`), or
+   drop the search's question with its answer. `shell/overlay.rs` paints the
+   frame and performs the close; opening one drops every pick and arm the
+   last visit held, because one value now stands for all of them. **The width
+   is the pass's own**: the box fills what `app::pass` gives every screen —
+   its 10-point side gutter already holds content off the glass's edge — so
+   "less `S`" is that gutter, not a second margin inside it. The name line's
+   rectangle is reported to the probe as `close` (§15.2).
+
 7. **The switcher → the roster and the conversation list, fused into one
    overlay; the platform back walks to it.** Opened by tapping the rule's
    name, by `/conversations`, or by the back gesture from the chat. One

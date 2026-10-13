@@ -35,12 +35,12 @@ use eframe::egui;
 use crate::codec::FleetAct;
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 
 /// The screen's name and the harness's tap target (§15.2). It is the loop's
 /// own op token, because that is the act an operator comes here for; the other
 /// three are what you do to it afterwards.
-pub(in crate::shell) const SCREEN: &str = "fleet";
+pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::Fleet.name();
 
 /// The smallest cap this control can mean. A cap of zero is a loop that spawns
 /// nothing and still reaps, which upstream refuses to spell as a cap at all.
@@ -59,9 +59,6 @@ impl Shell {
             self.fleet_acts(ui);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                if self.bar(ui, SCREEN, &Back::To("conversations")) {
-                    self.close_world();
-                }
                 super::super::banner(ui, snap);
                 ui.separator();
                 ui.weak(ELSEWHERE);

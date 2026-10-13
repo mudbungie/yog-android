@@ -194,14 +194,14 @@ impl Shell {
                 );
                 self.note_control("records", ui, control.rect);
                 if control.clicked() {
-                    self.open_records();
+                    self.open(crate::overlay::Overlay::Records);
                 }
                 let name = super::screens::FILES;
                 let control = ui.add(egui::Button::new(name).min_size(tall));
                 super::act::act(ui, &control, name);
                 self.note_control(name, ui, control.rect);
                 if control.clicked() {
-                    self.open_files();
+                    self.open(crate::overlay::Overlay::Files);
                 }
             },
         );

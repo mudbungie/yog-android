@@ -40,10 +40,9 @@ use eframe::egui;
 use crate::codec::{ClientRow, Machines};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::Back;
 
 /// The screen's name, the op it asks and the harness's tap target (§15.2).
-pub(in crate::shell) const SCREEN: &str = "clients";
+pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::Clients.name();
 
 impl Shell {
     pub(in crate::shell) fn clients(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
@@ -52,9 +51,6 @@ impl Shell {
             .clients
             .clone()
             .filter(|machines| machines.about(snap.focus.workspace.as_deref().unwrap_or_default()));
-        if self.bar(ui, SCREEN, &Back::To("conversations")) {
-            self.close_world();
-        }
         super::super::banner(ui, snap);
         ui.separator();
         egui::ScrollArea::vertical()

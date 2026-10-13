@@ -59,8 +59,16 @@ fn slot() -> egui::Id {
 /// fires (`prepare` then `prompt`, `seat::acts`), and a selector is the
 /// affordance for both the read that fills its list and the act its items
 /// post.
+///
+/// **A control laid inside an overlay's box counts whether or not its scroll
+/// is showing it** (DESIGN §22 item 6, lernie bl-eb29's reading): scrolled
+/// out of view is reachable by scrolling, which is what the inventory
+/// answers. Laid off the box's sides is still off the glass.
 pub(super) fn acts(ui: &egui::Ui, response: &egui::Response, ops: &[&str]) {
-    if !ui.is_rect_visible(response.rect) {
+    let rect = response.rect;
+    let scrolled =
+        super::overlay::boxed(ui).is_some_and(|frame| frame.x_range().contains(rect.center().x));
+    if !scrolled && !ui.is_rect_visible(rect) {
         return;
     }
     ui.data_mut(|data| {

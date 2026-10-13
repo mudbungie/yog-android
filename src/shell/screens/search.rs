@@ -9,12 +9,12 @@
 //! does not offer and this app must not imply (§8: the engine states, this
 //! seat never derives).
 //!
-//! **The answer is a screen, not a list swapped underneath one.** It paints
-//! its own bar and so inherits §13.2's back rule unchanged — the platform's
-//! back gesture walks out of a search exactly as it walks out of a
-//! conversation — and the walk's probe gets a name for it. Leaving is local:
-//! the empty needle crosses no wire (`seat::asks::search`), so a search can
-//! be left with the engine unreachable.
+//! **The answer is an overlay, not a list swapped underneath one** (DESIGN
+//! §22 item 6). It floats in the frame every depth now shares, so it inherits
+//! the back rule unchanged — the platform's back gesture or its name line
+//! closes it — and the walk's probe gets a name for it. Leaving is local: the
+//! empty needle crosses no wire (`seat::asks::search`), so a search can be
+//! left with the engine unreachable.
 //!
 //! **A hit is an address this seat already focuses**, which is the whole
 //! point of upstream's bl-764a: the rows carry the §3.1 workspace leaf and
@@ -37,23 +37,25 @@ use crate::shell::app::{NEEDLE, Shell};
 use crate::shell::mark::{Back, TOUCH};
 
 impl Shell {
-    /// **The top depth's two screens**: the workspace roster, and the hits
-    /// when an answer is standing over it. One arm each, and each names the
-    /// screen it chose (`app/probe.rs` — the name lives at the branch, never
-    /// derived a second time from the same state).
+    /// **The top depth**: the workspace roster. The hits are an overlay over
+    /// it (DESIGN §22 item 6) whose standing is the answer's
+    /// (`crate::overlay::standing`), so this paints only the roster.
     pub(super) fn top(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
+        self.note_screen("roster");
+        self.bar(ui, &crate::bootstrap::Component::Seat.brand(), &Back::None);
+        self.needle(ui);
+        super::banner(ui, snap);
+        self.roster(ui, snap);
+    }
+
+    /// **The hits, inside the overlay frame**: the field again — the question
+    /// is editable wherever its answer is shown — then the answer. Closing it
+    /// is the frame's, and drops the question with the answer.
+    pub(super) fn searched(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         let Some(found) = snap.search.clone() else {
-            self.note_screen("roster");
-            self.bar(ui, &crate::bootstrap::Component::Seat.brand(), &Back::None);
-            self.needle(ui);
-            super::banner(ui, snap);
-            self.roster(ui, snap);
             return;
         };
         self.note_screen("search");
-        if self.bar(ui, "search", &Back::To("workspaces")) {
-            self.clear_search();
-        }
         self.needle(ui);
         super::banner(ui, snap);
         self.hits(ui, &found);
@@ -102,12 +104,6 @@ impl Shell {
         if let Some(model) = self.model() {
             model.search(self.needle.clone());
         }
-    }
-
-    /// Drop the answer and the question with it: leaving a search leaves it.
-    fn clear_search(&mut self) {
-        self.needle = String::new();
-        self.fire_search();
     }
 
     /// The answer: what could not be read, then the ranked hits.

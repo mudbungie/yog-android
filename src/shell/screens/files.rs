@@ -28,11 +28,11 @@ use eframe::egui;
 use crate::codec::{FileRow, Files};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 
 /// The screen's name, the op it asks and the harness's tap target — one word,
 /// because the surface has one read (§15.2).
-pub(crate) const SCREEN: &str = "files";
+pub(crate) const SCREEN: &str = crate::overlay::Overlay::Files.name();
 
 impl Shell {
     /// The whole screen. No foot: every act here is a row, so there is
@@ -49,9 +49,6 @@ impl Shell {
             .files
             .clone()
             .filter(|files| files.about(workspace, agent));
-        if self.bar(ui, SCREEN, &Back::To("transcript")) {
-            self.close_files();
-        }
         super::banner(ui, snap);
         ui.separator();
         egui::ScrollArea::vertical()
@@ -114,19 +111,6 @@ impl Shell {
             super::preview::bytes(ui, preview);
         }
         ui.add_space(4.0);
-    }
-
-    /// **Open it** — and that is the ask, the records screen's rule (§13.11).
-    pub(in crate::shell) fn open_files(&mut self) {
-        self.files = true;
-        if let Some(model) = self.model() {
-            model.open_files(None);
-        }
-    }
-
-    /// Leave, back to the transcript.
-    fn close_files(&mut self) {
-        self.files = false;
     }
 }
 

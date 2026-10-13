@@ -46,6 +46,8 @@ pub(crate) mod jvm;
 #[cfg(target_os = "android")]
 mod mark;
 #[cfg(target_os = "android")]
+mod overlay;
+#[cfg(target_os = "android")]
 mod screens;
 #[cfg(target_os = "android")]
 pub(crate) mod sys;

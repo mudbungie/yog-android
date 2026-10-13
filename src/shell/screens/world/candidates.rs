@@ -30,7 +30,7 @@ pub(in crate::shell) use acts::FLOOR;
 use crate::codec::{Attempt, Spread};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 
 impl Shell {
     pub(in crate::shell) fn candidates(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
@@ -45,9 +45,6 @@ impl Shell {
             self.candidate_acts(ui);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                if self.bar(ui, SCREEN, &Back::To("conversations")) {
-                    self.close_world();
-                }
                 super::super::banner(ui, snap);
                 ui.separator();
                 egui::ScrollArea::vertical()
@@ -104,7 +101,7 @@ impl Shell {
 
 /// The screen's name, the op it asks and the harness's tap target, which are
 /// one word because the surface has one read (§15.2).
-pub(in crate::shell) const SCREEN: &str = "science";
+pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::Candidates.name();
 
 /// One row's label. **The handle is the discriminant and the label says which
 /// it is**, because that is what decides which controls below are live.

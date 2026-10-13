@@ -30,14 +30,10 @@ use eframe::egui;
 use crate::codec::QueueRow;
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::Back;
 
 impl Shell {
     pub(super) fn waiting(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         self.note_screen("attention");
-        if self.bar(ui, "waiting", &Back::To("workspaces")) {
-            self.close_world();
-        }
         super::super::banner(ui, snap);
         ui.separator();
         egui::ScrollArea::vertical()
@@ -66,7 +62,7 @@ impl Shell {
             && let Some(model) = self.model()
         {
             model.focus_conversation(row.workspace.clone(), row.agent.clone());
-            self.close_world();
+            self.close(crate::overlay::Close::Leave);
         }
         // **Why it fires, in the engine's words** (REMOTE §9.11 at protocol
         // 12): the sentence has one home and crosses rather than being

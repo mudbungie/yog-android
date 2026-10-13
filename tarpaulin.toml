@@ -111,6 +111,12 @@
 # of the available width by a constant table, and the table is the file — there
 # is no reading of the world in it at all.
 #
+# `src/shell/overlay.rs` is the overlay frame (bl-3f9a, DESIGN §22 item 6),
+# the same class again: a `Frame` over a child `Ui`, one click-sensed row and
+# its galleys, `cfg(target_os = "android")` to the last line. Which overlay
+# stands, what its name line says and what a close yields are
+# `crate::overlay`, pure and under the floor; the frame's picture is the walk's.
+#
 # `src/shell/screens/world.rs` and its two children (`world/waiting.rs`,
 # `world/trail.rs`) are the trail and the attention queue (bl-35bd), the same
 # class again: a `ScrollArea` of labels, two `ui.button` calls and the taps
@@ -307,6 +313,7 @@ exclude-files = [
     "src/shell/screens/records/parts.rs",
     "src/shell/screens/rows.rs",
     "src/shell/screens/rows/menu.rs",
+    "src/shell/overlay.rs",
     "src/shell/screens/rows/thread.rs",
     "src/shell/screens/search.rs",
     "src/shell/screens/world.rs",

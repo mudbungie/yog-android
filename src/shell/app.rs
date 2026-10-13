@@ -38,11 +38,13 @@ pub(crate) struct Shell {
     /// paints the configuration regardless of this flag, and nothing about
     /// what runs is stored here.
     pub(crate) settings: bool,
-    /// **Which world surface is open over the roster** (§13.8) — the queue,
-    /// the trail, or neither. Navigation like `settings` above and no more
-    /// durable than a scroll position: the focus underneath it is untouched,
-    /// which is what makes backing out of one land where the operator was.
-    pub(crate) opened: Option<super::screens::World>,
+    /// **Which overlay is floating over the chat** (DESIGN §22 item 6) — a
+    /// world surface, the records or files depth, or none. One value, so one
+    /// stands at a time; navigation and no more durable than a scroll
+    /// position: the focus underneath is untouched, which is what makes
+    /// closing one land where the operator was. `crate::overlay` decides
+    /// whether a held one stands at the focus's depth.
+    pub(crate) overlay: Option<crate::overlay::Overlay>,
     /// **Whether the armed control on the open screen is armed** (§13.8,
     /// §13.9). Two controls take an arming now — the trail's truncation and
     /// the ball pane's `close` — and it is still one bool rather than a
@@ -57,17 +59,6 @@ pub(crate) struct Shell {
     /// and no more durable than a scroll position — the acts are addressed at
     /// a row, and this is which row.
     pub(crate) ball: Option<(String, String)>,
-    /// **Whether the records screen is open over the transcript** (§13.11).
-    /// Navigation like `opened` above and no more durable than a scroll
-    /// position: the focus underneath it is untouched, which is what makes
-    /// backing out of it land where the operator was.
-    pub(crate) records: bool,
-    /// **Whether the files screen is open over the transcript** (§13.15).
-    /// `records`' twin exactly, and navigation for its reason: the focus
-    /// underneath it is untouched, so backing out of it lands where the
-    /// operator was. There is no picked path beside it — the answer carries
-    /// the path its bytes were asked at, and one name is enough.
-    pub(crate) files: bool,
     /// **Which config file the admin screen is showing** (§13.17), and which
     /// destination's bytes the editor was last seeded with. Two fields and not
     /// one: the pick is what a write is addressed at, and the seed is what
@@ -219,11 +210,9 @@ impl Shell {
             running: boot(&android),
             chose: None,
             settings: false,
-            opened: None,
+            overlay: None,
             armed: false,
             ball: None,
-            records: false,
-            files: false,
             step: None,
             scope: crate::codec::Scope::default(),
             picked_for: None,

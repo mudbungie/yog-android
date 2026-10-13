@@ -35,45 +35,9 @@
 
 use eframe::egui;
 
+use crate::overlay::Overlay;
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-
-/// Which world surface is open over the roster. Navigation and nothing else —
-/// no more durable than a scroll position — for `Shell::settings`' reason
-/// exactly: what this device IS is derived from the leaf on disk, and what is
-/// on the glass is not stored anywhere.
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum World {
-    /// Everything waiting on the operator, across every workspace.
-    Queue,
-    /// What the engine last did.
-    Trail,
-    /// **What each attempt on this workspace's obligations cost** (§13.12) —
-    /// the candidates listing, and the three acts over it.
-    Candidates,
-    /// **The two armings this workspace carries** (§13.13) — the drone loop,
-    /// and the alignment monitor over what it commits.
-    Fleet,
-    /// **Which machines may execute for this workspace** (§13.14), and what
-    /// each one says it offers.
-    Clients,
-    /// **What this workspace's attempts changed** (§13.15) — the churn, and
-    /// the bytes of any one changed file.
-    Work,
-    /// **The admin surface** (§13.17) — the config files, the task branch,
-    /// the inbox flush, and the unmaking of the workspace itself.
-    Admin,
-    /// **The sign-in surface** (§13.19) — this workspace's provider rows,
-    /// the act that signs one in, and the held tail of what that run says.
-    SignIn,
-    /// **The op table** (§13.14) — every gesture the engine speaks, read out
-    /// of the vendored table and costing no wire read at all.
-    Help,
-    /// **The ball pane at one of its three views** (§13.9). The view rides on
-    /// the navigation rather than on the answer, so a screen names itself from
-    /// what was opened and paints only the answer that belongs under it.
-    Balls(crate::codec::View),
-}
 
 mod admin;
 mod aimed;
@@ -91,66 +55,6 @@ mod trail;
 mod waiting;
 
 impl Shell {
-    /// Open one of them. For the trail, opening IS the ask — an operator
-    /// opening the surface is the request for its rows; the queue is held
-    /// standing and asks nothing.
-    pub(super) fn open_world(&mut self, world: World) {
-        self.opened = Some(world);
-        self.armed = false;
-        // A ball or an attempt picked on one visit is not still picked on the
-        // next: the act controls address a row, and a row nobody can see is
-        // not one.
-        self.ball = None;
-        self.candidate = None;
-        // A destination picked on one visit is not still picked on the next,
-        // and neither is the draft it seeded: the editor's text is the file
-        // that was read, and a screen that reopened holding one would be
-        // offering to write bytes nobody had just looked at.
-        self.destination = None;
-        self.seeded = None;
-        // A proposal picked on one visit is not still picked on the next, for
-        // the ball's reason: the settle addresses a row, and a row nobody can
-        // see is not one.
-        self.proposal = None;
-        let Some(model) = self.model() else { return };
-        // **A tail followed on one visit is not still followed on the next**
-        // (§13.19), and it is the WORKER that holds which one — so leaving
-        // the screen is a command rather than a field cleared here. It is
-        // sent on the way into every surface, this one included: the lane's
-        // subject is a row somebody tapped, and nobody has yet.
-        model.watch_login(None);
-        // **Opening IS the ask**, for the trail and for the ball pane alike:
-        // both are read by nothing standing, so a surface nobody has opened
-        // costs this device no radio at all (§14.1's argument, at the seat).
-        // The queue is the exception and asks nothing — it is the lane's.
-        match world {
-            World::Trail => model.list_trail(),
-            World::Balls(view) => model.list_balls(view),
-            World::Candidates => model.list_candidates(),
-            World::Clients => model.list_clients(),
-            World::Work => model.open_work(None),
-            // The admin screen opens on the two reads it can make with no
-            // pick at all — the mark, and what a reviewer has staged; a config
-            // file is read by tapping its destination, because opening a
-            // screen is not a request for three files.
-            World::Admin => {
-                model.read_marks();
-                model.list_proposals(None);
-            }
-            // **Opening IS the `providers` ask** (§13.19). The tail is not
-            // asked for here: which run is followed is a row's own tap, and
-            // a lane on a provider nobody has picked would be a held socket
-            // for a question nobody asked.
-            World::SignIn => model.list_providers(),
-            // **The three that ask nothing.** The queue is the held lane's,
-            // so opening it is a look at what is already held (§14.1); the
-            // fleet screen reads nothing at all, because what its acts DID is
-            // on the board and one fact has one home (§13.13); and the op
-            // table is compiled into this binary (§13.14).
-            World::Fleet | World::Help | World::Queue => (),
-        }
-    }
-
     /// **The one control that reaches one of the pane's reads**, painted where
     /// that read's subject is: `balls` and `board` on the roster, because
     /// neither names a workspace, and `workspace-balls` on a workspace's own
@@ -160,7 +64,7 @@ impl Shell {
         let control = super::tap(ui, view.screen().into(), view.screen());
         self.note_control(view.screen(), ui, control.rect);
         if control.clicked() {
-            self.open_world(World::Balls(view));
+            self.open(Overlay::Balls(view));
         }
     }
 
@@ -171,42 +75,30 @@ impl Shell {
         let control = super::tap(ui, name.into(), name);
         self.note_control(name, ui, control.rect);
         if control.clicked() {
-            self.open_world(World::Help);
+            self.open(Overlay::Help);
         }
     }
 
-    /// Paint whichever is open. One arm each, and each names its own screen
-    /// (`app/probe.rs` — the name lives at the branch, never derived a second
-    /// time from the same state).
-    pub(super) fn world(&mut self, ui: &mut egui::Ui, snap: &Snapshot, world: World) {
-        match world {
-            World::Queue => self.waiting(ui, snap),
-            World::Trail => self.trail(ui, snap),
-            World::Balls(view) => self.balls(ui, snap, view),
-            World::Candidates => self.candidates(ui, snap),
-            World::Fleet => self.fleet(ui, snap),
-            World::Clients => self.clients(ui, snap),
-            World::Help => self.help(ui, snap),
-            World::Work => self.work(ui, snap),
-            World::Admin => self.admin(ui, snap),
-            World::SignIn => self.signin(ui, snap),
+    /// Paint the standing overlay's body, inside its frame. One arm each, and
+    /// each names its own screen (`app/probe.rs` — the name lives at the
+    /// branch, never derived a second time from the same state).
+    pub(super) fn overlaid(&mut self, ui: &mut egui::Ui, snap: &Snapshot, overlay: Overlay) {
+        let workspace = snap.focus.workspace.clone().unwrap_or_default();
+        let agent = snap.focus.agent.clone().unwrap_or_default();
+        match overlay {
+            Overlay::Queue => self.waiting(ui, snap),
+            Overlay::Trail => self.trail(ui, snap),
+            Overlay::Balls(view) => self.balls(ui, snap, view),
+            Overlay::Candidates => self.candidates(ui, snap),
+            Overlay::Fleet => self.fleet(ui, snap),
+            Overlay::Clients => self.clients(ui, snap),
+            Overlay::Help => self.help(ui, snap),
+            Overlay::Work => self.work(ui, snap),
+            Overlay::Admin => self.admin(ui, snap),
+            Overlay::SignIn => self.signin(ui, snap),
+            Overlay::Records => self.records(ui, snap, &workspace, &agent),
+            Overlay::Files => self.files(ui, snap, &workspace, &agent),
+            Overlay::Search => self.searched(ui, snap),
         }
-    }
-
-    /// Leave, back to the roster. The arm goes with it: an armed control the
-    /// operator walked away from is not still armed when they come back.
-    fn close_world(&mut self) {
-        // The tail is the worker's, so leaving is a command (§13.19) — and it
-        // is sent first, while `opened` still says which screen was left.
-        if let Some(model) = self.model() {
-            model.watch_login(None);
-        }
-        self.opened = None;
-        self.armed = false;
-        self.ball = None;
-        self.candidate = None;
-        self.destination = None;
-        self.seeded = None;
-        self.proposal = None;
     }
 }

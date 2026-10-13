@@ -34,18 +34,15 @@ use eframe::egui;
 use crate::codec::{LoginView, ProviderRow};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 
 /// The screen's name, the harness's tap target (§15.2), and the act an
 /// operator comes here for.
-pub(in crate::shell) const SCREEN: &str = "login";
+pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::SignIn.name();
 
 impl Shell {
     pub(in crate::shell) fn signin(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         self.note_screen(SCREEN);
-        if self.bar(ui, SCREEN, &Back::To("conversations")) {
-            self.close_world();
-        }
         super::super::banner(ui, snap);
         ui.separator();
         egui::ScrollArea::vertical()

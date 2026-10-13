@@ -27,10 +27,10 @@ use eframe::egui;
 use crate::codec::{Churn, Diff, Work, WorkFile};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 
 /// The screen's name, the op it asks and the harness's tap target.
-pub(in crate::shell) const SCREEN: &str = "work-diff";
+pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::Work.name();
 
 impl Shell {
     /// The whole screen. No foot: every act here is a row.
@@ -40,9 +40,6 @@ impl Shell {
             .work
             .clone()
             .filter(|work| work.about(snap.focus.workspace.as_deref().unwrap_or_default()));
-        if self.bar(ui, SCREEN, &Back::To("conversations")) {
-            self.close_world();
-        }
         super::super::banner(ui, snap);
         ui.separator();
         egui::ScrollArea::vertical()

@@ -9,7 +9,8 @@
 
 use eframe::egui;
 
-use super::{World, admin, candidates, clients, fleet, signin, work};
+use super::{admin, candidates, clients, fleet, signin, work};
+use crate::overlay::Overlay;
 use crate::shell::app::Shell;
 
 /// The hairline between two chips, and the breathing room inside one. Both
@@ -35,18 +36,18 @@ const PAD: f32 = 2.0;
 /// answers. `config` opens the admin screen and asks `marks` and `proposals`
 /// with it (§13.17); `marks` has a write control of its own down there, and
 /// `proposals` has only its listing, which is empty until something is staged.
-const AIMED: [(&[&str], &str, World); 7] = [
+const AIMED: [(&[&str], &str, Overlay); 7] = [
     (
         &[crate::codec::View::Here.screen()],
         "balls",
-        World::Balls(crate::codec::View::Here),
+        Overlay::Balls(crate::codec::View::Here),
     ),
-    (&[candidates::SCREEN], "science", World::Candidates),
-    (&[work::SCREEN], "diff", World::Work),
-    (&[fleet::SCREEN], "fleet", World::Fleet),
-    (&[clients::SCREEN], "clients", World::Clients),
-    (&[admin::SCREEN, "proposals"], "config", World::Admin),
-    (&[signin::SCREEN], "login", World::SignIn),
+    (&[candidates::SCREEN], "science", Overlay::Candidates),
+    (&[work::SCREEN], "diff", Overlay::Work),
+    (&[fleet::SCREEN], "fleet", Overlay::Fleet),
+    (&[clients::SCREEN], "clients", Overlay::Clients),
+    (&[admin::SCREEN, "proposals"], "config", Overlay::Admin),
+    (&[signin::SCREEN], "login", Overlay::SignIn),
 ];
 
 impl Shell {
@@ -96,7 +97,7 @@ impl Shell {
         ui: &mut egui::Ui,
         ops: &'static [&'static str],
         label: &'static str,
-        world: World,
+        world: Overlay,
         wide: f32,
     ) {
         let control = crate::shell::theme::chip(ui, label.into(), wide, true);
@@ -106,7 +107,7 @@ impl Shell {
         let op = ops.first().copied().unwrap_or_default();
         self.note_control(op, ui, control.rect);
         if control.clicked() {
-            self.open_world(world);
+            self.open(world);
         }
     }
 }

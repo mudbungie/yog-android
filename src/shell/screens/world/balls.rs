@@ -34,7 +34,6 @@ mod acts;
 use crate::codec::{BallRow, Board, BoardRow, Pane, View, WsBallRow};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::Back;
 
 impl Shell {
     pub(in crate::shell) fn balls(&mut self, ui: &mut egui::Ui, snap: &Snapshot, view: View) {
@@ -56,9 +55,6 @@ impl Shell {
 
     /// The chrome and the rows under it.
     fn listed(&mut self, ui: &mut egui::Ui, snap: &Snapshot, view: View) {
-        if self.bar(ui, view.screen(), &Back::To("workspaces")) {
-            self.close_world();
-        }
         super::super::banner(ui, snap);
         ui.separator();
         egui::ScrollArea::vertical()

@@ -22,18 +22,14 @@ use eframe::egui;
 
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::Back;
 
 /// The screen's name and the harness's tap target (§15.2), which is also the
 /// op token the entry is tagged with.
-pub(in crate::shell) const SCREEN: &str = "help";
+pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::Help.name();
 
 impl Shell {
     pub(in crate::shell) fn help(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         self.note_screen(SCREEN);
-        if self.bar(ui, SCREEN, &Back::To("workspaces")) {
-            self.close_world();
-        }
         super::super::banner(ui, snap);
         ui.separator();
         // **The table is read at paint rather than held**, which is what a

@@ -31,7 +31,6 @@ use eframe::egui;
 use crate::codec::OpRow;
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::Back;
 
 impl Shell {
     pub(super) fn trail(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
@@ -43,9 +42,6 @@ impl Shell {
             self.acts(ui);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                if self.bar(ui, "trail", &Back::To("workspaces")) {
-                    self.close_world();
-                }
                 super::super::banner(ui, snap);
                 ui.separator();
                 egui::ScrollArea::vertical()

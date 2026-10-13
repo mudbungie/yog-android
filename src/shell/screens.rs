@@ -15,6 +15,7 @@ use super::boot::Running;
 use super::mark::Back;
 use super::theme::{self, ink};
 use crate::host::Health;
+use crate::overlay::{Depth, Overlay, Under, standing};
 /// **The attention mark**, re-exported from where it lives (`crate::roster`,
 /// bl-4d17). It moved because the conversation row's words are composed in
 /// that module and the mark sits in the middle of a row's first line; the
@@ -34,7 +35,6 @@ mod world;
 pub(super) use banner::banner;
 
 pub(crate) use files::SCREEN as FILES;
-pub(crate) use world::World;
 pub(in crate::shell) use world::{CAP, FLOOR};
 
 impl Shell {
@@ -63,29 +63,27 @@ impl Shell {
         let Some(snap) = self.model_mut().map(crate::seat::Model::snapshot) else {
             return;
         };
-        // **The two world surfaces sit over the depths, not inside them**
-        // (§13.8): neither read names a workspace or a conversation, so
-        // neither belongs to a focus — and the focus is left exactly where it
-        // was, which is where backing out of one lands.
-        if let Some(world) = self.opened {
-            self.settle_echo(&snap);
-            self.world(ui, &snap, world);
-            return;
-        }
         // The outbox settles once per frame, whatever screen is up: an echo
         // whose conversation the operator left is not an echo any more
         // (bl-66fb).
         self.settle_echo(&snap);
-        // The bar first, then the error banner under it (§13.2), then the
-        // depth's own body. Back walks exactly one focus depth — the bar
-        // returns the tap and this match is the one place a depth is spelled.
-        match snap.focus.workspace.clone() {
-            // **Two screens at this depth, and the search's own file chooses
-            // between them** (§13.6, bl-4c2b): the roster, and the hits when
-            // an answer is standing over it. The choice is one arm there
-            // rather than a third arm here, because both paint the same
-            // depth's chrome and only the body differs.
-            None => self.top(ui, &snap),
+        // **An overlay floats over whatever depth the focus is at** (DESIGN
+        // §22 item 6): one stands at a time, the focus underneath is left
+        // exactly where it was, and nothing under it paints — the composer
+        // included, so its field comes off the glass.
+        let depth = match (&snap.focus.workspace, &snap.focus.agent) {
+            (None, _) => Depth::Roster,
+            (Some(_), None) => Depth::Workspace,
+            (Some(_), Some(_)) => Depth::Conversation,
+        };
+        if let Some(overlay) = standing(self.overlay, depth, snap.search.is_some()) {
+            self.floating(ui, &snap, overlay);
+            return;
+        }
+        // Back walks exactly one focus depth — the bar returns the tap and
+        // this match is the one place a depth is spelled.
+        match (snap.focus.workspace.clone(), snap.focus.agent.clone()) {
+            (None, _) => self.top(ui, &snap),
             // **The two screens that anchor controls to the floor paint their
             // own bar** (bl-192c). Everywhere else the bar goes first because
             // nothing below it can be pushed anywhere; here the floor's order
@@ -94,31 +92,32 @@ impl Shell {
             // is painted inside that remainder rather than before it. It is
             // still the first thing in the screen's body, which is what §13.2
             // says.
-            Some(workspace) => match snap.focus.agent.clone() {
-                None => {
-                    self.note_screen("conversations");
-                    self.conversations(ui, &snap, &workspace);
-                }
-                // **The records screen is a depth of this one** (§13.11):
-                // its six reads are about the conversation the transcript is
-                // showing, so it opens OVER it and backs out into it, and
-                // the focus underneath never moves.
-                Some(agent) if self.records => {
-                    self.records(ui, &snap, &workspace, &agent);
-                }
-                // **The files screen is the other depth of the transcript**
-                // (§13.15): `files` names the conversation the transcript is
-                // showing, so it opens OVER it on the records screen's terms
-                // exactly.
-                Some(agent) if self.files => {
-                    self.files(ui, &snap, &workspace, &agent);
-                }
-                Some(agent) => {
-                    self.note_screen("transcript");
-                    self.transcript(ui, &snap, &workspace, &agent);
-                }
-            },
+            (Some(workspace), None) => {
+                self.note_screen("conversations");
+                self.conversations(ui, &snap, &workspace);
+            }
+            (Some(workspace), Some(agent)) => {
+                self.note_screen("transcript");
+                self.transcript(ui, &snap, &workspace, &agent);
+            }
         }
+    }
+
+    /// **The standing overlay, in its frame**: the name line from
+    /// `crate::overlay`, and the screen's own body under it.
+    fn floating(&mut self, ui: &mut egui::Ui, snap: &Snapshot, overlay: Overlay) {
+        let agent = snap.focus.agent.clone().unwrap_or_default();
+        let under = Under {
+            workspace: snap.focus.workspace.clone().unwrap_or_default(),
+            conversation: super::chat::speaker_of(snap, &agent),
+            needle: snap
+                .search
+                .as_ref()
+                .map(|found| found.needle.clone())
+                .unwrap_or_default(),
+        };
+        let line = overlay.line(snap.minted.is_some(), &under);
+        self.float(ui, &line, |shell, ui| shell.overlaid(ui, snap, overlay));
     }
 
     /// The foot's whole screen: what this machine offers and what it has run.
@@ -236,12 +235,12 @@ impl Shell {
         // could be addressed by, and they are the only way to two screens.
         self.note_control("waiting", ui, control.rect);
         if control.clicked() {
-            self.open_world(World::Queue);
+            self.open(Overlay::Queue);
         }
         let control = tap(ui, "trail".into(), "ops");
         self.note_control("trail", ui, control.rect);
         if control.clicked() {
-            self.open_world(World::Trail);
+            self.open(Overlay::Trail);
         }
         // The two ball reads that name no workspace (§13.9). They are here for
         // the queue's and the trail's reason exactly: what they are about is

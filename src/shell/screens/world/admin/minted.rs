@@ -22,7 +22,7 @@ use eframe::egui;
 
 use crate::envelope::Envelope;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 use crate::symbol::{QUIET, Symbol, encode, pitch};
 
 impl Shell {
@@ -30,9 +30,6 @@ impl Shell {
     /// under it knows to stand down.
     pub(super) fn minted(&mut self, ui: &mut egui::Ui, envelope: &Envelope) {
         self.note_screen(SCREEN);
-        if self.bar(ui, SCREEN, &Back::To("config")) {
-            self.forget();
-        }
         ui.weak(format!(
             "{} · {} · {}",
             envelope.name,
@@ -51,17 +48,10 @@ impl Shell {
             }
         }
     }
-
-    /// Drop the material — the act this surface exists to end with.
-    fn forget(&mut self) {
-        if let Some(model) = self.model() {
-            model.forget();
-        }
-    }
 }
 
 /// The surface's name and the harness's tap target (§15.2).
-pub(in crate::shell) const SCREEN: &str = "minted";
+pub(in crate::shell) const SCREEN: &str = crate::overlay::MINTED;
 
 /// What an operator has to do while it is on the glass, said once.
 const SAID: &str = "scan this from the new device now — leaving this screen forgets it, and \

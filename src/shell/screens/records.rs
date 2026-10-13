@@ -31,7 +31,7 @@ use parts::{head, mail, orphan, spine, step_line};
 use crate::codec::{Records, StepRow};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::{Back, TOUCH};
+use crate::shell::mark::TOUCH;
 
 impl Shell {
     /// The whole screen. The foot claims its band first and the listing takes
@@ -52,9 +52,6 @@ impl Shell {
             self.records_acts(ui, workspace, agent);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                if self.bar(ui, "records", &Back::To("transcript")) {
-                    self.close_records();
-                }
                 super::banner(ui, snap);
                 ui.separator();
                 egui::ScrollArea::vertical()
@@ -117,26 +114,5 @@ impl Shell {
             self.step = (!picked).then(|| row.seq.clone());
         }
         ui.add_space(4.0);
-    }
-
-    /// **Open it** — and that is the ask (§13.11). The pick goes with the
-    /// opening: a step picked on one visit is not picked on the next, because
-    /// the act addresses a row and a row nobody can see is not one.
-    pub(in crate::shell) fn open_records(&mut self) {
-        self.records = true;
-        self.step = None;
-        self.from = None;
-        self.armed = false;
-        if let Some(model) = self.model() {
-            model.open_records();
-        }
-    }
-
-    /// Leave, back to the transcript.
-    fn close_records(&mut self) {
-        self.records = false;
-        self.step = None;
-        self.from = None;
-        self.armed = false;
     }
 }
