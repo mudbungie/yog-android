@@ -84,8 +84,13 @@ impl Shell {
                     Some(why) => format!("{} · {} · {why}", row.name, row.fact),
                     None => format!("{} · {}", row.name, row.fact),
                 };
+                // The words at the row's left edge (STYLE §5, bl-1312): a
+                // growing atom after them takes the slack a full-width
+                // button would otherwise share out either side.
                 let follow = ui.add(
-                    egui::Button::new(stated).min_size(egui::vec2(ui.available_width(), TOUCH)),
+                    egui::Button::new((stated, egui::Atom::grow()))
+                        .truncate()
+                        .min_size(egui::vec2(ui.available_width(), TOUCH)),
                 );
                 crate::shell::act::act(ui, &follow, "login-tail");
                 if follow.clicked()
