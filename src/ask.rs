@@ -28,9 +28,12 @@ pub const HEADING: &str = "it is asking";
 /// The fold's word on the box's first line, beside the fold glyph: what it
 /// opens is the control's decision about the parked call (§13.7, bl-8c94).
 pub const WHY: &str = "why";
-/// How many cells stand on one row: six at 48 points apiece would be more
-/// than the room above a keyboard (§22 item 8).
-pub const ACROSS: usize = 2;
+/// **The narrowest a cell may be for three to stand on a row** (bl-58ca):
+/// `3. pass for this` at `SMALL` type (88.7 points in the bundled face) and
+/// the button's padding either side — so every cell's words wrap onto at most
+/// two small lines inside its 48 points and none is elided, because
+/// `pass for this…` would make cells 3 and 4 the same words.
+pub const CELL: f32 = 104.0;
 
 /// **One choice**: `seen`, or a verdict at a scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -74,16 +77,29 @@ pub fn choices(row: &QueueRow) -> Vec<Choice> {
     out
 }
 
-/// **The cells, numbered from one and laid `ACROSS` to a row.** The numbers
+/// **How many cells stand on one row** of `room` points with `gap` between
+/// neighbours: three where a third is at least [`CELL`] (at `SMALL` type),
+/// else two — six at 48 points apiece would be more than the room above a
+/// keyboard (§22 item 8), and three rows of two took a third of the glass.
+#[must_use]
+pub fn across(room: f32, gap: f32) -> usize {
+    if (room - gap * 2.0) / 3.0 >= CELL {
+        3
+    } else {
+        2
+    }
+}
+
+/// **The cells, numbered from one and laid `across` to a row.** The numbers
 /// are the desktop's spelling and carry no input meaning here.
 #[must_use]
-pub fn cells(row: &QueueRow) -> Vec<Vec<(String, Choice)>> {
+pub fn cells(row: &QueueRow, across: usize) -> Vec<Vec<(String, Choice)>> {
     let numbered: Vec<(String, Choice)> = choices(row)
         .into_iter()
         .enumerate()
         .map(|(at, choice)| (format!("{}. {}", at + 1, choice.word()), choice))
         .collect();
-    numbered.chunks(ACROSS).map(<[_]>::to_vec).collect()
+    numbered.chunks(across.max(1)).map(<[_]>::to_vec).collect()
 }
 
 /// **The focused conversation's own row**, where the queue carries one —
@@ -110,28 +126,60 @@ pub fn parked(row: &QueueRow) -> Option<Folded> {
 /// failure, the last words.
 #[must_use]
 pub fn words(row: &QueueRow) -> Vec<(String, Rgb)> {
-    let mut out = Vec::new();
-    if let Some(flag) = &row.flag {
-        out.push((
-            format!("flagged · {}", flag.reason),
-            theme::accent(State::Annotation),
-        ));
-    }
+    parts(row).into_iter().flatten().collect()
+}
+
+/// [`words`] by place — the flag, why it fires, the failure, the last
+/// words — each absent where the row says nothing of it.
+fn parts(row: &QueueRow) -> [Option<(String, Rgb)>; 4] {
     let why = if row.says.is_empty() {
         row.signals.join(" · ")
     } else {
         row.says.clone()
     };
-    if !why.is_empty() {
-        out.push((why, theme::INK_WEAK));
+    [
+        row.flag.as_ref().map(|flag| {
+            (
+                format!("flagged · {}", flag.reason),
+                theme::accent(State::Annotation),
+            )
+        }),
+        (!why.is_empty()).then_some((why, theme::INK_WEAK)),
+        row.failure
+            .as_ref()
+            .map(|failure| (format!("failed · {failure}"), theme::accent(State::Error))),
+        (!row.preview.is_empty()).then(|| (row.preview.clone(), theme::INK)),
+    ]
+}
+
+/// **The one line that stands under the name, folded or not** (bl-58ca):
+/// the parked call and its class, else the failure, else the last words,
+/// else whatever the row says first. None where the row says nothing.
+#[must_use]
+pub fn summary(row: &QueueRow) -> Option<(String, Rgb)> {
+    if let Some(folded) = parked(row) {
+        return Some((folded.line, theme::accent(State::Attention)));
     }
-    if let Some(failure) = &row.failure {
-        out.push((format!("failed · {failure}"), theme::accent(State::Error)));
-    }
-    if !row.preview.is_empty() {
-        out.push((row.preview.clone(), theme::INK));
-    }
-    out
+    let [flag, why, failure, preview] = parts(row);
+    failure.or(preview).or(flag).or(why)
+}
+
+/// **What the name line's fold opens onto**, under the summary: the row's
+/// words less the one the summary already says. The parked call's decision
+/// is the fold's too, read off [`parked`].
+#[must_use]
+pub fn behind(row: &QueueRow) -> Vec<(String, Rgb)> {
+    let first = summary(row);
+    words(row)
+        .into_iter()
+        .filter(|said| Some(said) != first.as_ref())
+        .collect()
+}
+
+/// Whether the name line carries a fold: something stands behind it.
+#[must_use]
+pub fn folds(row: &QueueRow) -> bool {
+    parked(row).is_some() || !behind(row).is_empty()
 }
 
 #[cfg(test)]

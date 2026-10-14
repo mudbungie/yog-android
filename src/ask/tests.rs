@@ -3,7 +3,7 @@
 
 use serde_json::Value;
 
-use super::{Choice, asking, cells, choices, parked, words};
+use super::{CELL, Choice, across, asking, behind, cells, choices, folds, parked, summary, words};
 use crate::codec::{QueueRow, Scope, Verdict};
 use crate::theme::{self, State};
 
@@ -23,7 +23,7 @@ fn corpus() -> Vec<QueueRow> {
 #[test]
 fn a_parked_call_offers_six_cells_two_to_a_row_in_the_desktops_words() {
     let rows = corpus();
-    let said: Vec<Vec<String>> = cells(&rows[0])
+    let said: Vec<Vec<String>> = cells(&rows[0], 2)
         .into_iter()
         .map(|row| row.into_iter().map(|(word, _)| word).collect())
         .collect();
@@ -44,7 +44,7 @@ fn a_parked_call_offers_six_cells_two_to_a_row_in_the_desktops_words() {
 fn nothing_parked_is_seen_alone() {
     let rows = corpus();
     assert_eq!(choices(&rows[1]), [Choice::Seen]);
-    assert_eq!(cells(&rows[1]).len(), 1);
+    assert_eq!(cells(&rows[1], 3).len(), 1);
     assert!(parked(&rows[1]).is_none());
 }
 
@@ -105,4 +105,50 @@ fn the_words_are_the_flag_the_reason_the_failure_and_the_last_words() {
     rows[0].says.clear();
     assert_eq!(words(&rows[0])[1].0, "held · mail · flagged");
     assert!(words(&rows[1]).is_empty());
+}
+
+#[test]
+fn three_cells_stand_to_a_row_where_a_third_holds_one() {
+    // The walk's 411-point glass, less the pass's gutters and the box's
+    // margins: three; a 360-point one: two.
+    assert_eq!(across(373.0, 8.0), 3);
+    assert_eq!(across(322.0, 8.0), 2);
+    assert_eq!(across(CELL * 3.0 + 16.0, 8.0), 3);
+    let said: Vec<Vec<String>> = cells(&corpus()[0], 3)
+        .into_iter()
+        .map(|row| row.into_iter().map(|(word, _)| word).collect())
+        .collect();
+    assert_eq!(
+        said[1],
+        ["4. pass for this workspace", "5. refuse", "6. hold"]
+    );
+    assert_eq!(said.len(), 2);
+}
+
+#[test]
+fn one_line_stands_under_the_name_and_the_rest_fold_behind_it() {
+    let mut rows = corpus();
+    // A parked call: its line stands; every word is behind the fold.
+    assert_eq!(
+        summary(&rows[0]),
+        Some(("held: Bash".to_owned(), theme::accent(State::Attention)))
+    );
+    assert_eq!(behind(&rows[0]), words(&rows[0]));
+    assert!(folds(&rows[0]));
+    // Nothing parked: the failure stands, and is not said twice.
+    rows[0].held = None;
+    assert_eq!(summary(&rows[0]).unwrap().0, "failed · Unauthorized");
+    assert_eq!(behind(&rows[0]).len(), 3);
+    // No failure: the last words.
+    rows[0].failure = None;
+    assert_eq!(summary(&rows[0]).unwrap().0, "p");
+    // No last words: the flag, then why it fires.
+    rows[0].preview.clear();
+    assert!(summary(&rows[0]).unwrap().0.starts_with("flagged"));
+    rows[0].flag = None;
+    assert!(summary(&rows[0]).unwrap().0.starts_with("parked a tool"));
+    assert!(!folds(&rows[0]));
+    // A row that says nothing has no line and no fold.
+    assert_eq!(summary(&rows[1]), None);
+    assert!(!folds(&rows[1]));
 }

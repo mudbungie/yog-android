@@ -1,7 +1,9 @@
 //! **The ask** (DESIGN §22 item 8, bl-289f; §13.7's held band, re-shaped):
 //! while the focused conversation is in the queue, a box framed and named in
-//! the attention accent stands between the transcript and the rule, carrying
-//! the queue row's words and its choices as numbered cells two to a row.
+//! the attention accent stands between the transcript and the rule: its name
+//! line, ONE line of the row's words (the parked call, else the failure, else
+//! the last words) with the rest behind the name line's fold (bl-58ca), and
+//! its choices as numbered cells three to a row where three fit, else two.
 //! Which cells, their words and what each fires are `crate::ask`, pure and
 //! host-tested; this file paints the box and spends a tap.
 //!
@@ -11,8 +13,8 @@
 //! `seat::acts::seen`), unchanged on the wire.
 //!
 //! **What it says of the parked call is the engine's sentence, folded**
-//! (bl-8c94): `held: <tool> · <class>` on one line, the decision behind the
-//! `why` fold on the box's first line, and the call's input never here — it
+//! (bl-8c94): `held: <tool> · <class>` on one line, the decision and the
+//! row's other words behind the `why` fold on the box's first line, and the call's input never here — it
 //! is a field of the transcript row that carries the call (`rows::held`).
 //!
 //! **Laid bottom-up**, because the block it is added to is (bl-193c): the
@@ -23,7 +25,7 @@ use eframe::egui;
 
 use super::app::Shell;
 use super::theme::{rgb, share};
-use crate::ask::{ACROSS, Choice, HEADING, WHY};
+use crate::ask::{Choice, HEADING, WHY};
 use crate::seat::Snapshot;
 use crate::theme::{self, State, glyph, space};
 
@@ -48,32 +50,55 @@ impl Shell {
             .corner_radius(theme::RADIUS)
             .inner_margin(egui::Margin::symmetric(space::S as i8, space::XS as i8))
             .show(ui, |ui| {
-                for cells in crate::ask::cells(&row).iter().rev() {
-                    super::controls::band(ui, |ui| {
-                        let wide = share(ui, ACROSS);
-                        for (word, choice) in cells {
-                            let control = cell(ui, word, wide);
-                            super::act::act(ui, &control, &choice.op());
-                            if control.clicked() {
-                                taken = Some(choice.clone());
+                let across = crate::ask::across(ui.available_width(), ui.spacing().item_spacing.x);
+                ui.scope(|ui| {
+                    if across == 3 {
+                        // Three to a row at `SMALL` (bl-58ca): every cell's
+                        // words wrap onto two small lines, none elided.
+                        ui.style_mut().text_styles.insert(
+                            egui::TextStyle::Button,
+                            egui::FontId::proportional(theme::type_scale::SMALL),
+                        );
+                    }
+                    for cells in crate::ask::cells(&row, across).iter().rev() {
+                        super::controls::band(ui, |ui| {
+                            let wide = share(ui, across);
+                            for (word, choice) in cells {
+                                let control = cell(ui, word, wide);
+                                super::act::act(ui, &control, &choice.op());
+                                if control.clicked() {
+                                    taken = Some(choice.clone());
+                                }
                             }
-                        }
-                    });
-                }
-                for (said, ink) in crate::ask::words(&row).iter().rev() {
-                    let text = egui::RichText::new(said).color(rgb(*ink));
-                    ui.add(egui::Label::new(text).truncate());
-                }
-                if let Some(folded) = &parked {
-                    if self.why {
+                        });
+                    }
+                });
+                if self.why {
+                    for (said, ink) in crate::ask::behind(&row).iter().rev() {
+                        line(ui, said, *ink);
+                    }
+                    if let Some(folded) = &parked {
                         ui.add(egui::Label::new(&folded.why).wrap());
                     }
-                    let line = egui::RichText::new(&folded.line).color(accent);
-                    ui.add(egui::Label::new(line).truncate());
                 }
+                // **The name line carries the summary** (bl-58ca): the name,
+                // then the one line in its own ink, elided before the fold —
+                // a line of its own under the name cost the transcript the
+                // last of the half of the glass it is owed.
                 super::controls::band(ui, |ui| {
                     ui.label(egui::RichText::new(HEADING).color(accent));
-                    if parked.is_some() {
+                    let fold = if crate::ask::folds(&row) {
+                        theme::TOUCH * 2.0 + ui.spacing().item_spacing.x
+                    } else {
+                        0.0
+                    };
+                    if let Some((said, ink)) = crate::ask::summary(&row) {
+                        let room = (ui.available_width() - fold).max(0.0);
+                        ui.allocate_ui(egui::vec2(room, theme::TOUCH), |ui| {
+                            line(ui, &format!("{} {said}", glyph::NOTE), ink);
+                        });
+                    }
+                    if fold > 0.0 {
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             flip = self.fold(ui);
                         });
@@ -105,7 +130,12 @@ impl Shell {
     }
 }
 
-/// **One cell**: half the row, a touch target tall, its words wrapped onto a
+/// One line of the row's words, in its ink, elided to the box.
+fn line(ui: &mut egui::Ui, said: &str, ink: theme::Rgb) {
+    ui.add(egui::Label::new(egui::RichText::new(said).color(rgb(ink))).truncate());
+}
+
+/// **One cell**: a half or a third of the row, a touch target tall, its words wrapped onto a
 /// second line rather than elided — `pass for this conversation` is the
 /// desktop's spelling byte for byte, and half a phone's width cannot hold it
 /// on one line.

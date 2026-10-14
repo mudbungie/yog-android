@@ -6789,6 +6789,25 @@ is a client of one engine (entries are an upstream ask, §13.4).
    `ask-why`; the walk's `asked` beat is the transcript seed (its queue row
    holds a call at the focused conversation) with that fold opened.
 
+   **As amended (bl-58ca) — the box folds.** Round 2 measured the box at
+   about 38% of a 411x914 glass, six lines of transcript left. **Folded, the
+   box is its name line and its cells**: the name line carries the row's ONE
+   summary after the name — the parked call and its class, else the
+   failure, else the last words, else the flag, else why it fires
+   (`ask::summary`) — and the fold at its end (`ask::folds`, standing
+   wherever something is behind it, parked or not) opens the decision and
+   every other line (`ask::behind`, never the summary twice). The summary
+   rides the name line rather than standing under it because a line of its
+   own left the transcript at 47% of the glass; on the line, it holds half
+   exactly (walk beat `transcript`: the box from 50% to 68%, the dock,
+   banner, rule and prompt below). **The cells stand three to a row where a
+   third of the box is at least `ask::CELL` (104 points) at `SMALL` type,
+   two otherwise** (`ask::across`: three at 411, two at 360). Their words
+   WRAP onto a second small line inside the 48 points rather than eliding:
+   `pass for this…` would make cells 3 and 4 the same words, and 104 is
+   `3. pass for this` at `SMALL` plus the padding, so no cell's words ever
+   need a third line.
+
 9. **The live dock → one tap line above the rule.** While any conversation
    under the focused workspace is live or in flight (the conversation rows'
    own word — the dock asks nothing of its own): `+ 2 running · <the first's
