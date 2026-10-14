@@ -89,3 +89,17 @@ fn an_organizational_unit_that_is_not_foot_is_still_a_seat() {
     crate::test_support::mint_unit(&dir, "ca", "desk", "footwear");
     assert_eq!(grade(&der(&dir, "desk")), Grade::Operator);
 }
+
+/// An attribute with no value is skipped, not read — and the well-formed one
+/// beside it still is. No minting recipe writes the malformed shape, so these
+/// bytes are built by hand: the claim is only that the walk stays total.
+#[test]
+fn an_attribute_without_a_value_is_skipped() {
+    let cn = [0x06, 0x03, 0x55, 0x04, 0x03];
+    let mut name = vec![0x31, 0x07, 0x30, 0x05];
+    name.extend(cn);
+    name.extend([0x31, 0x0a, 0x30, 0x08]);
+    name.extend(cn);
+    name.extend([0x0c, 0x01, b'x']);
+    assert_eq!(super::attributes(&name, super::COMMON_NAME), vec!["x"]);
+}

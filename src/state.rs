@@ -90,13 +90,18 @@ impl<T> Watched<T> {
     /// a change or for `tick`, whichever comes first.
     pub(crate) fn wait<R>(&self, f: &mut dyn FnMut(&mut T) -> Option<R>, tick: Duration) -> R {
         let mut held = self.value.lock().unwrap_or_else(PoisonError::into_inner);
-        loop {
+        // A `loop` that yields rather than returns (bl-b55d): rustc maps no
+        // coverage region to a bare `loop {` line, and tarpaulin counts every
+        // line of a generic body, so the bare form read uncovered forever.
+        let answer = loop {
             let waited = match f(&mut held) {
-                Some(answer) => return answer,
+                Some(answer) => break answer,
                 None => self.changed.wait_timeout(held, tick),
             };
             (held, _) = waited.unwrap_or_else(PoisonError::into_inner);
-        }
+        };
+        drop(held);
+        answer
     }
 }
 

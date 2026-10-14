@@ -88,3 +88,29 @@ fn a_held_read_carries_the_edition_the_engine_stated() {
     assert_eq!(open.edition(), crate::ledger::FLOOR);
     hangup.hang_up();
 }
+
+/// **A ping is never a frame of the answer** (REMOTE §13.4): one the engine
+/// wrote ahead of the reply is dropped by the read itself, never handed on.
+#[test]
+fn a_ping_ahead_of_the_reply_is_not_a_frame_of_it() {
+    let dir = pki();
+    let reply = json!({ "ok": true, "kind": "transcript", "rows": [] });
+    let (address, _served) = serve_once(
+        &dir,
+        "ca",
+        "server",
+        vec![
+            json!({ "ping": true }).to_string().into_bytes(),
+            reply.to_string().into_bytes(),
+        ],
+    );
+    let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
+    let (open, _hangup) = seat.hold(&json!({ "op": "transcript" })).unwrap();
+    let mut seen = Vec::new();
+    open.each(&mut |got| {
+        seen.push(got);
+        true
+    })
+    .unwrap();
+    assert_eq!(seen, vec![reply]);
+}

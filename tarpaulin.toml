@@ -274,7 +274,23 @@
 # "android")` data with no behaviour at all.
 #
 # `ignore-panics` excludes branches that only fire on programmer-error panics.
+#
+# `engine = "Llvm"` is the one engine setting, and it lives HERE because 0.35.2
+# ignores `--engine` on the command line whenever this file exists: the merge
+# of file and flags never copies it (bl-b55d; lernie bl-11da found the same).
+# Until this line the Makefile's `--engine llvm` was dead and every gate ran
+# ptrace, the Linux default: no profraw was written and the test binaries were
+# not instrumented. ptrace builds the coverable set from each binary's DWARF
+# line table, and on the 4-core runner the lib's own test binary carried no row
+# for one line of a multi-line chain (`src/dht.rs:172`, `src/rendezvous.rs:131`
+# before it) that an integration binary did carry — at zero hits, since it
+# never calls it. Summed, that line read uncovered on the runner every time and
+# covered on the builder every time, with no line of the tree at fault. llvm
+# reads rustc's own regions and counts from the profile, which were checked
+# identical on both machines; it also counts untaken branches ptrace never saw,
+# so it is the stricter floor, not a weaker one.
 [default]
+engine = "Llvm"
 exclude-files = [
     "rules/fixtures/*",
     "src/shell/act.rs",

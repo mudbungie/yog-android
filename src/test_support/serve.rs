@@ -135,12 +135,12 @@ fn play(mut tls: rustls::StreamOwned<rustls::ServerConnection, std::net::TcpStre
             return;
         }
         Turn::Feed(frames) => {
-            while let Ok(reply) = frames.recv() {
-                if crate::frame::write_frame(&mut tls, reply.as_slice()).is_err() {
-                    return;
-                }
-            }
-            let _ = crate::frame::write_end(&mut tls);
+            // A seat that hung up mid-feed ends it: nothing is written after
+            // a failed write, the terminator included.
+            let _ = frames
+                .iter()
+                .try_for_each(|reply| crate::frame::write_frame(&mut tls, &reply))
+                .and_then(|()| crate::frame::write_end(&mut tls));
             return;
         }
     };

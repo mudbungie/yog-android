@@ -39,3 +39,12 @@ fn a_datagram_over_the_buffer_is_truncated() {
     let (_, bytes) = b.recv(Duration::from_secs(2)).unwrap().unwrap();
     assert_eq!(bytes.len(), DATAGRAM);
 }
+
+/// Only a wait that ran out is "nothing yet"; every other error is the socket
+/// itself failing, which no loopback socket produces on demand.
+#[test]
+fn only_a_wait_that_ran_out_is_nothing_yet() {
+    assert!(elapsed(&io::Error::from(io::ErrorKind::WouldBlock)));
+    assert!(elapsed(&io::Error::from(io::ErrorKind::TimedOut)));
+    assert!(!elapsed(&io::Error::from(io::ErrorKind::ConnectionRefused)));
+}

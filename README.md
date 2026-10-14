@@ -82,7 +82,7 @@ no build has heard of.
 make check          # the complete gate == CI == what the builder runs for the hook
 make conformance    # replay the vendored wire corpus (REMOTE §3)
 make test           # cargo test
-make coverage       # tarpaulin, 100% floor (pinned 0.35.2)
+make coverage       # tarpaulin, llvm engine, 100% floor (pinned 0.35.2; engine in tarpaulin.toml)
 make lint           # line-cap + leak-scan + clippy + cross-clippy + ast-grep + cargo-deny
 make apk            # cargo-ndk (arm64-v8a + x86_64) + gradle assembleDebug
 make apk-release    # the release variant, signed with the permanent key
