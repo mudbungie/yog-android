@@ -6806,7 +6806,12 @@ is a client of one engine (entries are an upstream ask, §13.4).
    WRAP onto a second small line inside the 48 points rather than eliding:
    `pass for this…` would make cells 3 and 4 the same words, and 104 is
    `3. pass for this` at `SMALL` plus the padding, so no cell's words ever
-   need a third line.
+   need a third line. **The walk shows the class** (bl-c9ea): the corpus's
+   held reason is the bare class word, a sentence the engine's control never
+   writes, so the folded line read `held: Bash` alone; the transcript seed
+   now gives its held row the engine's own shape (`<tool> <input>
+   classified <class> (<evidence>)`) and the transcript's last words, and
+   the line reads `held: Bash · writes`.
 
 9. **The live dock → one tap line above the rule.** While any conversation
    under the focused workspace is live or in flight (the conversation rows'

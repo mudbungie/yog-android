@@ -247,6 +247,17 @@ if depth in ("conversations", "transcript", "running"):
             queue = frame("attention")
             held = dict(queue["rows"][0], workspace=workspace,
                         agent=body["focus"]["agent"])
+            # **Two words re-written, and why** (bl-c9ea): the corpus's
+            # held reason is the bare class (`writes`), a sentence yog's
+            # control never writes — it always writes `<tool> <input>
+            # classified <class> (<evidence>)` (REMOTE §8.1) — so the box's
+            # folded line could never show its class on the walk. And the
+            # row's last words (`p`) are set to this transcript's own, so
+            # the unfolded box reads as the conversation it stands over.
+            held["held"] = dict(held["held"], reason=(
+                'Bash {"command": "cargo test --all"} classified writes '
+                "(cargo builds into the workspace)"))
+            held["preview"] = "run the tests too"
             queue["rows"] = [held]
             body["attention"] = queue
 with open(out, "w") as fh:
