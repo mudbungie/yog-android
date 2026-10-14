@@ -94,7 +94,10 @@ impl Shell {
                 if *waiting {
                     parts.push((ATTENTION_MARK.to_owned(), ink(State::Attention)));
                 }
-                parts.push((format!("  {agents} agents"), rgb(crate::theme::INK_WEAK)));
+                parts.push((
+                    format!("  {}", crate::plural::counted(*agents as u64, "agent")),
+                    rgb(crate::theme::INK_WEAK),
+                ));
                 let label = theme::line(ui, &parts);
                 tap(ui, label.into(), "conversations").clicked()
             }

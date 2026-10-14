@@ -97,7 +97,7 @@ impl Shell {
                 {
                     self.spread = self.spread.saturating_sub(1).max(FLOOR);
                 }
-                ui.label(format!("{} candidates", self.spread));
+                ui.label(crate::plural::counted(self.spread as u64, "candidate"));
                 if ui.button("+1").clicked() {
                     self.spread = self.spread.saturating_add(1);
                 }

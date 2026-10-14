@@ -35,6 +35,7 @@ pub mod outbox;
 pub mod overlay;
 pub mod panel;
 pub mod parity;
+pub mod plural;
 pub mod pocket;
 pub mod rendezvous;
 pub mod roster;

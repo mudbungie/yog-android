@@ -76,7 +76,11 @@ pub(super) fn as_(mut row: Row, kind: Kind) -> Row {
 pub(super) fn with_size(mut row: Row) -> Row {
     if !row.body.is_empty() {
         let chars = row.body.chars().count();
-        row.prefix = format!("{} · {chars} chars", row.prefix);
+        row.prefix = format!(
+            "{} · {}",
+            row.prefix,
+            crate::plural::counted(chars as u64, "char")
+        );
     }
     row
 }

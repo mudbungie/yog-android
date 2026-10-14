@@ -98,7 +98,10 @@ pub(super) fn spine(ui: &mut egui::Ui, records: &Records) {
 pub(super) fn governed(governing: &crate::codec::Governing) -> String {
     let follows = match &governing.follows {
         Some(name) => format!("follows {name}"),
-        None => format!("{} lineages diverged", governing.diverged),
+        None => format!(
+            "{} diverged",
+            crate::plural::counted(governing.diverged as u64, "lineage")
+        ),
     };
     format!("governed by {} · {follows}", governing.short_oid)
 }

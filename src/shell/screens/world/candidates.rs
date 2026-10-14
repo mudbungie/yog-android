@@ -124,7 +124,11 @@ fn line(row: &Attempt, picked: bool) -> String {
             .filter(|said| !said.is_empty())
             .collect::<Vec<String>>()
             .join(" · "),
-        format!("{} steps · {}s", row.steps, row.wall_secs),
+        format!(
+            "{} · {}s",
+            crate::plural::counted(row.steps, "step"),
+            row.wall_secs
+        ),
     ]
     .join("\n")
 }

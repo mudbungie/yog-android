@@ -155,17 +155,17 @@ fn notice(standing: &Standing) -> Notice {
         (Health::Serving, _) if !standing.advertised => (
             "this phone is offering its tools".to_owned(),
             format!(
-                "presenting {} tools to the engine. A connection stays open while this \
+                "presenting {} to the engine. A connection stays open while this \
                  stands, and the radio wakes with it.",
-                standing.tools.len()
+                crate::plural::counted(standing.tools.len() as u64, "tool")
             ),
         ),
         (Health::Serving, last) => (
             "this phone is standing by as hands".to_owned(),
             format!(
-                "{} tools offered · {}. A connection stays open while this stands, \
+                "{} offered · {}. A connection stays open while this stands, \
                  and the radio wakes with it.",
-                standing.tools.len(),
+                crate::plural::counted(standing.tools.len() as u64, "tool"),
                 match last {
                     None => "nothing called yet".to_owned(),
                     Some(last) => format!("served {} · {last}", standing.served),
