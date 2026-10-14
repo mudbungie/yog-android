@@ -107,13 +107,15 @@ impl Shell {
         super::act::act(ui, &hit, line.reaches);
         self.note_control("close", ui, rect);
         let font = egui::TextStyle::Body.resolve(ui.style());
-        let close = ui
-            .painter()
-            .layout_no_wrap("close".to_owned(), font, rgb(theme::INK_WEAK));
+        let close = ui.painter().layout_no_wrap(
+            crate::overlay::DONE.to_owned(),
+            font,
+            rgb(theme::INK_WEAK),
+        );
         let mut named = super::theme::line(
             ui,
             &[
-                (line.name.to_owned(), rgb(theme::INK)),
+                (line.title.to_owned(), rgb(theme::INK)),
                 (format!("  {}", line.subject), rgb(theme::INK_WEAK)),
             ],
         );

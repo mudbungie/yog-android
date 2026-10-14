@@ -69,6 +69,11 @@ pub enum Depth {
 /// surface, and closing it returns there.
 pub const MINTED: &str = "minted";
 
+/// **The word at the name line's far end** (bl-dfad): what a tap on the line
+/// does. Not `close`, because `close` is a ball act's wire word and its
+/// label (PARITY §4's one name) — the ball pane stood with two of them.
+pub const DONE: &str = "done";
+
 /// What a close does. Three answers because three things can be standing
 /// under one name line, and only one of them is navigation alone.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,7 +95,10 @@ pub enum Close {
 /// PARITY §2), and what closing does.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Line {
+    /// The screen's name — the probe's and the harness's (§15.2).
     pub name: &'static str,
+    /// The words the line says: the phone's own (§13.3), not an op token.
+    pub title: &'static str,
     pub subject: String,
     pub reaches: &'static str,
     pub close: Close,
@@ -129,6 +137,16 @@ impl Overlay {
         }
     }
 
+    /// **The words the name line says** (bl-dfad): the verb sheet's word for
+    /// it (§22 item 5) where the screen's name is a wire op's token.
+    pub(crate) const fn title(self) -> &'static str {
+        match self {
+            Self::Work => "diff",
+            Self::Balls(View::Everywhere | View::Here) => "balls",
+            _ => self.name(),
+        }
+    }
+
     /// Which read the screen under it is populated by — the op the close line
     /// is the owed interactable for (PARITY §2), as the bar's back control
     /// was.
@@ -161,11 +179,10 @@ impl Overlay {
     /// the material rather than leaving the surface.
     pub fn line(self, minted: bool, under: &Under) -> Line {
         let subject = match self {
-            Self::Queue
-            | Self::Trail
-            | Self::Help
-            | Self::Switcher
-            | Self::Balls(View::Everywhere | View::Board) => String::new(),
+            Self::Queue | Self::Trail | Self::Help | Self::Switcher | Self::Balls(View::Board) => {
+                String::new()
+            }
+            Self::Balls(View::Everywhere) => "all workspaces".to_owned(),
             Self::Records | Self::Files => under.conversation.clone(),
             Self::Search => under.needle.clone(),
             _ => under.workspace.clone(),
@@ -180,6 +197,7 @@ impl Overlay {
         };
         Line {
             name,
+            title: if name == MINTED { MINTED } else { self.title() },
             subject,
             reaches,
             close,

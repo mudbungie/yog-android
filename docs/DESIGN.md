@@ -6693,6 +6693,15 @@ is a client of one engine (entries are an upstream ask, §13.4).
    "less `S`" is that gutter, not a second margin inside it. The name line's
    rectangle is reported to the probe as `close` (§15.2).
 
+   **As amended (bl-dfad) — the line's words.** The name line says the
+   verb sheet's word for the surface (`Overlay::title`), not the screen's
+   name where that is a wire op's token: `diff` where it said `work-diff`,
+   `balls` where it said `workspace-balls` (open on the workspace) or
+   `balls` (open on `all workspaces`); the screen's name stays the probe's.
+   **Its far end says `done`, not `close`** (`overlay::DONE`): `close` is a
+   ball act's wire word and its label (PARITY §4's one name), and the ball
+   pane stood with two of them; the line's act is unchanged.
+
 7. **The switcher → the roster and the conversation list, fused into one
    overlay; the platform back walks to it.** Opened by tapping the rule's
    name, by `/conversations`, or by the back gesture from the chat. One
