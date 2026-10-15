@@ -1,7 +1,8 @@
 +++
 title = "cargo deny fails every gate on RUSTSEC-2026-0349: rustls 0.23.45 in the lockfile; the fix is 0.23.46, a lockfile move of an approved dependency (cargo update -p rustls)"
 created = 1792034238
-updated = 1792034238
+updated = 1792034332
+claimant = "Surveying"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
