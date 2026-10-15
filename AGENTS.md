@@ -79,7 +79,7 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   reasoning, never to make a number.
 - **The gate.** `make check` is the complete gate: `fmt-check → lint →
   coverage`, where `lint` is `line-cap → protocol-gate → leak-scan → clippy -D
-  warnings → cross-clippy → rules-audit → cargo deny check` and coverage is
+  warnings → cross-clippy → rules-audit → cargo deny check bans licenses sources` and coverage is
   `scripts/check-coverage.sh` (tarpaulin, 100% floor). `check` is a door onto
   `scripts/check`, which carries the three-word exit make cannot (0 pass, 75
   no verdict, else fail — yog bl-673a). The pre-commit hook
@@ -162,6 +162,14 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   `pipefail`; and enumerating **zero** scripts fails outright, because a check
   that matches nothing is broken, never a clean tree. Measured on yog bl-e33a.
 - **Never credit AI or tooling** in commit messages, code, or docs.
+
+**Advisories are not in the gate** (ops bl-fb2c; lernie bl-9c29 holds the
+full reasoning). A RustSec advisory is a fact about the day, not the tree,
+so `make deny` judges bans, licences and sources, and
+`.github/workflows/advisories.yml` asks the day's question daily: on a
+finding it runs `make mend-advisories`, proves the lockfile move with
+`ci.yml` on a branch, fast-forwards `main` and re-judges the release. A
+gate failure on `deny` is about the tree, never about the calendar.
 
 ## What may never enter a ball body
 

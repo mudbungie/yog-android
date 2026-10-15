@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit cross-clippy line-cap leak-scan protocol-gate deny install-hooks apk apk-release deploy-phone screens screens-avd invoke parity natives
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit cross-clippy line-cap leak-scan protocol-gate deny advisories mend-advisories install-hooks apk apk-release deploy-phone screens screens-avd invoke parity natives
 
 all: check
 
@@ -302,8 +302,29 @@ leak-scan:
 # advisories, bans (openssl-sys / native-tls / aws-lc-sys — rustls-only,
 # ring-only, before the first TLS dependency even lands), and known-registry
 # sources.
+# The advisories are deliberately NOT in `deny` (ops bl-fb2c): an advisory is
+# a fact about the day, not the tree, and a gate that judged trees by it
+# failed every tree the hour one published (RUSTSEC-2026-0285, -0349). They
+# are `mend-advisories`, run daily by `.github/workflows/advisories.yml`.
 deny:
-	cargo deny check
+	cargo deny check bans licenses sources
+
+# The advisory check alone: the day's question, asked of this lockfile.
+advisories:
+	cargo deny check advisories
+
+# Move the lockfile past every advisory it carries, then ask again. The crate
+# names come off cargo-deny's own JSON diagnostics (one line per diagnostic,
+# the advised crate at the root of each graph) rather than off its prose, so a
+# reworded sentence cannot silently mend nothing; `cargo update -p` moves one
+# crate within its semver range and nothing else. The re-check is the proof:
+# an advisory with no fixed version leaves it failing, which is the one case
+# that is a hand's, and the workflow says so by failing.
+mend-advisories:
+	cargo deny --format json check advisories 2>&1 \
+	  | jq -r 'select(.type=="diagnostic" and .fields.severity=="error") | .fields.graphs[]?.Krate.name' \
+	  | sort -u | xargs -r -n1 cargo update -p
+	cargo deny check advisories
 
 # Static audit of every ast-grep rule (rules/, pinned ast-grep 0.44.1 — see
 # sgconfig.yml). Both directions: `src` must be clean (exit 0), and every
