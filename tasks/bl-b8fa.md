@@ -1,7 +1,8 @@
 +++
 title = "every control tells on a long press: the painters take the help sentence, the bare-control rule, every site's sentence, the told beat"
 created = 1792122062
-updated = 1792122062
+updated = 1792123163
+claimant = "Surveying"
 parent = "bl-d489"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
