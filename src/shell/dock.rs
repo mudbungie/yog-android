@@ -48,8 +48,11 @@ impl Shell {
                     theme::line(ui, &parts).into(),
                     "shows this running conversation",
                 );
-                // **Where the harness finds a row** (§15.2): the first only.
-                if std::mem::take(&mut first) {
+                // **Where the harness finds a row** (§15.2): the first that
+                // is not the focused conversation, so a tap on it is a move
+                // the walk can see (the tab strip from the second tab).
+                if first && snap.focus.agent.as_deref() != Some(row.root_id.as_str()) {
+                    first = false;
                     self.note_control("dock-row", ui, seat.rect);
                 }
                 if seat.clicked() {

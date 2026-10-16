@@ -71,7 +71,9 @@ long_press_control() {   # long_press_control <name>
   [ -n "$rect" ] || { verdict fail "the screen reported no $1 to press"; return 0; }
   local x y w h; IFS=, read -r x y w h <<<"$rect"
   local cx=$((x + w / 2)) cy=$((y + h / 2))
-  "${ADB[@]}" logcat -c || true
+  # The log is NOT cleared here: a long press changes no screen, so no new
+  # probe line follows it, and a cleared log would read as the app saying
+  # nothing. The told line is emitted once per sentence either way.
   "${ADB[@]}" shell input motionevent DOWN "$cx" "$cy"
   sleep 2
   "${ADB[@]}" shell input motionevent UP "$cx" "$cy"

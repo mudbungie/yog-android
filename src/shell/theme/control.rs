@@ -83,10 +83,15 @@ pub(crate) fn pick(
 
 /// **A check**: on or off, its word beside it, the touch floor tall.
 pub(crate) fn check(ui: &mut egui::Ui, on: &mut bool, word: &str, help: &str) -> egui::Response {
-    let response = ui.add_sized(
-        egui::vec2(ui.available_width(), theme::TOUCH),
-        egui::Checkbox::new(on, word),
-    );
+    // Laid at the left of a touch-tall band, never centred in it: a check
+    // is a row's control and reads where a row's words do.
+    let response = ui
+        .allocate_ui_with_layout(
+            egui::vec2(ui.available_width(), theme::TOUCH),
+            egui::Layout::left_to_right(egui::Align::Center),
+            |ui| ui.add(egui::Checkbox::new(on, word)),
+        )
+        .inner;
     told(ui, &response, help);
     response
 }
@@ -100,9 +105,15 @@ pub(crate) fn slider(
     unit: &str,
     help: &str,
 ) -> egui::Response {
+    // The trough takes the width the row has left, less the number's room:
+    // egui's default slider is a desktop's hundred points, a thumb's nothing.
+    ui.spacing_mut().slider_width = (ui.available_width() - 120.0).max(120.0);
     let response = ui.add(
         egui::Slider::new(value, floor..=ceiling)
             .step_by(f64::from(step))
+            // The run up to the handle in the selection tint: the trough's
+            // own fill is the surface it stands on, which is no trough.
+            .trailing_fill(true)
             .suffix(unit),
     );
     told(ui, &response, help);

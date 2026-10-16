@@ -123,3 +123,12 @@ roles = "read at cadence to settle the controls row; what it populates is the se
 # `seen` followed it (bl-2889) — the queue row is the mark that can be
 # answered, and `act:seen` is on it (DESIGN §13.8). This group is now empty and
 # is kept as the record of what was in it.
+
+# **The price table and the workflow mark** (corpus edition 23, bl-b8c5):
+# five control ops the engine added that this seat has no surface for yet.
+# The prices pane is bl-5638's; the workflow selector is bl-feee's.
+ceiling = "unbuilt: the workspace's spend ceiling is set from the prices pane, which this seat does not paint yet (bl-5638)"
+price = "unbuilt: pricing a provider row is the prices pane's act (bl-5638)"
+prices = "unbuilt: the price table has no pane on this seat yet (bl-5638)"
+workflow = "unbuilt: the workflow selector under the composer is bl-feee's"
+clear-workflow = "unbuilt: clearing the workflow mark is the same selector's act (bl-feee)"
