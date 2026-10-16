@@ -25,6 +25,8 @@
         "/rows/[]/flag:null": 12,
         "/rows/[]/flag:object": 12,
         "/rows/[]/held/reason:string": 12,
+        "/rows/[]/held/scopes/[]:string": 23,
+        "/rows/[]/held/scopes:array": 23,
         "/rows/[]/held/tool:string": 12,
         "/rows/[]/held/tool_use:string": 12,
         "/rows/[]/held:null": 12,
@@ -146,6 +148,8 @@
         "/rows/[]/flag:null": 12,
         "/rows/[]/flag:object": 12,
         "/rows/[]/held/reason:string": 12,
+        "/rows/[]/held/scopes/[]:string": 23,
+        "/rows/[]/held/scopes:array": 23,
         "/rows/[]/held/tool:string": 12,
         "/rows/[]/held/tool_use:string": 12,
         "/rows/[]/held:null": 12,
@@ -346,6 +350,14 @@
       "signature": {
         "/kind:string": 13,
         "/ok:bool": 13,
+        "/rendezvous/accepted:number": 22,
+        "/rendezvous/active:bool": 21,
+        "/rendezvous/calls:number": 21,
+        "/rendezvous/last_poll_unix:number": 21,
+        "/rendezvous/published:number": 21,
+        "/rendezvous/punched:number": 21,
+        "/rendezvous/served:number": 21,
+        "/rendezvous:object": 21,
         "/rows/[]/check:string": 13,
         "/rows/[]/fact:string": 13,
         "/rows/[]/ok:bool": 13,
@@ -365,6 +377,8 @@
         "/kind:string": 1,
         "/name:string": 1,
         "/ok:bool": 1,
+        "/pairing_salt:string": 20,
+        "/rendezvous_pub:string": 20,
         ":object": 1
       }
     },
@@ -446,6 +460,13 @@
         "/oid:string": 5,
         "/ok:bool": 5,
         "/short_oid:string": 5,
+        "/workflow_mark/holder:string": 19,
+        "/workflow_mark/lineage:null": 19,
+        "/workflow_mark/lineage:string": 19,
+        "/workflow_mark/oid:string": 19,
+        "/workflow_mark/short_oid:string": 19,
+        "/workflow_mark:null": 19,
+        "/workflow_mark:object": 19,
         ":object": 5
       }
     },
@@ -592,6 +613,27 @@
         ":object": 18
       }
     },
+    "reply/prices": {
+      "signature": {
+        "/ceiling:number": 19,
+        "/kind:string": 19,
+        "/ok:bool": 19,
+        "/released:number": 19,
+        "/rows/[]/cache_read:number": 19,
+        "/rows/[]/cache_write:number": 19,
+        "/rows/[]/input:number": 19,
+        "/rows/[]/model:string": 19,
+        "/rows/[]/output:number": 19,
+        "/rows/[]/provider:string": 19,
+        "/rows/[]:object": 19,
+        "/rows:array": 19,
+        "/spent/micro_usd:number": 19,
+        "/spent/unpriced_tokens:number": 19,
+        "/spent/usd:string": 19,
+        "/spent:object": 19,
+        ":object": 19
+      }
+    },
     "reply/proposals": {
       "signature": {
         "/kind:string": 16,
@@ -639,6 +681,10 @@
         "/ok:bool": 1,
         "/rows/[]/budget:number": 1,
         "/rows/[]/commit:string": 1,
+        "/rows/[]/cost/micro_usd:number": 19,
+        "/rows/[]/cost/unpriced_tokens:number": 19,
+        "/rows/[]/cost/usd:string": 19,
+        "/rows/[]/cost:object": 19,
         "/rows/[]/cut:number": 1,
         "/rows/[]/row:string": 1,
         "/rows/[]/seq:string": 1,
@@ -697,6 +743,10 @@
         "/rows/[]/base:string": 1,
         "/rows/[]/compacted:number": 1,
         "/rows/[]/conversation:string": 1,
+        "/rows/[]/cost/micro_usd:number": 19,
+        "/rows/[]/cost/unpriced_tokens:number": 19,
+        "/rows/[]/cost/usd:string": 19,
+        "/rows/[]/cost:object": 19,
         "/rows/[]/diff/ball_id:string": 1,
         "/rows/[]/diff/delivered:string": 1,
         "/rows/[]/diff/files/[]/added:number": 1,
@@ -814,6 +864,10 @@
         "/rows/[]/attempts:number": 9,
         "/rows/[]/auth_row:string": 9,
         "/rows/[]/commit:string": 9,
+        "/rows/[]/cost/micro_usd:number": 19,
+        "/rows/[]/cost/unpriced_tokens:number": 19,
+        "/rows/[]/cost/usd:string": 19,
+        "/rows/[]/cost:object": 19,
         "/rows/[]/ended_at:string": 9,
         "/rows/[]/framing:string": 9,
         "/rows/[]/seq:string": 9,
@@ -947,6 +1001,10 @@
         "/rows/[]/kind:string": 1,
         "/rows/[]/pinned:number": 1,
         "/rows/[]/running:bool": 1,
+        "/rows/[]/spend/micro_usd:number": 19,
+        "/rows/[]/spend/unpriced_tokens:number": 19,
+        "/rows/[]/spend/usd:string": 19,
+        "/rows/[]/spend:object": 19,
         "/rows/[]/workspace:string": 1,
         "/rows/[]:object": 1,
         "/rows:array": 1,
@@ -1039,10 +1097,25 @@
         ":object": 1
       }
     },
+    "request/ceiling": {
+      "signature": {
+        "/op:string": 19,
+        "/usd:number": 19,
+        ":object": 19
+      }
+    },
     "request/clear-trail": {
       "signature": {
         "/op:string": 1,
         ":object": 1
+      }
+    },
+    "request/clear-workflow": {
+      "signature": {
+        "/agent:string": 19,
+        "/op:string": 19,
+        "/workspace:string": 19,
+        ":object": 19
       }
     },
     "request/clients": {
@@ -1393,6 +1466,25 @@
         ":object": 1
       }
     },
+    "request/price": {
+      "signature": {
+        "/model:string": 19,
+        "/op:string": 19,
+        "/provider:string": 19,
+        "/rates/cache_read:number": 19,
+        "/rates/cache_write:number": 19,
+        "/rates/input:number": 19,
+        "/rates/output:number": 19,
+        "/rates:object": 19,
+        ":object": 19
+      }
+    },
+    "request/prices": {
+      "signature": {
+        "/op:string": 19,
+        ":object": 19
+      }
+    },
     "request/priority": {
       "signature": {
         "/on:bool": 6,
@@ -1600,6 +1692,15 @@
         "/op:string": 1,
         "/workspace:string": 1,
         ":object": 1
+      }
+    },
+    "request/workflow": {
+      "signature": {
+        "/agent:string": 19,
+        "/config:string": 19,
+        "/op:string": 19,
+        "/workspace:string": 19,
+        ":object": 19
       }
     },
     "request/workspace-balls": {

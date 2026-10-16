@@ -1,0 +1,13 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "agent": "c-1",
+      "config": "strict",
+      "op": "workflow",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 19,
+  "shape": "workflow"
+}

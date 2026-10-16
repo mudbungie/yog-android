@@ -69,8 +69,18 @@ impl Choice {
 #[must_use]
 pub fn choices(row: &QueueRow) -> Vec<Choice> {
     let mut out = vec![Choice::Seen];
-    if row.held.is_some() {
-        out.extend(Scope::ALL.map(|scope| Choice::Answer(Verdict::Pass, scope)));
+    if let Some(held) = &row.held {
+        // **A pass is offered only at the scopes the engine lists** (DESIGN
+        // §23 item 9; lernie bl-da16): a tap is never an answer the engine
+        // will refuse in band. A row that lists none is an older engine's,
+        // and every reach stands as it did before the key existed.
+        let permits = |scope: &Scope| held.scopes.is_empty() || held.scopes.contains(scope);
+        out.extend(
+            Scope::ALL
+                .into_iter()
+                .filter(permits)
+                .map(|scope| Choice::Answer(Verdict::Pass, scope)),
+        );
         out.push(Choice::Answer(Verdict::Refuse, Scope::Call));
         out.push(Choice::Answer(Verdict::Hold, Scope::Call));
     }

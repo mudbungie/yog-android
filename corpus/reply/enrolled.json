@@ -19,7 +19,9 @@
       "key": "-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n",
       "kind": "enrolled",
       "name": "builder",
-      "ok": true
+      "ok": true,
+      "pairing_salt": "1111111111111111111111111111111111111111111111111111111111111111",
+      "rendezvous_pub": "0000000000000000000000000000000000000000000000000000000000000000"
     }
   ],
   "protocol": 19,

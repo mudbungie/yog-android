@@ -48,6 +48,20 @@
           "verb": "retarget"
         },
         {
+          "detail": "Marks the selected conversation to resolve `workflow.yaml` from the named config lineage's head instead of the lineage it follows (`litany workflow --config`). Only the workflow moves: the models, souls and manifest keep following the tip. The mark names the head as it is now, so it is a pin as well as a switch — the lineage advancing later changes nothing until you mark again. It takes effect at the conversation's next step boundary, and it governs its whole descent: a child with no mark of its own inherits it. `/lineages` says what there is to name; `/governing` says which mark stands and who holds it. Takes the workspace and the conversation from the seat; litany declines an unknown lineage, and a head whose `version` or `workflow.yaml` it cannot read, before anything is written.",
+          "summary": "run the selected conversation under a named lineage's workflow from its next step",
+          "surface": "control",
+          "usage": "/workflow <lineage>",
+          "verb": "workflow"
+        },
+        {
+          "detail": "Deletes the selected conversation's workflow mark (`litany workflow --clear`), so from its next step boundary the lineage it follows answers the workflow question again. Removing the mark deletes a setting, never a branch; a conversation inheriting an ancestor's mark keeps inheriting it, because the ancestor's mark is the ancestor's to clear. Takes the workspace and the conversation from the seat.",
+          "summary": "let the selected conversation's followed lineage govern its workflow again",
+          "surface": "control",
+          "usage": "/clear-workflow",
+          "verb": "clear-workflow"
+        },
+        {
           "detail": "Delivers a ball (`bl close`): folds `main` into its worktree, runs the project's pre-commit gate, squashes the work onto the target branch and removes the worktree. A failing gate aborts and leaves the ball claimed. With no id, the focused ball; stamped with its claimant, never your login name.",
           "summary": "close a ball (the focused one by default) and deliver its work",
           "surface": "control",
@@ -181,7 +195,7 @@
           "verb": "flag"
         },
         {
-          "detail": "Arms the loop on the focused workspace: from then on, whenever it holds fewer than <cap> balls of the focused project, it claims the top ready one and starts a drone on it — the same start a ▶ Start click makes, through the same spend ceiling. It renders as facts on the board (how full, how often it looks, when it last acted) and every spawn and reap is a row on the trail. It never stops anything that is running. Add a `lease_min` to its cadence.yaml entry and it will also release a claim whose conversations have gone quiet for that long, recording the comparison that decided it. `/disband` ends it.",
+          "detail": "Arms the loop on the focused workspace: from then on, whenever it holds fewer than <cap> balls of the focused project, it claims the top ready one and starts a drone on it — the same start a ▶ Start click makes, through the same spend ceiling. It renders as facts on the board (how full, how often it looks, when it last acted) and every spawn and reap is a row on the trail. It never stops anything that is running. Add a `lease_min` to its entry with `/config cadence` and it will also release a claim whose conversations have gone quiet for that long, recording the comparison that decided it. `/disband` ends it.",
           "summary": "run the focused project's ready balls here, up to this many at once",
           "surface": "control",
           "usage": "/fleet <cap>",
@@ -277,6 +291,27 @@
           "surface": "control",
           "usage": "/enroll <common-name> [foot] [--at <host>:<port>]",
           "verb": "enroll"
+        },
+        {
+          "detail": "Answers every priced (provider, model) row with its four rates in USD per million tokens, the ceiling in USD when one is set, and the whole world's priced spend — the ledger the ceiling is compared against. The table and the ceiling are world facts: one `ui.json` on the engine, shared by every seat, addressed to no workspace. An empty table means no cost is answered anywhere and no ceiling can bind; a step whose row is unpriced is counted in `unpriced_tokens` beside the money, so a partial table reads as *at least*.",
+          "summary": "the price table, the spend ceiling, and what this world has spent against it",
+          "surface": "control",
+          "usage": "/prices",
+          "verb": "prices"
+        },
+        {
+          "detail": "Writes one row of the price table, keyed by the provider row a call went through and the model it named — the same model id bills at list on an API-key row and at nothing on a subscription row, which is why the key is the pair. The rates are input, output, cache read and cache write, quoted in USD per million tokens exactly as a provider's price page prints them; an omitted rate is zero. `*` as the model prices every model that row serves and does not name, so a subscription is `/price <row> * 0 0`: priced, and pricing to $0.00, which is a different fact from unpriced. `off` in place of the rates deletes the row. A negative or unreadable figure is refused. A provider row this workspace's wall does not know is NOT refused — a row may be priced before it is configured, and the name is the one `/providers` lists. The reply is the re-read table, never an echo.",
+          "summary": "price one (provider, model) row in USD per million tokens, or delete it",
+          "surface": "control",
+          "usage": "/price <provider> <model> <input> <output> [<cache_read> [<cache_write>]] | /price <provider> <model> off",
+          "verb": "price"
+        },
+        {
+          "detail": "Writes the one number this whole world's priced spend must stay under, or deletes it with `off`. At or over it, no new conversation is started anywhere and every running one parks at its next tool call — a hold, never a kill, so no uncommitted work is lost — until the number moves. It needs a price table to mean anything: with none, nothing is bounded. Raising it back over the world's spend, or removing it, releases every conversation the ceiling parked, and only those — a floor's park or a policy hold is untouched — and the reply says how many woke as `released`. A literal 0 is the hard stop that starts nothing new. A negative or unreadable figure is refused.",
+          "summary": "set the world's spend ceiling in USD, or remove it",
+          "surface": "control",
+          "usage": "/ceiling <usd> | /ceiling off",
+          "verb": "ceiling"
         },
         {
           "detail": "Answers the invocation the capability boundary parked before it ran. `pass` lets it through, `refuse` declines it — the model is told the decision stands, and told not to retry it, rephrase it or reach the same outcome another way — and `hold` keeps it parked even if the policy later would have passed it. The call is read from the conversation's own hold mark, so nothing is typed and nothing can be spent by a different call. `--scope` says how far the answer stands. Left off it settles that one call, which is the safe reading and the one you get without thinking about it. `--scope conversation` settles the whole CLASS of the held call — the same tool at the same reach — for this conversation and everything below it; `--scope workspace` settles that class for every conversation here. A wider answer is how you stop being asked eleven times about one narrow tool. Answer the same scope again to change it, and `/revoke` suspends every standing answer, which is how you take one back. A destructive or credential-reaching call takes the bare form only: those are decided for the call in front of you, never for calls to come. Passing or refusing then drives the conversation on (`litany advance`), which is what actually lifts the hold: the control is asked again and now finds your answer. Nothing here stops the agent. Refuses when nothing is held there.",
@@ -489,7 +524,7 @@
           "verb": "help"
         },
         {
-          "detail": "The decision queue: one row per conversation asking for you, anywhere yog can see — why it is asking (it notified you, it came to rest, it hit its budget, a transfer was declined, its mail is undelivered), what it last said, how long it has waited, and the workspace and conversation to aim an answer at. The order is the one the down arrow walks at the window; the count is the strip's. Answer a row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else about it. Over a connection that can be held it stays open: the first frame is the answer as of now, and a further frame arrives whenever what needs you changes — each frame the whole answer, so paint the last one you were given. The hold ends quietly after thirty seconds and the asker asks again. At a seat that cannot hold one it is the same answer, once.",
+          "detail": "The decision queue: one row per conversation asking for you, anywhere yog can see — why it is asking (it notified you, it stopped without finishing, it parked a tool call, it was flagged, it hit its budget, a transfer was declined, its mail is undelivered), what it last said, how long it has waited, and the workspace and conversation to aim an answer at. A turn that merely finished is not on it — that is the conversation's `quiescent` state. The order is the one the down arrow walks at the window; the count is the strip's. Answer a row with `/message`, `/stop` or `/seen`; hand one on by messaging somebody else about it. Over a connection that can be held it stays open: the first frame is the answer as of now, and a further frame arrives whenever what needs you changes — each frame the whole answer, so paint the last one you were given. The hold ends quietly after thirty seconds and the asker asks again. At a seat that cannot hold one it is the same answer, once.",
           "summary": "everything waiting on you, across every workspace",
           "surface": "control",
           "usage": "/attention",

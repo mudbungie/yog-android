@@ -5,7 +5,7 @@
 use serde_json::{Value, json};
 
 use super::{Held, held_at, row};
-use crate::codec::AgentState;
+use crate::codec::{AgentState, Scope};
 
 /// The engine's own row, as `corpus/reply/attention.json` carries one.
 fn full() -> Value {
@@ -45,6 +45,7 @@ fn the_full_row_reads_back() {
             tool_use: "toolu_1".into(),
             tool: "Bash".into(),
             reason: "writes".into(),
+            scopes: vec![],
         })
     );
     assert_eq!(r.failure.as_deref(), Some("Unauthorized"));
@@ -102,4 +103,21 @@ fn refusals_name_the_offender() {
         bad("pending", json!(-1)),
         "missing or non-integer field \"pending\""
     );
+}
+
+#[test]
+fn the_held_rows_scopes_read_and_an_absent_key_is_empty() {
+    let mut v = full();
+    v["held"]["scopes"] = serde_json::json!(["call", "workspace", "later"]);
+    let r = row(&v).unwrap();
+    let held = r.held.unwrap();
+    assert_eq!(
+        held.scopes,
+        [
+            Scope::Call,
+            Scope::Workspace,
+            Scope::Unknown("later".to_owned())
+        ]
+    );
+    assert!(row(&full()).unwrap().held.unwrap().scopes.is_empty());
 }

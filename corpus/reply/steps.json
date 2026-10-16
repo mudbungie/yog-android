@@ -10,6 +10,11 @@
         {
           "attempts": 1,
           "commit": "abc",
+          "cost": {
+            "micro_usd": 30000,
+            "unpriced_tokens": 0,
+            "usd": "$0.03"
+          },
           "ended_at": "t1",
           "framing": "complete",
           "seq": "001",
@@ -40,6 +45,11 @@
         {
           "attempts": 1,
           "commit": "abc",
+          "cost": {
+            "micro_usd": 30000,
+            "unpriced_tokens": 0,
+            "usd": "$0.03"
+          },
           "ended_at": "t1",
           "framing": "killed",
           "seq": "003",
@@ -56,6 +66,11 @@
         {
           "attempts": 1,
           "commit": "abc",
+          "cost": {
+            "micro_usd": 30000,
+            "unpriced_tokens": 0,
+            "usd": "$0.03"
+          },
           "ended_at": "t1",
           "framing": "complete",
           "seq": "004",
@@ -73,6 +88,11 @@
           "attempts": 1,
           "auth_row": "anthropic",
           "commit": "abc",
+          "cost": {
+            "micro_usd": 30000,
+            "unpriced_tokens": 0,
+            "usd": "$0.03"
+          },
           "ended_at": "t1",
           "framing": "failed",
           "seq": "005",
@@ -89,6 +109,11 @@
         {
           "attempts": 1,
           "commit": "abc",
+          "cost": {
+            "micro_usd": 30000,
+            "unpriced_tokens": 0,
+            "usd": "$0.03"
+          },
           "ended_at": "t1",
           "framing": "failed",
           "seq": "006",
@@ -105,6 +130,11 @@
         {
           "attempts": 1,
           "commit": "abc",
+          "cost": {
+            "micro_usd": 30000,
+            "unpriced_tokens": 0,
+            "usd": "$0.03"
+          },
           "framing": "in_flight",
           "seq": "007",
           "started_at": "t0",

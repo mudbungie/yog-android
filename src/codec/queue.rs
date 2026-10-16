@@ -22,7 +22,7 @@
 //! answer — the held call in it included — the day upstream names a ninth
 //! signal.
 
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 mod sentence;
 
@@ -70,6 +70,13 @@ pub struct Held {
     /// The control's sentence about this call — what it is about to do, in
     /// the words the engine chose. Painted verbatim (REMOTE §8.1).
     pub reason: String,
+    /// **The scopes a pass may take on this call** (REMOTE §9.26, corpus
+    /// edition 23; DESIGN §23 item 9): `call` alone for a secret or
+    /// destructive call, all three otherwise. **Empty means *the engine did
+    /// not say*** — an older engine wrote no such key — and the seat then
+    /// offers every reach it knows and lets the refusal land in band, as it
+    /// did before the key existed.
+    pub scopes: Vec<super::Scope>,
 }
 
 /// A raised flag, when somebody asked for a look at this conversation.
@@ -112,7 +119,16 @@ fn held(v: &Value) -> Result<Held, String> {
         tool_use: str_of(o, "tool_use")?,
         tool: str_of(o, "tool")?,
         reason: str_of(o, "reason")?,
+        scopes: opt(o, "scopes", scopes)?.unwrap_or_default(),
     })
+}
+
+/// The held row's scopes, each read by the one reader a scope word has.
+fn scopes(o: &Map<String, Value>, key: &str) -> Result<Vec<super::Scope>, String> {
+    Ok(super::fields::strings_of(o, key, "held")?
+        .iter()
+        .map(|word| super::Scope::of_word(word))
+        .collect())
 }
 
 fn flag(v: &Value) -> Result<Flag, String> {

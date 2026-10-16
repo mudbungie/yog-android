@@ -23,6 +23,7 @@ fn held(tool_use: &str) -> Held {
         tool_use: tool_use.to_owned(),
         tool: "Bash".to_owned(),
         reason: REASON.to_owned(),
+        scopes: vec![],
     }
 }
 

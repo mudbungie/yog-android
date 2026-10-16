@@ -1,0 +1,41 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "ceiling": 25,
+      "kind": "prices",
+      "ok": true,
+      "released": 2,
+      "rows": [
+        {
+          "cache_read": 0.3,
+          "cache_write": 3.75,
+          "input": 3,
+          "model": "*",
+          "output": 15,
+          "provider": "anthropic"
+        },
+        {
+          "cache_read": 0,
+          "cache_write": 0,
+          "input": 0,
+          "model": "claude-opus-4-1",
+          "output": 0,
+          "provider": "claude-session-direct"
+        }
+      ],
+      "spent": {
+        "micro_usd": 4250000,
+        "unpriced_tokens": 12,
+        "usd": "$4.25"
+      }
+    },
+    {
+      "kind": "prices",
+      "ok": true,
+      "rows": []
+    }
+  ],
+  "protocol": 19,
+  "shape": "prices"
+}

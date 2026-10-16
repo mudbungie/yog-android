@@ -15,7 +15,12 @@
             "reason": "please look at this one"
           },
           "held": {
-            "reason": "writes",
+            "reason": "Bash {\"command\":\"curl x\"} classified open-world (reaches the network)",
+            "scopes": [
+              "call",
+              "conversation",
+              "workspace"
+            ],
             "tool": "Bash",
             "tool_use": "toolu_1"
           },

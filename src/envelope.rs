@@ -173,6 +173,7 @@ pub fn read(text: &str) -> Result<Envelope, String> {
         key: field(obj, "key")?,
         roving: roving::read(obj)?,
     };
+    roving::checked(envelope.roving.as_ref())?;
     agrees(&envelope)?;
     Ok(envelope)
 }

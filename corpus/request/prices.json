@@ -1,0 +1,10 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "prices"
+    }
+  ],
+  "protocol": 19,
+  "shape": "prices"
+}

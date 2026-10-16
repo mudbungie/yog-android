@@ -9,6 +9,11 @@
           "base": "f00dbeef",
           "compacted": 12,
           "conversation": "20260815T101112Z-abcd1234",
+          "cost": {
+            "micro_usd": 7500000,
+            "unpriced_tokens": 3,
+            "usd": "$7.50"
+          },
           "diff": {
             "ball_id": "bl-1",
             "project": "p",

@@ -80,8 +80,8 @@ fn the_box_is_the_focused_conversations_own_row_by_both_keys() {
 #[test]
 fn the_parked_call_is_folded_at_the_engines_clause() {
     let folded = parked(&corpus()[0]).unwrap();
-    assert_eq!(folded.line, "held: Bash");
-    assert_eq!(folded.why, "writes");
+    assert_eq!(folded.line, "held: Bash · open-world");
+    assert_eq!(folded.why, "classified open-world (reaches the network)");
 }
 
 #[test]
@@ -131,7 +131,10 @@ fn one_line_stands_under_the_name_and_the_rest_fold_behind_it() {
     // A parked call: its line stands; every word is behind the fold.
     assert_eq!(
         summary(&rows[0]),
-        Some(("held: Bash".to_owned(), theme::accent(State::Attention)))
+        Some((
+            "held: Bash · open-world".to_owned(),
+            theme::accent(State::Attention)
+        ))
     );
     assert_eq!(behind(&rows[0]), words(&rows[0]));
     assert!(folds(&rows[0]));
@@ -151,4 +154,21 @@ fn one_line_stands_under_the_name_and_the_rest_fold_behind_it() {
     // A row that says nothing has no line and no fold.
     assert_eq!(summary(&rows[1]), None);
     assert!(!folds(&rows[1]));
+}
+
+#[test]
+fn a_secret_call_offers_a_pass_at_the_call_alone_and_an_unstated_row_every_reach() {
+    let mut rows = corpus();
+    let mut held = rows[0].held.clone().unwrap();
+    held.scopes = vec![Scope::Call];
+    rows[0].held = Some(held.clone());
+    let said: Vec<String> = cells(&rows[0], 4)
+        .into_iter()
+        .flatten()
+        .map(|(word, _)| word)
+        .collect();
+    assert_eq!(said, ["1. seen", "2. pass", "3. refuse", "4. hold"]);
+    held.scopes.clear();
+    rows[0].held = Some(held);
+    assert_eq!(choices(&rows[0]).len(), 6);
 }

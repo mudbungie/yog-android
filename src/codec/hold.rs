@@ -118,6 +118,16 @@ impl Scope {
     /// a deliberate move rightward.
     pub(crate) const ALL: [Self; 3] = [Self::Call, Self::Conversation, Self::Workspace];
 
+    /// **The scope a word names**, or the word itself where this build has no
+    /// reading for it (REMOTE §3.2) — the one reader for a receipt's scope and
+    /// for the scopes a held row lists (`queue::Held::scopes`).
+    pub(crate) fn of_word(word: &str) -> Self {
+        Self::ALL
+            .into_iter()
+            .find(|s| s.word() == word)
+            .unwrap_or_else(|| Self::Unknown(word.to_owned()))
+    }
+
     /// The engine's own word — the wire token and the control's label at once.
     pub(crate) fn word(&self) -> String {
         match self {
@@ -159,11 +169,7 @@ pub(crate) fn decode(o: &Map<String, Value>) -> Result<(String, String, Verdict,
 /// The scope token, read for whoever is asking — the gesture on the way out
 /// and the receipt on the way back, `verdict_of`'s shape one field along.
 fn scope_of(o: &Map<String, Value>) -> Result<Scope, String> {
-    let word = str_of(o, "scope")?;
-    Ok(Scope::ALL
-        .into_iter()
-        .find(|s| s.word() == word)
-        .unwrap_or(Scope::Unknown(word)))
+    Ok(Scope::of_word(&str_of(o, "scope")?))
 }
 
 /// The verdict token, read for whoever is asking — the gesture on the way out

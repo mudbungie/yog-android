@@ -53,6 +53,16 @@ engine of this major, every later path is optional to read. `deprecated`
 lists shapes and fields (path without type) yog still writes and a reader
 should stop relying on.
 
+**The engine states its edition, so a client can compare.** yog's `build.rs`
+reads this file and compiles the newest stamp in as `EDITION` and `floor` as
+`FLOOR`; the version preface each end writes carries `edition` beside
+`protocol` (REMOTE §3.2). A client that vendors this directory can therefore
+grey a control whose field's stamp exceeds the engine's edition, and tell a
+field the engine chose not to say from one it cannot spell at all. A peer that
+states no `edition` is read as speaking the floor. The preface is not a wire
+shape and is recorded nowhere in this file: it rides beside the gesture
+envelope, and only the envelope is stamped here.
+
 Keys are sorted and the file ends in a newline; regenerating on an unchanged
 boundary is byte-identical. There is no timestamp, no counter and no address in
 any fixture.

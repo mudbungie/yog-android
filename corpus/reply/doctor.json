@@ -17,6 +17,32 @@
           "remedy": "`WIRE_HOST=<host> WIRE_PORT=<port> yog wire-certs` states it"
         }
       ]
+    },
+    {
+      "kind": "doctor",
+      "ok": true,
+      "rendezvous": {
+        "accepted": 2,
+        "active": true,
+        "calls": 5,
+        "last_poll_unix": 1700000015,
+        "published": 3,
+        "punched": 4,
+        "served": 6
+      },
+      "rows": [
+        {
+          "check": "listener",
+          "fact": "listening on 127.0.0.1:7737",
+          "ok": true
+        },
+        {
+          "check": "address",
+          "fact": "127.0.0.1:0 is a request, not an endpoint",
+          "ok": false,
+          "remedy": "`WIRE_HOST=<host> WIRE_PORT=<port> yog wire-certs` states it"
+        }
+      ]
     }
   ],
   "protocol": 19,

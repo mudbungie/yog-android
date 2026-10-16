@@ -11,7 +11,13 @@
       "kind": "governing",
       "oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "ok": true,
-      "short_oid": "bbbbbbbb"
+      "short_oid": "bbbbbbbb",
+      "workflow_mark": {
+        "holder": "r-0",
+        "lineage": "strict",
+        "oid": "dddddddddddddddddddddddddddddddddddddddd",
+        "short_oid": "dddddddd"
+      }
     },
     {
       "diverged_lineages": 2,
@@ -20,7 +26,23 @@
       "kind": "governing",
       "oid": "cccccccccccccccccccccccccccccccccccccccc",
       "ok": true,
-      "short_oid": "cccccccc"
+      "short_oid": "cccccccc",
+      "workflow_mark": {
+        "holder": "r-0-c-1",
+        "lineage": null,
+        "oid": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "short_oid": "eeeeeeee"
+      }
+    },
+    {
+      "diverged_lineages": 0,
+      "files": [],
+      "follows": "default",
+      "kind": "governing",
+      "oid": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "ok": true,
+      "short_oid": "bbbbbbbb",
+      "workflow_mark": null
     }
   ],
   "protocol": 19,
