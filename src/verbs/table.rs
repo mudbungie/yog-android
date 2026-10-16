@@ -17,9 +17,6 @@ pub struct Gates {
     pub workspace: bool,
     /// A conversation is focused, and its row is read.
     pub conversation: Option<Offers>,
-    /// The two transcript policies, so a toggle says its state.
-    pub full: bool,
-    pub steps: bool,
 }
 
 /// What the engine's own gates on the focused row say (REMOTE §9.4).
@@ -104,12 +101,13 @@ pub fn rows(gates: &Gates) -> Vec<Row> {
     if let Some(offers) = gates.conversation {
         acts(offers, &mut out);
     }
-    out.push(toggle("full", Does::Full, "show full response", gates.full));
-    out.push(toggle(
-        "steps",
-        Does::Steps,
-        "show intermediate steps",
-        gates.steps,
+    // **The transcript's policy is the settings pane's** (§23 item 11):
+    // what was `/full` and `/steps` is two of its knobs.
+    out.push(row(
+        "settings",
+        &[],
+        Does::Open(Overlay::Settings),
+        "this device's own knobs",
     ));
     out
 }
@@ -182,10 +180,4 @@ fn acts(offers: Offers, out: &mut Vec<Row>) {
     out.push(wanting(row("flag", &["flag"], Does::Flag, ""), "a reason"));
     out.push(row("revoke", &["revoke"], Does::Revoke, ""));
     out.push(row("restore", &["restore"], Does::Restore, ""));
-}
-
-/// A toggle row, saying its state.
-fn toggle(word: &'static str, does: Does, what: &str, on: bool) -> Row {
-    let state = if on { "on" } else { "off" };
-    row(word, &[], does, &format!("{what} · {state}"))
 }

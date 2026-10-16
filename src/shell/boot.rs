@@ -112,6 +112,16 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
 /// no file and no directory — one is a private key an operator delivered out
 /// of channel, the other is a picture of the world that is deletable by
 /// definition.
+/// **Where the operator's knobs live** (DESIGN §23 item 11): a sibling of
+/// the cache under the same private root, and the operator's file rather
+/// than the engine's — never inside the material directory.
+pub(super) fn settings_file(android: &AndroidApp) -> std::path::PathBuf {
+    android
+        .internal_data_path()
+        .unwrap_or_default()
+        .join(crate::settings::FILE)
+}
+
 fn cache_file(android: &AndroidApp) -> std::path::PathBuf {
     android
         .internal_data_path()

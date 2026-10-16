@@ -28,7 +28,9 @@ impl Shell {
         let open = ui
             .ctx()
             .data(|d| d.get_temp::<bool>(fold()))
-            .unwrap_or(false);
+            // **The first frame reads the `dock` knob** (§23 item 11); a tap
+            // on the line is remembered for the run from then on.
+            .unwrap_or_else(|| self.knobs.on(crate::settings::Toggle::Dock));
         let Some(words) = crate::dock::line(&rows, open) else {
             return;
         };

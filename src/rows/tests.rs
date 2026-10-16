@@ -41,6 +41,7 @@ fn go_open(entries: &[Entry]) -> Vec<Row> {
     let auto = AutoExpand {
         responses: true,
         others: true,
+        fold: true,
     };
     rows(entries, SPEAKER, None, auto, &BTreeSet::new())
 }

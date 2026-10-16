@@ -22,7 +22,7 @@ use crate::verbs::{Does, Fired, Gates, Offers, Row};
 
 impl Shell {
     /// What the sheet is gated on, read off the focus and the focused row.
-    pub(super) fn gates(&self, snap: &Snapshot) -> Gates {
+    pub(super) fn gates(snap: &Snapshot) -> Gates {
         let row = super::controls::focused_row(snap);
         let row = row.as_ref();
         Gates {
@@ -32,8 +32,6 @@ impl Shell {
                 stop_children: row.is_some_and(|row| row.stop_children),
                 at_rest: row.is_some_and(|row| row.flight.is_none()),
             }),
-            full: self.auto.responses,
-            steps: self.auto.others,
         }
     }
 
@@ -48,7 +46,7 @@ impl Shell {
         if std::mem::take(&mut self.back) {
             self.composer = crate::verbs::door(&self.composer);
         }
-        let all = crate::verbs::rows(&self.gates(snap));
+        let all = crate::verbs::rows(&Self::gates(snap));
         let shown = crate::verbs::matching(&all, &self.composer);
         let rect = ui.available_rect_before_wrap();
         let mut took = None;
@@ -97,7 +95,7 @@ impl Shell {
 
     /// `send` on a slash line.
     pub(super) fn send_line(&mut self, snap: &Snapshot) {
-        let all = crate::verbs::rows(&self.gates(snap));
+        let all = crate::verbs::rows(&Self::gates(snap));
         let fired = crate::verbs::send(&all, &self.composer);
         self.fired(snap, fired);
     }
@@ -121,8 +119,6 @@ impl Shell {
     fn does(&mut self, snap: &Snapshot, does: Does, words: String) {
         let act = match does {
             Does::Open(overlay) => return self.open(overlay),
-            Does::Full => return self.auto.responses = !self.auto.responses,
-            Does::Steps => return self.auto.others = !self.auto.others,
             Does::Knob(crate::status::Slot::Priority) => return self.priority_verb(snap),
             Does::Knob(slot) => return self.rule.verb = Some(slot),
             Does::Find => {

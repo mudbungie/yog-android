@@ -45,9 +45,6 @@ pub enum Does {
     /// dropup, or flip priority — each reachable here however narrow the
     /// rule is.
     Knob(crate::status::Slot),
-    /// Flip a transcript policy: show full responses, show steps.
-    Full,
-    Steps,
 }
 
 /// **One row of the sheet**: the word typed, what it does in the engine's own

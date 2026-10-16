@@ -103,10 +103,12 @@ pub(crate) fn marked(
 /// padded `S`, the full width — the gutter glyph stands inside it.
 pub(crate) fn bubbled(
     ui: &mut egui::Ui,
-    role: crate::theme::bubble::Bubble,
+    role: Option<crate::theme::bubble::Bubble>,
     body: impl FnOnce(&mut egui::Ui),
 ) {
-    let (fill, stroke) = crate::theme::bubble::bubble(role);
+    // **The `bubbles` knob off is no fill and no stroke** (§23 item 11):
+    // the frame still pads, so the lines stand where they would.
+    let (fill, stroke) = role.map_or(([0, 0, 0, 0], None), crate::theme::bubble::bubble);
     let stroke = stroke.map_or(egui::Stroke::NONE, |rgb| {
         egui::Stroke::new(1.0, super::rgb(rgb))
     });

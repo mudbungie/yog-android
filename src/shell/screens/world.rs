@@ -73,6 +73,7 @@ impl Shell {
             Overlay::Files => self.files(ui, snap, &workspace, &agent),
             Overlay::Search => self.searched(ui, snap),
             Overlay::Switcher => self.switcher(ui, snap),
+            Overlay::Settings => self.tuned(ui, snap),
         }
     }
 }

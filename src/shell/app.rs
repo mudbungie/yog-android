@@ -21,7 +21,6 @@ use super::bridge::Bridge;
 use super::enroll::Scanner;
 use super::field::Native;
 use super::inset::InsetPx;
-use crate::rows::AutoExpand;
 
 pub(crate) struct Shell {
     pub(super) android: AndroidApp,
@@ -126,8 +125,12 @@ pub(crate) struct Shell {
     /// and the field does not: an open camera must be closed on the way out
     /// of the screen, whichever way out was taken.
     pub(crate) scanner: Scanner,
-    /// Which KINDS of row open by default (the desktop's two knobs).
-    pub(crate) auto: AutoExpand,
+    /// **This device's own knobs** (DESIGN §23 item 11), read from
+    /// `knobs_file` at boot and written back as each one moves; the
+    /// transcript's policy is three of them.
+    pub(crate) knobs: crate::settings::Settings,
+    /// Where the knobs are kept: beside the cache, never the material.
+    pub(crate) knobs_file: std::path::PathBuf,
     /// The rows the operator has flipped by hand — overrides, never states:
     /// membership FLIPS a row's auto-state, so an empty set is "everything as
     /// configured" and the knobs above keep meaning what they say.
@@ -207,6 +210,7 @@ pub(crate) struct Shell {
 
 impl Shell {
     fn new(android: AndroidApp) -> Self {
+        let knobs_file = super::boot::settings_file(&android);
         Self {
             running: boot(&android),
             chose: None,
@@ -233,7 +237,8 @@ impl Shell {
             needle: String::new(),
             envelope: String::new(),
             envelope_said: None,
-            auto: AutoExpand::default(),
+            knobs: crate::settings::read(&knobs_file),
+            knobs_file,
             folds: std::collections::BTreeSet::new(),
             acted: 0,
             t0: std::time::Instant::now(),

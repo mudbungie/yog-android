@@ -63,6 +63,14 @@ slash hel
 tap_control help
 capture help help
 
+# 2s. THE SETTINGS OVERLAY (DESIGN §23 item 11): this device's own knobs,
+#     one row each over its sentence, `defaults` at the foot. A sheet row
+#     like the rest; it reads nothing off the wire.
+relaunch
+slash sett
+tap_control settings
+capture tuned settings
+
 # 4a. THE BALL PANE'S AIMED READ (DESIGN §13.9). The one of the three that
 #     names a place, and it is offered on the screen that names it — a
 #     workspace's conversation list — so this is the only depth it can be

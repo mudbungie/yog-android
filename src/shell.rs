@@ -54,6 +54,8 @@ mod overlay;
 #[cfg(target_os = "android")]
 mod screens;
 #[cfg(target_os = "android")]
+mod settings;
+#[cfg(target_os = "android")]
 mod slash;
 #[cfg(target_os = "android")]
 mod status;

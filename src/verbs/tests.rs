@@ -13,8 +13,6 @@ fn running() -> Gates {
             stop_children: true,
             at_rest: false,
         }),
-        full: true,
-        steps: false,
     }
 }
 
@@ -46,8 +44,7 @@ fn with_nothing_focused_only_the_world_is_offered() {
             "board",
             "help",
             "find",
-            "full",
-            "steps"
+            "settings"
         ]
     );
 }
@@ -68,11 +65,7 @@ fn a_running_conversation_offers_the_stops_and_not_nudge() {
         assert!(words.contains(&word), "{word}");
     }
     assert!(!words.contains(&"nudge"));
-    assert_eq!(find(&rows, "full").summary, "show full response · on");
-    assert_eq!(
-        find(&rows, "steps").summary,
-        "show intermediate steps · off"
-    );
+    assert_eq!(find(&rows, "settings").summary, "this device's own knobs");
     assert_eq!(find(&rows, "stop all").ops, ["stop"]);
     assert_eq!(find(&rows, "diff").ops, ["work-diff"]);
 }
@@ -124,10 +117,7 @@ fn a_line_names_the_longest_word_it_begins_with() {
 #[test]
 fn the_sheet_narrows_by_the_first_word_and_shows_all_when_nothing_answers() {
     let rows = rows(&running());
-    assert_eq!(
-        words(&matching(&rows, "/st")),
-        ["stop", "stop all", "steps"]
-    );
+    assert_eq!(words(&matching(&rows, "/st")), ["stop", "stop all"]);
     assert_eq!(words(&matching(&rows, "/stop")), ["stop", "stop all"]);
     assert_eq!(words(&matching(&rows, "/flag why")), ["flag"]);
     assert_eq!(matching(&rows, "/it drifted").len(), rows.len());

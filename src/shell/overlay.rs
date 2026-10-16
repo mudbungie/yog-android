@@ -169,7 +169,8 @@ impl Shell {
             | Overlay::Help
             | Overlay::Queue
             | Overlay::Search
-            | Overlay::Switcher => (),
+            | Overlay::Switcher
+            | Overlay::Settings => (),
         }
     }
 

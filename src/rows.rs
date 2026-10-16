@@ -65,6 +65,9 @@ pub struct AutoExpand {
     pub responses: bool,
     /// Everything else: thinking, tool calls/results, raw bytes, rollups.
     pub others: bool,
+    /// **Whether a settled turn's working folds itself** (DESIGN §23 item
+    /// 6): off, the one line stands open to its compact steps by default.
+    pub fold: bool,
 }
 
 impl Default for AutoExpand {
@@ -72,6 +75,7 @@ impl Default for AutoExpand {
         Self {
             responses: true,
             others: false,
+            fold: true,
         }
     }
 }
@@ -234,10 +238,12 @@ pub fn rows(
 /// is happening it is the show, and completion returns it to its class
 /// auto-state with no event to notice and nothing to store.
 fn expanded_for(row: &Row, auto: AutoExpand, overridden: bool) -> bool {
+    // **A working that does not fold itself stands open** (§23 item 6): the
+    // `fold` switch off opens every settled turn's one line to its steps.
     let auto_on = showing(row)
         || match row.class {
             RowClass::Response => auto.responses,
-            RowClass::Other => auto.others,
+            RowClass::Other => auto.others || (!auto.fold && row.kind == Kind::Trail),
         };
     auto_on != overridden
 }

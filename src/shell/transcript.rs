@@ -58,7 +58,7 @@ impl Shell {
             &snap.transcript,
             &speaker,
             parked.as_ref(),
-            self.auto,
+            self.knobs.auto(),
             &self.folds,
         );
         let lines = crate::rows::lines(&painted, &self.folds);
@@ -128,12 +128,13 @@ impl Shell {
                             // item 7): the first line's parting stands
                             // outside the fill, the rest inside it.
                             let mut at = 0;
+                            let bubbles = self.knobs.on(crate::settings::Toggle::Bubbles);
                             for block in crate::rows::blocks(&lines) {
                                 let held = lines.get(at..at + block.lines).unwrap_or_default();
                                 if let Some(first) = held.first() {
                                     super::chat::before(ui, first.before);
                                 }
-                                bubbled(ui, block.bubble, |ui| {
+                                bubbled(ui, bubbles.then_some(block.bubble), |ui| {
                                     for (i, line) in held.iter().enumerate() {
                                         if i > 0 {
                                             super::chat::before(ui, line.before);
@@ -150,7 +151,8 @@ impl Shell {
                             // will be — above the answer to it, on the
                             // operator's own bubble (§23 item 5).
                             if let Some(echo) = &self.echo {
-                                bubbled(ui, crate::theme::bubble::Bubble::Operator, |ui| {
+                                let own = bubbles.then_some(crate::theme::bubble::Bubble::Operator);
+                                bubbled(ui, own, |ui| {
                                     super::chat::echo(ui, &echo.text, echo.fate);
                                 });
                             }

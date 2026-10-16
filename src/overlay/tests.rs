@@ -1,6 +1,7 @@
 use super::*;
 
-const ALL: [Overlay; 16] = [
+const ALL: [Overlay; 17] = [
+    Overlay::Settings,
     Overlay::Queue,
     Overlay::Trail,
     Overlay::Candidates,

@@ -52,6 +52,8 @@ pub enum Overlay {
     /// conversations, fused — what back from the chat opens, and what stands
     /// whenever nothing is focused.
     Switcher,
+    /// **This device's own knobs** (§23 item 11), one row each.
+    Settings,
 }
 
 /// How deep the focus is — what the overlay floats over.
@@ -134,6 +136,7 @@ impl Overlay {
             Self::Files => "files",
             Self::Search => "search",
             Self::Switcher => "conversations",
+            Self::Settings => "settings",
         }
     }
 
@@ -157,7 +160,8 @@ impl Overlay {
             | Self::Help
             | Self::Balls(_)
             | Self::Search
-            | Self::Switcher => "workspaces",
+            | Self::Switcher
+            | Self::Settings => "workspaces",
             Self::Records | Self::Files => "transcript",
             Self::Candidates
             | Self::Fleet
@@ -179,9 +183,12 @@ impl Overlay {
     /// the material rather than leaving the surface.
     pub fn line(self, minted: bool, under: &Under) -> Line {
         let subject = match self {
-            Self::Queue | Self::Trail | Self::Help | Self::Switcher | Self::Balls(View::Board) => {
-                String::new()
-            }
+            Self::Queue
+            | Self::Trail
+            | Self::Help
+            | Self::Switcher
+            | Self::Settings
+            | Self::Balls(View::Board) => String::new(),
             Self::Balls(View::Everywhere) => "all workspaces".to_owned(),
             Self::Records | Self::Files => under.conversation.clone(),
             Self::Search => under.needle.clone(),

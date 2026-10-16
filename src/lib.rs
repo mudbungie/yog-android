@@ -43,6 +43,7 @@ pub mod roster;
 pub mod rows;
 pub mod scan;
 pub mod seat;
+pub mod settings;
 pub mod shell;
 pub mod state;
 pub mod status;
