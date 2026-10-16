@@ -62,6 +62,8 @@ mod switcher;
 #[cfg(target_os = "android")]
 pub(crate) mod sys;
 #[cfg(target_os = "android")]
+mod tabs;
+#[cfg(target_os = "android")]
 mod theme;
 #[cfg(target_os = "android")]
 mod transcript;

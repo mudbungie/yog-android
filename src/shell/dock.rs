@@ -35,12 +35,18 @@ impl Shell {
         let mut chosen = None;
         if open {
             let now = crate::roster::now_unix();
+            let mut first = true;
             for row in rows.iter().rev() {
                 let parts: Vec<(String, egui::Color32)> = crate::dock::row_words(row, now)
                     .into_iter()
                     .map(|(text, hue)| (text, rgb(hue)))
                     .collect();
-                if theme::row(ui, theme::line(ui, &parts).into()).clicked() {
+                let seat = theme::row(ui, theme::line(ui, &parts).into());
+                // **Where the harness finds a row** (§15.2): the first only.
+                if std::mem::take(&mut first) {
+                    self.note_control("dock-row", ui, seat.rect);
+                }
+                if seat.clicked() {
                     chosen = Some(row.root_id.clone());
                 }
             }

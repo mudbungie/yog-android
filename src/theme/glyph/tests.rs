@@ -2,7 +2,10 @@ use super::*;
 
 #[test]
 fn the_spellings_are_the_desktops() {
-    assert_eq!(ALL, ["›", "—", "|", "¦", "·", "•", "✔", "✖", "−", "+", "…"]);
+    assert_eq!(
+        ALL,
+        ["›", "—", "|", "¦", "·", "•", "✔", "✖", "−", "+", "…", "×"]
+    );
 }
 
 #[test]

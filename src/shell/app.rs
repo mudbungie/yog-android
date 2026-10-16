@@ -84,6 +84,9 @@ pub(crate) struct Shell {
     /// by the control that moves it: a cap of zero is a loop that spawns
     /// nothing and still reaps, which upstream refuses to spell as a cap.
     pub(crate) cap: usize,
+    /// **The open set** (DESIGN §23 item 2): which conversations were
+    /// focused this run, what the tab strip paints. Per run, like a fold.
+    pub(crate) tabs: crate::tabs::Tabs,
     /// **Whether the ask's `why` is open** (§22 item 8, §13.7, bl-8c94):
     /// the control's decision about the parked call, folded away so the box
     /// says one line about it. A fold, and no more durable than one.
@@ -220,6 +223,7 @@ impl Shell {
             candidate: None,
             spread: crate::shell::screens::FLOOR,
             cap: crate::shell::screens::CAP,
+            tabs: crate::tabs::Tabs::default(),
             scanner: Scanner::new(android.clone()),
             android,
             bridge: Bridge::default(),

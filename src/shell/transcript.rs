@@ -25,6 +25,28 @@ impl Shell {
         workspace: &str,
         agent: &str,
     ) {
+        // **The frame that paints a focused conversation is what opens its
+        // tab** (§23 item 2), and a tab the listing forgot leaves here too.
+        self.tabs.focused(workspace, agent);
+        let known: Vec<String> = snap
+            .conversations
+            .iter()
+            .map(|row| row.root_id.clone())
+            .collect();
+        self.tabs.prune(workspace, &known, Some(agent));
+        // **The drawer** (§23 item 1): a drag from the left edge opens the
+        // switcher, the one gesture the desktop's bar had that the switcher
+        // lacked.
+        let (origin, now) = ui.ctx().input(|i| {
+            let down = i.pointer.any_down();
+            (
+                i.pointer.press_origin().filter(|_| down).map(|p| p.x),
+                i.pointer.latest_pos().map(|p| p.x),
+            )
+        });
+        if crate::drawer::opens(origin, now) {
+            self.open(crate::overlay::Overlay::Switcher);
+        }
         let speaker = super::chat::speaker_of(snap, agent);
         // **Which call is parked is the engine's answer, never a reading
         // taken here** (§13.7): the queue read names it, and the projection
@@ -75,6 +97,9 @@ impl Shell {
             }
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                // **The tab strip stands over the transcript** (§23 item 2),
+                // under the top inset, never riding the keyboard.
+                self.tabs(ui, snap, workspace);
                 // **The verb sheet takes this room while the draft is a slash
                 // line** (§22 item 5): above the rule, never over the field.
                 if self.sheet(ui, snap) {

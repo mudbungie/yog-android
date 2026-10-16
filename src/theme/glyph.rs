@@ -30,10 +30,12 @@ pub const OPEN: &str = "−";
 pub const SHUT: &str = "+";
 /// Where a line was cut.
 pub const ELIDED: &str = "…";
+/// A tab's close (DESIGN §23 item 2), the desktop's spelling.
+pub const CLOSE: &str = "×";
 
 /// Every glyph the table spells, for the tests that judge them as a set.
-pub const ALL: [&str; 11] = [
-    PROMPT, LEAD, SEP, MODEL, NOTE, CALL, DONE, FAILED, OPEN, SHUT, ELIDED,
+pub const ALL: [&str; 12] = [
+    PROMPT, LEAD, SEP, MODEL, NOTE, CALL, DONE, FAILED, OPEN, SHUT, ELIDED, CLOSE,
 ];
 
 /// **What this tree has measured as tofu** in the bundled proportional face

@@ -229,6 +229,13 @@ relaunch
 tap_control dock
 capture docked transcript
 
+# 5b. THE TAB STRIP (DESIGN §23 item 2). The dock's row focuses the second
+#     running conversation, so two are open this run and the strip stands
+#     over the transcript — the focused one over a brand hairline, `×` after
+#     each; a strip with one tab does not stand.
+tap_control dock-row
+capture tabbed transcript
+
 fetch_beats
 # The shade beats last of all: the third one posts a notification, which puts a
 # row in the status bar of every picture taken after it.

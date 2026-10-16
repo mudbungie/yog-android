@@ -189,6 +189,13 @@ inks, then the choices as numbered cells two to a row, each `TOUCH` tall and
 half the width, their words wrapping to a second line rather than eliding,
 `RAISED` under a thumb; `1. seen` alone when nothing is parked.
 
+**The tab strip** (`tabs`; DESIGN §23 item 2): one `TOUCH`-tall row over
+the transcript, standing from the second open conversation, scrolling
+sideways; a tab is its name at `BODY` with `S` of air either side, the
+asking `?` before it in the attention accent, the focused one in `INK` over
+a brand hairline and the rest in `INK_WEAK`, `×` in `INK_FAINT` as its own
+seat after it; the `RAISED` wash while a thumb is on either.
+
 **The dock** (`dock`): one `TOUCH`-tall row above the rule, `+ N running ·
 <name>` in `INK_WEAK` with the count in the working accent; unfolded, one row
 apiece beneath the head, name in `INK`, state in its ink, age in `INK_WEAK`.
