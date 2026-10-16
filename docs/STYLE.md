@@ -135,7 +135,7 @@ is `RADIUS 10`; a speaker's rule is `RULE 3` wide.
 ## 5. Anatomy
 
 **The shape, whole** (DESIGN §22, bl-bf74 — the desktop's Hermes shape at a
-phone's width): the chat is the home screen; the transcript fills it; above
+phone's width; **§23 adds the tab strip over the transcript from the second open conversation, the drawer swipe, the bubbles, the told sentence on a long press and the settings overlay**): the chat is the home screen; the transcript fills it; above
 the floor, bottom-up, stand the prompt line, the status rule, and — only while
 they have something to say — the ask and the dock. Everything else is an
 overlay, asked for by a tap on the rule or on `›`, and closed by its name line
@@ -216,8 +216,8 @@ its own indent, its lines elided against the width it has — the first line
 (name, mark, stamp) in the row's tone, every line after it in `INK_WEAK` —
 with the connector rails in `INK_FAINT`. No fill at rest, no stroke ever.
 
-**A block** (the transcript, DESIGN §7; **gutter since §22 item 4**):
-aligned, guttered, never bubbled. Every block starts at the same left edge
+**A block** (the transcript, DESIGN §7; **gutter since §22 item 4; bubbled by role since §23 item 7** — the operator's turn on the brand's tint, a trail on the ground inside a hairline, intermediate prose on `SURFACE`, the final prose on `RAISED`, each at `RADIUS` with the gutter glyph inside it):
+aligned, guttered, bubbled. Every block starts at the same left edge
 with its glyph in the gutter — `›` in the brand for the operator, `¦` in
 `INK_WEAK` for the model, `·` in `INK_WEAK` for a peer, a tool's answer or the
 machinery — then who spoke in their weight (§3), and the body wraps at the
@@ -257,7 +257,7 @@ does not offer the setting (bl-809d). **A dark chip here is still a target**:
 its reason is a sentence and not two words, so the tap is what says it, in
 `Annotation` ink on the line above the band (bl-0691).
 
-**A control** — a button, a selector, a toggle: `SURFACE` fill, no stroke,
+**A control** — a button, a selector, a toggle (**every one carries its help sentence since §23 item 10**: a long press opens it in the overlay's box above the control, `INK` at `BODY`, until the next tap): `SURFACE` fill, no stroke,
 `RADIUS` corners, `TOUCH` tall, its words in `INK`. Pressed or open it is
 `RAISED`. Armed (a two-tap irreversible act, DESIGN §13.8) its words are the
 attention accent, because an armed control is asking you. Disabled, its

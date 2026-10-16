@@ -605,6 +605,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/camera.rs` | android-only: the five static calls into `dev.yog.Camera`, activity passed in | landed (bl-d815) |
 | `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
+| `src/drawer.rs` | the drawer gesture (§23 item 1): whether a drag began within the edge and travelled far enough to open the switcher — pure, host-tested; `shell::back` reads it | planned (bl-d489) |
+| `src/tabs.rs` | the open set (§23 item 2): which conversations the operator focused this run, per workspace, in the order first focused; what a focus, a close and a listing do to it — pure | planned (bl-d489) |
+| `src/shell/tabs.rs` | android-only: the strip over the transcript, sideways-scrolling, standing from the second tab | planned (bl-d489) |
+| `src/settings.rs` | the knob table (§23 item 11): every device-local setting as one row — key, label, sentence, kind, default — the typed `Settings`, and the two projections from and to `settings.json`, writing only what is off its default | planned (bl-d489) |
+| `src/shell/settings.rs` | android-only: the settings overlay, one row per knob over its sentence, `defaults` at the foot | planned (bl-d489) |
 | `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
 | `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, and a `Color32` by a state's name at a paint site | landed (bl-549b) |
 | `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,frontier,flight,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half (with BEP 42's observed `ip` and its per-family vote, bl-544b), BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), its frontier of responsive nodes with the door re-asked while dry (yog bl-d00f) — only at the addresses that answered (yog bl-f519), the sliding window of queries in the air (yog bl-d9c1), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62, walk bl-066c) |
@@ -6523,7 +6528,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    widget id), and `✎ plan` has no phone predecessor to become, so no
    `/plan` is added.
 
-4. **The transcript idiom → the desktop's gutter and trail, at the phone's
+4. *Amended by §23 items 5–7: the working folds in three stages, the echo stands in the operator's bubble, and every block is bubbled by role.* **The transcript idiom → the desktop's gutter and trail, at the phone's
    width.** A block's `RULE`-wide speaker stripe (STYLE §5) becomes the
    gutter glyph: `›` in the brand for the operator, `¦` in weak ink for the
    model, `·` for a peer, a tool's answer or the machinery; who spoke still
@@ -6702,7 +6707,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    ball act's wire word and its label (PARITY §4's one name), and the ball
    pane stood with two of them; the line's act is unchanged.
 
-7. **The switcher → the roster and the conversation list, fused into one
+7. *Amended by §23 item 1: a drag from the left edge opens it too.* **The switcher → the roster and the conversation list, fused into one
    overlay; the platform back walks to it.** Opened by tapping the rule's
    name, by `/conversations`, or by the back gesture from the chat. One
    heading row per workspace (name, agent count, the attention mark), the
@@ -6753,7 +6758,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    gone and its tag is read off the sheet), `switching` (back from the chat),
    `row-menu` inside it, and `started` (`+ new`, keyboard up).
 
-8. **The ask above the field → §13.7's held band, re-shaped as a box above
+8. *Amended by §23 item 9: the cells offer a pass only at the scopes the held row lists.* **The ask above the field → §13.7's held band, re-shaped as a box above
    the rule.** While the focused conversation asks (`Standing::asking` — the
    queue's read stands), a box framed and named in the attention accent
    stands between the transcript and the rule: one line of the queue row's
@@ -6975,3 +6980,216 @@ offers it (§20). So every step must leave a whole, usable app behind it:
 7. (bl-365c) **The dock** (9).
 
 One to four each need the one before; five to seven need the rule and not each other (the `--needs` edges on the balls say the same).
+
+## 23. The phone keeps step: the tabs and the drawer, the chat as state, every control told, and the settings pane (bl-d489)
+
+Operator ruling 2026-10-15, verbatim: *"Spin out a sub-thread to re-tackle
+the design for the mobile app to align better to what we've been doing here,
+and rebuild it."* *What we've been doing here* is the desktop seat's three
+sections after the Hermes shape §22 already apes — lernie DESIGN §4.44 (the
+bar, the tabs, the workspace at the bar's foot), §4.45 (the chat as state:
+the sent message on the glass at once, the bubbles, the working that folds in
+three stages, every door lit, the held call's offered scopes) and §4.46 (the
+wheel, every control told under the pointer, every act on the keyboard, the
+settings pane as one knob table). This section reads each part in its order
+and states what it becomes under a thumb, with the reason; **where it
+contradicts §22 items 4, 7 and 8 and STYLE §5's *block*, *control* and
+*shape*, this section wins**, and each carries a line saying so. The two
+facts §22 bends around still hold — no chords, no Esc, a platform field the
+paint cannot cover — and a third joins them: **a phone's glass is the budget
+every band spends from**, so nothing lands here that costs a row without
+earning one.
+
+**§4.44 — the bar, the tabs, the foot.**
+
+1. **The bar → the switcher is the list, and a swipe from the left edge
+   opens it.** The desktop's bar is a column that opens to the pointer and
+   lingers after it; a phone has no pointer to linger after and no width to
+   give a column. The list it holds is §22 item 7's switcher, already one
+   gesture away (back, the rule's name, `/conversations`), and the one
+   thing a bar adds that the switcher lacks is the gesture every phone list
+   has: **a drag that begins within `theme::EDGE` (24 points) of the left
+   edge and travels right opens the switcher** (`shell::back` reads it
+   beside the back gesture; the decision — begun at the edge, moved far
+   enough — is `crate::drawer`, pure and host-tested). The linger, the pin,
+   the two dragged widths and the collapsed glyph column are **not ported**:
+   each is an answer to a pointer. The workspace at the bar's foot is the
+   rule's workspace dropup (§22 item 2), which is already the one place a
+   workspace is chosen and stays.
+
+2. **The tabs → a strip over the transcript, standing only while two or
+   more conversations are open** (`crate::tabs`, pure; `shell/tabs.rs`
+   paints it). The desktop's reading is kept whole: *open* is a navigation
+   the operator performed, so the set is per run, filled by every door that
+   focuses a conversation (the switcher, the dock, the ask, a start
+   resolving) and by nothing else; a tab is the conversation's name with
+   the asking `?` in the attention accent before it while it asks, the
+   focused one in `INK` over a brand hairline, the rest in `INK_WEAK`, and
+   `×` in `INK_FAINT` after it; a tap focuses, `×` closes and focuses the
+   neighbour to its left (or right at the left end), the last close puts
+   the focus down to the workspace; a tab the listing no longer knows
+   leaves with it; a start's tab is its claim's and is renamed in place when
+   the listing resolves it. **Two phone readings.** The strip is `TOUCH`
+   tall and **scrolls sideways** rather than wrapping — a wrapped strip of
+   five names is three rows of a phone — with the focused tab scrolled
+   into view the frame it is focused. And **it stands only from the second
+   tab**: with one conversation open it is the name the rule already
+   carries, 48 points spent on nothing, which the budget above refuses;
+   the desktop stands it from the first because a desktop has the row to
+   spare. The strip is laid between the transcript and the top inset, so it
+   never rides the keyboard.
+
+**§4.45 — the chat as state.**
+
+3. **The out-of-frame time and the dragged widths** (items 1 and 2) are
+   the bar's and are not ported with it.
+
+4. **The box beside the transcript** (item 3): the phone had it first — the
+   prompt line stands directly under the transcript and above the rule,
+   bottom-up (§22 item 1), because the thumb and the keyboard are at the
+   floor. Nothing moves.
+
+5. **A sent message is on the glass the frame it is sent** (item 4): §7's
+   outbox echo is this row and has been since bl-66fb — the deposit clears
+   the field and the same frame paints the words at the transcript's end
+   behind `›` in the brand, **in `INK_WEAK` until the receipt lands and in
+   `INK` after** (`outbox::Fate`), standing until a transcript read carries
+   the words, a refusal putting them back in the field, a lost reply leaving
+   the row in the pending ink beside the in-doubt notice. One reading is
+   corrected to the desktop's: the echo stands **inside the operator's
+   bubble** (7), as the row it will become, and not on a rule of its own.
+
+6. **The working folds in three stages** (item 5; `crate::rows`,
+   `rows/trail.rs`, `shell/chat/trail.rs`; amends §22 item 4's *open until
+   shut* head). The ruling is the desktop's, verbatim there and read the
+   same here: **a step in flight stands whole**, and the working is open
+   while any step is; **a finished step is compact** — a call whose result
+   landed is its call line and ONE line of its output elided at the width
+   it has, a finished thinking or intermediate prose one elided line — and
+   each compact step is a `TOUCH`-tall door that opens it whole in place;
+   **a settled turn's working is one line**, `+ worked · N calls · M
+   notes`, between the operator's turn and the final answer, a tap opening
+   it to the compact steps. §22 item 4's `tool calls (N)` head, its census
+   and the `#trail` head over a run that did not roll up are the heads this
+   replaces; the `response` elbow stands only while the working is open.
+   The stages decide where nobody tapped; a tap is remembered as the
+   viewport state it already is (the fold set), keyed under the
+   conversation. **`/full` and `/steps` become knobs** (11): a policy an
+   operator sets once is a setting, not a verb typed per session, and the
+   rows leave the sheet.
+
+7. **Four bubbles, by role** (item 7; `crate::theme::bubble`,
+   `shell/chat.rs`; amends STYLE §5 *a block … never bubbled*). Under each
+   block stands a filled block at `RADIUS` with the gutter glyph kept
+   inside it: the operator's turn on the brand's tint, a trail on the
+   ground inside a hairline, intermediate prose on `SURFACE`, the turn's
+   final prose on `RAISED` — the desktop's four fills, derived from the
+   palette with no new literal, faint. Which bubble a row gets is decided
+   in the projection (`rows::lines` knows the turn's shape), never by the
+   painter counting. The `bubbles` knob (11) turns them off.
+
+8. **Every door lights** (item 6): under a thumb, lit is *pressed* —
+   `anatomy::row`, `chat::tap::line`, the chips and every egui button
+   already paint `RAISED` while the pointer is down on them
+   (`is_pointer_button_down_on`). The audit here is of the seats that do
+   not: the rule's segments, the tabs, the fold doors and the told sentence
+   (10) go through the same painters, and a control painted elsewhere fails
+   the rule in 10.
+
+9. **The held call offers only the scopes the engine permits** (lernie
+   bl-da16; yog REMOTE §9.26, corpus edition 23; amends §22 item 8's six
+   cells). The engine states on each held row which scopes a pass may take
+   (`held.scopes`: `call` alone for a secret or destructive call, all three
+   otherwise); the ask's cells are `seen`, a pass per listed scope, `refuse`
+   and `hold` — four cells on a secret call, six on an ordinary one — so a
+   tap is never an answer the engine will refuse in band. A row that states
+   no scopes (an older engine) offers all three, the desktop's rule. The
+   corpus moves to edition 23 to carry the field, which is the vendoring
+   this seat has deferred since 19.
+
+**§4.46 — told, keyed, tuned.**
+
+10. **Every control tells, on a long press** (item 2; `shell/theme`'s
+    painters; `rules/no-bare-control.yml`; the walk's `told` beat). The
+    desktop's hover has no phone; its long press does, and it is the gesture
+    a phone already uses for *what is this*. **Every painter takes the
+    control's help sentence beside its word** — a row, a chip, a segment, a
+    cell, a tab, a fold door, `›`, `send` — so a control without one does
+    not compile; a long press (`Response::long_touched`) on the control
+    opens the sentence in the overlay's box directly above it, in `INK` at
+    `BODY`, standing until the next tap anywhere (the pointer cannot leave
+    a phone). The sentence defines what the control does in the operator's
+    terms. **Where a long press already means something** — a conversation
+    row's menu (§13.5), a block's copy (§13.2) — the sentence is the first
+    line of that menu, in `INK_WEAK`, and copy stays copy: a block is prose,
+    not a control. **The three holds** are the desktop's where the phone can
+    hold them: the compiler; the rule, confining `egui::Button`, `Checkbox`,
+    `selectable_label`, `Slider` and `link` to `src/shell/theme/`; and the
+    walk, whose `told` beat long-presses the rule's model segment and reads
+    the sentence off the probe (`shell::app::probe` prints `told: <words>`),
+    because the host compiles none of the paint and the emulator is the one
+    eye on it. The `help` knob (11) turns the long press off.
+
+11. **The settings pane, and the knobs are one table** (item 4;
+    `src/settings.rs`, `shell/settings.rs`; `/settings`, a row of the verb
+    sheet, an overlay named `settings`). Everything on it is a fact about
+    this device — REMOTE §7's per-seat state — and it is **not the mark's
+    configuration surface** (W5, §13.2), which is the engine's enrollment
+    and the foot's: the mark stays, the pane is new. Each knob is a row of
+    `settings::KNOBS` — key, label, help sentence, kind (a toggle, or a
+    number with unit, floor, ceiling and step), default — and the pane, the
+    file and the defaults test read the table. The knobs:
+
+    | key | what it tunes | default |
+    |---|---|---|
+    | `scale` | the glass's scale, text and air alike (egui's zoom factor) | 1 |
+    | `help` | whether a long press tells (10) | on |
+    | `bubbles` | the fills under blocks by role (7) | on |
+    | `fold` | whether a working folds itself once the answer stands (6) | on |
+    | `full` | whether delivered prose and the live tail stand open (was `/full`) | on |
+    | `steps` | whether thinking, calls, results and rollups stand open (was `/steps`) | off |
+    | `dock` | whether the dock stands unfolded when a conversation is focused (§22 item 9) | off |
+
+    A number is a slider, a toggle a check, each `TOUCH` tall over its
+    sentence in `INK_WEAK`; `defaults` at the foot puts every knob back. The
+    file is `settings.json` beside the cache in the app's private storage,
+    holding only knobs set off their default — a device that touched nothing
+    writes nothing and a default moved in a later build reaches it — and it
+    is the operator's, never the engine's: the cache's fail-closed rule does
+    not apply, an unreadable file is the defaults. The wheel, the delay, the
+    linger, the ease, the two widths, the pin and the delete confirmation
+    have no phone fact to tune and are **not ported**.
+
+12. **The wheel and the keyboard** (items 1 and 3) are **not ported**: a
+    phone scrolls by the platform's fling, and the slash words are its
+    keyboard — every pane, verb and door is `/word` (§22 item 5), which is
+    the half of *operable without a mouse* a touch screen keeps.
+
+13. **The lifecycle rule** (item 5) holds as on the desktop: a control is
+    its word and its sentence declared together and read by one painter;
+    one added without a sentence does not compile, one painted outside the
+    painters fails the rule, and the walk's `told` beat is the eye that the
+    sentence opens.
+
+**What this does not solve, and the principle that answers it.** A strip of
+tabs on a 360-point glass holds three names; the switcher is still the list,
+and the strip is the two or three the operator is between. A long press that
+tells is a long press that no longer menus on a control, so a control that
+had a menu keeps it with the sentence as its head — nothing lost, one line
+gained. The knob table is the desktop's shape with the phone's rows; a knob
+the phone has no fact for is absent, not off.
+
+**The order it lands in, and why each lands on main.** As §22's did: each
+ball carries `--parent bl-d489`, lands on `main`, is released, and the
+phone's update row offers it. Each step leaves a whole app behind it:
+
+1. **The held call's scopes** (9) — the corpus to edition 23, `Held::scopes`,
+   the cells by it.
+2. **The working in three stages, and the echo in the bubble** (5, 6).
+3. **The bubbles** (7).
+4. **The tabs and the drawer** (1, 2).
+5. **The settings pane** (11; `/full` and `/steps` leave the sheet).
+6. **Every control tells** (8, 10, 13).
+7. **The walk, whole, and the phone** — every beat re-captured on the
+   emulator, new beats `tabbed`, `told` and `tuned`, and the signed APK
+   installed on the operator's phone over adb.
