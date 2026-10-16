@@ -1,7 +1,8 @@
 +++
 title = "the settings pane and the knob table: scale, help, bubbles, fold, full, steps, dock; settings.json beside the cache"
 created = 1792122061
-updated = 1792122061
+updated = 1792122683
+claimant = "Surveying"
 parent = "bl-d489"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
