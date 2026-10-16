@@ -37,6 +37,7 @@ impl Shell {
                     egui::RichText::new(DEFAULTS)
                         .color(rgb(theme::BRAND))
                         .into(),
+                    "puts every knob back to its default",
                 );
                 self.note_control("defaults", ui, back.rect);
                 if back.clicked() {
@@ -61,7 +62,7 @@ fn row(ui: &mut egui::Ui, settings: &mut Settings, knob: &crate::settings::Knob)
         match (knob.kind, held) {
             (Kind::Toggle, Knobbed::On(was)) => {
                 let mut on = was;
-                ui.checkbox(&mut on, knob.label);
+                super::theme::check(ui, &mut on, knob.label, knob.help);
                 if on != was {
                     (knob.set)(settings, Knobbed::On(on));
                     moved = true;
@@ -77,10 +78,9 @@ fn row(ui: &mut egui::Ui, settings: &mut Settings, knob: &crate::settings::Knob)
                 Knobbed::At(mut at),
             ) => {
                 ui.add(egui::Label::new(knob.label).truncate());
-                let slider = egui::Slider::new(&mut at, floor..=ceiling)
-                    .step_by(f64::from(step))
-                    .suffix(unit);
-                if ui.add(slider).changed() {
+                let slider =
+                    super::theme::slider(ui, &mut at, (floor, ceiling, step), unit, knob.help);
+                if slider.changed() {
                     (knob.set)(settings, Knobbed::At(at));
                     moved = true;
                 }

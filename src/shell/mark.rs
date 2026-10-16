@@ -61,8 +61,8 @@ impl Shell {
         ui.horizontal(|ui| {
             self.mark(ui);
             if let Back::Plain = backable {
-                let control = egui::Button::new("<").min_size(egui::vec2(TOUCH, TOUCH));
-                let response = ui.add(control);
+                let response =
+                    super::theme::button(ui, "<", TOUCH, "one depth up, as the back gesture");
                 back = response.clicked() || std::mem::take(&mut self.back);
             }
             ui.heading(title);
@@ -74,6 +74,11 @@ impl Shell {
     /// the component — that unconditionality is the whole feature.
     pub(super) fn mark(&mut self, ui: &mut egui::Ui) {
         let (rect, hit) = ui.allocate_exact_size(egui::vec2(TOUCH, TOUCH), egui::Sense::click());
+        super::theme::told::told(
+            ui,
+            &hit,
+            "opens the configuration surface — enrollment and the foot — or closes it",
+        );
         paint(ui.painter(), rect.shrink(4.0));
         // Where the one control with no text is, for the harness that has to
         // tap it (`app/probe.rs`): the tap target, not the shrunk picture.

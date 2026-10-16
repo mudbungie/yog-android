@@ -95,10 +95,12 @@ impl Shell {
                 // (§22 item 3): with nothing to send there is no control.
                 let pressed = !self.composer.is_empty() && {
                     let word = egui::RichText::new("send").color(rgb(crate::theme::BRAND));
-                    let control = egui::Button::new(word)
-                        .frame(false)
-                        .min_size(egui::vec2(super::mark::TOUCH, super::mark::TOUCH));
-                    let send = ui.add(control);
+                    let send = super::theme::word(
+                        ui,
+                        word,
+                        super::mark::TOUCH,
+                        "sends the line: prose to the conversation, a slash line as its verb",
+                    );
                     super::act::acts(ui, &send, acts);
                     send.clicked()
                 };

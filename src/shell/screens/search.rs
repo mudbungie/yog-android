@@ -64,8 +64,12 @@ impl Shell {
             egui::vec2(ui.available_width(), TOUCH),
             egui::Layout::right_to_left(egui::Align::Center),
             |ui| {
-                let control = egui::Button::new("search").min_size(egui::vec2(0.0, TOUCH));
-                let response = ui.add(control);
+                let response = crate::shell::theme::button(
+                    ui,
+                    "search",
+                    0.0,
+                    "searches every conversation for the words in the field",
+                );
                 crate::shell::act::act(ui, &response, "search");
                 fired = response.clicked();
                 // The field's own box is the touch floor, not just the band
@@ -134,13 +138,20 @@ impl Shell {
             }
             Address::Workspace { name } => {
                 let label = format!("{name} · {tier} · {excerpt}");
-                if super::tap(ui, label.into(), "conversations").clicked() {
+                if super::tap(ui, label.into(), "conversations", "focuses this workspace").clicked()
+                {
                     self.focus_workspace(Some(name.clone()));
                 }
             }
             Address::Conversation { workspace, agent } => {
                 let label = format!("{workspace}/{agent} · {tier} · {excerpt}");
-                if super::tap(ui, label.into(), "transcript").clicked()
+                if super::tap(
+                    ui,
+                    label.into(),
+                    "transcript",
+                    "opens this conversation at the hit",
+                )
+                .clicked()
                     && let Some(model) = self.model()
                 {
                     model.focus_conversation(workspace.clone(), agent.clone());

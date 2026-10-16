@@ -38,19 +38,31 @@ impl Shell {
         open: bool,
     ) -> egui::Response {
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "provider", face, wide, open, |ui| {
-            for row in &snap.providers {
-                let label = format!("{} · {}", row.name, row.fact);
-                let label = if row.blocked.is_some() {
-                    egui::RichText::new(label).color(ui.visuals().weak_text_color())
-                } else {
-                    egui::RichText::new(label)
-                };
-                if ui.selectable_label(false, label).clicked() {
-                    picked = Some(row.name.clone());
+        let opened = super::drop::drop_down(
+            ui,
+            area,
+            (
+                "provider",
+                "opens the list of providers the worker may run on",
+            ),
+            face,
+            wide,
+            open,
+            |ui| {
+                for row in &snap.providers {
+                    let label = format!("{} · {}", row.name, row.fact);
+                    let label = if row.blocked.is_some() {
+                        egui::RichText::new(label).color(ui.visuals().weak_text_color())
+                    } else {
+                        egui::RichText::new(label)
+                    };
+                    if crate::shell::theme::pick(ui, label, "sets the worker's provider").clicked()
+                    {
+                        picked = Some(row.name.clone());
+                    }
                 }
-            }
-        });
+            },
+        );
         if let Some(name) = picked {
             self.provider = Some(name);
             self.model = None;
@@ -79,13 +91,26 @@ impl Shell {
         area: Band,
     ) -> egui::Response {
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "workspace", face, wide, false, |ui| {
-            for row in &snap.workspaces {
-                if ui.selectable_label(false, &row.workspace).clicked() {
-                    picked = Some(row.workspace.clone());
+        let opened = super::drop::drop_down(
+            ui,
+            area,
+            (
+                "workspace",
+                "opens the list of workspaces; one is focused at a time",
+            ),
+            face,
+            wide,
+            false,
+            |ui| {
+                for row in &snap.workspaces {
+                    if crate::shell::theme::pick(ui, &row.workspace, "focuses this workspace")
+                        .clicked()
+                    {
+                        picked = Some(row.workspace.clone());
+                    }
                 }
-            }
-        });
+            },
+        );
         act::act(ui, &opened, "workspaces");
         if let Some(workspace) = picked
             && snap.focus.workspace.as_deref() != Some(workspace.as_str())
@@ -116,7 +141,13 @@ impl Shell {
     ) -> egui::Response {
         let Some(provider) = provider(self, crate::codec::pick::worker(&snap.roles).as_ref())
         else {
-            let control = crate::shell::theme::chip(ui, face.into(), wide, false);
+            let control = crate::shell::theme::chip(
+                ui,
+                face.into(),
+                wide,
+                false,
+                "the model: dark until the worker has a provider",
+            );
             act::acts(ui, &control, &["models", "model"]);
             return control;
         };
@@ -126,13 +157,21 @@ impl Shell {
         // workspace's own provider, because a model belongs to the provider
         // that serves it.
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "model", face, wide, open, |ui| {
-            for name in snap.models.get(&provider).into_iter().flatten() {
-                if ui.selectable_label(false, name).clicked() {
-                    picked = Some(name.clone());
+        let opened = super::drop::drop_down(
+            ui,
+            area,
+            ("model", "opens the list of models the provider offers"),
+            face,
+            wide,
+            open,
+            |ui| {
+                for name in snap.models.get(&provider).into_iter().flatten() {
+                    if crate::shell::theme::pick(ui, name, "sets the worker's model").clicked() {
+                        picked = Some(name.clone());
+                    }
                 }
-            }
-        });
+            },
+        );
         act::acts(ui, &opened, &["models", "model"]);
         if let Some(name) = picked {
             self.model = Some(name.clone());

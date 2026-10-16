@@ -198,6 +198,9 @@ impl Shell {
             egui::Sense::hover()
         };
         let (rect, hit) = ui.allocate_exact_size(egui::vec2(wide, tall), sense);
+        if said.slot == Slot::Name {
+            super::theme::told::told(ui, &hit, "opens every workspace and its conversations");
+        }
         let pad = ui.spacing().button_padding.x;
         let text = egui::RichText::new(&said.text).color(rgb(said.ink));
         let galley = egui::WidgetText::from(text).into_galley(
@@ -232,7 +235,7 @@ impl Shell {
             return;
         };
         let line = egui::RichText::new(&text).color(ink(state));
-        if !super::theme::row(ui, line.into()).clicked() {
+        if !super::theme::row(ui, line.into(), "puts this notice down").clicked() {
             return;
         }
         if state == State::Annotation {

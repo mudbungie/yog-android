@@ -27,13 +27,21 @@ pub(super) fn head(ui: &mut egui::Ui, row: &Row) -> bool {
         parts.push((format!(" · {}", row.preview), rgb(theme::INK_FAINT)));
     }
     let (mark, ink) = super::gutter(ui, row);
-    tap::line(ui, 0.0, (&mark, ink), &[Run::body(parts)], theme::TOUCH).clicked()
+    tap::line(
+        ui,
+        0.0,
+        (&mark, ink),
+        &[Run::body(parts)],
+        theme::TOUCH,
+        "unfolds the working's steps, or folds them to this line",
+    )
+    .clicked()
 }
 
 /// **One step on its stem**: the stem's glyph, the step's words with how a
 /// call ended beside them and its fold at the end, the folded payload's first
-/// line under them; unfolded, the payload in place. A long press copies the
-/// whole payload.
+/// line under them; unfolded, the payload in place. A long press tells what
+/// the step does (§23 item 10); the unfolded payload is copyable prose.
 pub(super) fn step(ui: &mut egui::Ui, row: &Row, last: bool) -> bool {
     let top = ui.cursor().min.y;
     let left = ui.max_rect().left();
@@ -66,11 +74,16 @@ pub(super) fn step(ui: &mut egui::Ui, row: &Row, last: bool) -> bool {
     }
     let tall = if foldable { theme::TOUCH } else { 0.0 };
     let (glyph, hue) = super::gutter(ui, row);
-    let hit = tap::line(ui, GUTTER, (&glyph, hue), &runs, tall);
-    if hit.secondary_clicked() {
-        let whole = if foldable { &row.body } else { &row.preview };
-        ui.ctx().copy_text(whole.clone());
-    }
+    // **A long press on a step tells** (§23 item 10) and no longer copies:
+    // a step is a control, and its unfolded payload is copyable prose.
+    let hit = tap::line(
+        ui,
+        GUTTER,
+        (&glyph, hue),
+        &runs,
+        tall,
+        "opens this step whole, or folds it to its line",
+    );
     let font = egui::TextStyle::Body.resolve(ui.style());
     let line = ui.ctx().fonts_mut(|fonts| fonts.row_height(&font));
     let elbow = hit.rect.center().y - line * (runs.len() as f32 - 1.0) / 2.0;

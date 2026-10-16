@@ -124,9 +124,12 @@ impl Shell {
             _ if arming && self.armed => format!("{} · tap again", act.op()),
             _ => act.op().to_owned(),
         };
-        let control = ui.add_enabled(
+        let control = crate::shell::theme::button_if(
+            ui,
             live,
-            egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
+            label,
+            0.0,
+            &format!("fires {} on the picked ball", act.op()),
         );
         // The tag rides the control that FIRES the op, disabled or not: what
         // it records is that the control was laid out and its rectangle was on

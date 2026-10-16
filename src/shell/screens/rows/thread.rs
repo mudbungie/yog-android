@@ -41,6 +41,8 @@ pub(in crate::shell) fn threaded(
     let tall = lines_tall.max(crate::shell::mark::TOUCH);
     let (rect, response) =
         ui.allocate_exact_size(egui::vec2(ui.available_width(), tall), egui::Sense::click());
+    // A conversation row's long press is its menu (§13.5), whose head says
+    // the row's sentence (`menu.rs`); the row itself tells nothing twice.
     if !ui.is_rect_visible(rect) {
         return response;
     }

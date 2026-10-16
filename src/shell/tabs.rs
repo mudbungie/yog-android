@@ -98,22 +98,27 @@ fn tab(
         ));
     }
     parts.push((name, ink));
-    let tab = seat(ui, &parts);
+    let tab = seat(ui, &parts, "shows this conversation");
     if focused {
         let y = tab.rect.max.y - 1.0;
         let line = egui::Rect::from_x_y_ranges(tab.rect.x_range(), y..=y + 1.0);
         ui.painter().rect_filled(line, 0, rgb(theme::BRAND));
     }
-    let close = seat(ui, &[(glyph::CLOSE.to_owned(), rgb(theme::INK_FAINT))]);
+    let close = seat(
+        ui,
+        &[(glyph::CLOSE.to_owned(), rgb(theme::INK_FAINT))],
+        "closes this tab; the conversation stays",
+    );
     (tab, close)
 }
 
 /// A touch-tall seat around one run of words, `S` of air either side, the
 /// `RAISED` wash while a thumb is on it.
-fn seat(ui: &mut egui::Ui, parts: &[(String, egui::Color32)]) -> egui::Response {
+fn seat(ui: &mut egui::Ui, parts: &[(String, egui::Color32)], help: &str) -> egui::Response {
     let galley = ui.fonts_mut(|fonts| fonts.layout_job(super::theme::line(ui, parts)));
     let size = egui::vec2(galley.size().x + space::S * 2.0, theme::TOUCH);
     let (rect, response) = ui.allocate_exact_size(size, egui::Sense::click());
+    super::theme::told::told(ui, &response, help);
     if response.is_pointer_button_down_on() || response.hovered() {
         ui.painter().rect_filled(
             rect,

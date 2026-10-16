@@ -43,6 +43,27 @@ pub enum Choice {
 }
 
 impl Choice {
+    /// **What the cell does**, told on a long press (DESIGN §23 item 10).
+    #[must_use]
+    pub fn help(&self) -> String {
+        match self {
+            Self::Seen => "marks this row seen; nothing is answered",
+            Self::Answer(Verdict::Pass, Scope::Call) => "lets this one call run",
+            Self::Answer(Verdict::Pass, Scope::Conversation) => {
+                "lets this call's class run for this conversation from now on"
+            }
+            Self::Answer(Verdict::Pass, _) => {
+                "lets this call's class run for every conversation in the workspace"
+            }
+            Self::Answer(Verdict::Refuse, _) => "refuses this call; the turn goes on without it",
+            Self::Answer(Verdict::Hold, _) => "keeps the call parked for later",
+            // A verdict this build cannot spell is never offered as a cell
+            // (`choices` lists three); said as itself where it ever is.
+            Self::Answer(Verdict::Unknown(_), _) => "answers in a word this build cannot spell",
+        }
+        .to_owned()
+    }
+
     /// The words on the cell, as the desktop spells them: a verdict on the
     /// call alone is its bare word, a wider one says its reach.
     #[must_use]

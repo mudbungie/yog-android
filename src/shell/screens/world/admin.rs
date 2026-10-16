@@ -94,7 +94,7 @@ impl Shell {
                 ui.visuals().text_color()
             };
             let label = crate::shell::theme::line(ui, &[(at.file().to_owned(), ink)]);
-            let control = crate::shell::theme::row(ui, label.into());
+            let control = crate::shell::theme::row(ui, label.into(), "reads this config file");
             crate::shell::act::act(ui, &control, SCREEN);
             if control.clicked() {
                 self.destination = Some(at.clone());

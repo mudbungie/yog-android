@@ -25,7 +25,6 @@ use eframe::egui;
 
 use crate::codec::{Lineage, Notch, Records};
 use crate::shell::app::Shell;
-use crate::shell::mark::TOUCH;
 use crate::shell::screens::records::parts;
 
 impl Shell {
@@ -89,8 +88,12 @@ impl Shell {
     /// — an unpick asks nothing.
     fn point(&mut self, ui: &mut egui::Ui, label: String, refname: String) -> bool {
         let picked = self.from.as_ref() == Some(&refname);
-        let control =
-            ui.add(egui::Button::new(label).min_size(egui::vec2(ui.available_width(), TOUCH)));
+        let control = crate::shell::theme::button(
+            ui,
+            label,
+            ui.available_width(),
+            "picks this point as where a fork starts; again puts it down",
+        );
         ui.add_space(4.0);
         if !control.clicked() {
             return false;

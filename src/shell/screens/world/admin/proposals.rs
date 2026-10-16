@@ -104,7 +104,11 @@ impl Shell {
                 ),
             ],
         );
-        let control = crate::shell::theme::row(ui, label.into());
+        let control = crate::shell::theme::row(
+            ui,
+            label.into(),
+            "picks this proposal for a verdict; again puts it down",
+        );
         crate::shell::act::act(ui, &control, READ);
         if control.clicked() {
             self.proposal = (!picked).then(|| row.id.clone());
@@ -140,6 +144,7 @@ impl Shell {
                 format!("{} — tap a proposal", verdict.word()).into(),
                 wide,
                 false,
+                "settles the picked proposal: pick one in the list first",
             );
             crate::shell::act::act(ui, &dark, "proposal");
             return;
@@ -149,7 +154,12 @@ impl Shell {
         } else {
             verdict.word().to_owned()
         };
-        let control = crate::shell::theme::chip(ui, label.into(), wide, true);
+        let help = if arms {
+            "rejects the picked proposal: the first tap arms it, the second rejects"
+        } else {
+            "accepts the picked proposal"
+        };
+        let control = crate::shell::theme::chip(ui, label.into(), wide, true, help);
         crate::shell::act::act(ui, &control, "proposal");
         if !control.clicked() {
             return;

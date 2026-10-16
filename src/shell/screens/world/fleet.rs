@@ -99,14 +99,19 @@ impl Shell {
             band,
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
-                if ui
-                    .add_enabled(self.cap > FLOOR, egui::Button::new("−1"))
-                    .clicked()
+                if crate::shell::theme::button_if(
+                    ui,
+                    self.cap > FLOOR,
+                    "−1",
+                    0.0,
+                    "runs one fewer at once",
+                )
+                .clicked()
                 {
                     self.cap = self.cap.saturating_sub(1).max(FLOOR);
                 }
                 ui.label(format!("{} at once", self.cap));
-                if ui.button("+1").clicked() {
+                if crate::shell::theme::button(ui, "+1", 0.0, "runs one more at once").clicked() {
                     self.cap = self.cap.saturating_add(1);
                 }
             },
@@ -124,7 +129,13 @@ impl Shell {
             Some(ask) if !typed => format!("{} — {ask}", act.op()),
             _ => act.op().to_owned(),
         };
-        let control = crate::shell::theme::chip(ui, label.into(), wide, live);
+        let control = crate::shell::theme::chip(
+            ui,
+            label.into(),
+            wide,
+            live,
+            &format!("fires {} on the fleet", act.op()),
+        );
         crate::shell::act::act(ui, &control, act.op());
         if !control.clicked() {
             return;

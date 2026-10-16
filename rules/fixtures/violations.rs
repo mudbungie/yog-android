@@ -164,3 +164,16 @@ fn uses_arc() -> Cow<'static, str> {
     let _a: std::sync::Arc<u32> = std::sync::Arc::new(0);
     Cow::Borrowed("x")
 }
+
+// ===========================================================================
+// POSITIVE: no-bare-control
+// ===========================================================================
+fn bare_controls(ui: &mut egui::Ui, on: &mut bool, at: &mut f32) {
+    let _ = ui.button("fire");
+    let _ = ui.small_button("fire");
+    let _ = ui.selectable_label(false, "pick");
+    let _ = ui.checkbox(on, "on");
+    let _ = ui.add(egui::Button::new("fire"));
+    let _ = ui.add(egui::Checkbox::new(on, "on"));
+    let _ = ui.add(egui::Slider::new(at, 0.0..=1.0));
+}

@@ -182,5 +182,10 @@ fn visuals() -> egui::Visuals {
 /// above is the LANGUAGE (the palette as egui's `Visuals`, installed once,
 /// and a colour by a state's name), below is what is BUILT out of it.
 mod anatomy;
+/// The controls that were egui's own, each with its help sentence (§23 item 10).
+mod control;
+/// Every control tells on a long press (§23 item 10).
+pub(crate) mod told;
 
 pub(crate) use anatomy::{bubbled, chip, dark_chip, line, marked, row, share};
+pub(crate) use control::{button, button_if, button_led, check, pick, slider, word};

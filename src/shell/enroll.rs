@@ -233,8 +233,13 @@ fn choice(ui: &mut egui::Ui, offer: &Offer, emphasised: bool) -> bool {
     ui.add_space(8.0);
     let size = if emphasised { 24.0 } else { 19.0 };
     let brand = egui::RichText::new(&offer.brand).size(size).strong();
-    let button = egui::Button::new(brand).min_size(egui::vec2(ui.available_width(), 52.0));
-    let hit = ui.add(button).clicked();
+    let hit = super::theme::button(
+        ui,
+        brand,
+        ui.available_width(),
+        "opens this way in; nothing is stored or dialled yet",
+    )
+    .clicked();
     ui.weak(&offer.tagline);
     hit
 }

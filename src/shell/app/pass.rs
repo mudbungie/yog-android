@@ -123,6 +123,9 @@ impl eframe::App for Shell {
         // desktop one and does nothing here, so a command left in the output
         // would be a copy an operator watched fail silently.
         crate::shell::clip::copied(&ctx);
+        // **The sentence a long press left** (§23 item 10), over everything
+        // the screens painted, while the `help` knob is on.
+        crate::shell::theme::told::paint(&ctx, self.knobs.on(crate::settings::Toggle::Help));
         // What this pass painted, said once per change (`app/probe.rs`): the
         // seam a headless-emulator harness reads reachability out of, because
         // the platform's accessibility tree carries nothing about an egui

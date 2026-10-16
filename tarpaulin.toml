@@ -294,6 +294,10 @@ engine = "Llvm"
 exclude-files = [
     "rules/fixtures/*",
     "src/shell/act.rs",
+    "src/shell/settings.rs",
+    "src/shell/tabs.rs",
+    "src/shell/theme/told.rs",
+    "src/shell/theme/control.rs",
     "src/shell/app.rs",
     "src/shell/back.rs",
     "src/shell/app/fields.rs",

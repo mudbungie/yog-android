@@ -64,7 +64,7 @@ impl Shell {
                         super::controls::band(ui, |ui| {
                             let wide = share(ui, across);
                             for (word, choice) in cells {
-                                let control = cell(ui, word, wide);
+                                let control = cell(ui, word, wide, &choice.help());
                                 super::act::act(ui, &control, &choice.op());
                                 if control.clicked() {
                                     taken = Some(choice.clone());
@@ -124,7 +124,13 @@ impl Shell {
         let mark = if self.why { glyph::OPEN } else { glyph::SHUT };
         let ink = ui.visuals().text_color();
         let label = super::theme::marked(ui, WHY, mark, ink);
-        let control = super::theme::chip(ui, label.into(), theme::TOUCH * 2.0, true);
+        let control = super::theme::chip(
+            ui,
+            label.into(),
+            theme::TOUCH * 2.0,
+            true,
+            "opens the control's decision about the parked call, or folds it",
+        );
         self.note_control("ask-why", ui, control.rect);
         control.clicked()
     }
@@ -139,7 +145,7 @@ fn line(ui: &mut egui::Ui, said: &str, ink: theme::Rgb) {
 /// second line rather than elided — `pass for this conversation` is the
 /// desktop's spelling byte for byte, and half a phone's width cannot hold it
 /// on one line.
-fn cell(ui: &mut egui::Ui, word: &str, wide: f32) -> egui::Response {
+fn cell(ui: &mut egui::Ui, word: &str, wide: f32, help: &str) -> egui::Response {
     ui.spacing_mut().button_padding = egui::vec2(space::S, space::XS);
     let room = (wide - space::S * 2.0).max(0.0);
     let label: egui::WidgetText = egui::WidgetText::from(word)
@@ -150,5 +156,5 @@ fn cell(ui: &mut egui::Ui, word: &str, wide: f32) -> egui::Response {
             egui::TextStyle::Button,
         )
         .into();
-    ui.add(egui::Button::new(label).min_size(egui::vec2(wide, theme::TOUCH)))
+    super::theme::button(ui, label, wide, help)
 }

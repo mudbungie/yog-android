@@ -63,6 +63,28 @@ slash() {
 # name, so the probe line does not change, and the app says a line only when it
 # changes — clearing here would leave `settle` reading nothing until its
 # deadline.
+# A long press on a NAMED control (DESIGN §23 item 10): the control tells
+# its sentence rather than firing, and says it on the probe as `yog.told`.
+long_press_control() {   # long_press_control <name>
+  settle
+  local rect; rect=$(printf '%s' "$SETTLED" | sed -n "s/.*[ ]$1=\([0-9,]*\).*/\1/p")
+  [ -n "$rect" ] || { verdict fail "the screen reported no $1 to press"; return 0; }
+  local x y w h; IFS=, read -r x y w h <<<"$rect"
+  local cx=$((x + w / 2)) cy=$((y + h / 2))
+  "${ADB[@]}" logcat -c || true
+  "${ADB[@]}" shell input motionevent DOWN "$cx" "$cy"
+  sleep 2
+  "${ADB[@]}" shell input motionevent UP "$cx" "$cy"
+}
+
+# Whether the last long press was told: the sentence on the probe's own
+# channel. Absent, the control stayed silent, which is the defect §23 item
+# 10 exists to make impossible.
+require_told() {
+  local said; said=$("${ADB[@]}" logcat -d 2>/dev/null | grep -o 'yog\.told .*' | tail -1 || true)
+  if [ -n "$said" ]; then verdict pass "told: ${said#yog.told }"; else verdict fail "a long press told nothing"; fi
+}
+
 long_press_row() {
   settle
   local rect; rect=$(printf '%s' "$SETTLED" | sed -n 's/.*row=\([0-9,]*\).*/\1/p')

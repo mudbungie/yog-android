@@ -172,6 +172,15 @@ capture started start
 seed_cache transcript; relaunch
 capture transcript transcript
 
+# 4tt. EVERY CONTROL TELLS (DESIGN §23 item 10): a long press on the rule's
+#      model segment opens its sentence in a box above it instead of its
+#      list, and says the sentence on the probe. Relaunched after, so the
+#      box is not over the door the next beat taps.
+long_press_control rule-model
+require_told
+capture told transcript
+relaunch
+
 # 4tq. THE ASK (DESIGN §22 item 8, bl-289f): the transcript seed's queue row
 #      holds a call at the focused conversation, so the box stands above the
 #      rule at rest — the row's words and all six cells, two to a row, with

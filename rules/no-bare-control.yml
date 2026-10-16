@@ -1,0 +1,26 @@
+# Every control is painted by `src/shell/theme/` — the row, the chip, the
+# button, the pick, the check, the slider — and every painter there takes the
+# control's help sentence and tells it on a long press (DESIGN §23 item 10).
+# A control built from egui's own constructor anywhere else is a control with
+# no sentence, which is the defect this rule exists to make impossible rather
+# than reviewable: the compiler holds the sentence (no painter without one),
+# and this holds the painter (no control outside them).
+#
+# The `ignores` list is the one location authority: a site is added to the
+# theme directory, never a path to this list.
+id: no-bare-control
+language: rust
+severity: error
+message: "a control is painted by src/shell/theme, which takes its help sentence (DESIGN §23 item 10); see rules/no-bare-control.yml"
+ignores:
+  - "**/shell/theme/**"
+rule:
+  any:
+    - pattern: $UI.button($$$)
+    - pattern: $UI.small_button($$$)
+    - pattern: $UI.selectable_label($$$)
+    - pattern: $UI.checkbox($$$)
+    - pattern: $UI.link($$$)
+    - pattern: egui::Button::new($$$)
+    - pattern: egui::Checkbox::new($$$)
+    - pattern: egui::Slider::new($$$)

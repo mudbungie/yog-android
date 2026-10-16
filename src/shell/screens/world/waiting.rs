@@ -58,7 +58,7 @@ impl Shell {
             crate::roster::ago(row.age_secs),
             row.preview
         );
-        if super::super::tap(ui, label.into(), "transcript").clicked()
+        if super::super::tap(ui, label.into(), "transcript", "opens this conversation").clicked()
             && let Some(model) = self.model()
         {
             model.focus_conversation(row.workspace.clone(), row.agent.clone());
@@ -94,7 +94,12 @@ impl Shell {
     /// it has.
     fn answer(&mut self, ui: &mut egui::Ui, row: &QueueRow) {
         ui.horizontal(|ui| {
-            let seen = ui.button("seen");
+            let seen = crate::shell::theme::button(
+                ui,
+                "seen",
+                0.0,
+                "marks this row seen; nothing is answered",
+            );
             crate::shell::act::act(ui, &seen, "seen");
             if seen.clicked()
                 && let Some(model) = self.model()

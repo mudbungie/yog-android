@@ -50,9 +50,12 @@ impl Shell {
             return;
         };
         let label = format!("update to {}", offer.version);
-        let control =
-            egui::Button::new(label).min_size(egui::vec2(ui.available_width(), super::mark::TOUCH));
-        let response = ui.add(control);
+        let response = super::theme::button(
+            ui,
+            label,
+            ui.available_width(),
+            "downloads this release and hands it to the installer",
+        );
         self.note_control("update", ui, response.rect);
         if response.clicked() {
             FIRED.store(true, std::sync::atomic::Ordering::Relaxed);

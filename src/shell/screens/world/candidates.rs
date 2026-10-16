@@ -30,7 +30,6 @@ pub(in crate::shell) use acts::FLOOR;
 use crate::codec::{Attempt, Spread};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::TOUCH;
 
 impl Shell {
     pub(in crate::shell) fn candidates(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
@@ -82,8 +81,11 @@ impl Shell {
             row.diff.handle.clone(),
         );
         let picked = self.candidate.as_ref() == Some(&subject);
-        let control = ui.add(
-            egui::Button::new(line(row, picked)).min_size(egui::vec2(ui.available_width(), TOUCH)),
+        let control = crate::shell::theme::button(
+            ui,
+            line(row, picked),
+            ui.available_width(),
+            "picks this attempt for the acts below; again puts it down",
         );
         if control.clicked() {
             self.candidate = (!picked).then_some(subject);

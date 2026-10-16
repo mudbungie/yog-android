@@ -172,3 +172,30 @@ fn a_secret_call_offers_a_pass_at_the_call_alone_and_an_unstated_row_every_reach
     rows[0].held = Some(held);
     assert_eq!(choices(&rows[0]).len(), 6);
 }
+
+#[test]
+fn every_cell_says_what_it_does_and_the_widths_differ_by_reach() {
+    let rows = corpus();
+    let offered = choices(&rows[0]);
+    let said: Vec<String> = offered.iter().map(Choice::help).collect();
+    assert_eq!(said.len(), 6);
+    assert!(said.iter().all(|help| !help.is_empty()));
+    let distinct: std::collections::BTreeSet<_> = said.iter().collect();
+    assert_eq!(distinct.len(), 6, "{said:?}");
+    assert!(
+        Choice::Answer(Verdict::Pass, Scope::Conversation)
+            .help()
+            .contains("conversation")
+    );
+    assert!(
+        Choice::Answer(Verdict::Pass, Scope::Workspace)
+            .help()
+            .contains("workspace")
+    );
+}
+
+#[test]
+fn a_verdict_this_build_cannot_spell_is_still_told() {
+    let unheard = Choice::Answer(Verdict::Unknown("later".to_owned()), Scope::Call);
+    assert!(unheard.help().contains("cannot spell"));
+}

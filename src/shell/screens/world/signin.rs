@@ -73,7 +73,13 @@ impl Shell {
             egui::vec2(ui.available_width(), TOUCH),
             egui::Layout::right_to_left(egui::Align::Center),
             |ui| {
-                let start = ui.add_enabled(row.blocked.is_none(), egui::Button::new("sign in"));
+                let start = crate::shell::theme::button_if(
+                    ui,
+                    row.blocked.is_none(),
+                    "sign in",
+                    0.0,
+                    "starts this provider's sign-in",
+                );
                 crate::shell::act::act(ui, &start, SCREEN);
                 if start.clicked()
                     && let Some(model) = self.model()
@@ -87,10 +93,11 @@ impl Shell {
                 // The words at the row's left edge (STYLE §5, bl-1312): a
                 // growing atom after them takes the slack a full-width
                 // button would otherwise share out either side.
-                let follow = ui.add(
-                    egui::Button::new((stated, egui::Atom::grow()))
-                        .truncate()
-                        .min_size(egui::vec2(ui.available_width(), TOUCH)),
+                let follow = crate::shell::theme::button_led(
+                    ui,
+                    stated,
+                    ui.available_width(),
+                    "shows what this provider's sign-in has said so far",
                 );
                 crate::shell::act::act(ui, &follow, "login-tail");
                 if follow.clicked()

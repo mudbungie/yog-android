@@ -81,6 +81,9 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, fate: Fate) {
     }
 }
 
+/// What a said line's fold does, told on a long press (§23 item 10).
+const SAID_HELP: &str = "unfolds what was said whole, or folds it to its first line";
+
 /// What an in-doubt echo says under itself. It is the same fact the banner
 /// carried for one cadence, in the place the operator is looking and for as
 /// long as the doubt lasts.
@@ -146,7 +149,7 @@ fn said(ui: &mut egui::Ui, row: &Row) -> bool {
     let tall = if foldable { crate::theme::TOUCH } else { 0.0 };
     let runs = [tap::Run::body(parts)];
     let (mark, ink) = gutter(ui, row);
-    let toggled = tap::line(ui, 0.0, (&mark, ink), &runs, tall).clicked() && foldable;
+    let toggled = tap::line(ui, 0.0, (&mark, ink), &runs, tall, SAID_HELP).clicked() && foldable;
     ui.horizontal_top(|ui| {
         ui.add_space(tap::GUTTER);
         // Something said is prose: whole and wrapped unless it is folded,

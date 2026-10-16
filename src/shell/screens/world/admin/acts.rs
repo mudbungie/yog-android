@@ -75,7 +75,13 @@ impl Shell {
     /// tag; while the act is dark the label says what would light it.
     fn admin_item(&mut self, ui: &mut egui::Ui, act: Option<AdminAct>, wide: f32) {
         let Some(act) = act else {
-            let dark = crate::shell::theme::chip(ui, "config — tap a file".into(), wide, false);
+            let dark = crate::shell::theme::chip(
+                ui,
+                "config — tap a file".into(),
+                wide,
+                false,
+                "reads a config file: tap one in the list first",
+            );
             crate::shell::act::act(ui, &dark, "config");
             return;
         };
@@ -86,7 +92,13 @@ impl Shell {
             Some(ask) if !typed => format!("{} — {ask}", act.op()),
             _ => act.op().to_owned(),
         };
-        let control = crate::shell::theme::chip(ui, label.into(), wide, live);
+        let control = crate::shell::theme::chip(
+            ui,
+            label.into(),
+            wide,
+            live,
+            &format!("fires {} on this workspace", act.op()),
+        );
         crate::shell::act::act(ui, &control, act.op());
         if control.clicked() {
             self.fire(act);
@@ -113,8 +125,15 @@ impl Shell {
                     } else {
                         format!("enroll {word}")
                     };
-                    let control =
-                        crate::shell::theme::chip(ui, label.into(), wide, !typed.is_empty());
+                    let control = crate::shell::theme::chip(
+                        ui,
+                        label.into(),
+                        wide,
+                        !typed.is_empty(),
+                        &format!(
+                            "mints a leaf for a new {word} device under the name in the field"
+                        ),
+                    );
                     crate::shell::act::act(ui, &control, "enroll");
                     if control.clicked()
                         && let Some(model) = self.model()
@@ -143,7 +162,13 @@ impl Shell {
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
                 let wide = crate::shell::theme::share(ui, 1);
-                let control = crate::shell::theme::chip(ui, label.into(), wide, named);
+                let control = crate::shell::theme::chip(
+                    ui,
+                    label.into(),
+                    wide,
+                    named,
+                    "deletes this workspace, once its name is typed in the field",
+                );
                 crate::shell::act::act(ui, &control, act.op());
                 if control.clicked() {
                     self.fire(act);

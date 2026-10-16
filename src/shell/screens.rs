@@ -202,8 +202,13 @@ impl Shell {
 /// thing that differs between the two lists. The row itself is the
 /// language's (`shell::theme::row`): left-aligned, outline-free, a tint only
 /// under a thumb.
-pub(super) fn tap(ui: &mut egui::Ui, label: egui::WidgetText, op: &str) -> egui::Response {
-    let response = theme::row(ui, label);
+pub(super) fn tap(
+    ui: &mut egui::Ui,
+    label: egui::WidgetText,
+    op: &str,
+    help: &str,
+) -> egui::Response {
+    let response = theme::row(ui, label, help);
     super::act::act(ui, &response, op);
     response
 }

@@ -50,6 +50,7 @@ pub(super) fn line(
     gutter: (&str, egui::Color32),
     runs: &[Run],
     tall: f32,
+    help: &str,
 ) -> egui::Response {
     let body = egui::TextStyle::Body.resolve(ui.style());
     let mono = egui::TextStyle::Monospace.resolve(ui.style());
@@ -58,6 +59,11 @@ pub(super) fn line(
     let high = (text + space::XS).max(tall);
     let (rect, response) =
         ui.allocate_exact_size(egui::vec2(ui.available_width(), high), egui::Sense::click());
+    // **A line that is a target tells** (§23 item 10); a plain line is
+    // prose, and prose keeps its long press for copying.
+    if tall > 0.0 {
+        crate::shell::theme::told::told(ui, &response, help);
+    }
     if !ui.is_rect_visible(rect) {
         return response;
     }

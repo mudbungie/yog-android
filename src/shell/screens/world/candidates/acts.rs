@@ -91,14 +91,21 @@ impl Shell {
             band,
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
-                if ui
-                    .add_enabled(self.spread > FLOOR, egui::Button::new("−1"))
-                    .clicked()
+                if crate::shell::theme::button_if(
+                    ui,
+                    self.spread > FLOOR,
+                    "−1",
+                    0.0,
+                    "one fewer candidate to fan out",
+                )
+                .clicked()
                 {
                     self.spread = self.spread.saturating_sub(1).max(FLOOR);
                 }
                 ui.label(crate::plural::counted(self.spread as u64, "candidate"));
-                if ui.button("+1").clicked() {
+                if crate::shell::theme::button(ui, "+1", 0.0, "one more candidate to fan out")
+                    .clicked()
+                {
                     self.spread = self.spread.saturating_add(1);
                 }
             },
@@ -118,9 +125,12 @@ impl Shell {
         } else {
             "fan".to_owned()
         };
-        let control = ui.add_enabled(
+        let control = crate::shell::theme::button_if(
+            ui,
             claim && typed,
-            egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
+            label,
+            0.0,
+            "fans the picked ball into candidates with the goal in the field",
         );
         crate::shell::act::act(ui, &control, "fan");
         if !control.clicked() {
@@ -150,9 +160,12 @@ impl Shell {
             Some(ask) if !handle.is_empty() && !typed => format!("{} — {ask}", act.op()),
             _ => act.op().to_owned(),
         };
-        let control = ui.add_enabled(
+        let control = crate::shell::theme::button_if(
+            ui,
             live,
-            egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
+            label,
+            0.0,
+            &format!("fires {} on the picked candidate", act.op()),
         );
         crate::shell::act::act(ui, &control, act.op());
         if !control.clicked() {

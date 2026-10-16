@@ -47,7 +47,7 @@ pub(super) const CARET_ROOM: f32 = 20.0;
 pub(super) fn drop_down(
     ui: &mut egui::Ui,
     area: Band,
-    id: &str,
+    (id, help): (&str, &str),
     shown: String,
     width: f32,
     open: bool,
@@ -68,9 +68,7 @@ pub(super) fn drop_down(
         egui::TextStyle::Button,
     );
     let face = ui
-        .push_id(id, |ui| {
-            ui.add(egui::Button::new(shown).min_size(egui::vec2(width, 0.0)))
-        })
+        .push_id(id, |ui| crate::shell::theme::button(ui, shown, width, help))
         .inner;
     caret(ui, face.rect);
     // `open` is a verb asking for the list (`/model`, `/effort`): the same

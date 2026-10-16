@@ -43,7 +43,11 @@ impl Shell {
                     .into_iter()
                     .map(|(text, hue)| (text, rgb(hue)))
                     .collect();
-                let seat = theme::row(ui, theme::line(ui, &parts).into());
+                let seat = theme::row(
+                    ui,
+                    theme::line(ui, &parts).into(),
+                    "shows this running conversation",
+                );
                 // **Where the harness finds a row** (§15.2): the first only.
                 if std::mem::take(&mut first) {
                     self.note_control("dock-row", ui, seat.rect);
@@ -56,6 +60,7 @@ impl Shell {
         let head = theme::row(
             ui,
             egui::RichText::new(words).color(ink(State::Working)).into(),
+            "lists every running conversation, or folds the list",
         );
         self.note_control("dock", ui, head.rect);
         if head.clicked() {

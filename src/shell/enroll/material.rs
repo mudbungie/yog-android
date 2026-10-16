@@ -62,7 +62,14 @@ pub(super) fn screen(
     ui.add_space(4.0);
     // A read of this app's own storage, not a dial: it is the act that makes a
     // cable push land without killing and relaunching the app.
-    landed || ui.button("check for material").clicked()
+    landed
+        || crate::shell::theme::button(
+            ui,
+            "check for material",
+            0.0,
+            "looks again for material a cable pushed into this app",
+        )
+        .clicked()
 }
 
 /// **The scan screen, and what it produces** (bl-d815). Returns whether
@@ -140,13 +147,27 @@ fn envelope(
     ui.add_space(4.0);
     let mut landed = false;
     ui.horizontal(|ui| {
-        landed = ui.add_enabled(ready, egui::Button::new("enroll")).clicked()
+        landed = crate::shell::theme::button_if(
+            ui,
+            ready,
+            "enroll",
+            0.0,
+            "lands the pasted envelope and enrolls this device",
+        )
+        .clicked()
             && land(&landing.dir, text, said);
         // Beside paste, never instead of it (bl-d815). The camera is one way
         // to fill this field; a laptop screen read by eye is the other, and
         // the second one works on a device with no camera, no permission and
         // no light.
-        if ui.button("scan QR").clicked() {
+        if crate::shell::theme::button(
+            ui,
+            "scan QR",
+            0.0,
+            "opens the camera to read the envelope off a screen",
+        )
+        .clicked()
+        {
             *said = None;
             scanner.open();
         }

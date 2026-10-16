@@ -99,7 +99,13 @@ impl Shell {
                     rgb(crate::theme::INK_WEAK),
                 ));
                 let label = theme::line(ui, &parts);
-                tap(ui, label.into(), "conversations").clicked()
+                tap(
+                    ui,
+                    label.into(),
+                    "conversations",
+                    "focuses this workspace and lists its conversations",
+                )
+                .clicked()
             }
             Entry::Conversation { row, rails, .. } => {
                 let hue = super::chat::tone_hue(ui, &row.tone);
@@ -115,7 +121,11 @@ impl Shell {
             }
             Entry::New { .. } => {
                 let word = egui::RichText::new(NEW).color(rgb(crate::theme::BRAND));
-                let control = theme::row(ui, word.into());
+                let control = theme::row(
+                    ui,
+                    word.into(),
+                    "begins a conversation on this workspace, the caret in the field",
+                );
                 self.note_control("new", ui, control.rect);
                 control.clicked()
             }

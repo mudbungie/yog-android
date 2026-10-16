@@ -56,14 +56,31 @@ impl Shell {
             return control;
         }
         let mut picked = None;
-        let opened = super::drop::drop_down(ui, area, "effort", face, wide, open, |ui| {
-            for level in crate::codec::pick::LEVELS {
-                let label = crate::codec::Effort::label(level);
-                if ui.selectable_label(false, &label).clicked() {
-                    picked = Some((level, label));
+        let opened = super::drop::drop_down(
+            ui,
+            area,
+            (
+                "effort",
+                "opens the list of effort levels the worker may run at",
+            ),
+            face,
+            wide,
+            open,
+            |ui| {
+                for level in crate::codec::pick::LEVELS {
+                    let label = crate::codec::Effort::label(level);
+                    if crate::shell::theme::pick(
+                        ui,
+                        &label,
+                        "sets the worker's effort to this level",
+                    )
+                    .clicked()
+                    {
+                        picked = Some((level, label));
+                    }
                 }
-            }
-        });
+            },
+        );
         act::act(ui, &opened, "effort");
         if let Some((level, label)) = picked {
             self.tuning_said = None;
@@ -92,7 +109,13 @@ impl Shell {
         knob: &Knob,
         on: bool,
     ) -> egui::Response {
-        let control = crate::shell::theme::chip(ui, face.into(), wide, true);
+        let control = crate::shell::theme::chip(
+            ui,
+            face.into(),
+            wide,
+            true,
+            "flips the priority lane for this workspace's worker",
+        );
         act::act(ui, &control, "priority");
         if control.clicked() {
             self.flip_priority(knob, on);
@@ -127,7 +150,8 @@ impl Shell {
         knob: &Knob,
         op: &str,
     ) -> egui::Response {
-        let control = crate::shell::theme::dark_chip(ui, face, wide);
+        let control =
+            crate::shell::theme::dark_chip(ui, face, wide, "this knob is dark: a tap says why");
         act::act(ui, &control, op);
         if control.clicked() {
             self.tuning_said.clone_from(&knob.why);

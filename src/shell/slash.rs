@@ -83,7 +83,14 @@ impl Shell {
                 (format!("  {}", row.summary), rgb(crate::theme::INK_WEAK)),
             ],
         );
-        let control = super::theme::row(ui, label.into());
+        // **What the row does, told** (§23 item 10): the word and its own
+        // summary where the engine gave one.
+        let help = if row.summary.is_empty() {
+            format!("/{} — opens it, or fires it", row.word)
+        } else {
+            format!("/{} — {}", row.word, row.summary)
+        };
+        let control = super::theme::row(ui, label.into(), &help);
         super::act::acts(ui, &control, row.ops);
         // Where the walk taps it (§15.2): by its word. A two-word row is not
         // named — a space would split the probe line it is said on.

@@ -27,7 +27,6 @@ use eframe::egui;
 use crate::codec::{Churn, Diff, Work, WorkFile};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::TOUCH;
 
 /// The screen's name, the op it asks and the harness's tap target.
 pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::Work.name();
@@ -77,8 +76,12 @@ impl Shell {
             path: file.path.clone(),
             handle: row.handle.clone(),
         };
-        let control = ui
-            .add(egui::Button::new(churn(file)).min_size(egui::vec2(ui.available_width(), TOUCH)));
+        let control = crate::shell::theme::button(
+            ui,
+            churn(file),
+            ui.available_width(),
+            "opens this file's diff",
+        );
         crate::shell::act::act(ui, &control, SCREEN);
         if control.clicked()
             && let Some(model) = self.model()

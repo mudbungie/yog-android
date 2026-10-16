@@ -71,7 +71,8 @@ impl Shell {
         let band = egui::vec2(ui.available_width(), crate::shell::mark::TOUCH);
         let row = egui::Layout::left_to_right(egui::Align::Center);
         ui.allocate_ui_with_layout(band, row, |ui| {
-            let ack = ui.button("ack");
+            let ack =
+                crate::shell::theme::button(ui, "ack", 0.0, "marks the trail read up to here");
             crate::shell::act::act(ui, &ack, "ack");
             if ack.clicked() {
                 self.armed = false;
@@ -79,11 +80,16 @@ impl Shell {
                     model.ack_trail();
                 }
             }
-            let clear = ui.button(if self.armed {
-                "clear trail · tap again"
-            } else {
-                "clear trail"
-            });
+            let clear = crate::shell::theme::button(
+                ui,
+                if self.armed {
+                    "clear trail · tap again"
+                } else {
+                    "clear trail"
+                },
+                0.0,
+                "clears the trail: the first tap arms it, the second clears",
+            );
             crate::shell::act::act(ui, &clear, "clear-trail");
             if !clear.clicked() {
                 return;

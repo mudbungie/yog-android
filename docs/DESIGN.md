@@ -7122,7 +7122,10 @@ earning one.
     terms. **Where a long press already means something** — a conversation
     row's menu (§13.5), a block's copy (§13.2) — the sentence is the first
     line of that menu, in `INK_WEAK`, and copy stays copy: a block is prose,
-    not a control. **The three holds** are the desktop's where the phone can
+    not a control. **A step of a working is a control** (its fold), so its
+    long press tells and no longer copies its payload; the payload stands
+    unfolded as copyable prose, where §22 item 4's *block-unit copy*
+    survives. **The three holds** are the desktop's where the phone can
     hold them: the compiler; the rule, confining `egui::Button`, `Checkbox`,
     `selectable_label`, `Slider` and `link` to `src/shell/theme/`; and the
     walk, whose `told` beat long-presses the rule's model segment and reads

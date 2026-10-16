@@ -64,7 +64,12 @@ impl Shell {
             band,
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
-                let control = ui.add(egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)));
+                let control = crate::shell::theme::button(
+                    ui,
+                    label,
+                    0.0,
+                    &format!("fires {op} on this conversation"),
+                );
                 crate::shell::act::act(ui, &control, op);
                 if !control.clicked() {
                     return;
@@ -104,9 +109,12 @@ impl Shell {
     /// The drill-in. Its subject is a picked census row.
     fn drill_item(&mut self, ui: &mut egui::Ui) {
         let picked = self.step.clone();
-        let control = ui.add_enabled(
+        let control = crate::shell::theme::button_if(
+            ui,
             picked.is_some(),
-            egui::Button::new("step").min_size(egui::vec2(0.0, TOUCH)),
+            "step",
+            0.0,
+            "drills into the picked step",
         );
         // The tag rides the control that fires the op, disabled or not: what
         // it records is that the control was laid out and its rectangle was
@@ -128,9 +136,12 @@ impl Shell {
             (Some(_), false) => format!("fork — {GOAL}"),
             (Some(_), true) => "fork".to_owned(),
         };
-        let control = ui.add_enabled(
+        let control = crate::shell::theme::button_if(
+            ui,
             picked.is_some() && typed,
-            egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
+            label,
+            0.0,
+            "forks from the picked point with the goal in the field",
         );
         crate::shell::act::act(ui, &control, "fork");
         if !control.clicked() {

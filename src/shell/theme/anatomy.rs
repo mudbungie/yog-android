@@ -18,10 +18,11 @@ use crate::theme::{self, space};
 /// words at the left and centred in the band, a `RAISED` tint only while a
 /// thumb is on it, and a hairline under it. No outline, and no centring — a
 /// `Button` centres its text, which is how the roster read as two alignments.
-pub(crate) fn row(ui: &mut egui::Ui, label: egui::WidgetText) -> egui::Response {
+pub(crate) fn row(ui: &mut egui::Ui, label: egui::WidgetText, help: &str) -> egui::Response {
     let wide = ui.available_width();
     let (rect, response) =
         ui.allocate_exact_size(egui::vec2(wide, theme::TOUCH), egui::Sense::click());
+    super::told::told(ui, &response, help);
     if !ui.is_rect_visible(rect) {
         return response;
     }
@@ -135,17 +136,13 @@ pub(crate) fn chip(
     label: egui::WidgetText,
     wide: f32,
     live: bool,
+    help: &str,
 ) -> egui::Response {
     let label = laid(ui, label, wide);
     ui.allocate_ui_with_layout(
         egui::vec2(wide, theme::TOUCH),
         egui::Layout::left_to_right(egui::Align::Center),
-        |ui| {
-            ui.add_enabled(
-                live,
-                egui::Button::new(label).min_size(egui::vec2(wide, theme::TOUCH)),
-            )
-        },
+        |ui| super::button_if(ui, live, label, wide, help),
     )
     .inner
 }
@@ -180,7 +177,7 @@ fn laid(ui: &egui::Ui, label: egui::WidgetText, wide: f32) -> egui::WidgetText {
 /// FIRE — every caller of it acts on a click — and this is a control that
 /// fires nothing but an explanation. Dark by ink rather than by egui's
 /// disabled state, which is what makes it clickable at all.
-pub(crate) fn dark_chip(ui: &mut egui::Ui, label: String, wide: f32) -> egui::Response {
+pub(crate) fn dark_chip(ui: &mut egui::Ui, label: String, wide: f32, help: &str) -> egui::Response {
     let faint = laid(
         ui,
         egui::RichText::new(label)
@@ -191,7 +188,7 @@ pub(crate) fn dark_chip(ui: &mut egui::Ui, label: String, wide: f32) -> egui::Re
     ui.allocate_ui_with_layout(
         egui::vec2(wide, theme::TOUCH),
         egui::Layout::left_to_right(egui::Align::Center),
-        |ui| ui.add(egui::Button::new(faint).min_size(egui::vec2(wide, theme::TOUCH))),
+        |ui| super::button(ui, faint, wide, help),
     )
     .inner
 }

@@ -31,7 +31,6 @@ use parts::{head, mail, orphan, spine, step_line};
 use crate::codec::{Records, StepRow};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::TOUCH;
 
 impl Shell {
     /// The whole screen. The foot claims its band first and the listing takes
@@ -106,9 +105,11 @@ impl Shell {
     fn picking_step(&mut self, ui: &mut egui::Ui, row: &StepRow) {
         let picked = self.step.as_deref() == Some(row.seq.as_str());
         let ink = crate::shell::theme::rgb(crate::theme::framing(&row.framing));
-        let control = ui.add(
-            egui::Button::new(egui::RichText::new(step_line(row, picked)).color(ink))
-                .min_size(egui::vec2(ui.available_width(), TOUCH)),
+        let control = crate::shell::theme::button(
+            ui,
+            egui::RichText::new(step_line(row, picked)).color(ink),
+            ui.available_width(),
+            "picks this step for the drill-in; again puts it down",
         );
         if control.clicked() {
             self.step = (!picked).then(|| row.seq.clone());

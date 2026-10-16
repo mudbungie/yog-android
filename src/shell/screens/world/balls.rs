@@ -88,9 +88,11 @@ impl Shell {
     fn picking(&mut self, ui: &mut egui::Ui, row: &WsBallRow) {
         let subject = (row.project.clone(), row.id.clone());
         let picked = self.ball.as_ref() == Some(&subject);
-        let control = ui.add(
-            egui::Button::new(held(row, picked))
-                .min_size(egui::vec2(ui.available_width(), crate::shell::mark::TOUCH)),
+        let control = crate::shell::theme::button(
+            ui,
+            held(row, picked),
+            ui.available_width(),
+            "picks this ball for the acts below; again puts it down",
         );
         if control.clicked() {
             // Tapping the picked row again puts it down: a pick with no way

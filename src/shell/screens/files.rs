@@ -28,7 +28,6 @@ use eframe::egui;
 use crate::codec::{FileRow, Files};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
-use crate::shell::mark::TOUCH;
 
 /// The screen's name, the op it asks and the harness's tap target — one word,
 /// because the surface has one read (§15.2).
@@ -97,7 +96,7 @@ impl Shell {
             crate::shell::clip::weak(ui, label);
         } else {
             let control =
-                ui.add(egui::Button::new(label).min_size(egui::vec2(ui.available_width(), TOUCH)));
+                crate::shell::theme::button(ui, label, ui.available_width(), "opens this file");
             crate::shell::act::act(ui, &control, SCREEN);
             if control.clicked()
                 && let Some(model) = self.model()

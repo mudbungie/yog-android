@@ -128,7 +128,14 @@ impl Scanner {
     /// The screen: a heading, the live frame, the way out — and, when a frame
     /// is due a decode, the decode.
     fn paint(&mut self, ui: &mut egui::Ui, looked: &Camera) -> Option<String> {
-        if ui.button("< cancel").clicked() {
+        if crate::shell::theme::button(
+            ui,
+            "< cancel",
+            0.0,
+            "closes the camera without reading anything",
+        )
+        .clicked()
+        {
             self.shut();
             return None;
         }

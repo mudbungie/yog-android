@@ -13,6 +13,9 @@ use crate::panel::Fact;
 use crate::shell::theme::rgb;
 use crate::theme::{self, glyph, space};
 
+/// What a fact's fold does, told on a long press (§23 item 10).
+const FOLD_HELP: &str = "unfolds this fact whole, or folds it back to one line";
+
 /// Paint the card.
 pub(in crate::shell) fn card(ui: &mut egui::Ui, facts: &[Fact]) {
     egui::Frame::NONE
@@ -41,12 +44,13 @@ fn fact(ui: &mut egui::Ui, at: usize, fact: &Fact) {
     let tapped = if open {
         ui.horizontal_top(|ui| {
             tap::glyph(ui, glyph::OPEN, rgb(theme::INK_WEAK));
-            ui.add(
+            let whole = ui.add(
                 egui::Label::new(egui::RichText::new(&fact.text).color(ink))
                     .wrap()
                     .sense(egui::Sense::click()),
-            )
-            .clicked()
+            );
+            crate::shell::theme::told::told(ui, &whole, FOLD_HELP);
+            whole.clicked()
         })
         .inner
     } else {
@@ -57,6 +61,7 @@ fn fact(ui: &mut egui::Ui, at: usize, fact: &Fact) {
             (glyph::SHUT, rgb(theme::INK_WEAK)),
             &runs,
             theme::TOUCH,
+            FOLD_HELP,
         )
         .clicked()
     };

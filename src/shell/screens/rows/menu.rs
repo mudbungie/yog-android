@@ -40,7 +40,6 @@ use eframe::egui;
 
 use crate::codec::{ConvRow, RowAct};
 use crate::shell::app::Shell;
-use crate::shell::mark::TOUCH;
 use crate::shell::place::{Band, fit};
 
 /// The space between a row and its menu. `Popup::menu`'s own default is zero
@@ -77,6 +76,9 @@ fn roster() -> [RowAct; 5] {
 }
 
 impl Shell {
+    /// What a conversation row does, said at its menu's head (§23 item 10).
+    const ROW_HELP: &str = "a tap opens this conversation; these acts address it";
+
     /// **One row's context menu.** Answers whether a menu stood over this row
     /// as the frame began — a tap that closed one is not also a navigation
     /// into it, which is the one thing a menu owes the screen under it.
@@ -134,6 +136,10 @@ impl Shell {
                     .max_height((placed.height - chrome).max(0.0))
                     .show(ui, |ui| {
                         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                        // **The row's sentence heads its menu** (§23 item
+                        // 10): a long press that already means something says
+                        // what the row does first, then offers the acts.
+                        ui.weak(Self::ROW_HELP);
                         for act in roster() {
                             self.item(ui, &agent, &act);
                         }
@@ -153,9 +159,12 @@ impl Shell {
             Some(ask) if !typed => format!("{} — {ask}", act.op()),
             _ => act.op().to_owned(),
         };
-        let control = ui.add_enabled(
+        let control = crate::shell::theme::button_if(
+            ui,
             live,
-            egui::Button::new(label).min_size(egui::vec2(0.0, TOUCH)),
+            label,
+            0.0,
+            &format!("fires {} on this conversation", act.op()),
         );
         // The tag rides the item that FIRES the op, disabled or not: what it
         // records is that the control was laid out and its rectangle was on
