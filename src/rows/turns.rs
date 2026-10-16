@@ -45,7 +45,7 @@ const TURN_SUFFIX: &str = "turn";
 /// Separator between the aggregate's terms.
 const TERM_SEP: &str = " · ";
 /// What the aggregate's fold opens onto, said in words.
-const TURN_HOVER: &str = "what the agent did before answering — open it for each step";
+pub(super) const TURN_HOVER: &str = "what the agent did before answering — open it for each step";
 
 /// Roll every finished turn's machinery up into its aggregate row. `steps` and
 /// `usage` run parallel to `flat`; `auto`/`folds` decide whether an aggregate
@@ -135,9 +135,9 @@ fn push_turn(
     }
 }
 
-/// The turn's aggregate row — **its trail's fold head**, `tool calls (N)` with
-/// the census beside it in the preview's seat (§22 item 4; the fold counts
-/// calls, lernie bl-eb4e): machinery, so it answers the same auto-knob every
+/// The turn's aggregate row — **its trail's fold head**, `worked · N calls ·
+/// M notes` with the census behind it (§23 item 6; the fold counts calls,
+/// lernie bl-eb4e): machinery, so it answers the same auto-knob every
 /// other machinery row does — one line by default, and the operator who set
 /// that knob open gets every turn opened, steps and all. No separate knob,
 /// because a third setting for the same question is a setting that can
@@ -145,10 +145,13 @@ fn push_turn(
 fn aggregate(first_key: &str, counts: &Counts, auto: AutoExpand, folds: &BTreeSet<String>) -> Row {
     let mut row = Row {
         key: turn_key(first_key),
-        prefix: super::trail::head_word(counts.tools),
-        preview: counts.say(),
+        prefix: super::trail::head_word(true, counts.tools, counts.notes()),
+        // **The census is what the line tells, not what it says** (§23 item
+        // 6): the one line reads `worked · N calls · M notes`, and the
+        // tokens and inference calls stand behind it.
+        preview: String::new(),
         body: String::new(),
-        hover: TURN_HOVER.to_string(),
+        hover: format!("{TURN_HOVER}{TERM_SEP}{}", counts.say()),
         class: RowClass::Other,
         tone: Tone::Weak,
         // Machinery rolled up is still machinery: no one is speaking, so the

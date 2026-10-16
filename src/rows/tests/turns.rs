@@ -19,7 +19,7 @@ fn a_turn() -> Vec<Entry> {
     ]
 }
 
-const AGGREGATE: &str = "tool calls (1)";
+const AGGREGATE: &str = "worked · 1 call · 1 note";
 const CENSUS: &str = "1 inference call · 1 thinking block";
 
 #[test]
@@ -55,7 +55,8 @@ fn an_override_opens_one_turn_without_touching_the_knob() {
 fn the_aggregate_is_machinery_with_nothing_of_its_own_to_show() {
     let out = go(&a_turn());
     assert_eq!(out[1].key, "tx/002#turn");
-    assert_eq!(out[1].preview, CENSUS);
+    assert_eq!(out[1].preview, "");
+    assert!(out[1].hover.ends_with(CENSUS), "{}", out[1].hover);
     assert_eq!(out[1].body, "");
     assert_eq!(out[1].kind, Kind::Trail);
     assert_eq!(out[1].class, RowClass::Other);
@@ -64,7 +65,7 @@ fn the_aggregate_is_machinery_with_nothing_of_its_own_to_show() {
     assert_eq!(out[1].fold, Fold::Steps);
     assert_eq!(
         out[1].hover,
-        "what the agent did before answering — open it for each step"
+        format!("what the agent did before answering — open it for each step · {CENSUS}")
     );
 }
 
@@ -78,7 +79,7 @@ fn a_delivered_message_bounds_the_turns_on_either_side() {
         model("005", vec![thought("b")]),
         model("006", vec![text("second")]),
     ];
-    let one = "tool calls (0)";
+    let one = "worked · 1 note";
     assert_eq!(
         prefixes(&go(&entries)),
         ["user:", one, "yog:", "user:", one, "yog:"]

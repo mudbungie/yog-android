@@ -6,8 +6,9 @@
 //! Every block starts at one left edge with its glyph in the gutter — `›` for
 //! the operator, `¦` for the model, `·` for a peer, a tool's answer or the
 //! machinery. A run of steps — calls, results, reasoning — stands under one
-//! fold head, `tool calls (N)`, each step on a stem; a `response` elbow parts
-//! a trail from the prose after it, a hairline parts one turn from the next,
+//! fold head — `working · N calls · M notes` while a step is in flight,
+//! `worked · …` once the turn settled (DESIGN §23 item 6) — each step on a
+//! stem; a `response` elbow parts an open trail from the prose after it, a hairline parts one turn from the next,
 //! and a blank stands only where the kind of block changes.
 //!
 //! **A finished turn's rollup IS its trail's head** ([`super::turns`]): it
@@ -22,9 +23,25 @@ use std::collections::BTreeSet;
 use super::{Fold, Kind, Role, Row, RowClass, Tone};
 use crate::theme::glyph;
 
-/// The fold head's word, with the calls under it (the desktop's `TRAIL`).
-pub(super) fn head_word(calls: usize) -> String {
-    format!("tool calls ({calls})")
+/// **The working's one line** (DESIGN §23 item 6; lernie §4.45 item 5):
+/// `worked · N calls · M notes` once the turn settled, `working · …` while a
+/// step is still in flight — the same line in two tenses, so the fold reads
+/// as one thing whatever state it is in. A zero term is left out, and a
+/// working that holds nothing countable is the word alone.
+pub(super) fn head_word(settled: bool, calls: usize, notes: usize) -> String {
+    let mut said = vec![if settled { "worked" } else { "working" }.to_owned()];
+    for (n, word) in [(calls, "call"), (notes, "note")] {
+        if n > 0 {
+            said.push(format!("{n} {word}{}", if n == 1 { "" } else { "s" }));
+        }
+    }
+    said.join(" · ")
+}
+
+/// **What counts as a note** on a working's line: the model's reasoning and
+/// its remarks between two steps — everything it said that is not the answer.
+pub(super) fn is_note(step: &Row) -> bool {
+    matches!(step.kind, Kind::Thinking | Kind::Remark)
 }
 
 /// Key suffix of a head this pass makes, where the rollup's says `turn`.
@@ -118,7 +135,10 @@ fn between(above: &Line, row: &Row, turns: usize) -> Before {
     if row.kind != Kind::Said {
         return Before::Gap;
     }
-    let after_trail = above.part != Part::Said;
+    // **The `response` elbow stands only under an open working** (§23 item
+    // 6): folded, the one line is the parting, and an elbow under it would
+    // part the answer from a stem that is not on the glass.
+    let after_trail = matches!(above.part, Part::Step { .. });
     if row.role == Some(Role::User) {
         if turns > 0 {
             Before::Parting
@@ -143,10 +163,11 @@ fn made(steps: &[Row], folds: &BTreeSet<String>) -> Row {
         .iter()
         .filter(|step| matches!(step.kind, Kind::Call | Kind::Answered))
         .count();
+    let notes = steps.iter().filter(|step| is_note(step)).count();
     Row {
         expanded: !folds.contains(&key),
         key,
-        prefix: head_word(calls),
+        prefix: head_word(false, calls, notes),
         preview: String::new(),
         body: String::new(),
         hover: String::new(),

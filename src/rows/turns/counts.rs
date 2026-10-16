@@ -16,6 +16,9 @@ pub(super) struct Counts {
     /// the census beside it.
     pub(super) tools: usize,
     thinking: usize,
+    /// The model's remarks between its steps (`Step::Model`), counted with
+    /// the thinking as the line's notes (§23 item 6).
+    remarks: usize,
     /// Per-counter token sums over the counted entries' committed records,
     /// under the counters' own committed names.
     tokens: Usage,
@@ -33,6 +36,7 @@ impl Counts {
             inference: 0,
             tools: 0,
             thinking: 0,
+            remarks: 0,
             tokens: Usage::new(),
             reported: 0,
         };
@@ -41,7 +45,8 @@ impl Counts {
             match step {
                 Step::ToolCall => counts.tools += 1,
                 Step::Thinking => counts.thinking += 1,
-                Step::Model | Step::Boundary | Step::Plain => {}
+                Step::Model => counts.remarks += 1,
+                Step::Boundary | Step::Plain => {}
             }
             if matches!(step, Step::Model | Step::Thinking | Step::ToolCall) {
                 let seen = turn_key(&row.key);
@@ -73,6 +78,12 @@ impl Counts {
     /// own name; **a mixed turn** (some counted entries record-bearing, some
     /// not) suffixes each sum with `+` — *at least this many*, because the
     /// bytes carry no more than the reporting entries said.
+    /// **The notes a working's line counts** (§23 item 6): the reasoning
+    /// and the model's remarks between its steps.
+    pub(super) fn notes(&self) -> usize {
+        self.thinking + self.remarks
+    }
+
     pub(super) fn say(&self) -> String {
         let terms = [
             (self.inference, "inference call"),

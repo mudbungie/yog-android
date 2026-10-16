@@ -4,6 +4,16 @@
 use serde_json::json;
 
 use super::{call, go, metered, model, result, text, thought};
+use crate::rows::Row;
+
+/// **The census stands behind the line** (§23 item 6): the aggregate's hover
+/// is the turn's sentence, then the census after the term separator.
+fn census(row: &Row) -> String {
+    row.hover
+        .strip_prefix(&format!("{} · ", crate::rows::turns::TURN_HOVER))
+        .unwrap_or_default()
+        .to_owned()
+}
 
 #[test]
 fn a_full_census_names_every_term_and_sums_the_counters() {
@@ -23,7 +33,7 @@ fn a_full_census_names_every_term_and_sums_the_counters() {
         model("005", vec![text("done")]),
     ];
     assert_eq!(
-        go(&entries)[0].preview,
+        census(&go(&entries)[0]),
         "2 inference calls · 1 thinking block · 140 input tokens · 3150 output tokens"
     );
 }
@@ -42,7 +52,7 @@ fn a_turn_only_partly_metered_says_at_least() {
         model("005", vec![text("done")]),
     ];
     assert_eq!(
-        go(&entries)[0].preview,
+        census(&go(&entries)[0]),
         "2 inference calls · 1 thinking block · 100+ input tokens · 2000+ output tokens"
     );
 }
@@ -54,7 +64,7 @@ fn a_zero_term_is_left_unsaid_and_the_singular_has_no_s() {
         model("002", vec![text("hi")]),
     ];
     assert_eq!(
-        go(&entries)[0].preview,
+        census(&go(&entries)[0]),
         "1 inference call · 1 thinking block"
     );
 }
@@ -70,7 +80,7 @@ fn a_counter_at_zero_is_not_a_term() {
         model("002", vec![text("hi")]),
     ];
     assert_eq!(
-        go(&entries)[0].preview,
+        census(&go(&entries)[0]),
         "1 inference call · 1 thinking block · 5 input tokens"
     );
 }
@@ -86,7 +96,7 @@ fn a_counter_that_is_not_a_whole_number_is_not_read() {
         model("002", vec![text("hi")]),
     ];
     assert_eq!(
-        go(&entries)[0].preview,
+        census(&go(&entries)[0]),
         "1 inference call · 1 thinking block"
     );
 }

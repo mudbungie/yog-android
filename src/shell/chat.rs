@@ -36,9 +36,10 @@ mod trail;
 
 /// **The outbox's echo** (bl-66fb): the message this seat has sent, painted
 /// where the row it will become is going to be — behind the prompt's glyph,
-/// muted while the engine has not answered, ordinary ink with a rule under it
-/// once it has. The rule is the "not yet in the transcript" mark, and it goes
-/// when the echo does.
+/// in the pending ink while the engine has not answered and the operator's
+/// own once it has (DESIGN §23 item 5; lernie §4.45 item 4). **No rule under
+/// it**: it is the row it will become, in its state's ink, and the transcript
+/// read that carries the words is what retires it.
 ///
 /// **The third state is in doubt** (yog REMOTE §3, bl-07b1): the reply was
 /// lost, so the engine may have taken this message and may not have. It keeps
@@ -75,9 +76,6 @@ pub(crate) fn echo(ui: &mut egui::Ui, text: &str, fate: Fate) {
                 IN_DOUBT,
             );
         });
-    }
-    if fate == Fate::Landed {
-        ui.separator();
     }
 }
 
