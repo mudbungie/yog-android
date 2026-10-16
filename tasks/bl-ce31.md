@@ -1,7 +1,8 @@
 +++
 title = "four bubbles by role under every block"
 created = 1792122060
-updated = 1792122060
+updated = 1792122415
+claimant = "Surveying"
 parent = "bl-d489"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
