@@ -10,6 +10,7 @@ use serde_json::Value;
 use super::{AutoExpand, Row, rows};
 use crate::codec::{Block, Entry, EntryKind};
 
+mod blocks;
 mod call;
 mod census;
 mod compaction;

@@ -10,8 +10,10 @@
 //! **Every block starts at one left edge with its glyph in the gutter** — `›`
 //! in the brand for the operator, `¦` for the model, `·` for a peer, a tool's
 //! answer or the machinery — then who spoke in their weight, then the words
-//! at the gutter's edge. No stripe, no bubble. A trail and its stems are
-//! [`trail`]; the card at the head is [`panel`].
+//! at the gutter's edge, **the block on its role's bubble** (DESIGN §23
+//! item 7; `crate::rows::blocks` decides which, `anatomy::bubbled` paints
+//! it). A trail and its stems are [`trail`]; the card at the head is
+//! [`panel`].
 //!
 //! **The fold overrides are ephemeral, as they are upstream.** The two auto
 //! knobs are policy (`/full`, `/steps`); a hand-flip is a viewport fact and
@@ -89,17 +91,22 @@ const IN_DOUBT: &str = "the reply was lost — this may or may not have been tak
 /// fold glyph is read.
 const ABRIDGED: f32 = 0.55;
 
-/// **One line of the idiom** (§22 item 4): what parts it from the line above,
-/// then the line itself — something said at the gutter, a trail's head, or a
-/// step on its stem. Answers whether its fold was tapped; the caller owns the
-/// override set, so this stays a paint over a `&Line`.
-pub(crate) fn line(ui: &mut egui::Ui, line: &Line) -> bool {
-    match line.before {
+/// **What parts a line from the one above it** (§22 item 4), painted on its
+/// own so a block's first parting stands outside the block's bubble (§23
+/// item 7); the transcript paints it, then [`body_of`].
+pub(crate) fn before(ui: &mut egui::Ui, before: Before) {
+    match before {
         Before::Nothing => {}
         Before::Gap => ui.add_space(space::S),
         Before::Parting => parting(ui),
         Before::Response => trail::response(ui),
     }
+}
+
+/// **One line of the idiom** (§22 item 4): something said at the gutter, a
+/// trail's head, or a step on its stem. Answers whether its fold was tapped;
+/// the caller owns the override set, so this stays a paint over a `&Line`.
+pub(crate) fn body_of(ui: &mut egui::Ui, line: &Line) -> bool {
     match line.part {
         Part::Said => said(ui, &line.row),
         Part::Head => trail::head(ui, &line.row),

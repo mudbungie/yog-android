@@ -34,6 +34,7 @@ use std::collections::BTreeSet;
 
 use crate::codec::{Entry, Held};
 
+mod blocks;
 mod build;
 mod call;
 mod compacted;
@@ -44,6 +45,7 @@ mod turns;
 mod windowed;
 mod wounded;
 
+pub use blocks::{Block, blocks};
 pub use trail::{Before, Line, Part, glyph, lines, mark};
 
 /// The tone vocabulary, re-exported rather than restated: the wire already

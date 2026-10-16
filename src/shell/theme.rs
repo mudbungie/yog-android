@@ -183,4 +183,4 @@ fn visuals() -> egui::Visuals {
 /// and a colour by a state's name), below is what is BUILT out of it.
 mod anatomy;
 
-pub(crate) use anatomy::{chip, dark_chip, line, marked, row, share};
+pub(crate) use anatomy::{bubbled, chip, dark_chip, line, marked, row, share};

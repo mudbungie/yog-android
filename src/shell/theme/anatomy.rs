@@ -98,6 +98,29 @@ pub(crate) fn marked(
     job
 }
 
+/// **A bubbled block** (STYLE.md, *a block*; DESIGN §23 item 7): `body`
+/// laid on its role's fill at `RADIUS`, the trail's inside its hairline,
+/// padded `S`, the full width — the gutter glyph stands inside it.
+pub(crate) fn bubbled(
+    ui: &mut egui::Ui,
+    role: crate::theme::bubble::Bubble,
+    body: impl FnOnce(&mut egui::Ui),
+) {
+    let (fill, stroke) = crate::theme::bubble::bubble(role);
+    let stroke = stroke.map_or(egui::Stroke::NONE, |rgb| {
+        egui::Stroke::new(1.0, super::rgb(rgb))
+    });
+    egui::Frame::NONE
+        .fill(super::rgba(fill))
+        .stroke(stroke)
+        .corner_radius(egui::CornerRadius::same(theme::RADIUS))
+        .inner_margin(space::S)
+        .show(ui, |ui| {
+            ui.set_min_width(ui.available_width());
+            body(ui);
+        });
+}
+
 /// **A chip** (STYLE.md, *a band of chips*): one control of a band that
 /// divides its width equally, so the COUNT of controls is a fact the layout
 /// cannot lose (bl-6e8a's argument) — laid out inside a child of exactly its

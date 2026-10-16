@@ -13,6 +13,7 @@
 use eframe::egui;
 
 use super::app::Shell;
+use super::theme::bubbled;
 use crate::rows::rows;
 
 use crate::seat::Snapshot;
@@ -123,16 +124,35 @@ impl Shell {
                             // **The conversation's card at the head** (§22
                             // item 4), then the lines in the idiom.
                             super::chat::panel::card(ui, &facts);
-                            for line in &lines {
-                                if super::chat::line(ui, line) {
-                                    flipped = Some(line.row.key.clone());
+                            // **Every block on its role's bubble** (§23
+                            // item 7): the first line's parting stands
+                            // outside the fill, the rest inside it.
+                            let mut at = 0;
+                            for block in crate::rows::blocks(&lines) {
+                                let held = lines.get(at..at + block.lines).unwrap_or_default();
+                                if let Some(first) = held.first() {
+                                    super::chat::before(ui, first.before);
                                 }
+                                bubbled(ui, block.bubble, |ui| {
+                                    for (i, line) in held.iter().enumerate() {
+                                        if i > 0 {
+                                            super::chat::before(ui, line.before);
+                                        }
+                                        if super::chat::body_of(ui, line) {
+                                            flipped = Some(line.row.key.clone());
+                                        }
+                                    }
+                                });
+                                at += block.lines;
                             }
                             // The message this seat has sent and the engine
                             // has not shown back yet (bl-66fb), where its row
-                            // will be — above the answer to it.
+                            // will be — above the answer to it, on the
+                            // operator's own bubble (§23 item 5).
                             if let Some(echo) = &self.echo {
-                                super::chat::echo(ui, &echo.text, echo.fate);
+                                bubbled(ui, crate::theme::bubble::Bubble::Operator, |ui| {
+                                    super::chat::echo(ui, &echo.text, echo.fate);
+                                });
                             }
                         });
                     });
