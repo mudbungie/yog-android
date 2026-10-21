@@ -1,7 +1,8 @@
 +++
 title = "the settled working's line says what it hides by kind — N tool calls · M thoughts · K intermediate responses — on the full-width door, as the desktop now reads (lernie bl-db54); then the signed APK to the phone"
 created = 1792561605
-updated = 1792561605
+updated = 1792561627
+claimant = "Unstop-phone"
 priority = 1
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
