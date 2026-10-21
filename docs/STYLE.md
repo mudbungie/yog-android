@@ -125,8 +125,9 @@ selectors nothing to read a provider name in; its words are `SMALL` and its
 chips are padded at `S`, and that is the whole of the exception — an opened
 list is body size like every other list. **The exception goes with the band
 (DESIGN §22 item 10)**: its controls move to the model overlay at a full row
-each, where body size fits. The status rule's segments are `SMALL` ink inside
-a `TOUCH`-tall band, which is a line of facts and not a control's words.
+each, where body size fits. The status rule's runs are `SMALL` ink inside
+a `TOUCH`-tall line, which is a line of facts and not a control's words —
+its knobs are doors in that line, not buttons (DESIGN §23 item 14).
 
 Touch: every row and every control stands at least **48 points** tall
 (`theme::TOUCH`, DESIGN §13.2), full width where it lists. A block's corner
@@ -135,21 +136,29 @@ is `RADIUS 10`; a speaker's rule is `RULE 3` wide.
 ## 5. Anatomy
 
 **The shape, whole** (DESIGN §22, bl-bf74 — the desktop's Hermes shape at a
-phone's width; **§23 adds the tab strip over the transcript from the second open conversation, the drawer swipe, the bubbles, the told sentence on a long press and the settings overlay**): the chat is the home screen; the transcript fills it; above
-the floor, bottom-up, stand the prompt line, the status rule, and — only while
-they have something to say — the ask and the dock. Everything else is an
+phone's width; **§23 adds the tab strip over the transcript from the second open conversation, the drawer swipe, the bubbles, the told sentence on a long press and the settings overlay, and item 4 lays the floor in the desktop's order**): the chat is the home screen; the transcript fills it; from
+the floor, bottom-up, stand the status rule at the bottom edge, the banner
+line and the dock over it while they have something to say, the prompt line
+directly under the transcript, and the ask on the prompt line while the
+conversation asks. Everything else is an
 overlay, asked for by a tap on the rule or on `›`, and closed by its name line
 or the back gesture.
 
-**The status rule** (`status`): one band `TOUCH` tall, `SMALL` runs parted by
-`|` in `INK_FAINT`: the mark drawn at the band's height at the left edge plus
-`M`, then the state word in its state's ink (`ready` in `INK_WEAK`; the
-banner's sentence in its own accent while one stands), `· elapsed` in
-`INK_WEAK`, the waiting count in the attention accent while it is non-zero,
-the model in `INK_WEAK`, and `— name` at the right end in `INK`. Spend, then
-model, then elapsed drop as the width runs out; the state, the count and the
-name never drop, and the name elides. Every segment is its own target, at
-least `TOUCH` wide; bare ground at rest, `RAISED` under a thumb.
+**The status rule** (`status`; DESIGN §23 item 14): one line `TOUCH` tall
+at the bottom edge, `SMALL` runs: the mark at the left end, its picture the
+line's height in a `TOUCH`-square seat, then `— <workspace> ⏶ | <provider> ⏶
+| <model> ⏶ | <effort> ⏶ | <priority> | <state · age> | <tokens> | <spend> |
+<context> — <name>`, the `|` and `—` in `INK_FAINT` with `XS` either side.
+**Each knob is a door** (`shell::theme::door`): its words in `INK` and `⏶`
+in `INK_WEAK` inside one seat, `TOUCH` tall with `XS` of air either side,
+bare ground at rest and `RAISED` while pressed; the reload's `…`
+(annotation) or `✔` (attention) stands in the mark's place, a flip and a
+dark knob wear none, and a dark knob's words are `INK_FAINT`. The state is
+in its state's ink, the other diagnostics `INK_WEAK`, the name `INK` and a
+door. The diagnostics drop from the right, then priority, then effort; the
+selectors and the name never drop and elide, and where one line will not
+hold both halves the diagnostics and the name stand on a small line under
+it. No chip, no fill and no caret on the rule.
 
 **The prompt line** (`composer`): `›` in the brand at the left edge plus `M`,
 a `TOUCH`-square target of its own (it opens the verb sheet); the platform
@@ -157,11 +166,14 @@ field beside it, dressed by `shell::theme::skin` — `SURFACE`, the one-point
 brand ring while it holds the caret, the attention tint while the
 conversation asks, resting at `TOUCH` and growing to its cap only while
 focused; `send` at the right end in the brand on bare ground, painted only
-while the draft holds text. No chip, no band and no selector under it.
+while the draft holds text. Its hint in `INK_FAINT`: `say it`; in start
+mode `begin a conversation on <workspace>`; while the conversation asks
+`it is waiting on you`. It stands directly under the transcript, on the
+rule (DESIGN §23 item 4).
 
 **The verb sheet** (`slash`): a `SURFACE` box with a `HAIRLINE` frame and
-`RADIUS` corners, laid out directly above the rule — never over the field —
-as tall as its rows or the room above the rule, whichever is less, and
+`RADIUS` corners, laid out directly above the prompt line — never over the
+field — as tall as its rows or the room above it, whichever is less, and
 scrolling inside that. One `SMALL` line of what it is narrowed to, then rows
 `TOUCH` tall: `/word` in `INK`, the summary in `INK_WEAK`, elided at the row's
 width; a verb's glyph (`■ stop`, `▶ nudge`, `⚡ interrupt`) before its word; a
@@ -182,7 +194,7 @@ focused one open beneath it as the threaded rows below, `+ new` in the brand
 as the last row under it.
 
 **The ask** (`ask`): the overlay's box with its frame and name line in the
-attention accent, laid out directly above the rule (or the dock): the name
+attention accent, laid out directly above the prompt line: the name
 line `it is asking` with `why +` at its other end, the held line in the
 attention accent under it, the row's other words one line each in their
 inks, then the choices as numbered cells two to a row, each `TOUCH` tall and
@@ -196,7 +208,8 @@ asking `?` before it in the attention accent, the focused one in `INK` over
 a brand hairline and the rest in `INK_WEAK`, `×` in `INK_FAINT` as its own
 seat after it; the `RAISED` wash while a thumb is on either.
 
-**The dock** (`dock`): one `TOUCH`-tall row above the rule, `+ N running ·
+**The dock** (`dock`): one `TOUCH`-tall row on the rule, under the prompt
+line, `+ N running ·
 <name>` in `INK_WEAK` with the count in the working accent; unfolded, one row
 apiece beneath the head, name in `INK`, state in its ink, age in `INK_WEAK`.
 
@@ -290,8 +303,8 @@ can lose a control off the glass. **The call's input is never in this band** —
 a tool's JSON belongs on the transcript row that carries the call, not between
 the message field and the answers.
 
-**A band of chips** (the workspace bar, the admin foot, the controls under
-the composer; `shell::theme::chip`): a band `TOUCH` tall divided EQUALLY
+**A band of chips** (the workspace bar, the admin foot, the ask's cells —
+never the rule, whose knobs are doors; `shell::theme::chip`): a band `TOUCH` tall divided EQUALLY
 among its controls, so the count of controls is a fact the layout cannot
 lose (DESIGN §13.14) — each chip a `SURFACE` block with `RADIUS` corners, its
 label eliding inside its share rather than pushing a neighbour off the

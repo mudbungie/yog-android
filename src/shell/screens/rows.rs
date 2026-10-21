@@ -18,15 +18,16 @@ pub(in crate::shell) use thread::threaded;
 
 impl Shell {
     pub(crate) fn start(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str) {
-        // The starter rides the BOTTOM of this screen, where the composer sits
+        // The starter rides the floor of this screen, where the composer sits
         // on a conversation: starting one and speaking into one are the same
         // gesture to a thumb. **What claims the floor first is what may never
         // be pushed off it** (bl-192c).
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            // The prompt line in start mode, and the rule above it (§22
-            // items 1 and 2) — no bar: the rule carries the mark.
-            self.starter(ui, snap);
+            // The rule at the bottom edge and the prompt line in start mode
+            // on it (§23 item 4, the desktop's order) — no bar: the rule
+            // carries the mark.
             self.rule(ui, snap);
+            self.starter(ui, snap, workspace);
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                 // The verb sheet, while the draft is a slash line (§22 item
@@ -54,8 +55,9 @@ impl Shell {
     /// widget id with the chat screen's, and deliberately: only one of the two
     /// is ever on screen, they are the same gesture at two depths, and the IME
     /// bridge addresses exactly one field by that id (bl-014e).
-    fn starter(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        if let Some(goal) = self.compose(ui, snap, "start a conversation", &["prepare", "prompt"])
+    fn starter(&mut self, ui: &mut egui::Ui, snap: &Snapshot, workspace: &str) {
+        let hint = crate::draft::hint(Some(workspace), false);
+        if let Some(goal) = self.compose(ui, snap, &hint, &["prepare", "prompt"])
             && let Some(model) = self.model()
         {
             model.start_conversation(goal);

@@ -32,10 +32,14 @@ pub const SHUT: &str = "+";
 pub const ELIDED: &str = "…";
 /// A tab's close (DESIGN §23 item 2), the desktop's spelling.
 pub const CLOSE: &str = "×";
+/// **A knob on the rule** (DESIGN §23 item 14): it opens upward, and the
+/// mark stands inside its door. The desktop's glyph — the bundled icon face
+/// carries U+23F6, where the proportional face has no `▾`, `▴` or `▼`.
+pub const DROP: &str = "⏶";
 
 /// Every glyph the table spells, for the tests that judge them as a set.
-pub const ALL: [&str; 12] = [
-    PROMPT, LEAD, SEP, MODEL, NOTE, CALL, DONE, FAILED, OPEN, SHUT, ELIDED, CLOSE,
+pub const ALL: [&str; 13] = [
+    PROMPT, LEAD, SEP, MODEL, NOTE, CALL, DONE, FAILED, OPEN, SHUT, ELIDED, CLOSE, DROP,
 ];
 
 /// **What this tree has measured as tofu** in the bundled proportional face

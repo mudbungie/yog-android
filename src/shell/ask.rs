@@ -1,6 +1,7 @@
 //! **The ask** (DESIGN §22 item 8, bl-289f; §13.7's held band, re-shaped):
 //! while the focused conversation is in the queue, a box framed and named in
-//! the attention accent stands between the transcript and the rule: its name
+//! the attention accent stands between the transcript and the box under it
+//! (§23 item 4, the desktop's order): its name
 //! line, ONE line of the row's words (the parked call, else the failure, else
 //! the last words) with the rest behind the name line's fold (bl-58ca), and
 //! its choices as numbered cells three to a row where three fit, else two.

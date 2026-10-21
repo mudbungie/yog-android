@@ -23,7 +23,7 @@ use eframe::egui;
 use super::app::Shell;
 use crate::seat::Snapshot;
 
-pub(super) use chip::Chip;
+pub(super) use chip::{Chip, Seat};
 
 mod chip;
 mod drop;

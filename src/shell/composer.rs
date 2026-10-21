@@ -153,12 +153,16 @@ impl Shell {
     /// **A popup takes the glass instead** (§13.2's opened-list rule). A
     /// platform view is drawn over the GL surface by the window compositor
     /// and knows nothing of egui's areas, so a list opened over the composer
-    /// — the controls band's selectors open upward, directly across it —
-    /// would paint UNDER the field. The field steps off the glass for that
-    /// frame, which is the one arrangement in which the topmost thing on the
-    /// screen is the thing the operator opened.
+    /// — the rule's knobs stand under it and open upward, directly across it
+    /// (§23 item 14) — would paint UNDER the field. The field steps off the
+    /// glass for that frame, which is the one arrangement in which the
+    /// topmost thing on the screen is the thing the operator opened. A told
+    /// sentence is the same case: its box stands above the control, and a
+    /// knob's is over the field.
     fn overlay(&mut self, ui: &mut egui::Ui, hint: &str, rect: egui::Rect) {
-        if egui::Popup::is_any_open(ui.ctx()) {
+        let told =
+            super::theme::told::standing(ui.ctx()) && self.knobs.on(crate::settings::Toggle::Help);
+        if egui::Popup::is_any_open(ui.ctx()) || told {
             return;
         }
         let ppp = ui.ctx().pixels_per_point();

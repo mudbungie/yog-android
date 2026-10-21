@@ -35,19 +35,20 @@ fn standing(wide: f32) -> Vec<Slot> {
 }
 
 #[test]
-fn the_rule_drops_the_name_then_the_diagnostics_then_the_knobs() {
+fn the_rule_drops_the_diagnostics_then_priority_then_effort_and_never_the_name() {
     use Slot::*;
-    assert_eq!(standing(320.0), [Workspace, Provider, Model]);
-    assert_eq!(standing(360.0), [Workspace, Provider, Model]);
-    assert_eq!(standing(420.0), [Workspace, Provider, Model, Effort]);
+    assert_eq!(standing(320.0), [Workspace, Provider, Model, Name]);
+    assert_eq!(standing(360.0), [Workspace, Provider, Model, Name]);
+    assert_eq!(standing(420.0), [Workspace, Provider, Model, Effort, Name]);
+    assert_eq!(standing(480.0), [Workspace, Provider, Model, Effort, Name]);
     assert_eq!(
-        standing(480.0),
-        [Workspace, Provider, Model, Effort, Priority]
+        standing(560.0),
+        [Workspace, Provider, Model, Effort, Priority, Name]
     );
     assert_eq!(standing(800.0), ALL);
     // Narrower than the three selectors' floor, nothing else stands and the
-    // three still do — they elide; they never drop.
-    assert_eq!(standing(100.0), [Workspace, Provider, Model]);
+    // three and the name still do — they elide; they never drop.
+    assert_eq!(standing(100.0), [Workspace, Provider, Model, Name]);
 }
 
 #[test]
@@ -60,8 +61,28 @@ fn a_knob_whose_list_is_open_does_not_drop() {
         .collect();
     assert_eq!(
         standing,
-        [Slot::Workspace, Slot::Provider, Slot::Model, Slot::Priority]
+        [
+            Slot::Workspace,
+            Slot::Provider,
+            Slot::Model,
+            Slot::Priority,
+            Slot::Name
+        ]
     );
+}
+
+/// **The selectors are water-filled** (§23 item 14, the desktop's rule): a
+/// short one keeps its words, the long ones share one cut of what is left,
+/// and the others stand at their words.
+#[test]
+fn a_short_selector_keeps_its_words_and_the_long_ones_share_the_rest() {
+    use Slot::*;
+    let slots = [Workspace, Provider, Model, Name];
+    let widths = fit(&slots, &[50.0, 200.0, 200.0, 60.0], 300.0, 4.0, None);
+    assert_eq!(widths, [Some(50.0), Some(89.0), Some(89.0), Some(60.0)]);
+    // Where they all fit, each is its words and the rest of the line is air.
+    let widths = fit(&slots, &[50.0, 70.0, 90.0, 60.0], 600.0, 4.0, None);
+    assert_eq!(widths, [Some(50.0), Some(70.0), Some(90.0), Some(60.0)]);
 }
 
 #[test]

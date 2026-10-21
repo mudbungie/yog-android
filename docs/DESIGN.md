@@ -6349,7 +6349,7 @@ its text).
 *wall*; *conversations* for the list; no *engines* level, because this device
 is a client of one engine (entries are an upstream ask, §13.4).
 
-1. **One column → the chat is the home screen.** The transcript fills the
+1. *Amended by §23 item 4: the box stands directly under the transcript and the rule takes the bottom edge — the desktop's order; this item's floor is the order it replaced.* **One column → the chat is the home screen.** The transcript fills the
    glass; under it, in the floor's order (§13.2, bl-192c — claimed bottom-up,
    the transcript is what gives way): the prompt line, the status rule above
    it, and — only while they have something to say — the ask and the dock
@@ -6364,7 +6364,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    (round-3 shot `a9-after-keyboard`); one 48-point rule is the whole of what
    replaces them.
 
-2. **The status rule → a 48-point band of tappable segments, above the
+2. *Amended by §23 items 4 and 14: the rule is at the bottom edge, under the box, and it is one line of runs — each knob a door with its mark inside it, the name never dropped.* **The status rule → a 48-point band of tappable segments, above the
    prompt.** Left to right: **the mark** (drawn small, the §13.2 mark, still
    the one way to the configuration surface and still the walk's `mark`
    rectangle), then `<state> · <elapsed> | <N waiting> | <model> | <spend>`,
@@ -6510,7 +6510,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    lets go of (`/priority` still reaches it); on the walk's measured faces
    effort stands from about 407 points of glass.
 
-3. **The prompt line → the `EditText` behind `›`, with a `send` word.** `›`
+3. *Amended by §23 item 4: the prompt line stands on the rule, directly under the transcript. The hints below are now what the code says (`draft::hint`, bl-6caf); until then the field said `message` on a conversation and `start a conversation` in start mode.* **The prompt line → the `EditText` behind `›`, with a `send` word.** `›`
    in the brand at the left edge plus `M` (the body face carries U+203A; the
    baseline's `❯` paints as tofu, as on the desktop), the platform field
    after it, the hint in weak ink while it is empty — *say it*, *begin a
@@ -6853,7 +6853,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    the `running` seed puts a second row the engine calls `live`, and
    `docked` is that screen with the line tapped open (probe name `dock`).
 
-10. **The controls band under the composer → deleted, and spent three ways.**
+10. *Amended by §23 item 14: the knobs on the rule are doors, not chips.* **The controls band under the composer → deleted, and spent three ways.**
     Its stops (`stop`, `stop all`, `nudge`) are verbs (5) under the same
     engine gates. Its two selectors and the tuning pair (§13.2, bl-0267,
     bl-dfbb, bl-809d, bl-0691) move, whole and unchanged in rule — tap is the
@@ -7046,10 +7046,30 @@ earning one.
 3. **The out-of-frame time and the dragged widths** (items 1 and 2) are
    the bar's and are not ported with it.
 
-4. **The box beside the transcript** (item 3): the phone had it first — the
-   prompt line stands directly under the transcript and above the rule,
-   bottom-up (§22 item 1), because the thumb and the keyboard are at the
-   floor. Nothing moves.
+4. **The box beside the transcript** (item 3; amended by bl-6caf). This
+   item first said the phone had it first — the prompt line directly under
+   the transcript and above the rule — and that nothing moved. **It did
+   not**: §22 item 1 laid the prompt line at the floor with the rule, the
+   dock and the ask above it, the opposite of the desktop, and the emulator
+   captures of 0.0.40 against the desktop's 0.1.107 showed it (bl-9b97).
+   The order now is the desktop's (lernie §4.45 item 3), claimed bottom-up
+   as bl-192c rules, the transcript being what gives way: **the rule takes
+   the bottom edge** (with the diagnostics' small line under it where one
+   line will not hold both halves, §22 item 2); **the banner line** stands
+   directly over the rule; **the live dock** stands on those while anything
+   runs (§22 item 9); **the box** — `›`, the field and `send` — stands on
+   them, **directly under the transcript**, so the words typed are beside
+   the words they answer; **the ask** stands on the box (§22 item 8), the
+   model's question over the line its answer is typed in. While the draft is
+   a slash line the verb sheet takes the room over the box and the dock and
+   the ask step aside (§22 item 5). Start mode is the same floor with no
+   dock and no ask. A knob's list still opens upward from its door, which
+   now puts it over the box: it is egui's foreground layer anchored to the
+   door, as the desktop lays its dropup, it covers the box only while it
+   stands, and the native field steps off the glass meanwhile — as it does
+   while a told sentence stands (10), whose box above a knob is over the
+   field too. The keyboard still lifts the whole floor: the inset is spent
+   once (`app::pass`), and the rule rides it under the box.
 
 5. **A sent message is on the glass the frame it is sent** (item 4): §7's
    outbox echo is this row and has been since bl-66fb — the deposit clears
@@ -7216,6 +7236,59 @@ earning one.
     one added without a sentence does not compile, one painted outside the
     painters fails the rule, and the walk's `told` beat is the eye that the
     sentence opens.
+
+14. **The rule is one line of runs, not a band of chips** (bl-6caf; lernie
+    §4.42 item 11, §4.44 items 3 and 5). The ruling, operator 2026-10-20,
+    verbatim: *"phone still looks mostly like the old one"* — under the same
+    day's *"The user interface in general in lernie has gotten much better.
+    Adapt the mobile app to it, and implement the new version."* (6). The
+    rule was a band of filled chip buttons with a painted caret on each and a
+    large mark at its left; the desktop's is a line of text. It reads now:
+
+    `<mark> — <workspace> ⏶ | <provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> | <state · age> | <tokens> | <spend> | <context> — <name>`
+
+    - **What went**: the filled chip on the rule (`anatomy::chip` stays for
+      the screens that are bands of acts), its button padding, the caret
+      painted over its words, `dark_chip`, and `CARET_ROOM`.
+    - **The mark** stands at the left end, its picture drawn at the line's
+      height (the rule's `SMALL` type) inside its touch-square seat: still
+      the configuration door, still the walk's `mark` rectangle.
+    - **Each knob is a door** (`shell/theme/door.rs`): its words in `INK`
+      and `⏶` in `INK_WEAK` after them **inside the same seat** — one tap
+      target, the mark the affordance and never the name — `TOUCH` tall,
+      `XS` of air either side, **bare ground at rest and `RAISED` while
+      pressed** (8, the phone's lit). The reload marks ride in the mark's
+      place, as the desktop's `↻`/`✔` do: `…` in the annotation accent while
+      the list is asked for, `✔` in the attention accent once it lands.
+      Priority is a flip and opens no list, so its door wears no mark; a dark
+      knob (a model with no provider, effort the provider will not take) is
+      its words in `INK_FAINT` with no mark, and its tap still says why. The
+      name is a door the same way, unmarked.
+    - **The separators** `|` and the leads `—` are `INK_FAINT`, `XS` off
+      either side.
+    - **`⏶` is the desktop's own glyph** (`theme::glyph::DROP`, in the table
+      the glyph tests judge): the bundled icon face, the proportional
+      family's last fallback, carries U+23F6, where the body face has no
+      `▾`, `▴` or `▼`.
+    - **The drop rule is the desktop's** (`status::fit`, pure and
+      host-tested): the diagnostics leave from the right — context, spend,
+      tokens, state — then priority, then effort; workspace, provider and
+      model never drop, and **the name never drops** (bl-79bb's list put it
+      first). The width is paid in two passes: every other run stands at its
+      words, and the three selectors are water-filled into what is left — a
+      short one keeps its words, the long ones share one cut, never below
+      `status::SHARE`. That is **56 points**, read off the faces' advance
+      widths at `SMALL`: the door's air (8), ` ⏶` (13.5) and `clau…` (33.5);
+      the chip's padding and caret room made it 70. bl-96fc's budget stands:
+      where one line will not hold both halves the diagnostics and the name
+      stand on their own small line under the rule, in the same shape —
+      `<state · age> | … — <name>` — which is a budget decision, not the old
+      look. On the walk's 411 points the rule holds the mark, workspace,
+      provider, model and effort, and priority is the first to leave
+      (`/priority` reaches it).
+    - **The probe's names stand** (`mark`, `rule-workspace`,
+      `rule-provider`, `rule-model`, `rule-effort`, `rule-priority`,
+      `rule-name`), each the door's seat, so the walk taps what it tapped.
 
 15. **The speaker lines as the desktop spells them** (bl-75c6, under
     bl-9b97; lernie `ui::chat::rows::block`, `rows::role::OPERATOR`; amends

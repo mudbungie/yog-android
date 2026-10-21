@@ -33,6 +33,22 @@ use crate::theme::TOUCH;
 /// field that grew unbounded would push the transcript off the glass.
 pub const CAP: f32 = 132.0;
 
+/// **The empty field's hint** (DESIGN §22 item 3): the desktop's `say it`,
+/// less its key words — the phone's send is the `send` word, not a key.
+pub const SAY: &str = "say it";
+
+/// **What the empty field says**: in start mode (`start`, the workspace a
+/// conversation would begin on) that it begins one there; while the
+/// conversation asks, that it is waiting on the operator; else [`SAY`].
+#[must_use]
+pub fn hint(start: Option<&str>, asking: bool) -> String {
+    match (start, asking) {
+        (Some(workspace), _) => format!("begin a conversation on {workspace}"),
+        (None, true) => "it is waiting on you".to_owned(),
+        (None, false) => SAY.to_owned(),
+    }
+}
+
 /// What the native field said about itself this frame.
 pub struct Said {
     /// Whether the field holds the caret. The shell repaints fast while it

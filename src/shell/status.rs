@@ -1,16 +1,20 @@
-//! **The status rule** (DESIGN §22 items 1, 2 and 10, bl-79bb; operator
-//! ruling 2026-10-12): the touch-tall band above the prompt — the mark, the
-//! knobs as dropups, this conversation's diagnostics and its name — and the
-//! banner line over it. Which segments stand, what each says, which drop and
-//! whether a list is fresh are `crate::status`, pure and host-tested; this
-//! file paints them and performs the taps.
+//! **The status rule** (DESIGN §22 items 1, 2 and 10, bl-79bb; §23 item
+//! 14): the bottom edge of the chat — one touch-tall line of runs,
+//! `— <workspace> ⏶ | <provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> |
+//! <diagnostics> — <name>`, the mark at its left end drawn at the line's
+//! height — and the banner line over it. Which runs stand, what each says,
+//! which drop and whether a list is fresh are `crate::status`, pure and
+//! host-tested; this file paints them and performs the taps.
 //!
-//! **A knob is a dropup**: a tap opens its list upward from the segment,
-//! placed by `shell::place` (`controls/drop.rs`), showing the cached list at
-//! once and asking for a fresh one; a small mark stands on the segment —
-//! `…` in the annotation accent while the ask is out, `✔` in the attention
-//! accent once the answer has landed. A tap on a row sets it and closes the
-//! list; the platform's back closes it too.
+//! **Every knob is a door** (`theme::door`): its words in `INK` and its mark
+//! in `INK_WEAK` inside one seat, bare at rest and `RAISED` while pressed,
+//! the separators in `INK_FAINT` between. A tap opens its list upward from
+//! the door, placed by `shell::place` (`controls/drop.rs`) on egui's
+//! foreground layer over the box under the transcript, showing the cached
+//! list at once and asking for a fresh one; while the ask is out the door's
+//! mark is `…` in the annotation accent, and `✔` in the attention accent
+//! once the answer has landed. A tap on a row sets it and closes the list;
+//! the platform's back closes it too.
 //!
 //! **The banner stands on its own line over the rule**, not in a slot of it:
 //! at a phone's width the three selectors that never drop leave no room for a
@@ -20,12 +24,11 @@
 use eframe::egui;
 
 use super::app::Shell;
-use super::controls::{Chip, band};
+use super::controls::{Chip, Seat, band};
 use super::place::Band;
-use super::theme::{ink, rgb};
-use crate::overlay::Overlay;
+use super::theme::ink;
 use crate::seat::Snapshot;
-use crate::status::{Place, Reload, Said, Slot};
+use crate::status::{Place, Said, Slot};
 use crate::theme::{self, State, TOUCH, glyph, space};
 
 /// What the rule holds between frames: which knob's list was asked for and
@@ -44,15 +47,16 @@ pub(crate) struct Rule {
 /// touch-tall ways to the same place.
 const LOW: f32 = TOUCH / 2.0;
 
-/// One segment of the band, before it is given a width.
+/// One run of the line, before it is given a width.
 enum Segment {
     Knob(Chip),
     Said(Said),
 }
 
 impl Shell {
-    /// **The rule**, added to a bottom-up block: the band first, then the
-    /// banner line over it.
+    /// **The rule**, added to a bottom-up block: the line (and the small
+    /// line under it) first, so it takes the bottom edge, then the banner
+    /// line over it.
     pub(super) fn rule(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         self.follow(snap);
         let ctx = ui.ctx().clone();
@@ -63,25 +67,26 @@ impl Shell {
         } else if self.rule.verb.is_none() {
             self.rule.asked = None;
         }
-        // The tappable area a list may open into (bl-78c2): from the top of
-        // what `app::pass` left down to the top of the prompt line, which
-        // this bottom-up block has already laid. **A knob's list opens
-        // upward** (§22 item 2): with the prompt line out of its area the
-        // room below a selector is the diagnostics line at most, so the list
-        // never covers the field or the facts under the rule.
+        // The tappable area a list may open into (bl-78c2): everything
+        // `app::pass` left, the floor included. **A knob's list opens
+        // upward** (§22 item 2): under the rule there is the diagnostics
+        // line at most, so the list stands over the box, the dock and the
+        // transcript — on egui's foreground layer, anchored to the door, as
+        // the desktop lays its dropup (lernie §4.45 item 3) — and the native
+        // field steps off the glass while it does (`composer::overlay`).
         let area = Band {
             top: ui.max_rect().top(),
             bottom: ui.available_rect_before_wrap().bottom(),
         };
         ui.scope(|ui| {
             ui.spacing_mut().interact_size.y = TOUCH;
-            // The rule's type is `SMALL` (STYLE §4's band exception, kept):
-            // five knobs and the diagnostics share one line where they fit.
+            // The rule's type is `SMALL` (STYLE §4's band exception, kept),
+            // and a run's neighbours stand `XS` off either side of `|`.
             ui.style_mut().text_styles.insert(
                 egui::TextStyle::Button,
                 egui::FontId::proportional(theme::type_scale::SMALL),
             );
-            ui.spacing_mut().button_padding.x = space::S;
+            ui.spacing_mut().item_spacing.x = space::XS;
             self.segments(ui, snap, area);
         });
         self.banner_line(ui, snap);
@@ -98,43 +103,68 @@ impl Shell {
             crate::status::diagnostics(row.as_ref(), &snap.transcript, snap.head.as_ref(), now);
         segments.extend(said.into_iter().map(Segment::Said));
         let slots: Vec<Slot> = segments.iter().map(slot).collect();
-        let wants: Vec<f32> = segments.iter().map(|s| want(ui, s)).collect();
+        let lead = extra(ui);
+        let wants: Vec<f32> = segments.iter().map(|s| want(ui, s, lead)).collect();
         let held = self.rule.verb.or(self.rule.asked.map(|(slot, _)| slot));
-        let gap = ui.spacing().item_spacing.x;
+        let spacing = ui.spacing().item_spacing.x;
+        let gap = spacing * 2.0 + super::theme::wide(ui, glyph::SEP);
         let under = ui.available_width();
-        let places = crate::status::layout(&slots, &wants, under - TOUCH - gap, under, gap, held);
-        let low: Vec<(Said, f32)> = segments
-            .iter()
-            .zip(&places)
-            .filter_map(|(segment, place)| match (segment, place) {
-                (Segment::Said(said), Place::Under(wide)) => Some((said.clone(), *wide)),
-                _ => None,
-            })
-            .collect();
+        let room = under - TOUCH - spacing * 2.0 - super::theme::wide(ui, glyph::LEAD);
+        let places = crate::status::layout(&slots, &wants, room, under, gap, held);
+        let mut top = Vec::new();
+        let mut low = Vec::new();
+        for (segment, place) in segments.into_iter().zip(places) {
+            match place {
+                Place::Rule(wide) => top.push((segment, wide)),
+                Place::Under(wide) => low.push((segment, wide)),
+                Place::Off => {}
+            }
+        }
         if !low.is_empty() {
             ui.allocate_ui_with_layout(
                 egui::vec2(under, LOW),
                 egui::Layout::left_to_right(egui::Align::Center),
-                |ui| {
-                    for (said, wide) in &low {
-                        self.said(ui, said, *wide, LOW);
-                    }
-                },
+                |ui| self.runs(ui, snap, low, LOW, area),
             );
         }
         band(ui, |ui| {
-            self.mark(ui);
-            for (segment, place) in segments.into_iter().zip(places) {
-                let Place::Rule(wide) = place else { continue };
-                match segment {
-                    Segment::Knob(chip) => self.knob_on_rule(ui, snap, chip, wide, area),
-                    Segment::Said(said) => self.said(ui, &said, wide, TOUCH),
-                }
-            }
+            let line = ui.text_style_height(&egui::TextStyle::Button);
+            self.mark_drawn(ui, line);
+            faint(ui, glyph::LEAD, TOUCH);
+            self.runs(ui, snap, top, TOUCH, area);
         });
     }
 
-    /// One knob: painted, its list asked for when it opens, its reload mark.
+    /// One line's runs, `|` between neighbours and `—` before the name.
+    fn runs(
+        &mut self,
+        ui: &mut egui::Ui,
+        snap: &Snapshot,
+        line: Vec<(Segment, f32)>,
+        tall: f32,
+        area: Band,
+    ) {
+        for (at, (segment, wide)) in line.into_iter().enumerate() {
+            match segment {
+                Segment::Said(said) if said.slot == Slot::Name => {
+                    faint(ui, glyph::LEAD, tall);
+                    self.said(ui, &said, (wide - extra(ui)).max(0.0), tall);
+                }
+                segment => {
+                    if at > 0 {
+                        faint(ui, glyph::SEP, tall);
+                    }
+                    match segment {
+                        Segment::Knob(chip) => self.knob_on_rule(ui, snap, chip, wide, area),
+                        Segment::Said(said) => self.said(ui, &said, wide, tall),
+                    }
+                }
+            }
+        }
+    }
+
+    /// One knob: its door, its list asked for when it opens, its mark — the
+    /// drop mark, or the reload's in its place while a list is asked for.
     fn knob_on_rule(
         &mut self,
         ui: &mut egui::Ui,
@@ -148,7 +178,14 @@ impl Shell {
         if open {
             self.rule.verb = None;
         }
-        let face = self.knob(ui, snap, chip, wide, area, open);
+        let seat = Seat {
+            face: chip.face(),
+            wide,
+            area,
+            open,
+            mark: self.mark_of(snap, slot),
+        };
+        let face = self.knob(ui, snap, chip, seat);
         let name = match slot {
             Slot::Workspace => "rule-workspace",
             Slot::Provider => "rule-provider",
@@ -164,60 +201,6 @@ impl Shell {
                 _ => None,
             };
             self.rule.asked = Some((slot, mark));
-        }
-        let Some((asked, Some(at))) = self.rule.asked else {
-            return;
-        };
-        if asked != slot {
-            return;
-        }
-        let now = if slot == Slot::Workspace {
-            snap.passed
-        } else {
-            snap.listed
-        };
-        let (mark, state) = match crate::status::reload(at, now) {
-            Reload::Reloading => (glyph::ELIDED, State::Annotation),
-            Reload::Fresh => (glyph::DONE, State::Attention),
-        };
-        ui.painter().text(
-            face.rect.right_top() + egui::vec2(-space::XS, space::XS),
-            egui::Align2::RIGHT_TOP,
-            mark,
-            egui::FontId::proportional(theme::type_scale::SMALL),
-            ink(state),
-        );
-    }
-
-    /// One diagnostic: its words in its ink, elided to its width. The name is
-    /// the switcher's door.
-    fn said(&mut self, ui: &mut egui::Ui, said: &Said, wide: f32, tall: f32) {
-        let sense = if said.slot == Slot::Name {
-            egui::Sense::click()
-        } else {
-            egui::Sense::hover()
-        };
-        let (rect, hit) = ui.allocate_exact_size(egui::vec2(wide, tall), sense);
-        if said.slot == Slot::Name {
-            super::theme::told::told(ui, &hit, "opens every workspace and its conversations");
-        }
-        let pad = ui.spacing().button_padding.x;
-        let text = egui::RichText::new(&said.text).color(rgb(said.ink));
-        let galley = egui::WidgetText::from(text).into_galley(
-            ui,
-            Some(egui::TextWrapMode::Truncate),
-            (wide - pad * 2.0).max(0.0),
-            egui::TextStyle::Button,
-        );
-        let at = egui::pos2(rect.left() + pad, rect.center().y - galley.size().y / 2.0);
-        ui.painter().galley(at, galley, rgb(said.ink));
-        if said.slot != Slot::Name {
-            return;
-        }
-        super::act::act(ui, &hit, "workspaces");
-        self.note_control("rule-name", ui, rect);
-        if hit.clicked() {
-            self.open(Overlay::Switcher);
         }
     }
 
@@ -247,26 +230,5 @@ impl Shell {
     }
 }
 
-/// Where a segment stands.
-fn slot(segment: &Segment) -> Slot {
-    match segment {
-        Segment::Knob(chip) => chip.slot(),
-        Segment::Said(said) => said.slot,
-    }
-}
-
-/// How wide a segment would like to be at the rule's type.
-fn want(ui: &egui::Ui, segment: &Segment) -> f32 {
-    match segment {
-        Segment::Knob(chip) => chip.wants(ui, &chip.face()),
-        Segment::Said(said) => {
-            let galley = egui::WidgetText::from(said.text.clone()).into_galley(
-                ui,
-                Some(egui::TextWrapMode::Extend),
-                f32::INFINITY,
-                egui::TextStyle::Button,
-            );
-            galley.size().x + ui.spacing().button_padding.x * 2.0
-        }
-    }
-}
+mod runs;
+use runs::{extra, faint, slot, want};

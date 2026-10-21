@@ -31,55 +31,38 @@ use crate::shell::place::{Band, fit};
 /// placement arithmetic must be told the same number egui is.
 const GAP: f32 = 0.0;
 
-/// **The room the caret is drawn into, kept out of the face's own width**
-/// (bl-0691). The triangle is painted over the button's rect after the fact,
-/// so a face laid out at the button's full inner width runs its last glyph
-/// under it — which never showed while a selector had a third of the row and
-/// showed at once when the two selectors began sharing what the verbs left.
-/// The face is therefore laid to a width this much smaller, and elides there.
-pub(super) const CARET_ROOM: f32 = 20.0;
-
 /// A selector: the current value, and a list of what it may become.
 ///
-/// `area` is the tappable band (`Shell::controls` reads it off the rect
-/// `app::pass` shrank). The returned response is the control's own — what
-/// the caller tags, and what it asks its wire read on.
+/// `seat.area` is the tappable band the rule read off what `app::pass`
+/// left. The returned response is the control's own — what the caller tags,
+/// and what it asks its wire read on. **The face is a door** (§23 item 14):
+/// its words and its mark in one seat, bare until a thumb is down on it.
 pub(super) fn drop_down(
     ui: &mut egui::Ui,
-    area: Band,
     (id, help): (&str, &str),
-    shown: String,
-    width: f32,
-    open: bool,
+    seat: super::Seat,
     add: impl FnOnce(&mut egui::Ui),
 ) -> egui::Response {
-    // `push_id` rather than the button's own: a widget id derived from
+    // `push_id` rather than the door's own: a widget id derived from
     // position moves when the stop controls come and go, and a popup keyed
     // to it would close itself when a turn ends. The salt is the caller's
     // stable name, exactly as `ComboBox::from_id_salt` took it.
-    // Laid to the room the caret leaves rather than truncated by the button
-    // at its own inner width, which is the same elision one caret's width
-    // earlier.
-    let room = (width - ui.spacing().button_padding.x * 2.0 - CARET_ROOM).max(0.0);
-    let shown = egui::WidgetText::from(shown).into_galley(
-        ui,
-        Some(egui::TextWrapMode::Truncate),
-        room,
-        egui::TextStyle::Button,
-    );
+    let ink = crate::shell::theme::rgb(crate::theme::INK);
+    let size = egui::vec2(seat.wide, crate::theme::TOUCH);
     let face = ui
-        .push_id(id, |ui| crate::shell::theme::button(ui, shown, width, help))
+        .push_id(id, |ui| {
+            crate::shell::theme::door(ui, (&seat.face, ink), Some(seat.mark), size, help)
+        })
         .inner;
-    caret(ui, face.rect);
     // `open` is a verb asking for the list (`/model`, `/effort`): the same
     // memory a tap toggles, set rather than toggled.
     let popup = egui::Popup::menu(&face)
-        .open_memory(if open {
+        .open_memory(if seat.open {
             Some(egui::SetOpenCommand::Bool(true))
         } else {
             face.clicked().then_some(egui::SetOpenCommand::Toggle)
         })
-        .width(width)
+        .width(seat.wide)
         .gap(GAP)
         .close_behavior(egui::PopupCloseBehavior::CloseOnClick);
     // What the list took last time it was laid out. Before the first one
@@ -92,7 +75,7 @@ pub(super) fn drop_down(
         top: face.rect.top(),
         bottom: face.rect.bottom(),
     };
-    let Some(placed) = fit(area, anchor, GAP, wanted) else {
+    let Some(placed) = fit(seat.area, anchor, GAP, wanted) else {
         // Neither side of this control has room for a list. Opening one
         // would put it where taps do not land, which is the defect, so
         // nothing opens.
@@ -128,17 +111,4 @@ pub(super) fn drop_down(
                 });
         });
     face
-}
-
-/// The triangle that says *this control opens a list*, drawn rather than
-/// typed: the glyphs that carry one are not in the default font set, and a
-/// tofu box is worse than no caret at all.
-fn caret(ui: &egui::Ui, rect: egui::Rect) {
-    let at = egui::Align2::RIGHT_CENTER
-        .align_size_within_rect(egui::vec2(8.0, 5.0), rect.shrink2(egui::vec2(8.0, 0.0)));
-    ui.painter().add(egui::Shape::convex_polygon(
-        vec![at.left_top(), at.right_top(), at.center_bottom()],
-        ui.visuals().text_color(),
-        egui::Stroke::NONE,
-    ));
 }

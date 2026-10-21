@@ -1,4 +1,4 @@
-use super::{CAP, Mirror, Move, band, read};
+use super::{CAP, Mirror, Move, SAY, band, hint, read};
 use crate::theme::TOUCH;
 
 #[test]
@@ -115,4 +115,13 @@ fn a_send_records_what_it_handed_over() {
     assert_eq!(mirror.step("sent", ""), Move::Adopt("sent".to_owned()));
     mirror.handed("");
     assert_eq!(mirror.step("", ""), Move::Still);
+}
+
+#[test]
+fn the_hint_says_it_begins_waits_or_says_say_it() {
+    assert_eq!(hint(None, false), SAY);
+    assert_eq!(hint(None, false), "say it");
+    assert_eq!(hint(None, true), "it is waiting on you");
+    assert_eq!(hint(Some("alba"), false), "begin a conversation on alba");
+    assert_eq!(hint(Some("alba"), true), "begin a conversation on alba");
 }

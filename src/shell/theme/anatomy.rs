@@ -165,34 +165,6 @@ fn laid(ui: &egui::Ui, label: egui::WidgetText, wide: f32) -> egui::WidgetText {
         .into()
 }
 
-/// **A dark chip that still takes a tap** (STYLE.md, *a band of chips*: a
-/// dark chip says what would light it; bl-0691). Where the reason is a
-/// sentence rather than two words, a chip's width cannot carry it and a phone
-/// has no hover to say it in — so the control keeps its tap and the caller
-/// spends it on the sentence, which is the only way this app can be ASKED
-/// *why is this dark?*.
-///
-/// It is [`chip`]'s twin and not a parameter of it, because the two answer
-/// different questions: `chip(.., live: false)` is a control that must not
-/// FIRE — every caller of it acts on a click — and this is a control that
-/// fires nothing but an explanation. Dark by ink rather than by egui's
-/// disabled state, which is what makes it clickable at all.
-pub(crate) fn dark_chip(ui: &mut egui::Ui, label: String, wide: f32, help: &str) -> egui::Response {
-    let faint = laid(
-        ui,
-        egui::RichText::new(label)
-            .color(rgb(theme::INK_FAINT))
-            .into(),
-        wide,
-    );
-    ui.allocate_ui_with_layout(
-        egui::vec2(wide, theme::TOUCH),
-        egui::Layout::left_to_right(egui::Align::Center),
-        |ui| super::button(ui, faint, wide, help),
-    )
-    .inner
-}
-
 /// The share each of `count` chips gets of the width a band has, the gaps
 /// between them taken off first.
 pub(crate) fn share(ui: &egui::Ui, count: usize) -> f32 {

@@ -184,8 +184,11 @@ fn visuals() -> egui::Visuals {
 mod anatomy;
 /// The controls that were egui's own, each with its help sentence (§23 item 10).
 mod control;
+/// A run of words that is a control: the rule's knobs and its name (§23 item 14).
+mod door;
 /// Every control tells on a long press (§23 item 10).
 pub(crate) mod told;
 
-pub(crate) use anatomy::{bubbled, chip, dark_chip, line, marked, row, share};
+pub(crate) use anatomy::{bubbled, chip, line, marked, row, share};
 pub(crate) use control::{button, button_if, button_led, check, pick, slider, word};
+pub(crate) use door::{PAD, door, run, wants, wide};

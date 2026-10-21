@@ -50,6 +50,14 @@ pub(crate) fn told(ui: &egui::Ui, response: &egui::Response, help: &str) {
     ui.ctx().data_mut(|d| d.insert_temp(held(), said));
 }
 
+/// **Whether a sentence stands**: the composer's native field steps off
+/// the glass while one does, because a platform view is drawn over every
+/// egui layer and the box above a knob on the rule is over the box under
+/// the transcript (§23 item 14).
+pub(crate) fn standing(ctx: &egui::Context) -> bool {
+    ctx.data(|d| d.get_temp::<Told>(held()).is_some())
+}
+
 /// **Paint the sentence a long press left**, if one stands and `tells` is on
 /// (the `help` knob, §23 item 11), and put it down on the next press. Called
 /// once at the end of every pass, after the screens.

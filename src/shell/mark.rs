@@ -73,13 +73,23 @@ impl Shell {
     /// The mark control. Painted before anything else on every screen, whatever
     /// the component — that unconditionality is the whole feature.
     pub(super) fn mark(&mut self, ui: &mut egui::Ui) {
+        self.mark_drawn(ui, TOUCH - 8.0);
+    }
+
+    /// **The mark with its picture `side` points across**, its seat the
+    /// touch square whatever the picture: the rule draws it at the line's
+    /// height (§23 item 14), the bar at the seat's.
+    pub(super) fn mark_drawn(&mut self, ui: &mut egui::Ui, side: f32) {
         let (rect, hit) = ui.allocate_exact_size(egui::vec2(TOUCH, TOUCH), egui::Sense::click());
         super::theme::told::told(
             ui,
             &hit,
             "opens the configuration surface — enrollment and the foot — or closes it",
         );
-        paint(ui.painter(), rect.shrink(4.0));
+        paint(
+            ui.painter(),
+            egui::Rect::from_center_size(rect.center(), egui::vec2(side, side)),
+        );
         // Where the one control with no text is, for the harness that has to
         // tap it (`app/probe.rs`): the tap target, not the shrunk picture.
         self.note_control("mark", ui, rect);

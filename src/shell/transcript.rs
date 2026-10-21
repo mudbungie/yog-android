@@ -1,7 +1,8 @@
 //! **The transcript screen**: the conversation as the desktop window paints
 //! it, collapsing included (DESIGN §7). Split from `screens.rs` because it is
 //! the one screen with mechanics rather than taps — the projected rows, the
-//! fold overrides, and the composer that rides above the keyboard.
+//! fold overrides, and the floor under it — the box directly under the
+//! transcript, the rule at the bottom edge — that rides above the keyboard.
 //!
 //! The projection itself is `crate::rows`, which is pure and host-tested under
 //! the 100% floor; everything here is paint. **The growing answer is one of
@@ -79,19 +80,29 @@ impl Shell {
         // re-runs. `shell::place` is where the geometry that IS asserted
         // lives.
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-            // Closest to the floor: the prompt line, then the status rule
-            // above it, then the live dock and the ask above the rule (§22
-            // items 1, 2, 9 and 8). **No bar** (§22 item 1): the rule carries the
-            // mark and the name, and back is the platform's.
-            if let Some(taken) = self.compose(ui, snap, "message", &["message"]) {
+            // **The floor's order is the desktop's** (§23 item 4; lernie
+            // §4.45 item 3): the rule takes the bottom edge, the banner line
+            // over it (§22 item 2) and the live dock on those while anything
+            // runs (§22 item 9); the box stands on them, directly under the
+            // transcript, so the words typed are beside the words answered;
+            // and the ask stands on the box (§22 item 8), the model's
+            // question over the line its answer is typed in. **No bar** (§22
+            // item 1): the rule carries the mark and the name, and back is
+            // the platform's.
+            self.rule(ui, snap);
+            // **The sheet takes the whole room over the box** (§22 item 5):
+            // the dock and the ask step aside while the draft is a slash
+            // line, or the sheet is four rows over a six-cell box.
+            let slashing = crate::verbs::slashing(&self.composer);
+            if !slashing {
+                self.dock(ui, snap);
+            }
+            let asking = crate::ask::asking(&snap.queue, workspace, agent).is_some();
+            let hint = crate::draft::hint(None, asking);
+            if let Some(taken) = self.compose(ui, snap, &hint, &["message"]) {
                 self.deposit(snap, taken);
             }
-            self.rule(ui, snap);
-            // **The sheet takes the whole room above the rule** (§22 item
-            // 5): the dock and the ask step aside while the draft is a slash
-            // line, or the sheet is four rows over a six-cell box.
-            if !crate::verbs::slashing(&self.composer) {
-                self.dock(ui, snap);
+            if !slashing {
                 self.asked(ui, snap);
             }
             ui.add_space(4.0);
@@ -100,7 +111,7 @@ impl Shell {
                 // under the top inset, never riding the keyboard.
                 self.tabs(ui, snap, workspace);
                 // **The verb sheet takes this room while the draft is a slash
-                // line** (§22 item 5): above the rule, never over the field.
+                // line** (§22 item 5): over the box, never over the field.
                 if self.sheet(ui, snap) {
                     return;
                 }

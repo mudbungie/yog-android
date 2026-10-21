@@ -55,23 +55,35 @@ impl Chip {
         }
     }
 
-    /// How wide it would like to be: its words, the button's padding either
-    /// side, and the drop caret where it opens a list. A selector's claim is
-    /// ignored by the fit — it takes a share.
-    pub(in crate::shell) fn wants(&self, ui: &egui::Ui, face: &str) -> f32 {
-        let ink = egui::WidgetText::from(face.to_owned()).into_galley(
-            ui,
-            Some(egui::TextWrapMode::Extend),
-            f32::INFINITY,
-            egui::TextStyle::Button,
-        );
-        let caret = if matches!(self, Self::Effort(_, knob) if knob.taken) {
-            super::drop::CARET_ROOM
-        } else {
-            0.0
-        };
-        ink.size().x + ui.spacing().button_padding.x * 2.0 + caret
+    /// **Whether its door carries the drop mark** (§23 item 14): it opens a
+    /// list. Priority is a flip and a dark effort knob opens nothing, so
+    /// neither does; a dark model knob is decided where it paints.
+    pub(in crate::shell) const fn drops(&self) -> bool {
+        match self {
+            Self::Workspace(_) | Self::Provider(_) | Self::Model(_) => true,
+            Self::Effort(_, knob) => knob.taken,
+            Self::Priority(..) => false,
+        }
     }
+
+    /// How wide it would like to be: its words, the door's air either side,
+    /// and the drop mark where it opens a list. A selector takes no more
+    /// than this, and less where the rule is short (`status::fit`).
+    pub(in crate::shell) fn wants(&self, ui: &egui::Ui) -> f32 {
+        let mark = self.drops().then_some(crate::theme::glyph::DROP);
+        crate::shell::theme::wants(ui, &self.face(), mark)
+    }
+}
+
+/// **What one knob's door is handed** (§23 item 14): its words, its width,
+/// the room its list may open into, whether a verb asks it open, and the
+/// mark it wears — the drop mark, or the reload's `…` / `✔` in its place.
+pub(in crate::shell) struct Seat {
+    pub(in crate::shell) face: String,
+    pub(in crate::shell) wide: f32,
+    pub(in crate::shell) area: Band,
+    pub(in crate::shell) open: bool,
+    pub(in crate::shell) mark: (&'static str, egui::Color32),
 }
 
 impl Shell {
@@ -104,24 +116,21 @@ impl Shell {
         chips
     }
 
-    /// Paint one knob at its width. `open` is a verb asking for its list;
-    /// priority has none (`/priority` is [`Self::priority_verb`]).
+    /// Paint one knob in its seat. `seat.open` is a verb asking for its
+    /// list; priority has none (`/priority` is [`Self::priority_verb`]).
     pub(in crate::shell) fn knob(
         &mut self,
         ui: &mut egui::Ui,
         snap: &Snapshot,
         chip: Chip,
-        wide: f32,
-        area: Band,
-        open: bool,
+        seat: Seat,
     ) -> egui::Response {
-        let face = chip.face();
         match chip {
-            Chip::Workspace(_) => self.workspaces(ui, snap, face, wide, area),
-            Chip::Provider(_) => self.providers(ui, snap, face, wide, area, open),
-            Chip::Model(_) => self.models(ui, snap, face, wide, area, open),
-            Chip::Effort(_, knob) => self.effort(ui, face, wide, area, &knob, open),
-            Chip::Priority(_, knob, on) => self.priority(ui, face, wide, &knob, on),
+            Chip::Workspace(_) => self.workspaces(ui, snap, seat),
+            Chip::Provider(_) => self.providers(ui, snap, seat),
+            Chip::Model(_) => self.models(ui, snap, seat),
+            Chip::Effort(_, knob) => self.effort(ui, seat, &knob),
+            Chip::Priority(_, knob, on) => self.priority(ui, seat, &knob, on),
         }
     }
 

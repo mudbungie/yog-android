@@ -26,8 +26,8 @@ use eframe::egui;
 
 use super::super::act;
 use super::super::app::Shell;
+use super::Seat;
 use crate::codec::pick::knob::Knob;
-use crate::shell::place::Band;
 
 impl Shell {
     /// **The effort selector**: the vocabulary is closed and no wire read
@@ -39,17 +39,10 @@ impl Shell {
     /// operator seeing `extreme` is being told the truth — and it carries the
     /// control's NAME as well as its value (bl-b191): a magnitude names
     /// nothing, and `medium` alone was read as a context size once already.
-    pub(super) fn effort(
-        &mut self,
-        ui: &mut egui::Ui,
-        face: String,
-        wide: f32,
-        area: Band,
-        knob: &Knob,
-        open: bool,
-    ) -> egui::Response {
+    pub(super) fn effort(&mut self, ui: &mut egui::Ui, seat: Seat, knob: &Knob) -> egui::Response {
         if !knob.taken {
-            let control = self.dark(ui, face, wide, knob, "effort");
+            let open = seat.open;
+            let control = self.dark(ui, &seat, knob, "effort");
             if open {
                 self.tuning_said.clone_from(&knob.why);
             }
@@ -58,14 +51,11 @@ impl Shell {
         let mut picked = None;
         let opened = super::drop::drop_down(
             ui,
-            area,
             (
                 "effort",
                 "opens the list of effort levels the worker may run at",
             ),
-            face,
-            wide,
-            open,
+            seat,
             |ui| {
                 for level in crate::codec::pick::LEVELS {
                     let label = crate::codec::Effort::label(level);
@@ -98,22 +88,22 @@ impl Shell {
     /// different intent no config key expresses (REMOTE §9.4).
     ///
     /// It wears its state in its own words (`priority: on`) rather than in a
-    /// fill, because in a band of chips the word is what an operator reads
-    /// and a chip that alone among six carried a tint would be saying
-    /// something about state that STYLE.md reserves for the six accents.
+    /// fill, because on the rule the word is what an operator reads and a
+    /// door that alone among five carried a tint would be saying something
+    /// about state that STYLE.md reserves for the six accents. A flip opens
+    /// no list, so its door carries no drop mark (§23 item 14).
     pub(super) fn priority(
         &mut self,
         ui: &mut egui::Ui,
-        face: String,
-        wide: f32,
+        seat: Seat,
         knob: &Knob,
         on: bool,
     ) -> egui::Response {
-        let control = crate::shell::theme::chip(
+        let control = crate::shell::theme::door(
             ui,
-            face.into(),
-            wide,
-            true,
+            (&seat.face, crate::shell::theme::rgb(crate::theme::INK)),
+            None,
+            egui::vec2(seat.wide, crate::theme::TOUCH),
             "flips the priority lane for this workspace's worker",
         );
         act::act(ui, &control, "priority");
@@ -142,16 +132,17 @@ impl Shell {
     /// target — the tap is what says why (bl-0691). The `act:` tag rides it
     /// in this state too, because a disabled control is still the
     /// discoverable affordance for the act (PARITY §4).
-    fn dark(
-        &mut self,
-        ui: &mut egui::Ui,
-        face: String,
-        wide: f32,
-        knob: &Knob,
-        op: &str,
-    ) -> egui::Response {
-        let control =
-            crate::shell::theme::dark_chip(ui, face, wide, "this knob is dark: a tap says why");
+    fn dark(&mut self, ui: &mut egui::Ui, seat: &Seat, knob: &Knob, op: &str) -> egui::Response {
+        let control = crate::shell::theme::door(
+            ui,
+            (
+                &seat.face,
+                crate::shell::theme::rgb(crate::theme::INK_FAINT),
+            ),
+            None,
+            egui::vec2(seat.wide, crate::theme::TOUCH),
+            "this knob is dark: a tap says why",
+        );
         act::act(ui, &control, op);
         if control.clicked() {
             self.tuning_said.clone_from(&knob.why);

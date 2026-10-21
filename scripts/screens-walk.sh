@@ -173,17 +173,19 @@ seed_cache transcript; relaunch
 capture transcript transcript
 
 # 4tt. EVERY CONTROL TELLS (DESIGN §23 item 10): a long press on the rule's
-#      model segment opens its sentence in a box above it instead of its
-#      list, and says the sentence on the probe. Relaunched after, so the
-#      box is not over the door the next beat taps.
+#      model door opens its sentence in a box above it instead of its list —
+#      over the box under the transcript, the native field stepping off the
+#      glass while it stands (DESIGN §23 item 14) — and says the sentence on
+#      the probe. Relaunched after, so the box is not over the door the next
+#      beat taps.
 long_press_control rule-model
 require_told
 capture told transcript
 relaunch
 
 # 4tq. THE ASK (DESIGN §22 item 8, bl-289f): the transcript seed's queue row
-#      holds a call at the focused conversation, so the box stands above the
-#      rule at rest — the row's words and all six cells, two to a row, with
+#      holds a call at the focused conversation, so the box stands on the
+#      prompt line at rest (DESIGN §23 item 4) — the row's words and all six cells, two to a row, with
 #      the keyboard down. The `why` fold on its name line opened, so the
 #      control's decision is on the glass too; relaunched after, so the open
 #      fold is not under the door the next beat taps.
@@ -192,9 +194,9 @@ capture asked transcript
 relaunch
 
 # 4e2. THE MODEL DROPUP (DESIGN §22 items 2 and 10; operator ruling
-#      2026-10-12): the rule's model segment opens its list upward from the
-#      rule, the cached models at once and a reload asked; the mark on the
-#      segment says which. Relaunched after, so the open list is not over the
+#      2026-10-12): the rule's model door opens its list upward from the
+#      bottom edge, over the prompt line, the cached models at once and a
+#      reload asked; the mark inside the door says which (§23 item 14). Relaunched after, so the open list is not over the
 #      door the next beat taps.
 tap_control rule-model
 capture modelled transcript
@@ -241,7 +243,7 @@ capture running transcript
 
 # 5a. THE LIVE DOCK (DESIGN §22 item 9, bl-365c). The running seed holds two
 #     conversations the engine calls live or in flight, so the tap line stands
-#     over the rule; a tap unfolds it into one row apiece.
+#     on the rule, under the prompt line; a tap unfolds it into one row apiece.
 relaunch
 tap_control dock
 capture docked transcript

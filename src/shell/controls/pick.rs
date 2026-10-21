@@ -19,9 +19,9 @@ use eframe::egui;
 
 use super::super::act;
 use super::super::app::Shell;
+use super::Seat;
 use crate::codec::RoleRow;
 use crate::seat::Snapshot;
-use crate::shell::place::Band;
 
 impl Shell {
     /// The provider selector. Its list is the engine's own rows, and a row
@@ -32,22 +32,17 @@ impl Shell {
         &mut self,
         ui: &mut egui::Ui,
         snap: &Snapshot,
-        face: String,
-        wide: f32,
-        area: Band,
-        open: bool,
+        seat: Seat,
     ) -> egui::Response {
+        let open = seat.open;
         let mut picked = None;
         let opened = super::drop::drop_down(
             ui,
-            area,
             (
                 "provider",
                 "opens the list of providers the worker may run on",
             ),
-            face,
-            wide,
-            open,
+            seat,
             |ui| {
                 for row in &snap.providers {
                     let label = format!("{} · {}", row.name, row.fact);
@@ -86,21 +81,20 @@ impl Shell {
         &mut self,
         ui: &mut egui::Ui,
         snap: &Snapshot,
-        face: String,
-        wide: f32,
-        area: Band,
+        seat: Seat,
     ) -> egui::Response {
         let mut picked = None;
+        let seat = Seat {
+            open: false,
+            ..seat
+        };
         let opened = super::drop::drop_down(
             ui,
-            area,
             (
                 "workspace",
                 "opens the list of workspaces; one is focused at a time",
             ),
-            face,
-            wide,
-            false,
+            seat,
             |ui| {
                 for row in &snap.workspaces {
                     if crate::shell::theme::pick(ui, &row.workspace, "focuses this workspace")
@@ -134,18 +128,20 @@ impl Shell {
         &mut self,
         ui: &mut egui::Ui,
         snap: &Snapshot,
-        face: String,
-        wide: f32,
-        area: Band,
-        open: bool,
+        seat: Seat,
     ) -> egui::Response {
+        let open = seat.open;
         let Some(provider) = provider(self, crate::codec::pick::worker(&snap.roles).as_ref())
         else {
-            let control = crate::shell::theme::chip(
+            // Dark, and opening nothing, so no mark (§23 item 14).
+            let control = crate::shell::theme::door(
                 ui,
-                face.into(),
-                wide,
-                false,
+                (
+                    &seat.face,
+                    crate::shell::theme::rgb(crate::theme::INK_FAINT),
+                ),
+                None,
+                egui::vec2(seat.wide, crate::theme::TOUCH),
                 "the model: dark until the worker has a provider",
             );
             act::acts(ui, &control, &["models", "model"]);
@@ -159,11 +155,8 @@ impl Shell {
         let mut picked = None;
         let opened = super::drop::drop_down(
             ui,
-            area,
             ("model", "opens the list of models the provider offers"),
-            face,
-            wide,
-            open,
+            seat,
             |ui| {
                 for name in snap.models.get(&provider).into_iter().flatten() {
                     if crate::shell::theme::pick(ui, name, "sets the worker's model").clicked() {

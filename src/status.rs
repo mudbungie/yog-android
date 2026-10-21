@@ -1,6 +1,7 @@
 //! **The status rule** (DESIGN §22 items 1, 2 and 10, bl-79bb; operator
-//! ruling 2026-10-12): one touch-tall band above the prompt that says what
-//! the focused conversation runs on and how it stands. Pure and host-tested —
+//! ruling 2026-10-12; §23 item 14): one touch-tall line of runs at the
+//! glass's bottom edge, under the box, that says what the focused
+//! conversation runs on and how it stands. Pure and host-tested —
 //! which segments, in which order, what each says, which drop as the width
 //! runs out, what the banner line says and whether a dropup's list is fresh;
 //! `shell/status.rs` paints them. The desktop's shape, re-ordered by the
@@ -18,7 +19,8 @@
 //! **One line where everything fits, else two** (bl-96fc, [`layout`]): the
 //! selectors on the touch-tall rule, the diagnostics on a small line under
 //! it. Workspace, provider and model never drop: they share what is left and
-//! elide inside it; priority, then effort, leave the rule before them.
+//! elide inside it; priority, then effort, leave the rule before them. The
+//! name never drops either (DESIGN §23 item 14).
 
 use crate::codec::{Agent, ConvRow, Entry, EntryKind};
 use crate::theme::{self, Rgb, State, TOUCH};
@@ -38,14 +40,15 @@ pub enum Slot {
     Name,
 }
 
-/// The order segments leave a one-line rule in as the width runs out — and a
-/// diagnostic leaving is what puts the diagnostics on a line of their own.
-pub const DROPS: [Slot; 7] = [
-    Slot::Name,
-    Slot::State,
-    Slot::Spend,
+/// The order segments leave a one-line rule in as the width runs out — the
+/// diagnostics from the right, then priority, then effort (the desktop's
+/// rule) — and a diagnostic leaving is what puts the diagnostics on a line
+/// of their own. The name is not here: it never drops.
+pub const DROPS: [Slot; 6] = [
     Slot::Context,
+    Slot::Spend,
     Slot::Tokens,
+    Slot::State,
     Slot::Priority,
     Slot::Effort,
 ];
@@ -54,13 +57,14 @@ pub const DROPS: [Slot; 7] = [
 const KEPT: [Slot; 3] = [Slot::Workspace, Slot::Provider, Slot::Model];
 
 /// **The narrowest a selector is let fall to before a knob leaves**: a few
-/// letters and the drop caret. Below it a selector says nothing worth reading,
-/// and a knob is the cheaper thing to lose. Measured, not rounded to touch
-/// targets (bl-9817): the button's padding either side (16), the caret's room
-/// (20) and four letters with their ellipsis at `SMALL` type (`clau…` is
-/// 33.5 in the bundled face) — which at the walk's 411 points keeps effort
-/// on the rule, where one and a half touch targets (72) dropped it by two.
-pub const SHARE: f32 = 70.0;
+/// letters and the drop mark. Below it a selector says nothing worth reading,
+/// and a knob is the cheaper thing to lose. Read off the bundled faces'
+/// advance widths at `SMALL` type, not rounded to touch targets (bl-9817's
+/// rule; DESIGN §23 item 14): the door's air either side (8), its mark
+/// ` ⏶` (13.5: a space, and the glyph at the icon face's nine-tenths scale)
+/// and four letters with their ellipsis (`clau…` is 33.5). The chip it
+/// replaces spent 16 of padding and 20 of caret room, which made this 70.
+pub const SHARE: f32 = 56.0;
 
 /// The banner's word while the wire is being re-dialled.
 pub const RECONNECTING: &str = "reconnecting…";
@@ -154,12 +158,18 @@ pub fn count(n: u64) -> String {
 }
 
 /// **Which segments stand, and how wide each is**, at `room` points with
-/// `gap` between neighbours. `wants` is each segment's own width (a
-/// selector's is ignored: it takes a share). A dropped segment is `None`.
-/// `held` never drops: it is the knob whose list is open, or that a verb
-/// just asked to open (`/effort` on a rule too narrow to carry it).
-/// Every segment that stands is at least the touch floor wide, and a
-/// selector at least [`SHARE`] wherever the room holds three of them.
+/// `gap` between neighbours. `wants` is each segment's own width: its words,
+/// the air inside its door and the mark it carries. A dropped segment is
+/// `None`. `held` never drops: it is the knob whose list is open, or that a
+/// verb just asked to open (`/effort` on a rule too narrow to carry it).
+///
+/// **The drop is the desktop's** (lernie §4.42 item 11, DESIGN §23 item
+/// 14): the diagnostics from the right, then priority, then effort; the
+/// three selectors and the name never drop. **The width is paid in two
+/// passes**: every other segment that stands gets its words, and the
+/// selectors are water-filled into what is left — a short one keeps its
+/// words, and the rest share one cut, never below [`SHARE`] where the room
+/// holds three. Every segment that stands is at least the touch floor wide.
 pub fn fit(
     slots: &[Slot],
     wants: &[f32],
@@ -167,25 +177,16 @@ pub fn fit(
     gap: f32,
     held: Option<Slot>,
 ) -> Vec<Option<f32>> {
-    let claim: Vec<f32> = slots
-        .iter()
-        .zip(wants)
-        .map(|(slot, want)| {
-            if KEPT.contains(slot) {
-                f32::INFINITY
-            } else {
-                want.max(TOUCH)
-            }
-        })
-        .collect();
+    let claim: Vec<f32> = wants.iter().map(|want| want.max(TOUCH)).collect();
     let floor = |shown: &[bool]| -> f32 {
         let standing = shown.iter().filter(|s| **s).count();
         let gaps = gap * standing.saturating_sub(1) as f32;
-        claim
+        slots
             .iter()
+            .zip(&claim)
             .zip(shown)
             .filter(|(_, s)| **s)
-            .map(|(want, _)| if want.is_finite() { *want } else { SHARE })
+            .map(|((slot, want), _)| if KEPT.contains(slot) { SHARE } else { *want })
             .sum::<f32>()
             + gaps
     };
@@ -200,16 +201,56 @@ pub fn fit(
             }
         }
     }
-    let kept: Vec<f32> = claim
+    let standing: Vec<(Slot, f32)> = slots
         .iter()
+        .zip(&claim)
         .zip(&shown)
         .filter(|(_, s)| **s)
-        .map(|(want, _)| *want)
+        .map(|((slot, want), _)| (*slot, *want))
         .collect();
-    let mut widths = crate::shell::place::row::widths(room, gap, &kept).into_iter();
+    let mut widths = paid(&standing, room, gap, floor(&shown) <= room).into_iter();
     shown
         .iter()
         .map(|s| if *s { widths.next() } else { None })
+        .collect()
+}
+
+/// **The two passes**, over what stands: where the floor fits, the others
+/// at their words and the selectors water-filled into the rest; where even
+/// it does not (a glass narrower than three selectors), one max-min share
+/// over everything, the selectors asking for all of it.
+fn paid(standing: &[(Slot, f32)], room: f32, gap: f32, fits: bool) -> Vec<f32> {
+    let kept = |slot: &Slot| KEPT.contains(slot);
+    if !fits {
+        let wants: Vec<f32> = standing
+            .iter()
+            .map(|(slot, want)| if kept(slot) { f32::INFINITY } else { *want })
+            .collect();
+        return crate::shell::place::row::widths(room, gap, &wants);
+    }
+    let others: f32 = standing
+        .iter()
+        .filter(|(s, _)| !kept(s))
+        .map(|(_, w)| w)
+        .sum();
+    let gaps = gap * standing.len().saturating_sub(1) as f32;
+    let selectors: Vec<f32> = standing
+        .iter()
+        .filter(|(s, _)| kept(s))
+        .map(|(_, w)| *w)
+        .collect();
+    let mut filled =
+        crate::shell::place::row::widths((room - others - gaps).max(0.0), 0.0, &selectors)
+            .into_iter();
+    standing
+        .iter()
+        .map(|(slot, want)| {
+            if kept(slot) {
+                filled.next().unwrap_or(0.0)
+            } else {
+                *want
+            }
+        })
         .collect()
 }
 
