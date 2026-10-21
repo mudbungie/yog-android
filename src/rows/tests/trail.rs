@@ -41,7 +41,7 @@ fn a_finished_turn_is_the_prompt_a_shut_trail_and_the_response() {
             t(Part::Said, Before::Gap, "¦"),
         ]
     );
-    assert_eq!(out[1].row.prefix, "worked · 1 call · 1 note");
+    assert_eq!(out[1].row.prefix, "1 tool call · 1 thought");
 }
 
 #[test]
@@ -70,7 +70,10 @@ fn an_open_rollup_stands_its_steps_and_remarks_on_one_stem() {
             (Part::Said, Before::Response),
         ]
     );
-    assert_eq!(out[1].row.prefix, "worked · 2 calls · 2 notes");
+    assert_eq!(
+        out[1].row.prefix,
+        "2 tool calls · 1 thought · 1 intermediate response"
+    );
     assert_eq!(glyph(&out[1].row), "−");
     assert_eq!(
         out[4].row.kind,
@@ -93,7 +96,7 @@ fn a_running_run_gets_its_own_head_open_until_shut() {
     let open = lines(&go(&turn), &none());
     assert_eq!(open.len(), 4);
     assert_eq!(open[1].row.key, "tx/002#trail");
-    assert_eq!(open[1].row.prefix, "working · 1 call · 1 note");
+    assert_eq!(open[1].row.prefix, "1 tool call · 1 thought");
     assert_eq!(open[1].row.kind, Kind::Trail);
     assert!(open[1].row.expanded);
     assert_eq!(open[3].part, Part::Step { last: true });
@@ -139,7 +142,10 @@ fn an_orphan_result_stands_behind_how_it_ended() {
     );
     let glyphs: Vec<_> = out.iter().map(|line| glyph(&line.row)).collect();
     assert_eq!(glyphs, ["−", "✔", "✖"]);
-    assert_eq!(out[0].row.prefix, "working");
+    assert_eq!(
+        out[0].row.prefix, "2 tool calls",
+        "a result whose call is not on this read is a tool call still"
+    );
     assert_eq!(mark(&out[1].row), None);
 }
 

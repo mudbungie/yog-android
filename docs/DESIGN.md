@@ -7067,8 +7067,8 @@ earning one.
    landed is its call line and ONE line of its output elided at the width
    it has, a finished thinking or intermediate prose one elided line — and
    each compact step is a `TOUCH`-tall door that opens it whole in place;
-   **a settled turn's working is one line**, `+ worked · N calls · M
-   notes`, between the operator's turn and the final answer, a tap opening
+   **a settled turn's working is one line**, what it hides counted by kind
+   (below), between the operator's turn and the final answer, a tap opening
    it to the compact steps. §22 item 4's `tool calls (N)` head, its census
    and the `#trail` head over a run that did not roll up are the heads this
    replaces; the `response` elbow stands only while the working is open.
@@ -7077,6 +7077,36 @@ earning one.
    conversation. **`/full` and `/steps` become knobs** (11): a policy an
    operator sets once is a setting, not a verb typed per session, and the
    rows leave the sheet.
+
+   **The one line says what it hides, by kind** (bl-0db5, following lernie
+   bl-db54; amends this item's first `+ worked · N calls · M notes`). The
+   desktop's defect, operator 2026-10-20: *"the tool collapse goes too far
+   and there's no way to reopen it. Everything between the user prompt and
+   the LLM response should break down into a status line showing what is
+   hidden: '16 tool calls, 13 thoughts, 4 intermediate responses'"*; and
+   the ruling that brings the phone along, operator 2026-10-20: *"The user
+   interface in general in lernie has gotten much better. Adapt the mobile
+   app to it, and implement the new version."* The old line lumped the
+   thoughts and the prose between as notes and read as a label. Now it
+   counts four kinds in a fixed order — `tool calls` (a call, its answered
+   form, a result whose call is not on this read), `thoughts` (reasoning),
+   `intermediate responses` (the model's own prose inside the working),
+   `notes` (anything else said there, such as an unread entry) — a kind it
+   holds none of left out, singular for one, parted by ` · `
+   (`rows::trail::head_word`, the one spelling both heads use). At rest:
+   `+ 16 tool calls · 13 thoughts · 4 intermediate responses`; open, the
+   same behind `−`. **`worked` / `working` go**: the counts are the
+   sentence, and the stage shows only in whether the line stands open.
+   **A working with nothing countable does not exist**: every step is one
+   of the four kinds and a working is at least one step (a rollup needs an
+   inference call, a head of its own needs a run), so the line is never
+   bare and no fallback word is kept for it. The line stays the full-width
+   `TOUCH`-tall door, pressed-lit (8), and its long press (10) says it is
+   the way back to the hidden steps: shut, *opens what the turn did — every
+   step it hid: the calls, their results, the thoughts and the prose
+   between*; open, *folds the working back to its one line* — the
+   desktop's two sentences. Nothing else here moves: the three stages, the
+   fold set keyed under the conversation, and the `fold` knob.
 
 7. **Four bubbles, by role** (item 7; `crate::theme::bubble`,
    `shell/chat.rs`; amends STYLE §5 *a block … never bubbled*). Under each

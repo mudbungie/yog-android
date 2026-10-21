@@ -115,7 +115,7 @@ fn push_turn(
         answer.class == RowClass::Response && counts.inference > 0 && !rows.iter().any(showing);
     match run.first() {
         Some(first) if rolls_up => {
-            let parent = aggregate(&first.key, &counts, auto, folds);
+            let parent = aggregate(&first.key, run, &counts, auto, folds);
             let open = parent.expanded;
             out.push(parent);
             if open {
@@ -135,19 +135,25 @@ fn push_turn(
     }
 }
 
-/// The turn's aggregate row — **its trail's fold head**, `worked · N calls ·
-/// M notes` with the census behind it (§23 item 6; the fold counts calls,
-/// lernie bl-eb4e): machinery, so it answers the same auto-knob every
+/// The turn's aggregate row — **its trail's fold head**, what `run` hides
+/// counted by kind (`N tool calls · M thoughts · K intermediate responses`)
+/// with the census behind it (§23 item 6; bl-0db5, lernie bl-db54): machinery, so it answers the same auto-knob every
 /// other machinery row does — one line by default, and the operator who set
 /// that knob open gets every turn opened, steps and all. No separate knob,
 /// because a third setting for the same question is a setting that can
 /// disagree with itself.
-fn aggregate(first_key: &str, counts: &Counts, auto: AutoExpand, folds: &BTreeSet<String>) -> Row {
+fn aggregate(
+    first_key: &str,
+    run: &[Row],
+    counts: &Counts,
+    auto: AutoExpand,
+    folds: &BTreeSet<String>,
+) -> Row {
     let mut row = Row {
         key: turn_key(first_key),
-        prefix: super::trail::head_word(true, counts.tools, counts.notes()),
+        prefix: super::trail::head_word(run),
         // **The census is what the line tells, not what it says** (§23 item
-        // 6): the one line reads `worked · N calls · M notes`, and the
+        // 6): the one line counts what the working hides by kind, and the
         // tokens and inference calls stand behind it.
         preview: String::new(),
         body: String::new(),

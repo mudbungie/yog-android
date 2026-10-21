@@ -12,13 +12,7 @@ use super::{Row, Step, TERM_SEP, Usage, turn_key};
 pub(super) struct Counts {
     /// Distinct model entries the run's rows came from.
     pub(super) inference: usize,
-    /// The calls the run made — the trail head's count, and so not a term of
-    /// the census beside it.
-    pub(super) tools: usize,
     thinking: usize,
-    /// The model's remarks between its steps (`Step::Model`), counted with
-    /// the thinking as the line's notes (§23 item 6).
-    remarks: usize,
     /// Per-counter token sums over the counted entries' committed records,
     /// under the counters' own committed names.
     tokens: Usage,
@@ -34,20 +28,13 @@ impl Counts {
     pub(super) fn of(rows: &[Row], steps: &[Step], usage: &[Usage]) -> Self {
         let mut counts = Self {
             inference: 0,
-            tools: 0,
             thinking: 0,
-            remarks: 0,
             tokens: Usage::new(),
             reported: 0,
         };
         let mut entry = String::new();
         for ((row, step), report) in rows.iter().zip(steps).zip(usage) {
-            match step {
-                Step::ToolCall => counts.tools += 1,
-                Step::Thinking => counts.thinking += 1,
-                Step::Model => counts.remarks += 1,
-                Step::Boundary | Step::Plain => {}
-            }
+            counts.thinking += usize::from(*step == Step::Thinking);
             if matches!(step, Step::Model | Step::Thinking | Step::ToolCall) {
                 let seen = turn_key(&row.key);
                 if seen != entry {
@@ -78,12 +65,6 @@ impl Counts {
     /// own name; **a mixed turn** (some counted entries record-bearing, some
     /// not) suffixes each sum with `+` — *at least this many*, because the
     /// bytes carry no more than the reporting entries said.
-    /// **The notes a working's line counts** (§23 item 6): the reasoning
-    /// and the model's remarks between its steps.
-    pub(super) fn notes(&self) -> usize {
-        self.thinking + self.remarks
-    }
-
     pub(super) fn say(&self) -> String {
         let terms = [
             (self.inference, "inference call"),

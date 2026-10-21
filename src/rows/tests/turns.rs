@@ -19,7 +19,7 @@ fn a_turn() -> Vec<Entry> {
     ]
 }
 
-const AGGREGATE: &str = "worked · 1 call · 1 note";
+const AGGREGATE: &str = "1 tool call · 1 thought";
 const CENSUS: &str = "1 inference call · 1 thinking block";
 
 #[test]
@@ -79,7 +79,7 @@ fn a_delivered_message_bounds_the_turns_on_either_side() {
         model("005", vec![thought("b")]),
         model("006", vec![text("second")]),
     ];
-    let one = "worked · 1 note";
+    let one = "1 thought";
     assert_eq!(
         prefixes(&go(&entries)),
         ["user:", one, "yog:", "user:", one, "yog:"]
@@ -124,4 +124,38 @@ fn anything_in_flight_makes_the_whole_turn_the_show() {
 fn a_run_with_no_inference_call_is_not_a_turn() {
     let entries = [raw("001", "noise"), model("002", vec![text("hi")])];
     assert_eq!(prefixes(&go(&entries)), ["001", "yog:"]);
+}
+
+#[test]
+fn the_one_line_counts_what_it_hides_by_kind_in_a_fixed_order() {
+    let entries = [
+        delivered("001", "user", "go"),
+        model(
+            "002",
+            vec![thought("a"), thought("b"), call("t1", "Read", "{}")],
+        ),
+        result("003", "t1", "contents", false),
+        model("004", vec![text("checking")]),
+        raw("005", "noise"),
+        model("006", vec![call("t2", "Bash", "{}"), text("again")]),
+        result("007", "t2", "ok", false),
+        model("008", vec![text("done")]),
+    ];
+    assert_eq!(
+        prefixes(&go(&entries))[1],
+        "2 tool calls · 2 thoughts · 2 intermediate responses · 1 note"
+    );
+}
+
+#[test]
+fn a_kind_the_working_holds_none_of_is_left_out() {
+    let entries = [
+        delivered("001", "user", "go"),
+        model("002", vec![text("checking")]),
+        model("003", vec![text("done")]),
+    ];
+    assert_eq!(
+        prefixes(&go(&entries)),
+        ["user:", "1 intermediate response", "yog:"]
+    );
 }

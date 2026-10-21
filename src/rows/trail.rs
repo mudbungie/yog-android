@@ -6,10 +6,11 @@
 //! Every block starts at one left edge with its glyph in the gutter — `›` for
 //! the operator, `¦` for the model, `·` for a peer, a tool's answer or the
 //! machinery. A run of steps — calls, results, reasoning — stands under one
-//! fold head — `working · N calls · M notes` while a step is in flight,
-//! `worked · …` once the turn settled (DESIGN §23 item 6) — each step on a
-//! stem; a `response` elbow parts an open trail from the prose after it, a hairline parts one turn from the next,
-//! and a blank stands only where the kind of block changes.
+//! fold head — what it hides counted by kind, `N tool calls · M thoughts ·
+//! K intermediate responses` (DESIGN §23 item 6) — each step on a stem; a
+//! `response` elbow parts an open trail from the prose after it, a hairline
+//! parts one turn from the next, and a blank stands only where the kind of
+//! block changes.
 //!
 //! **A finished turn's rollup IS its trail's head** ([`super::turns`]): it
 //! already folds the turn's machinery and counts it. A run that did not roll
@@ -23,25 +24,40 @@ use std::collections::BTreeSet;
 use super::{Fold, Kind, Role, Row, RowClass, Tone};
 use crate::theme::glyph;
 
-/// **The working's one line** (DESIGN §23 item 6; lernie §4.45 item 5):
-/// `worked · N calls · M notes` once the turn settled, `working · …` while a
-/// step is still in flight — the same line in two tenses, so the fold reads
-/// as one thing whatever state it is in. A zero term is left out, and a
-/// working that holds nothing countable is the word alone.
-pub(super) fn head_word(settled: bool, calls: usize, notes: usize) -> String {
-    let mut said = vec![if settled { "worked" } else { "working" }.to_owned()];
-    for (n, word) in [(calls, "call"), (notes, "note")] {
-        if n > 0 {
-            said.push(format!("{n} {word}{}", if n == 1 { "" } else { "s" }));
-        }
-    }
-    said.join(" · ")
+/// **The working's one line** (DESIGN §23 item 6; bl-0db5, lernie bl-db54):
+/// what it hides, counted by kind in a fixed order — `tool calls` (a call,
+/// its answered form, a result), `thoughts`, `intermediate responses` (the
+/// model's own prose inside the working) and `notes` (anything else said
+/// there) — a kind it holds none of left out, singular for one. The same
+/// line whatever the stage: the stage decides only whether it stands open.
+/// Every step counts as one of the four, so a working is never a bare line.
+pub(super) fn head_word(steps: &[Row]) -> String {
+    KINDS
+        .iter()
+        .enumerate()
+        .map(|(at, word)| {
+            (
+                steps.iter().filter(|step| kind_of(step) == at).count(),
+                word,
+            )
+        })
+        .filter(|(n, _)| *n > 0)
+        .map(|(n, word)| format!("{n} {word}{}", if n == 1 { "" } else { "s" }))
+        .collect::<Vec<_>>()
+        .join(" · ")
 }
 
-/// **What counts as a note** on a working's line: the model's reasoning and
-/// its remarks between two steps — everything it said that is not the answer.
-pub(super) fn is_note(step: &Row) -> bool {
-    matches!(step.kind, Kind::Thinking | Kind::Remark)
+/// The four kinds a working's line counts, in the order it says them.
+const KINDS: [&str; 4] = ["tool call", "thought", "intermediate response", "note"];
+
+/// Which of [`KINDS`] a step is.
+fn kind_of(step: &Row) -> usize {
+    match step.kind {
+        Kind::Call | Kind::Answered | Kind::Result => 0,
+        Kind::Thinking => 1,
+        Kind::Said | Kind::Remark if step.role == Some(Role::Model) => 2,
+        Kind::Said | Kind::Remark | Kind::Trail => 3,
+    }
 }
 
 /// Key suffix of a head this pass makes, where the rollup's says `turn`.
@@ -159,15 +175,10 @@ fn made(steps: &[Row], folds: &BTreeSet<String>) -> Row {
     let first = steps.first().map_or("", |step| step.key.as_str());
     let entry = first.rsplit_once('#').map_or(first, |(head, _)| head);
     let key = format!("{entry}#{TRAIL_SUFFIX}");
-    let calls = steps
-        .iter()
-        .filter(|step| matches!(step.kind, Kind::Call | Kind::Answered))
-        .count();
-    let notes = steps.iter().filter(|step| is_note(step)).count();
     Row {
         expanded: !folds.contains(&key),
         key,
-        prefix: head_word(false, calls, notes),
+        prefix: head_word(steps),
         preview: String::new(),
         body: String::new(),
         hover: String::new(),

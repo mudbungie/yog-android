@@ -58,7 +58,7 @@ pub const KNOBS: &[Knob] = &[
     toggle!(
         "fold",
         "fold the working",
-        "whether a turn's calls and notes fold to one line once its answer stands",
+        "whether what a turn did before its answer folds to one line once the answer stands",
         Toggle::Fold
     ),
     toggle!(

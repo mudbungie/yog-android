@@ -1,5 +1,5 @@
 //! **A trail** (DESIGN §22 item 4; lernie `ui::chat::trail`): the fold head
-//! `tool calls (N)`, then each step on a stem — a call with `•` and how it
+//! counting what it hides by kind, then each step on a stem — a call with `•` and how it
 //! ended (`✔`, or `✖` in the error accent), a result folded to its first line
 //! and unfolded in place in the code face, reasoning and remarks as prose —
 //! and the `response` elbow that parts a trail from the prose after it.
@@ -15,12 +15,18 @@ use crate::rows::{Kind, Row, Tone};
 use crate::shell::theme::rgb;
 use crate::theme::{self, space};
 
+/// What the working's line does, shut and open — the desktop's sentences.
+const UNFOLD_HELP: &str = "opens what the turn did — every step it hid: the calls, their results, the thoughts and the prose between";
+const FOLD_HELP: &str = "folds the working back to its one line";
+
 /// What parts a trail from the prose that follows it (the desktop's word).
 const RESPONSE: &str = "response";
 
-/// **The fold head**: its glyph in the gutter, `tool calls (N)` in weak ink
-/// and a rolled-up turn's census beside it in faint — the whole line the
-/// touch floor tall, and its toggle.
+/// **The fold head**: its glyph in the gutter, what the working hides counted
+/// by kind in weak ink (`N tool calls · M thoughts · K intermediate
+/// responses`) — the whole width its seat, the touch floor tall, lit under a
+/// press, and its toggle. It is the one way back to the steps a settled turn
+/// hid, so its long press says so (§23 items 6 and 10; lernie bl-db54).
 pub(super) fn head(ui: &mut egui::Ui, row: &Row) -> bool {
     let mut parts = vec![(row.prefix.clone(), rgb(theme::INK_WEAK))];
     if !row.preview.is_empty() {
@@ -33,7 +39,7 @@ pub(super) fn head(ui: &mut egui::Ui, row: &Row) -> bool {
         (&mark, ink),
         &[Run::body(parts)],
         theme::TOUCH,
-        "unfolds the working's steps, or folds them to this line",
+        if row.expanded { FOLD_HELP } else { UNFOLD_HELP },
     )
     .clicked()
 }
