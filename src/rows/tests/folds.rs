@@ -3,13 +3,13 @@
 
 use std::collections::BTreeSet;
 
-use super::{SPEAKER, call, delivered, go, model, result, text, thought};
+use super::{THOUGHT, call, delivered, go, model, result, text, thought};
 use crate::codec::Entry;
 use crate::rows::{AutoExpand, Row, rows};
 
 fn under(entries: &[Entry], auto: AutoExpand, folds: &[&str]) -> Vec<Row> {
     let folds: BTreeSet<String> = folds.iter().map(|key| (*key).to_string()).collect();
-    rows(entries, SPEAKER, None, auto, &folds)
+    rows(entries, None, auto, &folds)
 }
 
 fn shut_others() -> AutoExpand {
@@ -26,9 +26,9 @@ fn the_defaults_open_the_conversation_and_fold_the_machinery() {
         delivered("001", "user", "hi"),
         model("002", vec![thought("t")]),
     ]);
-    assert_eq!(out[0].prefix, "user:");
+    assert_eq!(out[0].prefix, "user");
     assert!(out[0].expanded);
-    assert_eq!(out[1].prefix, "thinking:");
+    assert_eq!(out[1].prefix, THOUGHT);
     assert!(!out[1].expanded);
 }
 

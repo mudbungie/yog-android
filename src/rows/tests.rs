@@ -17,23 +17,21 @@ mod compaction;
 mod folds;
 mod held;
 mod labels;
+mod speakers;
 mod split;
 mod trail;
 mod turns;
 mod wound;
 
-/// The conversation's display name in every fixture — an agent, never a model.
-const SPEAKER: &str = "yog";
+/// The model every fixture turn ran on — what a model turn says (DESIGN §23
+/// item 15), as the desktop's does.
+const MODEL: &str = "sonnet-9";
+/// What that model's reasoning says.
+const THOUGHT: &str = "sonnet-9 (thinking)";
 
 /// Project under the shipped defaults: the conversation open, machinery shut.
 fn go(entries: &[Entry]) -> Vec<Row> {
-    rows(
-        entries,
-        SPEAKER,
-        None,
-        AutoExpand::default(),
-        &BTreeSet::new(),
-    )
+    rows(entries, None, AutoExpand::default(), &BTreeSet::new())
 }
 
 /// Project with both knobs open — every step row on screen, aggregates too.
@@ -43,7 +41,7 @@ fn go_open(entries: &[Entry]) -> Vec<Row> {
         others: true,
         fold: true,
     };
-    rows(entries, SPEAKER, None, auto, &BTreeSet::new())
+    rows(entries, None, auto, &BTreeSet::new())
 }
 
 /// The always-visible labels, in order — what the operator actually reads.
@@ -98,7 +96,7 @@ fn metered(name: &str, blocks: Vec<Block>, usage: Value) -> Entry {
     entry(
         name,
         EntryKind::Model {
-            model_id: "sonnet-9".to_string(),
+            model_id: MODEL.to_string(),
             blocks,
             usage,
         },

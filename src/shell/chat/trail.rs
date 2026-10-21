@@ -1,7 +1,8 @@
 //! **A trail** (DESIGN §22 item 4; lernie `ui::chat::trail`): the fold head
 //! counting what it hides by kind, then each step on a stem — a call with `•` and how it
 //! ended (`✔`, or `✖` in the error accent), a result folded to its first line
-//! and unfolded in place in the code face, reasoning and remarks as prose —
+//! and unfolded in place in the code face, reasoning and remarks as one
+//! `<who> · <first line>` line that opens onto their prose —
 //! and the `response` elbow that parts a trail from the prose after it.
 //!
 //! **The stems are painted strokes**, the conversation tree's own rails
@@ -44,16 +45,30 @@ pub(super) fn head(ui: &mut egui::Ui, row: &Row) -> bool {
     .clicked()
 }
 
-/// **One step on its stem**: the stem's glyph, the step's words with how a
-/// call ended beside them and its fold at the end, the folded payload's first
-/// line under them; unfolded, the payload in place. A long press tells what
-/// the step does (§23 item 10); the unfolded payload is copyable prose.
+/// **One step on its stem** (§23 item 6): the stem's glyph, then the step's
+/// line with its fold at the end. A finished call is its head with how it
+/// ended beside it and ONE line of its output under it; a finished thought
+/// or intermediate response is `<who> · <first line>` in one run
+/// ([`crate::rows::compact`]), elided at the width it has. Unfolded, the who
+/// line stands over the payload in place. A long press tells what the step
+/// does (§23 item 10); the unfolded payload is copyable prose.
+///
+/// **A prose step folds whenever it has words**: its one line is elided at a
+/// phone's width, so a short thought would otherwise be cut with no way to
+/// read the rest. The `+`/`−` at the line's end stays — a phone has no hover
+/// to say the line is a door.
 pub(super) fn step(ui: &mut egui::Ui, row: &Row, last: bool) -> bool {
     let top = ui.cursor().min.y;
     let left = ui.max_rect().left();
-    let foldable = !row.body.is_empty();
     let code = matches!(row.kind, Kind::Call | Kind::Answered | Kind::Result);
-    let mut parts = vec![(row.prefix.clone(), ink(ui, row))];
+    let compact = crate::rows::compact(row);
+    let foldable = !row.body.is_empty() || compact.is_some();
+    let unfolded = foldable && row.expanded;
+    let words = match compact {
+        Some(line) if !unfolded => line,
+        _ => row.prefix.clone(),
+    };
+    let mut parts = vec![(words, ink(ui, row))];
     if let Some(mark) = crate::rows::mark(row) {
         let hue = if row.tone == Tone::Bad {
             ui.visuals().error_fg_color
@@ -71,11 +86,10 @@ pub(super) fn step(ui: &mut egui::Ui, row: &Row, last: bool) -> bool {
         parts.push((format!("  {fold}"), rgb(theme::INK_WEAK)));
     }
     let mut runs = vec![Run::body(parts)];
-    let unfolded = foldable && row.expanded;
-    if !unfolded && !row.preview.is_empty() {
+    if code && !unfolded && !row.preview.is_empty() {
         runs.push(Run {
             parts: vec![(row.preview.clone(), rgb(theme::INK_WEAK))],
-            mono: code,
+            mono: true,
         });
     }
     let tall = if foldable { theme::TOUCH } else { 0.0 };
@@ -94,19 +108,24 @@ pub(super) fn step(ui: &mut egui::Ui, row: &Row, last: bool) -> bool {
     let line = ui.ctx().fonts_mut(|fonts| fonts.row_height(&font));
     let elbow = hit.rect.center().y - line * (runs.len() as f32 - 1.0) / 2.0;
     if unfolded {
+        let said = if row.body.is_empty() {
+            &row.preview
+        } else {
+            &row.body
+        };
         ui.horizontal_top(|ui| {
             ui.add_space(GUTTER * 2.0);
             if code {
                 crate::shell::clip::copyable(
                     ui,
                     egui::Label::new(
-                        egui::RichText::new(&row.body).text_style(egui::TextStyle::Monospace),
+                        egui::RichText::new(said).text_style(egui::TextStyle::Monospace),
                     )
                     .wrap(),
-                    &row.body,
+                    said,
                 );
             } else {
-                super::body(ui, &row.body);
+                super::body(ui, said);
             }
         });
     }

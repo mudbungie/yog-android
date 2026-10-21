@@ -15,30 +15,23 @@ use crate::codec::{Block, Entry};
 /// has met is one row** ([`super::super::call`]): its head names the call and
 /// the result is its payload, folded to its first line and unfolded in place;
 /// a failed one wears the error accent and nothing else does, because how a
-/// call ended is the trail's mark, not a hue over the whole step.
-pub(super) fn block_row(
-    entries: &[Entry],
-    key: String,
-    speaker: &str,
-    model_id: &str,
-    block: &Block,
-) -> Row {
+/// call ended is the trail's mark, not a hue over the whole step. **The
+/// model's prose and reasoning say the model id** (`<model id>`, `<model id>
+/// (thinking)`; DESIGN §23 item 15), as the desktop's do.
+pub(super) fn block_row(entries: &[Entry], key: String, model_id: &str, block: &Block) -> Row {
     match block {
-        Block::Text(text) => Row {
-            hover: model_hover(model_id),
-            ..row(
-                key,
-                format!("{speaker}:"),
-                text,
-                RowClass::Response,
-                Tone::Plain,
-                Some(Role::Model),
-            )
-        },
+        Block::Text(text) => row(
+            key,
+            model_id.to_owned(),
+            text,
+            RowClass::Response,
+            Tone::Plain,
+            Some(Role::Model),
+        ),
         Block::Thinking(text) => as_(
             row(
                 key,
-                "thinking:".to_string(),
+                format!("{model_id} ({})", super::THINKING),
                 text,
                 RowClass::Other,
                 Tone::Weak,
@@ -83,13 +76,4 @@ pub(super) fn block_row(
             None,
         ),
     }
-}
-
-/// What a model turn's speaker label stands for: the model that ran it. The
-/// model id is a **config** fact — which model the conversation's governing
-/// commit assigned — not a speaker, so it rides the hover while the label
-/// names the agent. One turn can name a different model than the header's
-/// current assignment, and that is the truth of that turn.
-pub(super) fn model_hover(model_id: &str) -> String {
-    format!("ran on {model_id} — the model is config, not the speaker")
 }

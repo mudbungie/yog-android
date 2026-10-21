@@ -7,7 +7,7 @@
 //! the 100% floor; everything here is paint. **The growing answer is one of
 //! those rows and not a paint of its own** (bl-e3d1): the follow lane
 //! freshens the transcript's own streaming entry (`crate::live`), so the tail
-//! wears the speaker's name and dissolves structurally when the read stops
+//! wears the model's id and dissolves structurally when the read stops
 //! carrying it.
 
 use eframe::egui;
@@ -48,7 +48,6 @@ impl Shell {
         if crate::drawer::opens(origin, now) {
             self.open(crate::overlay::Overlay::Switcher);
         }
-        let speaker = super::chat::speaker_of(snap, agent);
         // **Which call is parked is the engine's answer, never a reading
         // taken here** (§13.7): the queue read names it, and the projection
         // marks the row it already committed rather than guessing from a
@@ -56,7 +55,6 @@ impl Shell {
         let parked = crate::codec::queue::held_at(&snap.queue, workspace, agent);
         let painted = rows(
             &snap.transcript,
-            &speaker,
             parked.as_ref(),
             self.knobs.auto(),
             &self.folds,

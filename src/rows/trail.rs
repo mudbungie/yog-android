@@ -212,6 +212,18 @@ pub fn glyph(row: &Row) -> String {
     said.to_owned()
 }
 
+/// **A finished prose step in its one line** (DESIGN §23 item 6; lernie
+/// `chat::working::compact`): a thought or an intermediate response folded
+/// says `<who> · <first line>` — the row's speaker and its payload's head in
+/// one run, which the glass elides at the width it has. A call has its own
+/// two lines (its head, one of output) and answers `None`, as does a row
+/// with no words to lead with.
+pub fn compact(row: &Row) -> Option<String> {
+    let prose = matches!(row.kind, Kind::Thinking | Kind::Remark);
+    (prose && !row.preview.is_empty())
+        .then(|| format!("{} {} {}", row.prefix, glyph::NOTE, row.preview))
+}
+
 /// **How a met call ended**, beside its head: `✔`, or `✖` where it failed.
 pub fn mark(row: &Row) -> Option<String> {
     (row.kind == Kind::Answered).then(|| {

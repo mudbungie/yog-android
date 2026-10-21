@@ -9,7 +9,7 @@
 
 use std::collections::BTreeSet;
 
-use super::{SPEAKER, call, delivered, model, text};
+use super::{call, delivered, model, text};
 use crate::codec::{Entry, Held};
 use crate::rows::{AutoExpand, Row, Tone, rows};
 
@@ -28,13 +28,7 @@ fn held(tool_use: &str) -> Held {
 }
 
 fn go(entries: &[Entry], parked: Option<&Held>) -> Vec<Row> {
-    rows(
-        entries,
-        SPEAKER,
-        parked,
-        AutoExpand::default(),
-        &BTreeSet::new(),
-    )
+    rows(entries, parked, AutoExpand::default(), &BTreeSet::new())
 }
 
 fn a_call() -> Vec<Entry> {

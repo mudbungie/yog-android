@@ -3,8 +3,8 @@
 //! painting one record.
 
 use super::{
-    SPEAKER, call, delivered, ended, go, go_open, model, named, parked, prefixes, raw, result,
-    streaming, text, thought, windowed,
+    MODEL, THOUGHT, call, delivered, ended, go, go_open, model, named, parked, prefixes, raw,
+    result, streaming, text, thought, windowed,
 };
 use crate::codec::{Block, Entry, EntryKind};
 use crate::rows::{Fold, Kind, Role, RowClass, Tone};
@@ -13,7 +13,7 @@ use crate::rows::{Fold, Kind, Role, RowClass, Tone};
 fn a_delivered_message_wears_its_sender_and_the_operator_role() {
     let rows = go(&[delivered("001", "user", "go")]);
     assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].prefix, "user:");
+    assert_eq!(rows[0].prefix, "user");
     assert_eq!(rows[0].preview, "go");
     assert_eq!(rows[0].body, "");
     assert_eq!(rows[0].hover, "");
@@ -34,7 +34,7 @@ fn a_sender_wearing_a_name_is_headed_by_it() {
         "DulcetMongoose",
         "found it",
     )]);
-    assert_eq!(rows[0].prefix, "DulcetMongoose:");
+    assert_eq!(rows[0].prefix, "DulcetMongoose");
     assert_eq!(
         rows[0].role,
         Some(Role::Peer),
@@ -45,7 +45,7 @@ fn a_sender_wearing_a_name_is_headed_by_it() {
 #[test]
 fn any_other_sender_is_a_peer() {
     let rows = go(&[delivered("001", "scout", "found it")]);
-    assert_eq!(rows[0].prefix, "scout:");
+    assert_eq!(rows[0].prefix, "scout");
     assert_eq!(rows[0].role, Some(Role::Peer));
 }
 
@@ -74,14 +74,11 @@ fn an_empty_delivered_body_says_so_and_fades() {
 }
 
 #[test]
-fn a_model_text_block_speaks_as_the_agent_over_the_model_id() {
+fn a_model_text_block_says_the_model_id() {
     let rows = go(&[model("001", vec![text("here you go")])]);
-    assert_eq!(rows[0].prefix, "yog:");
+    assert_eq!(rows[0].prefix, MODEL);
     assert_eq!(rows[0].preview, "here you go");
-    assert_eq!(
-        rows[0].hover,
-        "ran on sonnet-9 — the model is config, not the speaker"
-    );
+    assert_eq!(rows[0].hover, "");
     assert_eq!(rows[0].class, RowClass::Response);
     assert_eq!(rows[0].role, Some(Role::Model));
 }
@@ -90,21 +87,18 @@ fn a_model_text_block_speaks_as_the_agent_over_the_model_id() {
 fn a_turn_with_no_content_blocks_is_machinery_that_says_so() {
     let rows = go(&[model("001", vec![])]);
     assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].prefix, "yog:");
+    assert_eq!(rows[0].prefix, MODEL);
     assert_eq!(rows[0].preview, "(no content blocks)");
     assert_eq!(rows[0].class, RowClass::Other);
     assert_eq!(rows[0].tone, Tone::Weak);
     assert_eq!(rows[0].role, Some(Role::Model));
-    assert_eq!(
-        rows[0].hover,
-        "ran on sonnet-9 — the model is config, not the speaker"
-    );
+    assert_eq!(rows[0].hover, "");
 }
 
 #[test]
 fn thinking_is_machinery_with_nobody_speaking() {
     let rows = go(&[model("001", vec![thought("weighing it")])]);
-    assert_eq!(rows[0].prefix, "thinking:");
+    assert_eq!(rows[0].prefix, THOUGHT);
     assert_eq!(rows[0].preview, "weighing it");
     assert_eq!(rows[0].hover, "");
     assert_eq!(rows[0].class, RowClass::Other);
@@ -137,10 +131,10 @@ fn a_tool_result_states_its_outcome_in_words() {
 
 #[test]
 fn the_live_tail_is_two_rows_and_an_empty_half_is_none() {
+    // With no committed turn to name its model, the tail says the desktop's
+    // own word for the growing turn; the settled-label case is `speakers`.
     let both = go(&[streaming("001", "mulling", "the answer so far")]);
-    // The growing text is the SPEAKER's row, wearing the label its settled
-    // counterpart will wear (bl-e3d1) — never a second speaker called `live`.
-    assert_eq!(prefixes(&both), ["thinking:", &format!("{SPEAKER}:")]);
+    assert_eq!(prefixes(&both), ["«live» (thinking)", "«live»"]);
     assert_eq!(both[0].class, RowClass::Other);
     assert_eq!(both[0].role, None);
     assert_eq!(both[1].class, RowClass::Response);
@@ -149,12 +143,9 @@ fn the_live_tail_is_two_rows_and_an_empty_half_is_none() {
 
     assert_eq!(
         prefixes(&go(&[streaming("001", "mulling", "")])),
-        ["thinking:"]
+        ["«live» (thinking)"]
     );
-    assert_eq!(
-        prefixes(&go(&[streaming("001", "", "words")])),
-        [format!("{SPEAKER}:")]
-    );
+    assert_eq!(prefixes(&go(&[streaming("001", "", "words")])), ["«live»"]);
     assert!(go(&[streaming("001", "", "")]).is_empty());
 }
 

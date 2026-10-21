@@ -239,9 +239,9 @@ pub(super) fn tone_hue(ui: &egui::Ui, tone: &crate::codec::Tone) -> egui::Color3
     }
 }
 
-/// The conversation's display name — **who** the model turns are, since a
-/// speaker is an agent and not a model id. The roster row already carries it;
-/// falling back to the addressed id is what a transcript opened before its
+/// The conversation's display name, for the surfaces that name the
+/// conversation (not its model turns, which say the model id — DESIGN §23
+/// item 15). The roster row already carries it; falling back to the addressed id is what a transcript opened before its
 /// list arrived shows.
 pub(crate) fn speaker_of(snap: &Snapshot, agent: &str) -> String {
     snap.conversations

@@ -4,7 +4,8 @@
 use std::collections::BTreeSet;
 
 use super::{
-    SPEAKER, call, compacted, delivered, go, go_open, model, prefixes, raw, result, text, thought,
+    MODEL, THOUGHT, call, compacted, delivered, go, go_open, model, prefixes, raw, result, text,
+    thought,
 };
 use crate::codec::Entry;
 use crate::rows::{AutoExpand, Fold, Kind, RowClass, Tone, rows};
@@ -24,7 +25,7 @@ const CENSUS: &str = "1 inference call · 1 thinking block";
 
 #[test]
 fn a_finished_turn_folds_its_machinery_to_one_line() {
-    assert_eq!(prefixes(&go(&a_turn())), ["user:", AGGREGATE, "yog:"]);
+    assert_eq!(prefixes(&go(&a_turn())), ["user", AGGREGATE, MODEL]);
 }
 
 #[test]
@@ -32,21 +33,21 @@ fn a_shut_aggregate_omits_its_steps_rather_than_hiding_them() {
     let out = go(&a_turn());
     assert_eq!(out.len(), 3);
     assert!(!out[1].expanded);
-    assert!(!out.iter().any(|row| row.prefix == "thinking:"));
+    assert!(!out.iter().any(|row| row.prefix == THOUGHT));
 }
 
 #[test]
 fn an_open_aggregate_re_emits_every_step_after_it() {
     assert_eq!(
         prefixes(&go_open(&a_turn())),
-        ["user:", AGGREGATE, "thinking:", "Read()", "yog:",]
+        ["user", AGGREGATE, THOUGHT, "Read()", MODEL,]
     );
 }
 
 #[test]
 fn an_override_opens_one_turn_without_touching_the_knob() {
     let folds: BTreeSet<String> = ["tx/002#turn".to_string()].into_iter().collect();
-    let out = rows(&a_turn(), SPEAKER, None, AutoExpand::default(), &folds);
+    let out = rows(&a_turn(), None, AutoExpand::default(), &folds);
     assert_eq!(prefixes(&out).len(), 5);
     assert!(out[1].expanded);
 }
@@ -82,7 +83,7 @@ fn a_delivered_message_bounds_the_turns_on_either_side() {
     let one = "1 thought";
     assert_eq!(
         prefixes(&go(&entries)),
-        ["user:", one, "yog:", "user:", one, "yog:"]
+        ["user", one, MODEL, "user", one, MODEL]
     );
 }
 
@@ -95,7 +96,7 @@ fn a_compaction_mark_is_a_boundary_and_is_never_swallowed() {
     ];
     assert_eq!(
         prefixes(&go(&entries)),
-        ["thinking:", "✂ 1 entry compacted away — 001", "yog:"]
+        [THOUGHT, "✂ 1 entry compacted away — 001", MODEL]
     );
 }
 
@@ -105,7 +106,7 @@ fn a_turn_that_ended_on_machinery_keeps_its_steps_on_screen() {
         model("001", vec![thought("a")]),
         model("002", vec![thought("b")]),
     ];
-    assert_eq!(prefixes(&go(&entries)), ["thinking:", "thinking:"]);
+    assert_eq!(prefixes(&go(&entries)), [THOUGHT, THOUGHT]);
 }
 
 #[test]
@@ -116,14 +117,14 @@ fn anything_in_flight_makes_the_whole_turn_the_show() {
     ];
     assert_eq!(
         prefixes(&go(&entries)),
-        ["thinking:", "Read() — running", "yog:"]
+        [THOUGHT, "Read() — running", MODEL]
     );
 }
 
 #[test]
 fn a_run_with_no_inference_call_is_not_a_turn() {
     let entries = [raw("001", "noise"), model("002", vec![text("hi")])];
-    assert_eq!(prefixes(&go(&entries)), ["001", "yog:"]);
+    assert_eq!(prefixes(&go(&entries)), ["001", MODEL]);
 }
 
 #[test]
@@ -156,6 +157,6 @@ fn a_kind_the_working_holds_none_of_is_left_out() {
     ];
     assert_eq!(
         prefixes(&go(&entries)),
-        ["user:", "1 intermediate response", "yog:"]
+        ["user", "1 intermediate response", MODEL]
     );
 }

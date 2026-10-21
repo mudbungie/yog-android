@@ -227,8 +227,13 @@ with the connector rails in `INK_FAINT`. No fill at rest, no stroke ever.
 aligned, guttered, bubbled. Every block starts at the same left edge
 with its glyph in the gutter — `›` in the brand for the operator, `¦` in
 `INK_WEAK` for the model, `·` in `INK_WEAK` for a peer, a tool's answer or the
-machinery — then who spoke in their weight (§3), and the body wraps at the
-width it has. A turn's calls stand under one fold head `+ tool calls (N)` in
+machinery — then who spoke in their weight (§3) on a line of its own, with
+no colon: `user` (or `op`) for the operator, the model id for a model's
+prose, `<model id> (thinking)` for its reasoning (DESIGN §23 item 15) — and
+the body wraps at the width it has, in `INK`. A finished thought or
+intermediate response on a trail is one `<who> · <first line>` line in
+`INK_WEAK`, elided, its `+` at the end; a finished call is its line with
+`✔`/`✖` and one weak line of output under it (DESIGN §23 item 6). A turn's calls stand under one fold head `+ tool calls (N)` in
 `INK_WEAK`, each on a painted stem (the threaded row's rails) with `•` in the
 brand, `✔` in `INK_WEAK` or `✖` in the error accent; a `HAIRLINE` parts
 turns. A tool row's state is its words' ink; a folded one's

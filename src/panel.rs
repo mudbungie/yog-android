@@ -76,8 +76,9 @@ pub fn conversation(
     out
 }
 
-/// The model that last answered on the transcript, where one did.
-fn answered_by(transcript: &[Entry]) -> Option<String> {
+/// The model that last answered on the transcript, where one did — also
+/// who the live tail is (`rows::project`), since it is that model speaking.
+pub(crate) fn answered_by(transcript: &[Entry]) -> Option<String> {
     transcript.iter().rev().find_map(|entry| match &entry.kind {
         EntryKind::Model { model_id, .. } => Some(model_id.clone()),
         _ => None,

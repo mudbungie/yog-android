@@ -46,7 +46,7 @@ mod windowed;
 mod wounded;
 
 pub use blocks::{Block, blocks};
-pub use trail::{Before, Line, Part, glyph, lines, mark};
+pub use trail::{Before, Line, Part, compact, glyph, lines, mark};
 
 /// The tone vocabulary, re-exported rather than restated: the wire already
 /// spells six of these for a conversation row ([`crate::codec::Tone`]) and two
@@ -116,7 +116,7 @@ pub enum Fold {
 /// module's business.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Role {
-    /// The operator's own words: the reserved `user` sender.
+    /// The operator's own words: the `user` sender, or `op` written short.
     User,
     /// The agent speaking: model output, or the live streaming tail.
     Model,
@@ -164,7 +164,8 @@ impl Kind {
 pub struct Row {
     /// Stable identity across the stateless re-read: `tx/<entry name>#<n>`.
     pub key: String,
-    /// The always-visible label — `sender:`, `Read("a.rs")`, `tool calls (2)`.
+    /// The always-visible label — who spoke (`user`, the model id, `<model id>
+    /// (thinking)`), a call's head `read("a.rs")`, or a working's counts.
     pub prefix: String,
     /// The payload's first line, shown while contracted.
     pub preview: String,
@@ -188,9 +189,10 @@ pub struct Row {
     pub expanded: bool,
 }
 
-/// Project decoded transcript `entries` into one-line rows. `speaker` is the
-/// conversation's display name — **who** the model turns are, since a speaker
-/// is an agent and not a model id; `auto` is the durable knob pair; `folds` is
+/// Project decoded transcript `entries` into one-line rows. **A model turn
+/// says the model id** (DESIGN §23 item 15; lernie `rows::block`), read off
+/// the entry itself, so the projection needs no name from outside; `auto` is
+/// the durable knob pair; `folds` is
 /// the caller's override set, where membership *flips* a row's auto-state, so
 /// an empty set means "everything as configured".
 ///
@@ -207,7 +209,6 @@ pub struct Row {
 /// iteration order costs nothing and buys a test that cannot flake.
 pub fn rows(
     entries: &[Entry],
-    speaker: &str,
     parked: Option<&Held>,
     auto: AutoExpand,
     folds: &BTreeSet<String>,
@@ -217,7 +218,7 @@ pub fn rows(
     let mut usage = Vec::new();
     for entry in entries {
         let before = flat.len();
-        project::push_entry(entries, entry, speaker, &mut flat);
+        project::push_entry(entries, entry, &mut flat);
         for block in 0..flat.len().saturating_sub(before) {
             steps.push(turns::step_of(&entry.kind, block));
             usage.push(turns::usage_of(&entry.kind));

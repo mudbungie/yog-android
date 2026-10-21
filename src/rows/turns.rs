@@ -121,10 +121,13 @@ fn push_turn(
             if open {
                 // **The turn's own remarks are steps of its trail** (§22 item
                 // 4): under an open rollup they stand on its stem, so the
-                // turn's answer is the one thing it said.
+                // turn's answer is the one thing it said — and, a finished
+                // step, they answer the machinery's knob, compact until
+                // opened (§23 item 6), not the conversation's.
                 out.extend(run.iter().cloned().map(|mut step| {
                     if step.kind == Kind::Said {
                         step.kind = Kind::Remark;
+                        step.class = RowClass::Other;
                     }
                     step
                 }));

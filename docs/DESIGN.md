@@ -1061,7 +1061,9 @@ vocabularies inside one app. Upstream's own words for why a list is the place
 this matters: *"the roster is the operator's one passive sighting of it — a
 list where the two read identically is a list that cannot be scanned."*
 
-**The growing answer is the speaking agent's own row, and there is exactly
+*Amended by §23 item 15: the tail says the model id (`<model id>`, `<model
+id> (thinking)`), not the conversation's name.* **The growing answer is the
+speaking agent's own row, and there is exactly
 one of it** (operator ruling, bl-e3d1). The engine writes the tail into the
 transcript itself as a streaming entry, so a cadence read already carries
 one; the follow lane below then carries the same answer as it is written.
@@ -6528,7 +6530,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    widget id), and `✎ plan` has no phone predecessor to become, so no
    `/plan` is added.
 
-4. *Amended by §23 items 5–7: the working folds in three stages, the echo stands in the operator's bubble, and every block is bubbled by role.* **The transcript idiom → the desktop's gutter and trail, at the phone's
+4. *Amended by §23 items 5–7: the working folds in three stages, the echo stands in the operator's bubble, and every block is bubbled by role.* *Amended by §23 item 15: who spoke is `user` and the model id with no colon, reasoning `<model id> (thinking)`, and a finished thought or remark is one `<who> · <first line>` line.* **The transcript idiom → the desktop's gutter and trail, at the phone's
    width.** A block's `RULE`-wide speaker stripe (STYLE §5) becomes the
    gutter glyph: `›` in the brand for the operator, `¦` in weak ink for the
    model, `·` for a peer, a tool's answer or the machinery; who spoke still
@@ -7064,9 +7066,20 @@ earning one.
    shut* head). The ruling is the desktop's, verbatim there and read the
    same here: **a step in flight stands whole**, and the working is open
    while any step is; **a finished step is compact** — a call whose result
-   landed is its call line and ONE line of its output elided at the width
-   it has, a finished thinking or intermediate prose one elided line — and
-   each compact step is a `TOUCH`-tall door that opens it whole in place;
+   landed is its call line with `✔`/`✖` beside it and ONE line of its
+   output under it in weak ink, elided at the width it has; a finished
+   thinking or intermediate prose is **`<who> · <first line>` in one line**,
+   elided at the width it has, in `INK_WEAK` — no label line over a text
+   line (bl-75c6, lernie `chat::working::compact`; `rows::compact`) — and
+   each compact step is a `TOUCH`-tall door, pressed-lit, that opens it
+   whole in place: the who line over the payload. **The `+`/`−` stays at
+   the line's end**: the desktop's hover says a line is a door and a phone
+   has none, so the glyph is the phone's affordance. **A prose step folds
+   whenever it has words**, not only when its payload runs past one line:
+   its one line is elided at a phone's width, so a short thought would
+   otherwise be cut with no way to read the rest. An intermediate response
+   under an open working answers the `steps` knob, as every other finished
+   step does, not `full`;
    **a settled turn's working is one line**, what it hides counted by kind
    (below), between the operator's turn and the final answer, a tap opening
    it to the compact steps. §22 item 4's `tool calls (N)` head, its census
@@ -7203,6 +7216,39 @@ earning one.
     one added without a sentence does not compile, one painted outside the
     painters fails the rule, and the walk's `told` beat is the eye that the
     sentence opens.
+
+15. **The speaker lines as the desktop spells them** (bl-75c6, under
+    bl-9b97; lernie `ui::chat::rows::block`, `rows::role::OPERATOR`; amends
+    §22 item 4 and §7's live tail). Operator ruling 2026-10-20, after the
+    phone release that followed item 6's amendment, verbatim: *"phone still
+    looks mostly like the old one"* — under the earlier ruling of the same
+    day that item 6 quotes, *"The user interface in general in lernie has
+    gotten much better. Adapt the mobile app to it, and implement the new
+    version."* The phone headed a turn `user:` and `<conversation name>:`
+    and put `thinking:` over its text; the desktop says neither. Now, read
+    off the committed bytes (`crate::rows`):
+
+    | row | its who line |
+    |---|---|
+    | the operator's turn | its sender as the server spells it — `user`, or `op`, which is the operator too |
+    | a model's prose | the model id (`EntryKind::Model.model_id`) |
+    | its reasoning | `<model id> (thinking)` |
+    | a turn with no blocks | the model id, over `(no content blocks)` |
+    | the live tail | the same two, the model id being the model that last answered on this read; `«live»` (the desktop's word for the growing turn) only before any turn has |
+    | a delivered message | the sender's name where it wears one, else its id; `<name> ended: <epitaph>` on a deposit |
+
+    **No colon anywhere**: the who line stands on its own line over the
+    body, so the colon was punctuation joining two things that are no
+    longer on one line. **The model id, not the conversation's name**: the
+    desktop reads a model turn as said by the model that ran it, and the
+    two seats read one record alike; the conversation's name is already on
+    the glass (the rule's `— name`, the tab, the panel), so repeating it on
+    every turn told nothing, while the id says the one fact a turn can
+    differ in — one turn can run on another model than the conversation's
+    current assignment. The model-id hover the projection carried goes with
+    it, and `rows::rows` takes no name from outside. The who line paints in
+    the speaker's ink (`theme::speaker`), the body beneath in `INK` and the
+    pending echo in `INK_WEAK`; the gutter glyph is unchanged.
 
 **What this does not solve, and the principle that answers it.** A strip of
 tabs on a 360-point glass holds three names; the switcher is still the list,

@@ -15,12 +15,20 @@ use super::windowed::windowed_row;
 use super::wounded::wounded_row;
 use super::{Kind, Role, Row, RowClass, Tone};
 use crate::codec::{Entry, EntryKind};
-use blocks::{block_row, model_hover};
+use blocks::block_row;
 
 mod blocks;
 
-/// The reserved sender token naming the operator.
-const USER_SENDER: &str = "user";
+/// **The senders that are the operator's own** (lernie `rows::role::OPERATOR`):
+/// the engine writes a deposit from a seat with `user`, and `op` is the same
+/// claim written short. Reading either as a peer would paint the operator's
+/// own words in a peer's weight.
+const OPERATOR: [&str; 2] = ["user", "op"];
+/// Who the live tail is when no committed turn has named its model yet — the
+/// desktop's own word for the growing turn (lernie `chat::LIVE`).
+const LIVE: &str = "«live»";
+/// The mark a model's reasoning wears after its speaker (lernie `rows::block`).
+pub(super) const THINKING: &str = "thinking";
 /// A result deposit can assert an ending and no content, so its body is empty
 /// once the envelope is off. Say so, rather than paint a blank line from a
 /// stranger.
@@ -65,7 +73,7 @@ fn delivered_row(
     )
 }
 
-pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &mut Vec<Row>) {
+pub(super) fn push_entry(entries: &[Entry], entry: &Entry, out: &mut Vec<Row>) {
     match &entry.kind {
         EntryKind::Delivered {
             sender,
@@ -81,28 +89,19 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
         )),
         EntryKind::Model {
             model_id, blocks, ..
-        } if blocks.is_empty() => out.push(Row {
-            hover: model_hover(model_id),
-            ..row(
-                key(&entry.name, 0),
-                format!("{speaker}:"),
-                NO_BLOCKS,
-                RowClass::Other,
-                Tone::Weak,
-                Some(Role::Model),
-            )
-        }),
+        } if blocks.is_empty() => out.push(row(
+            key(&entry.name, 0),
+            model_id.clone(),
+            NO_BLOCKS,
+            RowClass::Other,
+            Tone::Weak,
+            Some(Role::Model),
+        )),
         EntryKind::Model {
             model_id, blocks, ..
         } => {
             for (i, block) in blocks.iter().enumerate() {
-                out.push(block_row(
-                    entries,
-                    key(&entry.name, i),
-                    speaker,
-                    model_id,
-                    block,
-                ));
+                out.push(block_row(entries, key(&entry.name, i), model_id, block));
             }
         }
         // The size hint takes the prefix seat because it has to be legible
@@ -134,7 +133,8 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, speaker: &str, out: &
             ));
         }
         EntryKind::Streaming { thinking, text } => {
-            push_streaming(&entry.name, speaker, thinking, text, out);
+            let who = crate::panel::answered_by(entries).unwrap_or_else(|| LIVE.to_owned());
+            push_streaming(&entry.name, &who, thinking, text, out);
         }
         EntryKind::Windowed {
             tool,
@@ -211,19 +211,19 @@ fn unread_row(entry: &Entry) -> Row {
 fn delivered_prefix(sender: &str, epitaph: Option<&str>) -> String {
     match epitaph {
         Some(epitaph) => format!("{sender} ended: {epitaph}"),
-        None => format!("{sender}:"),
+        None => sender.to_owned(),
     }
 }
 
 /// The role of a delivered message, from the two facts its bytes assert: who
 /// sent it and whether it carries an `epitaph:`. The epitaph wins — a result
-/// deposit is a kind before it is a sender — then the reserved `user` token,
+/// deposit is a kind before it is a sender — then the operator's own tokens,
 /// then the peer catch-all, which is the general path so an unknown sender
 /// reads as third-party mail and never as the operator.
 fn message_role(sender: &str, has_epitaph: bool) -> Role {
     if has_epitaph {
         Role::Ended
-    } else if sender == USER_SENDER {
+    } else if OPERATOR.contains(&sender) {
         Role::User
     } else {
         Role::Peer
@@ -239,18 +239,18 @@ fn message_role(sender: &str, has_epitaph: bool) -> Role {
 /// one blank one.
 ///
 /// **Both rows wear their committed counterpart's label** (operator ruling,
-/// bl-e3d1): the growing text is the speaking agent's own row, so it says
-/// `<speaker>:` exactly as the settled turn will, and the reasoning says
-/// `thinking:` exactly as a committed thinking block does. It used to say
-/// `live:`, which put a word that is not a speaker in the speaker's seat —
-/// a §13.3 vocabulary break — and made a finished reply read as two
-/// different people saying the same thing.
-fn push_streaming(name: &str, speaker: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
+/// bl-e3d1; DESIGN §23 item 15): the growing text is the model's own row, so
+/// it says `<model id>` exactly as the settled turn will, and the reasoning
+/// `<model id> (thinking)` exactly as a committed thinking block does. The
+/// tail's entry names no model, so `who` is the model that last answered on
+/// this read ([`crate::panel::answered_by`]) — the one speaking — and the
+/// desktop's `«live»` only where no turn has answered yet.
+fn push_streaming(name: &str, who: &str, thinking: &str, text: &str, out: &mut Vec<Row>) {
     if !thinking.is_empty() {
         out.push(as_(
             row(
                 key(name, 0),
-                "thinking:".to_string(),
+                format!("{who} ({THINKING})"),
                 thinking,
                 RowClass::Other,
                 Tone::Live,
@@ -262,7 +262,7 @@ fn push_streaming(name: &str, speaker: &str, thinking: &str, text: &str, out: &m
     if !text.is_empty() {
         out.push(row(
             key(name, 1),
-            format!("{speaker}:"),
+            who.to_owned(),
             text,
             RowClass::Response,
             Tone::Live,

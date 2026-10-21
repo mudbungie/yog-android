@@ -70,5 +70,5 @@ fn the_size_hint_counts_characters_not_bytes() {
 #[test]
 fn no_other_row_class_carries_a_size_hint() {
     let rows = go(&[delivered("001", "user", "a\nb\nc")]);
-    assert_eq!(rows[0].prefix, "user:");
+    assert_eq!(rows[0].prefix, "user");
 }
