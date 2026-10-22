@@ -63,14 +63,20 @@ impl Tabs {
     }
 
     /// **A tab the listing no longer knows leaves with it** (lernie bl-6dfd's
-    /// rule), except the focused one — a start's claim stands under a name
-    /// the listing has not resolved yet, and the frame that resolves it
-    /// focuses the root, after which the claim's tab is no longer the focus
-    /// and goes on the next prune.
-    pub fn prune(&mut self, workspace: &str, known: &[String], focus: Option<&str>) {
-        self.open.retain(|(w, a)| {
-            w != workspace || known.iter().any(|k| k == a) || Some(a.as_str()) == focus
-        });
+    /// rule) — **once the listing knows the focus**. A conversation painted
+    /// focused is in its workspace's listing by definition, so a listing that
+    /// lacks it was not read under this focus: the empty one a moved focus
+    /// honestly has while the engine is unreachable (§14), or a start's claim
+    /// the listing has not resolved yet. Such a listing forgets nothing; the
+    /// walk of bl-6f02 caught the strip emptied by exactly that, a dock tap
+    /// with the engine down. The frame that resolves a claim focuses the
+    /// root, which the listing knows, and the claim's tab goes then.
+    pub fn prune(&mut self, workspace: &str, known: &[String], focus: &str) {
+        if !known.iter().any(|k| k == focus) {
+            return;
+        }
+        self.open
+            .retain(|(w, a)| w != workspace || known.iter().any(|k| k == a));
     }
 }
 
@@ -105,14 +111,16 @@ mod tests {
     }
 
     #[test]
-    fn a_tab_the_listing_forgot_leaves_unless_it_is_the_focus() {
+    fn a_tab_the_listing_forgot_leaves_once_the_listing_knows_the_focus() {
         let mut tabs = Tabs::default();
         tabs.focused("w", "a");
         tabs.focused("w", "claim");
         tabs.focused("v", "gone");
-        tabs.prune("w", &["a".to_owned()], Some("claim"));
+        tabs.prune("w", &["a".to_owned()], "claim");
         assert_eq!(tabs.strip("w"), ["a", "claim"]);
-        tabs.prune("w", &["a".to_owned()], Some("a"));
+        tabs.prune("w", &[], "a");
+        assert_eq!(tabs.strip("w"), ["a", "claim"]);
+        tabs.prune("w", &["a".to_owned()], "a");
         assert_eq!(tabs.strip("w"), ["a"]);
         assert_eq!(tabs.strip("v"), ["gone"]);
     }

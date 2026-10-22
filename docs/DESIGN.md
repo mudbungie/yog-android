@@ -1878,12 +1878,12 @@ here is a defect.
   and it is under the coverage floor: an optimistic pick first, the
   workspace's own assignment next, and the control's own NAME where neither
   exists. That third arm is §8 — an engine that predates the assignments read
-  answers nothing, and a seat painting `effort: off` there would be inventing
+  answers nothing, and a seat painting `effort off` there would be inventing
   the assignment to keep its face tidy. Two readings fall out of the same
   rule: the model face shows the workspace's model only under the workspace's
   own PROVIDER, because a model belongs to the provider that serves it and
   the pair would otherwise name something that does not exist; and an
-  assignment with no level reads `effort: off`, because the absence carried
+  assignment with no level reads `effort off`, because the absence carried
   as a real null IS the value, while no assignment at all reads `effort`.
 
   **The effort face carries its own name** (bl-b191). Every other control in
@@ -7030,7 +7030,10 @@ earning one.
    `×` in `INK_FAINT` after it; a tap focuses, `×` closes and focuses the
    neighbour to its left (or right at the left end), the last close puts
    the focus down to the workspace; a tab the listing no longer knows
-   leaves with it; a start's tab is its claim's and is renamed in place when
+   leaves with it — **judged only by a listing that knows the focused
+   conversation** (bl-6f02): a listing that lacks the focus was not read
+   under it (a moved focus with the engine unreachable publishes an empty
+   one, §14), and the walk caught the strip emptied by exactly that; a start's tab is its claim's and is renamed in place when
    the listing resolves it. **Two phone readings.** The strip is `TOUCH`
    tall and **scrolls sideways** rather than wrapping — a wrapped strip of
    five names is three rows of a phone — with the focused tab scrolled
@@ -7264,6 +7267,12 @@ earning one.
       knob (a model with no provider, effort the provider will not take) is
       its words in `INK_FAINT` with no mark, and its tap still says why. The
       name is a door the same way, unmarked.
+    - **A tuning knob's words are its name and its value with no colon** —
+      `effort high`, `priority on` — as the desktop's are (lernie
+      `ui::status`). The walk of bl-6f02 found the phone still saying
+      `effort: high` beside the realigned rule; the colon joined a label to a
+      value in the chip era and is punctuation the desktop dropped
+      (`codec::pick::face`).
     - **The separators** `|` and the leads `—` are `INK_FAINT`, `XS` off
       either side.
     - **`⏶` is the desktop's own glyph** (`theme::glyph::DROP`, in the table

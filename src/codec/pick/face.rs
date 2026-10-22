@@ -14,7 +14,7 @@
 //! truth that overtakes the guess; and where NEITHER exists the control wears
 //! its own name — never a value. That last arm is §8's rule and it is the
 //! reason this is not a `unwrap_or_default`: an engine that predates the read
-//! answers nothing, and a seat that painted `effort: off` there would be
+//! answers nothing, and a seat that painted `effort off` there would be
 //! inventing an assignment to keep its face tidy.
 
 use super::{Effort, RoleRow};
@@ -42,7 +42,7 @@ pub fn effort(picked: Option<String>, set: Option<&RoleRow>) -> String {
     match picked
         .or_else(|| set.map(|row| row.effort.clone().unwrap_or_else(|| Effort::label(None))))
     {
-        Some(level) => format!("effort: {level}"),
+        Some(level) => format!("effort {level}"),
         None => "effort".to_owned(),
     }
 }
@@ -52,7 +52,7 @@ pub fn effort(picked: Option<String>, set: Option<&RoleRow>) -> String {
 /// it again, so an operator gets the answer from a glance or from a read.
 pub fn priority(picked: Option<bool>, set: Option<&RoleRow>) -> (bool, String) {
     match picked.or_else(|| set.map(|row| row.priority)) {
-        Some(on) => (on, format!("priority: {}", if on { "on" } else { "off" })),
+        Some(on) => (on, format!("priority {}", if on { "on" } else { "off" })),
         None => (false, "priority".to_owned()),
     }
 }

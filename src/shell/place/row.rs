@@ -176,7 +176,7 @@ mod tests {
     /// width is paid in full and the selectors take what is left, which is
     /// the ruling: the pickers are what elides. Under a plain max-min share
     /// the two faces would be capped at the selectors' own share and
-    /// `effort: off` would read `effor…`, hiding the value the face exists
+    /// `effort off` would read `effor…`, hiding the value the face exists
     /// to carry.
     #[test]
     fn the_phones_own_row_pays_every_named_width_and_the_selectors_take_the_rest() {

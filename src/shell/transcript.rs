@@ -35,7 +35,7 @@ impl Shell {
             .iter()
             .map(|row| row.root_id.clone())
             .collect();
-        self.tabs.prune(workspace, &known, Some(agent));
+        self.tabs.prune(workspace, &known, agent);
         // **The drawer** (§23 item 1): a drag from the left edge opens the
         // switcher, the one gesture the desktop's bar had that the switcher
         // lacked.

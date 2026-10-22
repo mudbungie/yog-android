@@ -42,8 +42,8 @@ fn the_assignment_is_not_shown_under_another_provider() {
 #[test]
 fn the_effort_face_carries_its_name_and_its_level() {
     let row = set("anthropic", "opus", Some("high"), false);
-    assert_eq!(effort(None, Some(&row)), "effort: high");
-    assert_eq!(effort(Some("low".to_owned()), Some(&row)), "effort: low");
+    assert_eq!(effort(None, Some(&row)), "effort high");
+    assert_eq!(effort(Some("low".to_owned()), Some(&row)), "effort low");
 }
 
 /// An assignment with no level IS a value — `off`, the absence carried as a
@@ -52,7 +52,7 @@ fn the_effort_face_carries_its_name_and_its_level() {
 #[test]
 fn no_level_reads_off_and_no_assignment_reads_nothing() {
     let row = set("anthropic", "opus", None, false);
-    assert_eq!(effort(None, Some(&row)), "effort: off");
+    assert_eq!(effort(None, Some(&row)), "effort off");
     assert_eq!(effort(None, None), "effort");
 }
 
@@ -60,14 +60,14 @@ fn no_level_reads_off_and_no_assignment_reads_nothing() {
 fn the_priority_face_says_which_way_it_is_set() {
     let on = set("anthropic", "opus", None, true);
     let off = set("anthropic", "opus", None, false);
-    assert_eq!(priority(None, Some(&on)), (true, "priority: on".to_owned()));
+    assert_eq!(priority(None, Some(&on)), (true, "priority on".to_owned()));
     assert_eq!(
         priority(None, Some(&off)),
-        (false, "priority: off".to_owned())
+        (false, "priority off".to_owned())
     );
     assert_eq!(
         priority(Some(true), Some(&off)),
-        (true, "priority: on".to_owned())
+        (true, "priority on".to_owned())
     );
     assert_eq!(priority(None, None), (false, "priority".to_owned()));
 }

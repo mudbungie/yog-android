@@ -48,7 +48,7 @@ fn on(places: &[Place], under: bool) -> Vec<Slot> {
 /// 14): a 411-point glass, the rule's spacing either side of a `|`, and the
 /// doors' wants read off the bundled faces at `SMALL` — the air inside the
 /// door, the words and ` ⏶`: a short workspace, `anthropic`, a long model
-/// id, `effort: high`, and `priority: on` with no mark (a flip opens no list).
+/// id, `effort high`, and `priority on` with no mark (a flip opens no list).
 #[test]
 fn at_411_points_effort_stands_and_a_short_selector_keeps_its_words() {
     use Slot::*;

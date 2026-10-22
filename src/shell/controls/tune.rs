@@ -87,7 +87,7 @@ impl Shell {
     /// removes the line, because asking for the *standard* lane is a
     /// different intent no config key expresses (REMOTE §9.4).
     ///
-    /// It wears its state in its own words (`priority: on`) rather than in a
+    /// It wears its state in its own words (`priority on`) rather than in a
     /// fill, because on the rule the word is what an operator reads and a
     /// door that alone among five carried a tint would be saying something
     /// about state that STYLE.md reserves for the six accents. A flip opens
