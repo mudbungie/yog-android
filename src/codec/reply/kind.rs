@@ -25,6 +25,7 @@ impl Reply {
             Self::Prepared(_) => "prepared",
             Self::Started { .. } => "started",
             Self::Providers(_) => "providers",
+            Self::Catalog(_) => "catalog",
             Self::Models(_) => "models",
             Self::Roles(_) => "roles",
             Self::Applied => "applied",

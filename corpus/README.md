@@ -49,16 +49,16 @@ A signature key is a field path with its JSON type; its value is the
 **edition** at which that path first appeared. The corpus's edition is the
 newest stamp in the file, computed, never stored. `floor` is the edition at
 which the current major was cut: every path stamped at or below it is on every
-engine of this major, every later path is optional to read. `deprecated`
+server of this major, every later path is optional to read. `deprecated`
 lists shapes and fields (path without type) yog still writes and a reader
 should stop relying on.
 
-**The engine states its edition, so a client can compare.** yog's `build.rs`
+**The server states its edition, so a client can compare.** yog's `build.rs`
 reads this file and compiles the newest stamp in as `EDITION` and `floor` as
 `FLOOR`; the version preface each end writes carries `edition` beside
 `protocol` (REMOTE §3.2). A client that vendors this directory can therefore
-grey a control whose field's stamp exceeds the engine's edition, and tell a
-field the engine chose not to say from one it cannot spell at all. A peer that
+grey a control whose field's stamp exceeds the server's edition, and tell a
+field the server chose not to say from one it cannot spell at all. A peer that
 states no `edition` is read as speaking the floor. The preface is not a wire
 shape and is recorded nowhere in this file: it rides beside the gesture
 envelope, and only the envelope is stamped here.
@@ -98,8 +98,8 @@ real machine, path or account.
 
 The yog repository is the source. A client vendors the directory, or reads it
 from a checkout at build time; there is no published artifact and no endpoint
-that serves it. The engine states the corpus's edition in its hello, so a
-client that vendored this record can tell which fields the engine it dialled
+that serves it. The server states the corpus's edition in its hello, so a
+client that vendored this record can tell which fields the server it dialled
 spells. The consumers today are the seat and the android app; the foot's
 surface is small enough that it may consume the subset of shapes it actually
 speaks, under rule 4 above.

@@ -16,7 +16,7 @@
             "kind": "provider"
           },
           "entry": "worker",
-          "fault": "brazen's table has no provider row `gone` — every dispatch through it dies with `unknown provider`; pick a live row, or add the row with /config brazen",
+          "fault": "no provider row `gone` in this workspace's routing table — every dispatch through it dies with `unknown provider`; /login signs in, or /config brazen takes a key",
           "help": "the brazen provider row this role dispatches through",
           "name": "provider",
           "value": "gone"

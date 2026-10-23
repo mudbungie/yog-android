@@ -19,14 +19,15 @@
 //! whole of what this replay is for. `kind` is exempt because §3.2 rule 4
 //! keeps the reply envelope's kind strict — a reader asks only what it paints.
 //!
-//! **What is vacuous today, said out loud.** The corpus's edition IS its floor
-//! at a major's own cut, so the projection loop runs once and deletes nothing.
-//! That is the honest state of a freshly cut major and not a broken check —
-//! but a replay that can only pass is a replay that proves nothing, so
+//! **The loop does real work now, and it did not at the cut.** At a major's
+//! own cut the corpus's edition IS its floor, so the projection runs once and
+//! deletes nothing — a replay that can only pass proves nothing, which is why
 //! [`the_projector_deletes_what_a_stamp_puts_out_of_reach`] holds the
-//! projector itself against a ledger that HAS grown. The day the corpus grows
-//! a field, the loop below starts doing the work and that test stays its
-//! witness.
+//! projector against a ledger that HAS grown. The vendored corpus has since
+//! grown past the floor (edition 24 at bl-892e), so the loop below now
+//! projects every read shape back to 18 — and a shape born AFTER the floor is
+//! projected only as far back as its birth, because an engine older than that
+//! never writes it (the comment at the loop).
 
 use serde_json::Value;
 use yog_android::codec::reply;
@@ -74,7 +75,18 @@ fn every_reply_shape_reads_at_every_edition_of_this_major() {
     let mut editions = 0;
     for shape in read_shapes() {
         let stamps = shape_of(&vendored, &shape).unwrap().stamps;
-        for e in vendored.floor..=vendored.edition {
+        // **A shape is projected back only as far as it exists** (lernie's
+        // bl-9111 ruling, met here at `reply/catalog`, born whole at edition
+        // 24): an engine older than a shape's birth never writes it at all, so
+        // stripping it to `{}` and asking it to read would judge a frame no
+        // engine sends. The earliest stamp is the birth, because the root
+        // path is stamped then.
+        let born = stamps
+            .values()
+            .copied()
+            .min()
+            .map_or(vendored.floor, |stamp| stamp.max(vendored.floor));
+        for e in born..=vendored.edition {
             editions += 1;
             for frame in frames("reply", &shape).unwrap() {
                 let mut projected = frame.clone();

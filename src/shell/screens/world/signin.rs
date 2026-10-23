@@ -1,6 +1,6 @@
 //! **The sign-in screen** (REMOTE §8.3, DESIGN §13.19): the workspace's
-//! provider rows, the act that signs one in, and the held tail of whatever
-//! that run is saying.
+//! sign-in catalog, the act that signs one row in, and the held tail of
+//! whatever that run is saying.
 //!
 //! **It is a depth, not a control on the composer's row.** The provider
 //! selector under the composer states each row's credential fact and stays
@@ -11,11 +11,15 @@
 //! the minutes a browser flow takes. So it is an aimed entry beside the admin
 //! screen: one workspace, its providers, and room to read.
 //!
-//! **The rows are the same fact painted twice, and that is not two homes.**
-//! Both surfaces read `snap.providers` — the engine's own rows with the
-//! engine's own sentences on them — and neither derives anything. Opening
-//! this screen IS the `providers` ask, exactly as opening the records screen
-//! is its five.
+//! **The rows are the CATALOG, not the routing table** (bl-892e). The
+//! selector under the composer reads `snap.providers` — the rows a run can
+//! route to — and a built-in preset nobody has signed into is absent from
+//! it, so a fresh workspace's table is empty and a screen painted from it
+//! would offer nothing to sign into. This screen reads `snap.catalog`: every
+//! row carrying a sign-in flow, signed in or not, in the same row shape with
+//! the engine's own sentences on it, and derives nothing. Opening this
+//! screen IS the `catalog` ask, exactly as opening the records screen is its
+//! five.
 //!
 //! **Tapping a row opens its tail; the button beside it starts a run.** The
 //! two are different gestures and the wire says so: `login-tail` is a held
@@ -53,10 +57,10 @@ impl Shell {
     /// The provider rows, each with its own tail under it when it is the one
     /// being followed.
     fn rows(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        if snap.providers.is_empty() {
+        if snap.catalog.is_empty() {
             ui.weak("nothing read yet");
         }
-        for row in &snap.providers {
+        for row in &snap.catalog {
             self.provider(ui, row);
             if let Some(signing) = snap.login.as_ref().filter(|held| held.about(&row.name)) {
                 tail(ui, &signing.view);

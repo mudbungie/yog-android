@@ -51,6 +51,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         },
         "invocations" => Reply::Invocations(rows(o, invocation_of)?),
         "providers" => Reply::Providers(rows(o, pick::row)?),
+        "catalog" => Reply::Catalog(rows(o, pick::row)?),
         "models" => Reply::Models(pick::names(o)?),
         "roles" => Reply::Roles(rows(o, pick::role)?),
         "applied" => Reply::Applied,

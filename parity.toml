@@ -94,12 +94,15 @@
 # screen as a symbol the next device photographs, with a back control whose
 # whole product is the forgetting (DESIGN §13.18, amending §11).
 
-# --- Sign-in from the glass is whole (bl-5a41) ------------------------------
-# Nothing of it is on this ledger. Both are on the sign-in screen, the seventh
-# aimed entry: `login` on each provider row's own button, because the row IS
-# the subject, and `login-tail` on the row itself, because tapping it is what
-# opens the run's tail. The tail is a THIRD held lane (§14.1) beside the queue
-# and the follow, and its stop condition is the run settling (DESIGN §13.19).
+# --- Sign-in from the glass is whole (bl-5a41, bl-892e) ---------------------
+# Nothing of it is on this ledger. All three are on or at the sign-in screen,
+# the seventh aimed entry: `catalog` on the chip that opens it, because opening
+# IS the ask and what it lists is the sign-in catalog rather than the routing
+# table (edition 24, bl-892e); `login` on each row's own button, because the
+# row IS the subject; and `login-tail` on the row itself, because tapping it is
+# what opens the run's tail. The tail is a THIRD held lane (§14.1) beside the
+# queue and the follow, and its stop condition is the run settling (DESIGN
+# §13.19).
 
 # --- Unbuilt: the pinned run of the roster (protocol 10, yog bl-7782) --------
 pin = "unbuilt: the roster's pinned run — an assertion about the world the seat does not yet offer a control for (DESIGN §16.2)"

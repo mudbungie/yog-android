@@ -74,8 +74,9 @@ fn the_pick_envelope_is_the_servers_spelling() {
     );
 }
 
-/// Both reads name their workspace: sign-ins live per workspace, so neither
-/// is a global fact (bl-0267).
+/// Every read here names its workspace: sign-ins live per workspace, so none
+/// is a global fact (bl-0267) — the catalog included, because *signed in* is
+/// a fact of the workspace asked about (bl-892e).
 #[test]
 fn both_reads_name_their_workspace() {
     assert_eq!(
@@ -83,6 +84,12 @@ fn both_reads_name_their_workspace() {
             workspace: "home".into()
         })),
         json!({ "op": "providers", "workspace": "home" })
+    );
+    assert_eq!(
+        encode(&Gesture::Ask(Ask::Catalog {
+            workspace: "home".into()
+        })),
+        json!({ "op": "catalog", "workspace": "home" })
     );
     assert_eq!(
         encode(&Gesture::Ask(Ask::Models {

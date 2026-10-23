@@ -35,6 +35,13 @@ pub struct Snapshot {
     /// per-workspace fact, so one workspace's list under another's name would
     /// be the same wrong claim as one focus's rows under another's.
     pub providers: Vec<ProviderRow>,
+    /// **The focused workspace's sign-in catalog** (bl-892e): every row it
+    /// can sign in to, signed in or not, in the same row shape. The sign-in
+    /// screen paints this and never `providers`, because a fresh workspace's
+    /// routing table is empty and signing in is how a row enters it. Held
+    /// and emptied on the terms of the field above — it is the same
+    /// per-workspace fact, one question along.
+    pub catalog: Vec<ProviderRow>,
     /// Each provider's models, keyed by the provider they belong to — the key
     /// IS the pairing, so no frame can paint one provider's list under
     /// another's name.

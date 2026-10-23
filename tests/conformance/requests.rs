@@ -33,6 +33,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("balls", Reads),
     ("board", Reads),
     ("capture", Refuses(ASKING_SIDE)),
+    ("catalog", Reads),
     ("ceiling", Refuses(ACT)),
     ("clear-workflow", Refuses(ACT)),
     ("clear-trail", Reads),

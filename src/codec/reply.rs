@@ -78,6 +78,10 @@ pub enum Reply {
     /// One workspace's provider rows, each carrying its own credential fact
     /// (bl-0267).
     Providers(Vec<ProviderRow>),
+    /// **The sign-in catalog** (bl-892e): every row the workspace can sign
+    /// in to, signed in or not — the same row shape as `Providers`, read by
+    /// the same reader, so the two cannot drift into two spellings of a row.
+    Catalog(Vec<ProviderRow>),
     /// One provider's model names, in the engine's order.
     Models(Vec<String>),
     /// **What each role is set to** (bl-e9f9). An empty list is the answer

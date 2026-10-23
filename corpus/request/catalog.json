@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "catalog",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 19,
+  "shape": "catalog"
+}

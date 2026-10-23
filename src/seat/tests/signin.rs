@@ -102,6 +102,55 @@ fn the_act_seeds_the_tail_before_the_lane_says_anything() {
     );
 }
 
+/// **Opening the sign-in screen asks for the CATALOG, not the table**
+/// (bl-892e): what paints is every row the workspace can sign in to, signed
+/// in or not, and the routing table beside it stays exactly as it was — here
+/// empty, which is a fresh workspace's whole point. The ask names the focused
+/// workspace, because *signed in* is a fact of the workspace asked about.
+#[test]
+fn opening_the_sign_in_screen_lists_the_catalog_and_leaves_the_table_alone() {
+    let catalog = json!({ "ok": true, "kind": "catalog",
+                          "rows": [{ "name": "acme", "fact": "auth oauth2 · not signed in",
+                                     "blocked": null, "effort": true, "priority": false }] })
+    .to_string()
+    .into_bytes();
+    let (mut model, served) = focused(vec![
+        Turn::Answer(vec![catalog]),
+        Turn::Answer(vec![ws_reply()]),
+        Turn::Answer(vec![conv_reply()]),
+    ]);
+    model.list_catalog();
+    let snap = settle(&mut model, &|s| !s.catalog.is_empty());
+    assert_eq!(snap.catalog[0].name, "acme");
+    assert!(
+        snap.providers.is_empty(),
+        "the table was not asked and not painted"
+    );
+    drop(model);
+    let requests = served.join().unwrap();
+    assert_eq!(ops(&requests)[4], "catalog");
+    let asked: serde_json::Value = serde_json::from_slice(&requests[4]).unwrap();
+    assert_eq!(asked, json!({ "op": "catalog", "workspace": "home" }));
+}
+
+/// A catalog answered in the wrong kind is the wrong-kind sentence, like
+/// every read here — and nothing paints.
+#[test]
+fn a_catalog_of_the_wrong_kind_says_which_kind_came_instead() {
+    let (mut model, _served) = focused(vec![
+        Turn::Answer(vec![super::pick::applied()]),
+        Turn::Answer(vec![ws_reply()]),
+        Turn::Answer(vec![conv_reply()]),
+    ]);
+    model.list_catalog();
+    let snap = settle(&mut model, &|s| s.error.is_some());
+    assert_eq!(
+        snap.error.as_deref(),
+        Some("catalog: the engine answered applied instead")
+    );
+    assert!(snap.catalog.is_empty());
+}
+
 /// **A refused sign-in is the banner's sentence and no tail at all**: a run
 /// that never started has said nothing. An unsigned wall crosses here, as
 /// every refusal does — the act's own `ok: false`.

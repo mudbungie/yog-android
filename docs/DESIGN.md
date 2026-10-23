@@ -179,8 +179,10 @@ that is the whole reason the reader changed. Four obligations, each landed:
    decoder here indexes by key and none enumerates an object.
 2. **An absent post-floor key reads as its DEFAULT**, and the default is the
    fact before the field existed. Such a key is optional to read
-   (`fields::opt`/`opt_val`); no field in the vendored corpus is post-floor
-   today, so this is the rule every future one is added under.
+   (`fields::opt`/`opt_val`). The first post-floor SHAPE is `catalog`
+   (edition 24, bl-892e) — a whole reply born after the floor rather than a
+   key inside one, so it is bound by the replay's birth rule below and not by
+   this one.
 3. **An unknown WORD becomes that vocabulary's named catch-all**, carrying the
    word, rendered as *unknown `<noun>`: `<word>`* in the theme's resting ink —
    never the nearest known word, never a refusal of the row it sits in. Every
@@ -238,7 +240,13 @@ number has to arrive.
 
 **Two conformance replays hold all of it** (`tests/conformance/editions.rs`).
 Projection: every reply shape, at every edition from the floor to the corpus's
-own, with every post-`e` key deleted — nothing refuses. Mutation: every
+own, with every post-`e` key deleted — nothing refuses. **A shape is projected
+back only as far as it exists** (bl-892e, lernie's bl-9111 ruling): `reply/catalog`
+was born whole at edition 24, and an engine older than a shape's birth never
+writes it at all, so the loop for a shape starts at its earliest stamp rather
+than at the floor — stripping it to `{}` would judge a frame no engine sends. An
+engine of that age answers the ask with the kind-less refusal instead, which
+is a read. Mutation: every
 string-typed path in a reply other than `kind`, replaced with a token no build
 has heard of — nothing refuses; free text passes trivially and a vocabulary
 passes only through its catch-all. The projection loop is vacuous at a
@@ -3597,10 +3605,26 @@ produces is a URL to copy, a device code to type and, when it fails, a command
 to run by hand. None of that fits in a popup over a composer, and a band under
 it would push the transcript off the glass for the minutes a browser flow
 takes. So it is the seventh aimed entry beside the admin screen: one
-workspace, its providers, and room to read. **The rows are the same fact
-painted twice and that is not two homes** — both surfaces read the engine's
-own `providers` rows and neither derives anything. Opening the screen IS the
-`providers` ask, exactly as opening the records screen is its five.
+workspace, what it can sign in to, and room to read.
+
+**The screen lists the sign-in CATALOG, and the selector lists the routing
+TABLE** (edition 24, bl-892e; upstream brazen bl-6feb). They are two reads in
+one row shape, and they answer different questions. `providers` is the rows a
+run in this workspace can route to — the rows its config names, plus the
+built-in presets a credential resolves for — and a preset nobody has signed
+into is **absent** from it; signing in is exactly how it enters. `catalog` is
+every row carrying a sign-in flow, signed in or not, read off the config and
+the credential store and never the network. A fresh workspace therefore has an
+empty table and a full catalog, so a sign-in screen painted from the table
+would offer nothing to sign into — which is why this screen reads
+`snap.catalog` and the composer's selector reads `snap.providers`, each the
+engine's own rows with the engine's own sentences on them, and neither derives
+anything. One row reader serves both (`codec::pick::row`); the catalog rides the
+§14 cache beside the table under the same per-workspace pairing, so the screen
+opens on what the engine last said and corrects itself a round trip later.
+Opening the screen IS the `catalog` ask, exactly as opening the records screen
+is its five, and the chip that opens it carries `act:catalog` beside
+`act:login` for that reason (PARITY §4).
 
 **Tapping a row opens its tail; the button beside it starts a run.** The two
 are different gestures and the wire says so, one a read and one an act. A row
@@ -4103,7 +4127,8 @@ field and reads no spelling the codec does not already decode. The options the
 controls row is made of (the providers reply, the roles the workspace is
 actually set to, one provider's models) are seeded for the same reason: without
 them there is no picked provider, so the model selector is disabled and the
-§9.4 tuning band does not paint.
+§9.4 tuning band does not paint. The sign-in catalog is seeded beside them,
+because the sign-in screen paints it and not the table (§13.19).
 
 The pair in the middle is the assertion the loop was built for. It found its
 first defect immediately and the defect was in the harness's own premises: the

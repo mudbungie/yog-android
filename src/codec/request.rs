@@ -146,6 +146,9 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
         "providers" => Ask::Providers {
             workspace: str_of(o, "workspace")?,
         },
+        "catalog" => Ask::Catalog {
+            workspace: str_of(o, "workspace")?,
+        },
         "models" => Ask::Models {
             workspace: str_of(o, "workspace")?,
             provider: str_of(o, "provider")?,

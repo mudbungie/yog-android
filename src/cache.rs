@@ -65,6 +65,10 @@ pub struct Envelopes {
     /// other mispairing.
     pub options_workspace: Option<String>,
     pub providers: Option<Value>,
+    /// The `catalog` reply (bl-892e) — what the sign-in screen paints, held
+    /// beside the table for the same reason and under the same pairing.
+    /// Absent is ordinary: a file written before the screen was opened.
+    pub catalog: Option<Value>,
     pub models: std::collections::BTreeMap<String, Value>,
     /// The `roles` reply — what the workspace is set to (bl-e9f9). Stored
     /// with the options because it is the same per-workspace fact, so a
@@ -97,6 +101,7 @@ pub fn write(path: &Path, focus: &Focus, kept: &Envelopes) -> Result<(), String>
         "attention": kept.attention,
         "options": { "workspace": kept.options_workspace,
                      "providers": kept.providers,
+                     "catalog": kept.catalog,
                      "models": kept.models,
                      "roles": kept.roles },
     });
@@ -196,6 +201,7 @@ fn options(value: &Value, focus: &Focus) -> Option<Envelopes> {
     Some(Envelopes {
         options_workspace: workspace,
         providers: held.get("providers").filter(|v| !v.is_null()).cloned(),
+        catalog: held.get("catalog").filter(|v| !v.is_null()).cloned(),
         models,
         roles: held.get("roles").filter(|v| !v.is_null()).cloned(),
         ..Envelopes::default()

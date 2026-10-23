@@ -132,6 +132,7 @@ fn asked(ask: &Ask) -> Value {
         Ask::Providers { workspace } => {
             json!({ "op": "providers", "workspace": workspace })
         }
+        Ask::Catalog { workspace } => json!({ "op": "catalog", "workspace": workspace }),
         Ask::Models {
             workspace,
             provider,

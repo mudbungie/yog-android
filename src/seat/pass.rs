@@ -225,8 +225,9 @@ impl Standing {
         // The selectors' offerings ride every snapshot, under the focus they
         // were read for and no other (bl-0267).
         self.options.paint(focus, &mut fresh);
-        let (providers, models, roles) = self.options.envelopes();
+        let (providers, catalog, models, roles) = self.options.envelopes();
         kept.providers = providers;
+        kept.catalog = catalog;
         kept.models = models;
         kept.roles = roles;
         kept.options_workspace = self.options.workspace();

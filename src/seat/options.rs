@@ -29,6 +29,12 @@ pub(super) struct Options {
     workspace: Option<String>,
     /// The `providers` reply, verbatim.
     providers: Option<Value>,
+    /// The `catalog` reply, verbatim (bl-892e) — what the sign-in screen
+    /// paints. The same per-workspace fact as the row above under the same
+    /// pairing law, and the §14 cache stores it beside the rest so the screen
+    /// opens on what the engine last said and corrects itself a round trip
+    /// later.
+    catalog: Option<Value>,
     /// Each `models` reply, verbatim, keyed by the provider asked for.
     models: BTreeMap<String, Value>,
     /// The `roles` reply, verbatim — what the workspace is actually set to
@@ -44,12 +50,14 @@ impl Options {
     pub(super) fn resumed(
         workspace: Option<String>,
         providers: Option<Value>,
+        catalog: Option<Value>,
         models: BTreeMap<String, Value>,
         roles: Option<Value>,
     ) -> Self {
         Self {
             workspace,
             providers,
+            catalog,
             models,
             roles,
         }
@@ -60,10 +68,12 @@ impl Options {
         self.workspace.clone()
     }
 
-    /// The stored envelopes, for the cache.
-    pub(super) fn envelopes(&self) -> (Option<Value>, BTreeMap<String, Value>, Option<Value>) {
+    /// The stored envelopes, for the cache — the four the file holds under
+    /// `options`, in its order.
+    pub(super) fn envelopes(&self) -> Stored {
         (
             self.providers.clone(),
+            self.catalog.clone(),
             self.models.clone(),
             self.roles.clone(),
         )
@@ -86,6 +96,12 @@ impl Options {
     pub(super) fn assigned(&mut self, workspace: &str, envelope: Value) {
         self.fresh(workspace);
         self.roles = Some(envelope);
+    }
+
+    /// Take the sign-in catalog read (bl-892e), under the same rule.
+    pub(super) fn catalogued(&mut self, workspace: &str, envelope: Value) {
+        self.fresh(workspace);
+        self.catalog = Some(envelope);
     }
 
     /// Drop everything that belonged to another workspace — a fresh
@@ -111,6 +127,9 @@ impl Options {
         if let Some(Reply::Providers(rows)) = self.providers.as_ref().and_then(read) {
             snap.providers = rows;
         }
+        if let Some(Reply::Catalog(rows)) = self.catalog.as_ref().and_then(read) {
+            snap.catalog = rows;
+        }
         for (provider, envelope) in &self.models {
             if let Some(Reply::Models(names)) = read(envelope) {
                 snap.models.insert(provider.clone(), names);
@@ -121,6 +140,15 @@ impl Options {
         }
     }
 }
+
+/// The four envelopes as the cache file holds them: `providers`, `catalog`,
+/// the `models` map, `roles`.
+pub(super) type Stored = (
+    Option<Value>,
+    Option<Value>,
+    BTreeMap<String, Value>,
+    Option<Value>,
+);
 
 /// One stored envelope through the one decoder.
 fn read(envelope: &Value) -> Option<Reply> {
@@ -137,6 +165,7 @@ pub(super) fn from_cache(kept: crate::cache::Envelopes) -> Options {
     Options::resumed(
         kept.options_workspace,
         kept.providers,
+        kept.catalog,
         kept.models,
         kept.roles,
     )

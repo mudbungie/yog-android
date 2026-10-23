@@ -14,6 +14,9 @@ fn with_options() -> Envelopes {
         providers: Some(json!({ "kind": "providers", "ok": true,
                                 "rows": [{ "name": "acme", "fact": "credential present", "effort": true, "priority": true,
                                            "blocked": null }] })),
+        catalog: Some(json!({ "kind": "catalog", "ok": true,
+                              "rows": [{ "name": "rival", "fact": "not signed in", "effort": true, "priority": true,
+                                         "blocked": null }] })),
         models: [(
             "acme".to_owned(),
             json!({ "kind": "models", "ok": true, "rows": ["opus"] }),
@@ -34,6 +37,10 @@ fn stored_options_read_back_and_a_foreign_workspace_discards() {
     let (_, _, kept) = read(&at).unwrap();
     assert_eq!(kept.options_workspace.as_deref(), Some("home"));
     assert!(kept.providers.is_some());
+    assert!(
+        kept.catalog.is_some(),
+        "the sign-in catalog rides beside the table (bl-892e)"
+    );
     assert_eq!(kept.models.len(), 1);
 
     // A file with no options at all is ordinary: the selectors may simply
@@ -41,7 +48,7 @@ fn stored_options_read_back_and_a_foreign_workspace_discards() {
     write(&at, &deep(), &all()).unwrap();
     let (_, _, kept) = read(&at).unwrap();
     assert_eq!(kept.options_workspace, None);
-    assert!(kept.providers.is_none() && kept.models.is_empty());
+    assert!(kept.providers.is_none() && kept.catalog.is_none() && kept.models.is_empty());
 
     // Options under another workspace than the focus discard the file.
     let mut foreign = with_options();

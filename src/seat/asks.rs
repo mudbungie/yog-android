@@ -62,6 +62,19 @@ pub(super) fn providers(seat: &Seat, focus: &Focus) -> Result<(String, Value), S
     }
 }
 
+/// **The focused workspace's sign-in catalog** (bl-892e), the same way: the
+/// engine's own envelope, which the cache stores beside the table (§14).
+pub(super) fn catalog(seat: &Seat, focus: &Focus) -> Result<(String, Value), String> {
+    let workspace = super::acts::focused(focus)?;
+    let ask = Ask::Catalog {
+        workspace: workspace.clone(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Catalog(_), envelope) => Ok((workspace, envelope)),
+        (other, _) => Err(kind_err("catalog", &other)),
+    }
+}
+
 /// One provider's models, the same way.
 pub(super) fn models(
     seat: &Seat,

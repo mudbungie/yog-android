@@ -25,6 +25,7 @@ pub const REPLIES: &[(&str, Expect)] = &[
     ("attention", Reads),
     ("balls", Reads),
     ("board", Reads),
+    ("catalog", Reads),
     ("clients", Reads),
     ("config", Reads),
     ("conversations", Reads),

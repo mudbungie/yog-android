@@ -56,6 +56,7 @@ pub(super) fn spend(
         // engine's own envelope (bl-0267); a failure is a sentence for the
         // banner exactly as an act's is.
         Cmd::Providers => learned(asks::providers(seat, focus), None, standing),
+        Cmd::Catalog => fold::catalogued(asks::catalog(seat, focus), standing),
         Cmd::Models(provider) => {
             let listed = asks::models(seat, focus, &provider);
             learned(listed, Some(provider), standing)

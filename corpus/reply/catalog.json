@@ -1,0 +1,27 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "catalog",
+      "ok": true,
+      "rows": [
+        {
+          "blocked": null,
+          "effort": true,
+          "fact": "auth oauth2 · signed in",
+          "name": "anthropic",
+          "priority": true
+        },
+        {
+          "blocked": null,
+          "effort": false,
+          "fact": "auth oauth2 · not signed in",
+          "name": "openai-chatgpt",
+          "priority": false
+        }
+      ]
+    }
+  ],
+  "protocol": 19,
+  "shape": "catalog"
+}

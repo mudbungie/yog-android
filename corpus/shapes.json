@@ -244,6 +244,20 @@
         ":object": 1
       }
     },
+    "reply/catalog": {
+      "signature": {
+        "/kind:string": 24,
+        "/ok:bool": 24,
+        "/rows/[]/blocked:null": 24,
+        "/rows/[]/effort:bool": 24,
+        "/rows/[]/fact:string": 24,
+        "/rows/[]/name:string": 24,
+        "/rows/[]/priority:bool": 24,
+        "/rows/[]:object": 24,
+        "/rows:array": 24,
+        ":object": 24
+      }
+    },
     "reply/clients": {
       "signature": {
         "/kind:string": 14,
@@ -1095,6 +1109,13 @@
         "/invocation:string": 1,
         "/op:string": 1,
         ":object": 1
+      }
+    },
+    "request/catalog": {
+      "signature": {
+        "/op:string": 24,
+        "/workspace:string": 24,
+        ":object": 24
       }
     },
     "request/ceiling": {

@@ -93,7 +93,7 @@ body = {"yog-seat-cache": version, "protocol": protocol,
         "focus": {"workspace": None, "agent": None},
         "workspaces": workspaces, "conversations": None, "transcript": None,
         "agent": None, "attention": None,
-        "options": {"workspace": None, "providers": None, "models": {}}}
+        "options": {"workspace": None, "providers": None, "catalog": None, "models": {}}}
 # **The queue rides beside the depths and pairs with nothing** (DESIGN §13.7):
 # it names no workspace and no conversation, so a cache written at the top
 # depth may carry it — which is what puts rows on the queue screen (§13.8) for
@@ -152,8 +152,12 @@ if depth in ("conversations", "transcript", "running"):
         ]
     roles = frame("roles")
     worker = next(r for r in roles["rows"] if r["role"] == "worker")
+    # The sign-in screen paints the CATALOG and not the table (DESIGN §13.19,
+    # bl-892e): the corpus answer holds one row signed in and one not, which is
+    # what puts `act:login` on the glass for a seat whose table may be empty.
     body["options"] = {"workspace": workspace, "providers": frame("providers"),
-                       "roles": roles, "models": {worker["provider"]: frame("models")}}
+                       "catalog": frame("catalog"), "roles": roles,
+                       "models": {worker["provider"]: frame("models")}}
     if depth in ("transcript", "running"):
         rows = conversations["rows"]
         # **Two transcript seeds, because three controls are gated by the

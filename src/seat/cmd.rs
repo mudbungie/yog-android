@@ -14,6 +14,11 @@ pub(super) enum Cmd {
     /// the selectors' own, asked when one is opened rather than on every
     /// pass: a pass is the standing set, and these are options.
     Providers,
+    /// **List what the focused workspace can sign in to** (bl-892e) — the
+    /// sign-in screen's opening ask. Its own command because it is its own
+    /// question: the table is what a run routes to, the catalog is what a
+    /// sign-in may enter into it.
+    Catalog,
     /// List one provider's models.
     Models(String),
     /// **What the controls row is gated on** (bl-0691): the workspace's role

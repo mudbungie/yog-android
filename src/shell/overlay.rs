@@ -158,7 +158,9 @@ impl Shell {
                 model.read_marks();
                 model.list_proposals(None);
             }
-            Overlay::SignIn => model.list_providers(),
+            // The sign-in screen asks the CATALOG, never the routing table
+            // (§13.19, bl-892e): a fresh workspace's table is empty.
+            Overlay::SignIn => model.list_catalog(),
             Overlay::Records => model.open_records(),
             Overlay::Files => model.open_files(None),
             // The queue is the held lane's (§14.1), the fleet reads nothing

@@ -129,7 +129,7 @@ const AIMED: [(&str, &[&str], Overlay); 7] = [
     ("fleet", &["fleet"], Overlay::Fleet),
     ("clients", &["clients"], Overlay::Clients),
     ("config", &["config", "proposals"], Overlay::Admin),
-    ("login", &["login"], Overlay::SignIn),
+    ("login", &["login", "catalog"], Overlay::SignIn),
 ];
 
 /// The rule's knobs, by verb (§22 items 2 and 10): the model's list, the

@@ -14,6 +14,15 @@
 //! is present only when something stops it being used; the glass greys a row
 //! by them and states them, and computes neither.
 //!
+//! **Two listings wear the row, and they answer different questions**
+//! (bl-892e). `providers` is the workspace's ROUTING TABLE — the rows a run
+//! can route to: those its config names, plus the built-in presets a
+//! credential resolves for — and a preset nobody has signed into is absent
+//! from it. `catalog` is the SIGN-IN CATALOG: every row carrying a sign-in
+//! flow, signed in or not. A picker reads the table; the sign-in screen reads
+//! the catalog, because on a fresh workspace the table is empty and the
+//! catalog is how a row gets into it. One row reader serves both.
+//!
 //! **What this family does NOT carry is the current assignment.** No shape
 //! here answers *which* model the workspace is on — the pick lives in the
 //! workspace's own config file, which is the engine's to read. So the seat

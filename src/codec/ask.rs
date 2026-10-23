@@ -25,6 +25,12 @@ pub enum Ask {
     /// One workspace's providers, with the credential fact each states about
     /// itself. Per workspace, because sign-ins are (bl-0267).
     Providers { workspace: String },
+    /// **The sign-in catalog** (REMOTE §9.13, bl-892e): every row the
+    /// workspace CAN sign in to, signed in or not, in the `providers` row
+    /// shape. Its own read because the two answer different questions —
+    /// `providers` is the routing table, which a preset nobody has signed
+    /// into is absent from, and signing in is exactly how a row enters it.
+    Catalog { workspace: String },
     /// One provider's models, in the engine's listing order.
     Models { workspace: String, provider: String },
     /// **What one sign-in has said** (REMOTE §8.3, DESIGN §13.19): the

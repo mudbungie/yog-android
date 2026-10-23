@@ -40,6 +40,13 @@ impl Model {
         let _ = self.cmds.send(Cmd::Providers);
     }
 
+    /// **Ask for the focused workspace's sign-in catalog** (bl-892e) — what
+    /// opening the sign-in screen asks, on `list_providers`' terms: the
+    /// screen opens on the cache and corrects itself a round trip later.
+    pub fn list_catalog(&self) {
+        let _ = self.cmds.send(Cmd::Catalog);
+    }
+
     /// Ask for one provider's models.
     pub fn list_models(&self, provider: String) {
         let _ = self.cmds.send(Cmd::Models(provider));

@@ -33,6 +33,22 @@ pub(super) fn learned(
     }
 }
 
+/// **The sign-in catalog, folded** (bl-892e) — `learned`'s shape for the
+/// screen's own read: the envelope lands in its slot under the workspace it
+/// was read for, and a failure is the sentence it failed with.
+pub(super) fn catalogued(
+    read: Result<(String, serde_json::Value), String>,
+    standing: &mut Standing,
+) -> Option<String> {
+    match read {
+        Ok((workspace, envelope)) => {
+            standing.options.catalogued(&workspace, envelope);
+            None
+        }
+        Err(why) => Some(why),
+    }
+}
+
 /// **One search, held** (bl-4c2b) — `learned`'s shape for the other read a
 /// gesture makes, and here for the same reason: what the fold does with an
 /// answer is the worker's business, and what a PASS means is `seat::pass`'s.

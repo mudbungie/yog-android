@@ -205,6 +205,10 @@ fn the_selector_replies_read_back() {
         panic!("not providers")
     };
     assert_eq!(rows[0].name, "acme");
+    // The catalog is the same row through the same reader (bl-892e).
+    let mut catalogued = listed.clone();
+    catalogued["kind"] = json!("catalog");
+    assert_eq!(decode(&catalogued).unwrap().unwrap(), Reply::Catalog(rows));
     let models = json!({ "ok": true, "kind": "models", "rows": ["opus"] });
     assert_eq!(
         decode(&models).unwrap().unwrap(),
