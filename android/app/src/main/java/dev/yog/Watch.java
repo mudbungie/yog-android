@@ -11,7 +11,7 @@ import android.content.Context;
  * The scheduled fetch (DESIGN §17; yog REMOTE §14 rung 1): the platform runs
  * this on its own schedule, the run performs one ordinary ask, and a rise
  * becomes a notification. Attention reaches a pocketed phone with no push
- * path, no third party, and no engine work at all.
+ * path, no third party, and no server work at all.
  *
  * <h2>JobScheduler, not WorkManager</h2>
  *
@@ -41,7 +41,7 @@ import android.content.Context;
  *
  * <h2>Silence is the failure mode</h2>
  *
- * Nothing here reports anything. No material, no engine, no answer: the run
+ * Nothing here reports anything. No material, no server, no answer: the run
  * ends and the next schedule tries again. A phone in a pocket must never nag
  * about network. The decision — what wakes a human and what stays quiet —
  * is {@code crate::attention}, on the Rust side, where the suite can reach it.

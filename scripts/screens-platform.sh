@@ -26,7 +26,7 @@ held_grants() {
   # the operator did everything right.
   #
   # What this does NOT do is invoke a tool. Putting an invocation through the
-  # host channel to a device needs an engine, a foot leaf and something to fire
+  # host channel to a device needs a server, a foot leaf and something to fire
   # `/invoke` at it, none of which exists yet — that is bl-05b6's ball, and the
   # refusal halves stay host tests.
   held=$("${ADB[@]}" shell dumpsys package "$PKG" 2>/dev/null | tr -d '\r')
@@ -78,7 +78,7 @@ shade_beats() {
     verdict pass "shade: a fresh install holds no notification access — the refusal state"
   fi
 
-  # 2. THE BIND, which is the enabled path as far as anything without an engine
+  # 2. THE BIND, which is the enabled path as far as anything without a server
   #    reaches. `Live notification listeners` is the platform's list of
   #    listeners it has actually CONNECTED — not `Allowed`, which is only the
   #    setting written back. Our component appearing there means the system
@@ -110,7 +110,7 @@ shade_beats() {
   #
   #    WHAT IT DOES NOT PROVE, said plainly: that THIS APP read it. Nothing here
   #    calls the tool — putting an invocation through the host channel needs an
-  #    engine, a foot leaf and something to fire it, which is bl-05b6's ball and
+  #    server, a foot leaf and something to fire it, which is bl-05b6's ball and
   #    not this one's. The retention ruling is why no other evidence exists to
   #    look for: the listener keeps nothing and logs nothing, so a shade read
   #    leaves no trace anywhere for a walk to find, and one that did would be the

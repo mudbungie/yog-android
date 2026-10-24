@@ -31,7 +31,7 @@ pub enum Ask {
     /// `providers` is the routing table, which a preset nobody has signed
     /// into is absent from, and signing in is exactly how a row enters it.
     Catalog { workspace: String },
-    /// One provider's models, in the engine's listing order.
+    /// One provider's models, in the server's listing order.
     Models { workspace: String, provider: String },
     /// **What one sign-in has said** (REMOTE §8.3, DESIGN §13.19): the
     /// held read beside [`Ask::Follow`](Ask::Follow) and
@@ -43,7 +43,7 @@ pub enum Ask {
     /// **Search the world this seat can see** (yog DESIGN §8.5): one needle,
     /// no scope. It is the only read here that names no place — every other
     /// one asks about a workspace or a conversation the operator is already
-    /// looking at, and this one asks the engine where to look. The answer's
+    /// looking at, and this one asks the server where to look. The answer's
     /// addresses are the focuses this seat already takes, so a hit is fed
     /// straight back as one rather than resolved through anything.
     Search { text: String },
@@ -60,13 +60,13 @@ pub enum Ask {
     /// the only one of the three that names a place. Its rows are unpaintable
     /// under another focus, which is §14's pairing law and not a second rule.
     WorkspaceBalls { workspace: String },
-    /// **The board**: the same balls folded into the engine's own columns,
+    /// **The board**: the same balls folded into the server's own columns,
     /// with a line per armed loop riding beside them.
     Board,
     /// **The ops trail's tail** (yog §4.2, REMOTE §9.17): the last `max`
-    /// actions the engine took, newest last. `max` is the client's, not the
-    /// engine's — a phone asks for a screenful — and it is carried rather
-    /// than defaulted so the frame this codec writes is the frame the engine
+    /// actions the server took, newest last. `max` is the client's, not the
+    /// server's — a phone asks for a screenful — and it is carried rather
+    /// than defaulted so the frame this codec writes is the frame the server
     /// reads back.
     Ops { max: usize },
     /// **The conversation's own row** (DESIGN §13.11): what it is, what it is
@@ -144,7 +144,7 @@ pub enum Ask {
     /// the text (`codec::admin`).
     Config { at: crate::codec::Destination },
     /// **Which task branch a workspace is marked with**. The same op the write
-    /// spends, without the branch — the engine reads a frame with none as the
+    /// spends, without the branch — the server reads a frame with none as the
     /// question.
     Marks { workspace: String },
     /// **What a reviewer has staged for this workspace's config** (REMOTE
@@ -158,7 +158,7 @@ pub enum Ask {
         id: Option<String>,
     },
     /// **The follow-class read**: this machine's next work, answered when
-    /// there is some. The ask never inverts (REMOTE §3) — the engine speaks
+    /// there is some. The ask never inverts (REMOTE §3) — the server speaks
     /// only into a stream this device asked for — so a tool host waits here
     /// rather than listening on a socket it would have to open.
     Invocations,

@@ -50,14 +50,14 @@ fn dispatch(tool: &str, input: &Value) -> Capture {
     }
 }
 
-/// The ordinary receipt: the engine compared and wrote nothing (REMOTE §5.1,
+/// The ordinary receipt: the server compared and wrote nothing (REMOTE §5.1,
 /// PROTOCOL 8). Every presentation in this file earns this one except where a
 /// test is about the other reading.
 fn advertised() -> Vec<u8> {
     receipt(false)
 }
 
-/// The receipt that says the engine **wrote** — on a re-assertion, this
+/// The receipt that says the server **wrote** — on a re-assertion, this
 /// device's set having been replaced while it was busy.
 fn restored() -> Vec<u8> {
     receipt(true)
@@ -154,7 +154,7 @@ fn it_advertises_then_runs_what_it_is_handed_and_completes_it() {
     ]);
     let standing = settle(&mut host, &|s| s.served == 1);
     assert_eq!(standing.tools, ["echo"]);
-    // Nothing was disarmed: the re-assertion's receipt says the engine
+    // Nothing was disarmed: the re-assertion's receipt says the server
     // compared and wrote nothing, which is the ordinary answer.
     assert_eq!(standing.restored, 0);
     assert!(standing.advertised);

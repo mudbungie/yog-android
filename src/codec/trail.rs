@@ -1,8 +1,8 @@
 //! **The ops trail** (yog DESIGN §4.2, §7.3; REMOTE §9.17) — the last actions
-//! this engine took, and the two acts an operator has over them.
+//! this server took, and the two acts an operator has over them.
 //!
 //! The trail is the world's durable record of what ran: every subprocess the
-//! engine forked, with the directory it ran in, what it said and what it
+//! server forked, with the directory it ran in, what it said and what it
 //! exited. It is the read every other recovery sentence in this client points
 //! at — *"the world is the durable record"* (REMOTE §9.8) — and until this
 //! surface it was the one read a phone could not make.
@@ -15,7 +15,7 @@
 //! banner had to re-implement … five derivations this document names one home
 //! for apiece, and whose failure mode is a seat quietly disagreeing"*. Since
 //! the protocol-13 re-vendor (bl-8e3c) all three are read here, and `exit`
-//! rides beside them as the number the engine logged: a seat that read a
+//! rides beside them as the number the server logged: a seat that read a
 //! verdict out of it would be the disagreement §9.17 exists to prevent.
 //!
 //! **`standing` is typed, and the queue's `signals` are not — deliberately
@@ -29,7 +29,7 @@
 //! spelling `argv`, `cwd`, `origin` and `exit` and nothing that told them
 //! apart, and on a shared workspace that is the question a trail is read to
 //! answer. `client` is required for the reason `standing` is: a row that could
-//! omit it would make "an older engine" and "yog itself" one shape, and yog
+//! omit it would make "an older server" and "yog itself" one shape, and yog
 //! itself has a true answer — `local`.
 //!
 //! **`ack` and `clear-trail` carry nothing, and that is the whole shape.**
@@ -41,10 +41,10 @@ use serde_json::Value;
 
 use super::fields::{bool_of, i64_of, pick, str_of};
 
-/// One action the engine took.
+/// One action the server took.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpRow {
-    /// When it ran, in the engine's own stamp — carried as the string it
+    /// When it ran, in the server's own stamp — carried as the string it
     /// wrote rather than a parsed instant, because a phone's job is to show
     /// what the record says and no clock here is the record's.
     pub ts: String,
@@ -52,11 +52,11 @@ pub struct OpRow {
     /// `world`, `conversation`. Stored on the line because it cannot be
     /// derived, and the key a banner would group by.
     pub origin: String,
-    /// The command line, as the engine logged it.
+    /// The command line, as the server logged it.
     pub argv: String,
     /// Where it ran.
     pub cwd: String,
-    /// What it exited with. Negative values are the engine's own sentinels
+    /// What it exited with. Negative values are the server's own sentinels
     /// (a handoff, a drift observation) — which is exactly why nothing here
     /// reads meaning into the number.
     pub exit: i64,
@@ -65,7 +65,7 @@ pub struct OpRow {
     /// **Whether this line failed** — the row's own question, answerable of
     /// it held alone (REMOTE §9.17), and never re-derived from `exit`.
     pub failed: bool,
-    /// The engine's own reading of `exit`: `exit 1`, or the sentinel's
+    /// The server's own reading of `exit`: `exit 1`, or the sentinel's
     /// sentence (*detached — handed off, no exit to observe*).
     pub exit_label: String,
     /// Where this row stands in the tail — the alarm's whole state.
@@ -77,7 +77,7 @@ pub struct OpRow {
     /// recovered later, because presence is a point-in-time observation by
     /// design and nothing after the fact can say who a row belonged to.
     ///
-    /// It is carried as the engine's word and classified no further. `local`
+    /// It is carried as the server's word and classified no further. `local`
     /// is §3's reserved in-world identity and every other value is a leaf's
     /// common name, which is the same type the roster spells — a trail row and
     /// a client row say one identity one way.
@@ -100,13 +100,13 @@ pub enum Standing {
     Retired,
     /// Failed, and the operator's watermark covers it.
     Acked,
-    /// A standing a newer engine of this major spells and this build does not
+    /// A standing a newer server of this major spells and this build does not
     /// (REMOTE §3.2). The row is kept and the word is said.
     Unknown(String),
 }
 
 impl Standing {
-    /// The engine's word, which is also the label the trail paints. `pub`
+    /// The server's word, which is also the label the trail paints. `pub`
     /// for `queue::held_at`'s reason: a reading the ANDROID paint spends,
     /// which a `pub(crate)` would leave dead on a host build.
     #[must_use]

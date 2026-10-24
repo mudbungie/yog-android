@@ -6,11 +6,11 @@
 //! answers a private key for a box that does not exist yet, and the whole
 //! gesture is *put it on the glass, let a camera read it, and forget it*. So
 //! the material rides back with the outcome rather than being read again —
-//! there is no read that could fetch it, because the engine shredded the key
+//! there is no read that could fetch it, because the server shredded the key
 //! the moment it answered.
 //!
 //! **Never sent twice, and here that is more than an idiom.** A second mint
-//! under one name is refused by the engine — the certificate it kept is what
+//! under one name is refused by the server — the certificate it kept is what
 //! refuses it — so a resend on a lost reply would turn a mint whose material
 //! was lost into a refusal that says the name is taken. The read that settles
 //! it is the workspace's own client roster (§13.14).
@@ -29,7 +29,7 @@ use super::super::posted::{Posted, faulted};
 /// list a client the moment its registration exists.
 const SETTLES: &str = "The workspace's machines list a client as soon as it is registered — open \
      that screen to see whether the name was taken. Nothing was sent again: a second mint \
-     under one name is refused by the certificate the engine kept, so a repeat would \
+     under one name is refused by the certificate the server kept, so a repeat would \
      report the name as taken rather than minting it.";
 
 /// Post one mint at the focused workspace, and hand back what it answered.

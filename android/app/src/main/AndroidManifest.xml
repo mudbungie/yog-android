@@ -166,7 +166,7 @@
                  android:exported="false"
                  android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                      android:value="This device is enrolled as a remote tool host. The service holds one outbound mTLS connection to its operator's own engine so tool calls addressed to this phone are answered while it is in a pocket. No other foreground service type describes an inbound-work connection: dataSync is capped at six hours, and connectedDevice means a Bluetooth, NFC or USB companion." />
+                      android:value="This device is enrolled as a remote tool host. The service holds one outbound mTLS connection to its operator's own server so tool calls addressed to this phone are answered while it is in a pocket. No other foreground service type describes an inbound-work connection: dataSync is capped at six hours, and connectedDevice means a Bluetooth, NFC or USB companion." />
         </service>
         <!-- The downloaded APK, handed to the installer (bl-7a68, DESIGN
              §20). A `file:` URI has been refused by the platform since API 24,

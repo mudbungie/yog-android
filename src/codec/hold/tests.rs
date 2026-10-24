@@ -8,7 +8,7 @@ fn body(v: &Value) -> serde_json::Map<String, Value> {
     v.as_object().unwrap().clone()
 }
 
-/// The three verdicts at each of the three scopes, spelled the engine's way
+/// The three verdicts at each of the three scopes, spelled the server's way
 /// and read back to themselves — nine frames, which is the corpus's own count.
 #[test]
 fn every_verdict_round_trips_through_its_own_word_at_every_scope() {
@@ -66,7 +66,7 @@ fn the_receipt_reads_back_whole() {
 }
 
 /// **A stray token is carried, not refused** (REMOTE §3.2): a fourth verdict
-/// word a newer engine of this major spells arrives on the receipt as the
+/// word a newer server of this major spells arrives on the receipt as the
 /// catch-all, and the receipt still says which call it landed on and whether
 /// the branch advanced. Refusing it would throw those away to say nothing.
 #[test]
@@ -88,7 +88,7 @@ fn an_unknown_verdict_rides_as_the_catch_all() {
 /// **A scope this build has not heard of is said, never widened.** It rides as
 /// the catch-all for the verdict's reason exactly, and the danger the old
 /// refusal was guarding against is not reachable from here: this seat only
-/// ever SENDS a scope out of [`Scope::ALL`], so an unknown word is the engine
+/// ever SENDS a scope out of [`Scope::ALL`], so an unknown word is the server
 /// naming a standing in a spelling this build cannot render — and rendering it
 /// as any known reach, narrow or wide, would be the lie.
 #[test]

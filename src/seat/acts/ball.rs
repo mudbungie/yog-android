@@ -11,7 +11,7 @@
 //!
 //! **Nothing new is decoded and no receipt is invented.** All five answer with
 //! a captured run, which `deposit` already reads the same way: a refusal
-//! arrives in the engine's own words on the banner, and a success says
+//! arrives in the server's own words on the banner, and a success says
 //! nothing. That silence is the pane's own read paying for itself — the act is
 //! followed by a re-read of the view it was fired on, and a ball filed, moved
 //! or closed is a row that changed there. A receipt here would be a second,

@@ -1,19 +1,19 @@
 //! **The fork points, as controls** (DESIGN §13.16): the operable notches of
 //! this conversation's spine, and the workspace's `config/<name>` heads.
 //!
-//! **They are the picking surface `fork` was held back for.** The engine's own
+//! **They are the picking surface `fork` was held back for.** The server's own
 //! `fork::Attempt` says *"empty is not a value — a fork with no ref is a
 //! different gesture"*, and until this landed nothing on this seat could name
 //! one. Both kinds are already read here — the notches by `rail`, the heads by
 //! `lineages` — so the surface is a placement, not a new question.
 //!
 //! **A notch with no commit is not a control.** Upstream states the commit
-//! exactly where the notch is reachable, so *unpinnable* is the engine's
+//! exactly where the notch is reachable, so *unpinnable* is the server's
 //! answer rather than this app's reading, and an unreachable notch paints as a
 //! label — the trail row's rule (§13.8) at another site.
 //!
 //! **What crosses is the whole commit and what paints is the clipped one.** A
-//! gesture naming a prefix would be asking the engine to resolve a length this
+//! gesture naming a prefix would be asking the server to resolve a length this
 //! app chose; the short form is for a phone's glass and stays there.
 //!
 //! **Picking a commit asks what governs there**, and picking a lineage asks

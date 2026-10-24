@@ -81,7 +81,7 @@ tap_control balls
 capture workspace-balls workspace-balls
 
 # 4b. THE CANDIDATES SCREEN (DESIGN §13.12). The other read that names a
-#     workspace, so the other entry on this same list. The engine is not
+#     workspace, so the other entry on this same list. The server is not
 #     dialled, so what this captures is a screen that opened and said nothing
 #     was read; what the parity gate wants from it is the four controls, and
 #     all four paint — three of them disabled, saying which row to tap first.
@@ -102,7 +102,7 @@ capture fleet fleet
 
 # 4d. THE MACHINES ROSTER (DESIGN §13.14). The fourth entry on the aimed band,
 #     and the one surface in this app with no control inside it at all — every
-#     other op in REMOTE §5 is a machine's. The engine is not dialled, so this
+#     other op in REMOTE §5 is a machine's. The server is not dialled, so this
 #     captures a screen that opened and said nothing was read.
 relaunch
 slash cli
@@ -111,7 +111,7 @@ capture clients clients
 
 # 4da. THE WORK SCREEN (DESIGN §13.15). The fifth aimed entry, and the other
 #      half of the candidates screen's row: what an attempt CHANGED, off the
-#      same diff object `science` carries. The engine is not dialled, so this
+#      same diff object `science` carries. The server is not dialled, so this
 #      captures a screen that opened and said nothing was read; what the parity
 #      gate wants from it is the entry, which is on the band either way.
 relaunch
@@ -121,7 +121,7 @@ capture work work-diff
 
 # 4db. THE ADMIN SCREEN (DESIGN §13.17). The sixth aimed entry: the config
 #      files, the task branch, the inbox flush, what a reviewer has STAGED, and
-#      the unmaking of the workspace itself. The engine is not dialled, so this
+#      the unmaking of the workspace itself. The server is not dialled, so this
 #      captures a screen that opened and said nothing was read; what the parity
 #      gate wants from it is the six controls — five of them dark and saying
 #      which word or which row would light them, `accept` and `reject` among
@@ -136,7 +136,7 @@ capture admin config
 #      only one whose rows come out of the seeded cache rather than out of a
 #      dial: the `conversations` seed carries the workspace's `catalog`
 #      envelope — the sign-in catalog, not the routing table (bl-892e) — so
-#      both rows paint with the engine's own credential facts on them, one
+#      both rows paint with the server's own credential facts on them, one
 #      signed in and one not, which is what puts `act:login` on the glass.
 #      The chip that opened it carries `act:catalog`, because opening is the
 #      ask. The tail under the rows is empty, because nothing is dialled and
@@ -213,7 +213,7 @@ capture slashing transcript
 
 # 4f. THE RECORDS SCREEN (DESIGN §13.11). One drill-down depth behind the
 #     transcript, reached by the one control that opens it — which is also the
-#     affordance for the five reads it asks (PARITY §2). The engine is not
+#     affordance for the five reads it asks (PARITY §2). The server is not
 #     dialled, so what this captures is a screen that opened and said nothing
 #     was read; what the parity gate wants from it is the sixth control, and
 #     `step` paints on this screen disabled with its reason beside it.
@@ -230,7 +230,7 @@ tap_control prompt
 tap_control files
 capture files files
 
-# 5. The same screen with the engine's stop gates ON. Not a sixth screen — the
+# 5. The same screen with the server's stop gates ON. Not a sixth screen — the
 #    app says `transcript` for both — but the controls row is a different set
 #    of controls under it, and the parity gate below can only see a control a
 #    walked screen actually painted.
@@ -244,7 +244,7 @@ tap_control prompt
 capture running transcript
 
 # 5a. THE LIVE DOCK (DESIGN §22 item 9, bl-365c). The running seed holds two
-#     conversations the engine calls live or in flight, so the tap line stands
+#     conversations the server calls live or in flight, so the tap line stands
 #     on the rule, under the prompt line; a tap unfolds it into one row apiece.
 relaunch
 tap_control dock

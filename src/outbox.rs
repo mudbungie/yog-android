@@ -2,7 +2,7 @@
 //! deposited come back in a transcript read?
 //!
 //! The local echo's PAINT is the shell's — muted ink, a rule under it, where
-//! the row will be — but *what state it is in* is a fact about the engine's
+//! the row will be — but *what state it is in* is a fact about the server's
 //! answers, which is exactly the kind of reading that belongs under the
 //! coverage floor rather than in a paint file. So the echo itself lives here
 //! (bl-07b1 moved the rest of it down): the shell holds one and paints it, and
@@ -32,9 +32,9 @@ const TAIL: usize = 4;
 pub enum Fate {
     /// Written to the wire, nothing back yet.
     Sent,
-    /// The engine's receipt came back and said yes.
+    /// The server's receipt came back and said yes.
     Landed,
-    /// **The reply was lost** (yog REMOTE §3): the engine may have taken this
+    /// **The reply was lost** (yog REMOTE §3): the server may have taken this
     /// message and may not have, and no gesture this end can send will say
     /// which. It stays on the glass, saying so, until a transcript read
     /// settles it — the read IS the recovery, and it is one this seat makes
@@ -49,17 +49,17 @@ pub enum Settled {
     /// Gone: it became a transcript row, or the operator left the
     /// conversation it belonged to.
     Gone,
-    /// Gone, and its text goes back to the composer — the engine said no, so
+    /// Gone, and its text goes back to the composer — the server said no, so
     /// saying it again is an ordinary first attempt rather than a repeat.
     Draft(String),
 }
 
-/// **The message this seat has sent and the engine has not shown back yet.**
+/// **The message this seat has sent and the server has not shown back yet.**
 /// It paints the instant it is sent, because that is the whole point: the
 /// round trip is seconds and a chat app that shows nothing for seconds is a
 /// chat app you press twice.
 ///
-/// What it cannot know by itself is what the engine did with it, so it
+/// What it cannot know by itself is what the server did with it, so it
 /// remembers the seat's deposit counters at the moment it was sent and
 /// watches for one of them to move.
 pub struct Echo {
@@ -91,11 +91,11 @@ impl Echo {
     /// whatever screen is up.
     ///
     /// The order is the order of certainty. A conversation left behind takes
-    /// its echo with it. A refusal is the engine's own no, so the text goes
+    /// its echo with it. A refusal is the server's own no, so the text goes
     /// back to the composer and the banner already carries the sentence. A
     /// **lost reply is neither** (yog REMOTE §3, bl-07b1): handing the draft
     /// back there would put the operator one tap from a second copy of a
-    /// message the engine may have taken, so the echo stands and says it is in
+    /// message the server may have taken, so the echo stands and says it is in
     /// doubt. And a row that appears in the transcript dissolves the echo
     /// whatever state it was in — which is how a doubted message resolves,
     /// with no gesture and nothing remembered.

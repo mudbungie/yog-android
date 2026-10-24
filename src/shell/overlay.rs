@@ -189,7 +189,7 @@ impl Shell {
                 }
             }
             // The empty needle is the clear and crosses no wire
-            // (`seat::asks::search`), so a search is left with the engine
+            // (`seat::asks::search`), so a search is left with the server
             // unreachable.
             Close::Unsearch => {
                 self.needle = String::new();

@@ -25,10 +25,10 @@ fn a_row_reads_its_own_words_and_derives_nothing() {
     assert_eq!(row.standing, Standing::Live);
 }
 
-/// A sentinel exit crosses as the number the engine wrote AND as the engine's
+/// A sentinel exit crosses as the number the server wrote AND as the server's
 /// reading of it (REMOTE §9.17): nothing here reads meaning into the number.
 #[test]
-fn a_sentinel_exit_is_carried_with_the_engines_reading_of_it() {
+fn a_sentinel_exit_is_carried_with_the_servers_reading_of_it() {
     let row = super::row(&line(
         -2,
         false,
@@ -66,10 +66,10 @@ fn a_row_that_is_not_an_object_refuses_naming_the_shape() {
 }
 
 /// **The identity is required** (REMOTE §9.20): a row that could omit it would
-/// make an older engine and yog's own acts one shape, and yog's own acts have
+/// make an older server and yog's own acts one shape, and yog's own acts have
 /// a true answer — `local`, §3's reserved in-world identity.
 #[test]
-fn the_client_is_required_and_the_engines_own_acts_say_local() {
+fn the_client_is_required_and_the_servers_own_acts_say_local() {
     let mut bare = line(0, false, "exit 0", "clean");
     bare["client"] = json!("local");
     assert_eq!(super::row(&bare).unwrap().client, "local");

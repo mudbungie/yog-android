@@ -54,7 +54,7 @@ fn the_queue_is_held_standing_from_the_first_pass() {
     assert_eq!(snap.queue[0].agent, "a9");
     assert_eq!(snap.queue[0].says, "has mail queued");
     // **The lane's frame is what the §14 cache stores for the queue**: the
-    // next pass the engine answers writes it, the rows having changed.
+    // next pass the server answers writes it, the rows having changed.
     model.focus_workspace(None);
     settle(&mut model, &|s| s.workspaces[0].workspace == "away");
     let (_, kept, stored) = crate::cache::read(&at).unwrap();
@@ -67,11 +67,11 @@ fn the_queue_is_held_standing_from_the_first_pass() {
     assert_eq!(ops(&served.join().unwrap()), ["workspaces", "workspaces"]);
 }
 
-/// **The hold's end is the next pass's to answer**: the engine ends the lane
+/// **The hold's end is the next pass's to answer**: the server ends the lane
 /// at its bound, and the pass after that dials it again. Nothing reopens it
 /// sooner, which is what bounds the redial rate to the cadence.
 #[test]
-fn a_lane_the_engine_ended_is_reopened_by_the_next_pass() {
+fn a_lane_the_server_ended_is_reopened_by_the_next_pass() {
     let (feed, frames) = mpsc::channel();
     let (mut model, _served) = model_lanes(
         vec![vec![ws_reply()]; 12],
@@ -97,10 +97,10 @@ fn a_queue_frame_of_the_wrong_kind_names_the_read_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("attention: the engine answered workspaces instead")
+        Some("attention: the server answered workspaces instead")
     );
     assert_eq!(snap.queue.len(), 1);
-    // The engine's own no on the lane is its sentence, verbatim.
+    // The server's own no on the lane is its sentence, verbatim.
     feed.send(
         json!({ "ok": false, "error": "registered nowhere" })
             .to_string()
@@ -212,7 +212,7 @@ fn an_acknowledgement_answered_with_another_kind_is_named() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("seen: the engine answered nudged instead")
+        Some("seen: the server answered nudged instead")
     );
 }
 

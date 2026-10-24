@@ -13,7 +13,7 @@
 //! trip is seconds; the workspace's own assignment is next, because it is the
 //! truth that overtakes the guess; and where NEITHER exists the control wears
 //! its own name — never a value. That last arm is §8's rule and it is the
-//! reason this is not a `unwrap_or_default`: an engine that predates the read
+//! reason this is not a `unwrap_or_default`: a server that predates the read
 //! answers nothing, and a seat that painted `effort off` there would be
 //! inventing an assignment to keep its face tidy.
 

@@ -9,12 +9,12 @@
 //! screen on a row is what makes a lane wanted; the run settling is what makes
 //! it unwanted, and both halves are needed. Without the first, a lane would
 //! stand on a provider nobody is looking at; without the second, a seat would
-//! redial a FINISHED sign-in every pass forever — the engine's lane ends at
+//! redial a FINISHED sign-in every pass forever — the server's lane ends at
 //! the outcome frame, so the pass that reopened it would replay a settled
 //! buffer and end again, once per cadence, for as long as the screen was open.
 //!
 //! **A frame replaces or appends by its LANE's id, never by its subject.**
-//! The engine hands each read the lines it has not sent *to that read*, so a
+//! The server hands each read the lines it has not sent *to that read*, so a
 //! lane that expired at its hold and was redialled by the next pass replays
 //! the whole buffer from zero (REMOTE §8.3). Folding that onto what stands
 //! would show every line twice. So the first frame of a lane this fold has

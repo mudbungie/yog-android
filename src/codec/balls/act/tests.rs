@@ -47,7 +47,7 @@ fn an_absent_optional_key_is_omitted_and_never_nulled() {
             body: Some(String::new()),
         },
     );
-    // An empty string is a VALUE — it asks the engine to blank the field — so
+    // An empty string is a VALUE — it asks the server to blank the field — so
     // it is written, where an absent one is not.
     assert_eq!(bodied["body"], json!(""));
 }

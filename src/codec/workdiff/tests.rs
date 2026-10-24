@@ -35,7 +35,7 @@ fn an_answer_with_no_patch_says_so_rather_than_carrying_an_empty_one() {
 /// **A state this codec cannot read keeps the row and says the word** (REMOTE
 /// §3.2). Which fields a row carries is exactly what its state token says, so
 /// an unknown one reads none of them — the same shape `unreadable` already is
-/// — and the screen paints the word the engine wrote.
+/// — and the screen paints the word the server wrote.
 #[test]
 fn a_state_this_codec_cannot_read_keeps_the_row_and_says_the_word() {
     let stray = json!({ "ball_id": "bl-1", "project": "p", "state": "renamed" });

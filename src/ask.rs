@@ -11,7 +11,7 @@
 //! and `hold`, which settle the call alone. **A tap is the answer**: the
 //! verdict and its reach are one cell, so §13.7's scope chooser — and the
 //! *reset when the parked call changes* rule that guarded its state — is gone
-//! with the state. The engine still decides whether a wide answer is allowed,
+//! with the state. The server still decides whether a wide answer is allowed,
 //! and says so in band. `go to it` is not among them: the operator is there.
 //!
 //! **It stands while the focused conversation's row is in the queue.** That
@@ -91,9 +91,9 @@ impl Choice {
 pub fn choices(row: &QueueRow) -> Vec<Choice> {
     let mut out = vec![Choice::Seen];
     if let Some(held) = &row.held {
-        // **A pass is offered only at the scopes the engine lists** (DESIGN
-        // §23 item 9; lernie bl-da16): a tap is never an answer the engine
-        // will refuse in band. A row that lists none is an older engine's,
+        // **A pass is offered only at the scopes the server lists** (DESIGN
+        // §23 item 9; lernie bl-da16): a tap is never an answer the server
+        // will refuse in band. A row that lists none is an older server's,
         // and every reach stands as it did before the key existed.
         let permits = |scope: &Scope| held.scopes.is_empty() || held.scopes.contains(scope);
         out.extend(
@@ -143,7 +143,7 @@ pub fn asking(queue: &[QueueRow], workspace: &str, agent: &str) -> Option<QueueR
         .cloned()
 }
 
-/// **The parked call, folded at the engine's clause** (`codec::queue`): the
+/// **The parked call, folded at the server's clause** (`codec::queue`): the
 /// line the box says and the decision its `why` opens onto. None where
 /// nothing is parked, and then the box has no fold.
 #[must_use]

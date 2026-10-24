@@ -5,7 +5,7 @@
 //! interactable in one it must exist in the other, and drift between them is
 //! caught mechanically rather than noticed by hand. PARITY §2 rules out a
 //! client-vs-client diff (components meet at the interface, never pairwise)
-//! and judges each client against **one roster**: the ops the engine's own
+//! and judges each client against **one roster**: the ops the server's own
 //! help table classes `control`, published inside the corpus every client
 //! already vendors.
 //!
@@ -128,7 +128,7 @@ pub fn judge(help: &str, exemptions: &str, inventory: &str) -> Judgement {
     for op in roster.control.difference(&excused) {
         if !found.contains(op) {
             failures.push(format!(
-                "{op}: classed `control` by the engine, no {} tag in the walked \
+                "{op}: classed `control` by the server, no {} tag in the walked \
                  inventory, and no line in parity.toml — surface it, extend the \
                  walk to the screen that already does, or record the absence \
                  with its citation",

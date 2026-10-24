@@ -28,7 +28,7 @@ use crate::codec::reply::Reply;
 use crate::codec::{Ask, Found, Machines, OpRow, Pane, Spread, View};
 use crate::transport::Seat;
 
-/// **How much trail a phone asks for** (DESIGN §13.8). The engine's own tail
+/// **How much trail a phone asks for** (DESIGN §13.8). The server's own tail
 /// bound is larger; this is a screenful and a scroll, chosen here because the
 /// ask carries the number and the asker is the one that knows what it can
 /// paint. A larger window costs a radio a bigger answer for rows below the
@@ -36,7 +36,7 @@ use crate::transport::Seat;
 const TAIL: usize = 64;
 
 /// **What the focused workspace's roles are set to** (bl-e9f9), handed back
-/// as the engine's own envelope like the two option reads beside it.
+/// as the server's own envelope like the two option reads beside it.
 pub(super) fn roles(seat: &Seat, focus: &Focus) -> Result<(String, Value), String> {
     let workspace = super::acts::focused(focus)?;
     let ask = Ask::Roles {
@@ -49,7 +49,7 @@ pub(super) fn roles(seat: &Seat, focus: &Focus) -> Result<(String, Value), Strin
 }
 
 /// **The focused workspace's providers** (bl-0267), handed back as the
-/// engine's own envelope: what the selectors hold is what the engine said,
+/// server's own envelope: what the selectors hold is what the server said,
 /// and the cache stores exactly that (§14).
 pub(super) fn providers(seat: &Seat, focus: &Focus) -> Result<(String, Value), String> {
     let workspace = super::acts::focused(focus)?;
@@ -63,7 +63,7 @@ pub(super) fn providers(seat: &Seat, focus: &Focus) -> Result<(String, Value), S
 }
 
 /// **The focused workspace's sign-in catalog** (bl-892e), the same way: the
-/// engine's own envelope, which the cache stores beside the table (§14).
+/// server's own envelope, which the cache stores beside the table (§14).
 pub(super) fn catalog(seat: &Seat, focus: &Focus) -> Result<(String, Value), String> {
     let workspace = super::acts::focused(focus)?;
     let ask = Ask::Catalog {
@@ -98,7 +98,7 @@ pub(super) fn models(
 /// **An empty needle is no search, on both sides of the wire.** Before it: a
 /// cleared field is answered here, because the answer being dropped is this
 /// seat's own copy and an operator must be able to leave a search with the
-/// engine unreachable. After it: the engine's own spelling of *no search* is
+/// server unreachable. After it: the server's own spelling of *no search* is
 /// an answer whose needle is empty, and it means the same thing. One rule,
 /// stated once, and nothing downstream has to tell a cleared search from a
 /// search that was never made.
@@ -116,7 +116,7 @@ pub(super) fn search(seat: &Seat, text: &str) -> Result<Option<Found>, String> {
 }
 
 /// **The ops trail's tail** (yog §4.2, DESIGN §13.8) — the read that names no
-/// place, like the search beside it: the trail is the engine's, not a
+/// place, like the search beside it: the trail is the server's, not a
 /// workspace's, so nothing about the focus decides what it says.
 pub(super) fn ops(seat: &Seat) -> Result<Vec<OpRow>, String> {
     match answer(seat, &Ask::Ops { max: TAIL })? {

@@ -134,7 +134,7 @@ fn tool_result_streaming_compacted_and_raw_read_back() {
 }
 
 /// The wound (REMOTE §9.16): the class always, the adapter's words and the
-/// provider row only where the engine stated them — an absence is a class
+/// provider row only where the server stated them — an absence is a class
 /// that left no words, never an empty string standing in for one.
 #[test]
 fn a_wound_reads_its_class_and_whatever_words_came_with_it() {
@@ -190,7 +190,7 @@ fn refusals_name_the_offender() {
 }
 
 /// **Both kind vocabularies grow** (REMOTE §3.2). An entry kind or a block
-/// kind a newer engine of this major spells becomes the catch-all carrying the
+/// kind a newer server of this major spells becomes the catch-all carrying the
 /// word; nothing under the word is read, because the word says which keys are
 /// there — but `raw` rides beside the kind, so the entry still shows its own
 /// bytes. Refusing either would blank the whole transcript for one added word.

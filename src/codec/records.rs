@@ -29,7 +29,7 @@
 //!   is built is the day this field earns a reader.
 //!
 //! And one narrowing beside them: the `agent` answer's **`state` and
-//! `flight`** are carried as the engine's own tokens rather than picked
+//! `flight`** are carried as the server's own tokens rather than picked
 //! against `codec::conv`'s tables, because nothing on this screen branches on
 //! either — it paints them. That is what a step's `framing`, its `wound` and a
 //! child card's `state` already do, and the conversation ROW keeps the strict

@@ -132,7 +132,7 @@ fn a_wrong_kind_at_a_marks_read_names_it_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("marks: the engine answered transcript instead")
+        Some("marks: the server answered transcript instead")
     );
     assert!(snap.marks.is_some_and(|held| held.branch == "balls/tasks"));
     drop(model);
@@ -140,9 +140,9 @@ fn a_wrong_kind_at_a_marks_read_names_it_and_keeps_what_was_there() {
 }
 
 /// **A `marks` write answers with the branch it landed on**, and that is the
-/// engine's own re-read — so nothing here asks again.
+/// server's own re-read — so nothing here asks again.
 #[test]
-fn a_marks_write_folds_the_branch_the_engine_re_read() {
+fn a_marks_write_folds_the_branch_the_server_re_read() {
     let mut scripts = focused_scripts();
     scripts.push(vec![marks("balls/agents/corp")]);
     scripts.extend(after());
@@ -214,7 +214,7 @@ fn the_other_four_acts_are_taken_in_their_own_receipt_shapes() {
     }
 }
 
-/// **A refusal is the engine's own words**, and an answer of another kind
+/// **A refusal is the server's own words**, and an answer of another kind
 /// names the act.
 #[test]
 fn an_admin_act_refused_says_why_and_a_wrong_kind_names_it() {
@@ -241,7 +241,7 @@ fn an_admin_act_refused_says_why_and_a_wrong_kind_names_it() {
     });
     assert_eq!(
         snap.error.as_deref(),
-        Some("scan: the engine answered transcript instead")
+        Some("scan: the server answered transcript instead")
     );
     drop(model);
     served.join().unwrap();
@@ -263,7 +263,7 @@ fn a_wrong_kind_at_a_config_read_names_it_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("config: the engine answered transcript instead")
+        Some("config: the server answered transcript instead")
     );
     assert!(snap.config.is_some_and(|held| held.text == "roles: []"));
     drop(model);

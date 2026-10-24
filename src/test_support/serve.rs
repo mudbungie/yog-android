@@ -41,7 +41,7 @@ pub fn serve_many(
 }
 
 /// **What one scripted connection does** (bl-8641). A reply list can say
-/// "answer nothing and terminate cleanly", which is an engine that answered
+/// "answer nothing and terminate cleanly", which is a server that answered
 /// badly; it cannot say "the socket went away mid-answer", which is what a
 /// phone that changed networks meets and the one class the tool host redials.
 pub enum Turn {
@@ -51,10 +51,10 @@ pub enum Turn {
     Hangup,
     /// Write these frames and then HOLD the connection — no terminator —
     /// until the seat hangs up. What a follow-class read looks like from the
-    /// engine's side, and what a lane in a test parks on.
+    /// server's side, and what a lane in a test parks on.
     Hold(Vec<Vec<u8>>),
     /// Hold the connection and write each frame the test FEEDS, as it feeds
-    /// it — the engine's *"a frame whenever the answer changes"*, with the
+    /// it — the server's *"a frame whenever the answer changes"*, with the
     /// test as the world. Dropping the sender ends the hold cleanly: the
     /// terminator is written, which is the bound expiring.
     Feed(std::sync::mpsc::Receiver<Vec<u8>>),
@@ -71,7 +71,7 @@ pub fn serve_turns(
     scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns, Vec::new())
 }
 
-/// The scripted engine with **the attention lane served aside** (DESIGN
+/// The scripted server with **the attention lane served aside** (DESIGN
 /// §14.1): a connection whose request is `attention` is answered from `lane`
 /// — one turn per dial, in order, each on its own thread — and is not a turn
 /// of `turns`, nor a request the handle reports. The lane stands for the
@@ -89,8 +89,8 @@ pub fn serve_lanes(
     scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns, lane)
 }
 
-/// [`serve_many`], with the version this engine states made a parameter — the
-/// one knob a test needs to stand a skewed engine up (REMOTE §3's fail-closed
+/// [`serve_many`], with the version this server states made a parameter — the
+/// one knob a test needs to stand a skewed server up (REMOTE §3's fail-closed
 /// mismatch). Every other caller gets this build's own `PROTOCOL`, so every
 /// existing test also asserts that the seat states its version on **every**
 /// connection: the read below refuses a client that did not.
@@ -175,7 +175,7 @@ fn scripted(
             let (tcp, _) = listener.accept().unwrap();
             let conn = rustls::ServerConnection::new(Arc::clone(&config)).unwrap();
             let mut tls = rustls::StreamOwned::new(conn, tcp);
-            // The engine's half of the preface, stated before this end reads —
+            // The server's half of the preface, stated before this end reads —
             // §3's "both write before either reads", from the other side.
             crate::frame::write_frame(&mut tls, &preface).unwrap();
             let stated = crate::frame::read_frame(&mut tls).unwrap().unwrap();

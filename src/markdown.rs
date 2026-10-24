@@ -4,7 +4,7 @@
 //! emphasis, strong). Pure and host-tested; `shell/chat/prose.rs` paints it.
 //!
 //! **Only the marks models actually write are read**, and a mark that does
-//! not close is a literal: these are verbatim engine bytes, so `2 * 3`, a
+//! not close is a literal: these are verbatim server bytes, so `2 * 3`, a
 //! stray backtick or an unterminated `**` keep every character. The desktop
 //! reads fences the same way (lernie `ui::chat::code`, bl-beef): a line
 //! opening with three backticks opens a block, the next closes it, and a

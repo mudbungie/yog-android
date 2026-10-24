@@ -33,7 +33,7 @@ impl Standing {
     /// **A failure is not an error until it persists** (bl-3202): a refresh
     /// failure paints once it has persisted past [`GRACE`], and a pass that
     /// succeeds clears it instantly. **The note never waits.** It is a
-    /// gesture's own answer — a refused deposit, a start the engine would not
+    /// gesture's own answer — a refused deposit, a start the server would not
     /// run, a lane's frame this build could not read — and the operator just
     /// acted. Silence there is a message that vanished.
     ///
@@ -46,7 +46,7 @@ impl Standing {
     /// shape rather than a promise.
     ///
     /// **The grace is the channel's alone.** A reply of a kind this build
-    /// cannot use is `Wire::Unusable` and paints at once: it is the engine
+    /// cannot use is `Wire::Unusable` and paints at once: it is the server
     /// answering, not the radio, and the sixth ask gets the same answer as
     /// the first.
     pub(in crate::seat) fn publish(&self, focus: &Focus) -> Snapshot {
@@ -110,7 +110,7 @@ impl Standing {
     ///
     /// **Three, since bl-07b1**: a lost reply is not a refusal (yog REMOTE
     /// §3), and counting it as one made the echo hand its text back to the
-    /// composer — an invitation to send a message the engine may already have
+    /// composer — an invitation to send a message the server may already have
     /// taken. The third counter is what lets the echo stand instead.
     pub(in crate::seat) fn posted(&mut self, fate: &Posted) {
         match fate {
@@ -136,7 +136,7 @@ impl Standing {
     /// Two readers spend it and they want different halves (REMOTE §5.5,
     /// bl-ee21): the lane is worth holding for any flight, because the tool
     /// window is the STEP's, while the prose tail is painted only for
-    /// `Inference`, because that is the only flight the engine opens the prose
+    /// `Inference`, because that is the only flight the server opens the prose
     /// half under. One derivation, so the two cannot come to disagree about a
     /// moment.
     fn flight(&self, focus: &Focus) -> Option<crate::codec::Flight> {

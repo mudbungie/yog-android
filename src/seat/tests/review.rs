@@ -162,7 +162,7 @@ fn an_answer_of_the_wrong_kind_names_files_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("files: the engine answered transcript instead")
+        Some("files: the server answered transcript instead")
     );
     assert!(snap.files.is_some_and(|held| held.listing.rows.len() == 1));
     drop(model);
@@ -232,7 +232,7 @@ fn the_work_diff_refuses_without_a_workspace_and_names_a_wrong_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("work-diff: the engine answered transcript instead")
+        Some("work-diff: the server answered transcript instead")
     );
     drop(model);
     served.join().unwrap();

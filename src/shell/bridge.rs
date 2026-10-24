@@ -54,7 +54,7 @@ pub(crate) enum FieldKind {
     Composer,
     /// **The search field** (§13.6): one line, and neither autocorrected nor
     /// capitalized. A needle is as often an id or a fragment as it is a word
-    /// — the engine folds case itself and never spelling — so a correction
+    /// — the server folds case itself and never spelling — so a correction
     /// here would search for something the operator did not type, and the
     /// only way to find out would be reading the answer's own echoed needle.
     /// No action key, for the composer's reason: `GameActivity` writes one

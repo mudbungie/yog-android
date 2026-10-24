@@ -20,7 +20,7 @@
 //!
 //! **Two of the five are DOORS rather than rows.** `create`'s body and each of
 //! `update`'s three may be **absent**, and absence is a value: an empty string
-//! asks the engine to blank a field nobody touched, so an encoder that wrote
+//! asks the server to blank a field nobody touched, so an encoder that wrote
 //! `""` for an absent key would be saying something the operator did not.
 //! Every optional key is therefore skipped rather than nulled — the same rule
 //! `effort`'s string-or-null already keeps in this codec, third application.

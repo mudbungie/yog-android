@@ -51,17 +51,17 @@ pub struct Rove {
     pub awake: Arc<Awake>,
 }
 
-/// The engine reads its inbox every fifteen seconds and punches for twenty
+/// The server reads its inbox every fifteen seconds and punches for twenty
 /// after it reads a call, so a client window that stopped at twenty would
-/// miss the engine's whole window when the poll came late. The sum — the
+/// miss the server's whole window when the poll came late. The sum — the
 /// figure thrall states too (thrall bl-0a8b) — and a default to revisit on
 /// evidence (yog REMOTE §13.7 ruling 3).
 const WINDOW: Duration = Duration::from_secs(35);
 
 impl Rove {
-    /// The production shape over `pairing`: the engine's own four mainline
+    /// The production shape over `pairing`: the server's own four mainline
     /// routers (a silent router should cost a quarter of the roster, not
-    /// half — yog bl-9408), the engine's walk, and [`WINDOW`].
+    /// half — yog bl-9408), the server's walk, and [`WINDOW`].
     pub fn mainline(pairing: Pairing) -> Rove {
         Rove {
             pairing,

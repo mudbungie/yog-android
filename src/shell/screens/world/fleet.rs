@@ -5,7 +5,7 @@
 //! **It reads nothing, and that is one fact having one home.** Whether a loop
 //! is armed, how full it is and what it holds are on the `board` answer, which
 //! the ball pane already paints (§13.9) — so opening this screen asks the
-//! engine nothing at all, and the screen says where the answer lives instead
+//! server nothing at all, and the screen says where the answer lives instead
 //! of asking for a second copy of it.
 //!
 //! **It holds the workspace it was opened on**, which is what the whole app

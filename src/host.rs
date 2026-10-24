@@ -8,7 +8,7 @@
 //! worker a policy of its own (bl-8641).
 //!
 //! It is a *client*, not a server, and that is REMOTE §3's routing ruling: the
-//! ask never inverts. The worker thread dials the engine exactly as the seat
+//! ask never inverts. The worker thread dials the server exactly as the seat
 //! model does, presents what this machine can run, then **rides a follow-class
 //! read** for its next invocation — one ordinary ask whose answer takes as
 //! long as it takes. It runs what comes back and posts each capture as an
@@ -16,7 +16,7 @@
 //!
 //! **It runs serially**, as upstream does: one invocation at a time, so this
 //! machine is *absent* — holding no connection — for as long as a tool takes.
-//! Nothing in the engine treats presence as the routing predicate, which is
+//! Nothing in the server treats presence as the routing predicate, which is
 //! exactly why that is safe (REMOTE §5, bl-024b).
 //!
 //! **It redials a broken channel and stops on a refusal** (bl-8641, reversing
@@ -27,7 +27,7 @@
 //! What made silent redialling wrong was the silence, not the redial, so the
 //! standing line says `reconnecting` with the sentence that broke the channel
 //! for as long as it is climbing the ladder (§6). A refusal that is not the
-//! channel — the engine declining the advertisement, a version that cannot be
+//! channel — the server declining the advertisement, a version that cannot be
 //! spoken to, an answer of the wrong kind — still stops for good, because
 //! nothing about dialling again changes any of them. [`crate::transport::Wire`]
 //! is where the two are told apart.
@@ -61,10 +61,10 @@ use crate::foot::Foot;
 mod serve;
 
 /// **What this device says when a re-assertion actually wrote** (REMOTE §5.1,
-/// PROTOCOL 8, yog bl-66d4). The engine writes only a set that DIFFERS, so a
+/// PROTOCOL 8, yog bl-66d4). The server writes only a set that DIFFERS, so a
 /// `true` on a presentation after a channel's first means the set in force was
 /// not the set this device offers: something replaced it while this box was
-/// executing a tool and therefore holding no read for the engine's guards to
+/// executing a tool and therefore holding no read for the server's guards to
 /// protect (REMOTE §5's two guards both stand on a parked read).
 ///
 /// The restoration is automatic and has already happened by the time this is
@@ -77,7 +77,7 @@ mod serve;
 /// reach, and the words are the remedy.
 pub const RESTORED: &str = "this device's advertised set was replaced while a tool was running, \
     and has been put back. Either another connection is bearing this device's identity, or the \
-    engine lost the set it was holding.";
+    server lost the set it was holding.";
 
 /// What a host runs an invocation with: the tool's name and the model's own
 /// arguments in, a capture out. Owned and `Send` because it crosses onto the
@@ -112,7 +112,7 @@ pub enum Health {
 pub struct Standing {
     /// The advertised tool names, in the order presented.
     pub tools: Vec<String>,
-    /// Whether the presentation has been accepted by the engine **on the
+    /// Whether the presentation has been accepted by the server **on the
     /// channel that is up now**. A redial clears it: the presentation went
     /// with the connection that carried it.
     pub advertised: bool,

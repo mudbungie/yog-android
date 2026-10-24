@@ -24,7 +24,7 @@ fn envelope(dir: &Path, grade: &str, client: &str, leaf: &str) -> String {
         TAG: VERSION,
         "grade": grade,
         "name": client,
-        "address": "engine.example.com:7737",
+        "address": "server.example.com:7737",
         "ca": read_file("ca.pem".to_owned()),
         "cert": read_file(format!("{leaf}.pem")),
         "key": read_file(format!("{leaf}.key")),
@@ -54,7 +54,7 @@ fn a_pasted_envelope_lands_material_the_reader_reads_back() {
     };
     assert_eq!(enrolled.component, crate::bootstrap::Component::Seat);
     assert_eq!(enrolled.client, "notreal-desk");
-    assert_eq!(enrolled.material.address, "engine.example.com:7737");
+    assert_eq!(enrolled.material.address, "server.example.com:7737");
 }
 
 /// A foot envelope enrolls a foot, and the component that comes up is read off
@@ -88,7 +88,7 @@ fn a_stated_grade_that_the_certificate_contradicts_refuses() {
     assert!(e.contains("REMOTE §4.2"), "{e}");
 }
 
-/// The same defect one field over: the engine's registry knows this device by
+/// The same defect one field over: the server's registry knows this device by
 /// what the CA wrote, so an envelope naming something else is material minted
 /// wrong rather than a rename.
 #[test]
@@ -178,13 +178,13 @@ fn landing_supplies_the_trailing_newline_a_compact_payload_drops() {
     let dir = scratch();
     let text = minted(&dir, "operator", "desk");
     let envelope = Envelope {
-        address: "engine.example.com:7737".to_owned(),
+        address: "server.example.com:7737".to_owned(),
         ..read(&text).unwrap()
     };
     let wire = dir.join("wire");
     land(&wire, &envelope).unwrap();
     let address = std::fs::read_to_string(wire.join(crate::material::ADDRESS)).unwrap();
-    assert_eq!(address, "engine.example.com:7737\n");
+    assert_eq!(address, "server.example.com:7737\n");
     assert!(crate::bootstrap::standing(&wire).is_ok());
 }
 
@@ -217,7 +217,7 @@ fn the_marker_may_land_last_because_a_seat_prints_its_keys_sorted() {
         serde_json::Value::from(std::fs::read_to_string(dir.join(file)).unwrap()).to_string()
     };
     let sorted = format!(
-        r#"{{"address":"engine.example.com:7737","ca":{},"cert":{},"grade":"foot","key":{},"name":"notreal-phone","{TAG}":{VERSION}}}"#,
+        r#"{{"address":"server.example.com:7737","ca":{},"cert":{},"grade":"foot","key":{},"name":"notreal-phone","{TAG}":{VERSION}}}"#,
         quoted("ca.pem".to_owned()),
         quoted("phone.pem".to_owned()),
         quoted("phone.key".to_owned()),
@@ -229,7 +229,7 @@ fn the_marker_may_land_last_because_a_seat_prints_its_keys_sorted() {
     let envelope = read(&sorted).unwrap();
     assert_eq!(envelope.grade, Grade::Foot);
     assert_eq!(envelope.name, "notreal-phone");
-    assert_eq!(envelope.address, "engine.example.com:7737");
+    assert_eq!(envelope.address, "server.example.com:7737");
 }
 
 /// The paste screen's sentence names exactly the keys the writer writes — the
@@ -241,7 +241,7 @@ fn the_hint_names_every_key_and_fixes_no_order() {
     let text = write(&Envelope {
         grade: Grade::Foot,
         name: "notreal-phone".to_owned(),
-        address: "engine.example.com:7737".to_owned(),
+        address: "server.example.com:7737".to_owned(),
         ca: "ca".to_owned(),
         cert: "cert".to_owned(),
         key: "key".to_owned(),
@@ -258,7 +258,7 @@ fn the_hint_names_every_key_and_fixes_no_order() {
 /// **The mint carries a grade word this build cannot spell** (REMOTE §3.2).
 /// `codec::enroll` reads the `enrolled` answer grows-only, so an `Envelope`
 /// this seat displays can hold `Grade::Unknown` — and the QR it writes says
-/// the engine's own word back, because the certificate is §4.2's authority and
+/// the server's own word back, because the certificate is §4.2's authority and
 /// the NEXT device is the one that checks the two against each other.
 ///
 /// The reader here stays strict on purpose: a photographed payload has no
@@ -268,7 +268,7 @@ fn a_grade_word_this_build_cannot_spell_is_written_back_and_refused_on_the_way_i
     let text = write(&Envelope {
         grade: Grade::Unknown("admin".to_owned()),
         name: "notreal-phone".to_owned(),
-        address: "engine.example.com:7737".to_owned(),
+        address: "server.example.com:7737".to_owned(),
         ca: "ca".to_owned(),
         cert: "cert".to_owned(),
         key: "key".to_owned(),

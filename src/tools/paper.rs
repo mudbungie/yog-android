@@ -55,7 +55,7 @@ pub(crate) const OPEN: &str = "open";
 /// advertised whether or not their grant is held: an advertisement is a fact
 /// about what this machine offers, and whether it can act right now is a
 /// refusal in band (REMOTE §5's staleness correction). A set that tracked
-/// permission state would rewrite the engine-side document on every grant
+/// permission state would rewrite the server-side document on every grant
 /// flip, which is what §16.1 means by *the advertisement is static and whole*.
 pub(crate) fn tools() -> Vec<Tool> {
     vec![

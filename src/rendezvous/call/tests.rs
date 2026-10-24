@@ -1,5 +1,5 @@
 //! The call names the observed address beside the local ones, at the punch
-//! port, and round-trips through the seal the engine opens it with.
+//! port, and round-trips through the seal the server opens it with.
 
 use super::*;
 use crate::dht::tests::fake::{FakeNode, Mood};
@@ -8,7 +8,7 @@ use crate::rendezvous::item::Call;
 
 fn pairing() -> Pairing {
     Pairing {
-        engine: [1u8; 32],
+        server: [1u8; 32],
         salt: [2u8; 32],
     }
 }

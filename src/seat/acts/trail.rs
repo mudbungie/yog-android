@@ -1,7 +1,7 @@
 //! **The two acts over the ops trail** (yog DESIGN §4.2, §7.3; this repo's
 //! §13.8) — the acknowledgement and the truncation, in their own file for the
 //! reason the two beside it have one: what they address is not a conversation
-//! and not a workspace, it is the engine's own record, and a file about
+//! and not a workspace, it is the server's own record, and a file about
 //! gestures aimed at the world reads differently from a file about gestures
 //! aimed at a place.
 //!

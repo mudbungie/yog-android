@@ -1,5 +1,5 @@
 //! **The held read** (DESIGN §14.1): the door a lane parks on, and the two
-//! ways a read on it ends before the engine's terminator — the seat hanging
+//! ways a read on it ends before the server's terminator — the seat hanging
 //! up from another thread, and the reader answering no.
 
 use super::{Seat, Wire, pki};
@@ -37,7 +37,7 @@ fn a_held_read_is_ended_by_a_hangup_from_another_thread() {
 }
 
 /// The reader's own `false` ends a read cleanly, with the frames after it
-/// unread: the connection is dropped, which is how the engine learns its
+/// unread: the connection is dropped, which is how the server learns its
 /// answer has no reader.
 #[test]
 fn a_reader_that_answers_false_ends_the_read_where_it_stands() {
@@ -64,17 +64,17 @@ fn a_reader_that_answers_false_ends_the_read_where_it_stands() {
     assert_eq!(seen, vec![first]);
 }
 
-/// **The engine's edition rides on the connection** (REMOTE §3.2, DESIGN
+/// **The server's edition rides on the connection** (REMOTE §3.2, DESIGN
 /// §2.1). It is read off the §3 preface and kept on the open read, so whatever
-/// asks `crate::ledger::spells` asks it of the engine actually being spoken
+/// asks `crate::ledger::spells` asks it of the server actually being spoken
 /// to — never of a process-wide slot whose value depends on what else has been
 /// dialled since.
 ///
-/// The fake engine here states no edition, which is not a gap in the test: an
-/// engine that predates the field IS at the floor, and that is the case a
+/// The fake server here states no edition, which is not a gap in the test: an
+/// server that predates the field IS at the floor, and that is the case a
 /// phone in the field actually meets first.
 #[test]
-fn a_held_read_carries_the_edition_the_engine_stated() {
+fn a_held_read_carries_the_edition_the_server_stated() {
     let dir = pki();
     let frame = json!({ "ok": true, "kind": "attention", "rows": [] });
     let (address, _served) = serve_turns(
@@ -89,7 +89,7 @@ fn a_held_read_carries_the_edition_the_engine_stated() {
     hangup.hang_up();
 }
 
-/// **A ping is never a frame of the answer** (REMOTE §13.4): one the engine
+/// **A ping is never a frame of the answer** (REMOTE §13.4): one the server
 /// wrote ahead of the reply is dropped by the read itself, never handed on.
 #[test]
 fn a_ping_ahead_of_the_reply_is_not_a_frame_of_it() {

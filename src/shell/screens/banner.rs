@@ -21,7 +21,7 @@ use crate::status::RECONNECTING;
 ///
 /// **Two sentences and two states, never one** (bl-eec1). A wire being
 /// re-dialled is the WORKING accent, because re-dialling is work; a failure
-/// that outlived its grace, and a gesture the engine refused, are the ERROR
+/// that outlived its grace, and a gesture the server refused, are the ERROR
 /// accent, because they will not mend themselves. The model publishes them as
 /// two fields that cannot both be about the wire, so this paints whichever it
 /// is handed and decides nothing.
@@ -30,7 +30,7 @@ pub(crate) fn banner(ui: &mut egui::Ui, snap: &Snapshot) {
         crate::shell::clip::tinted(ui, ink(State::Working), RECONNECTING);
     }
     if let Some(error) = &snap.error {
-        // Copyable like every other prose surface (bl-7781): an engine's own
+        // Copyable like every other prose surface (bl-7781): a server's own
         // sentence is exactly the text an operator wants out of the phone.
         crate::shell::clip::tinted(ui, ink(State::Error), error);
     }

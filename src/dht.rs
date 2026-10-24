@@ -6,13 +6,13 @@
 //! phone opens no listening socket"* one layer down.
 //!
 //! **Reimplemented per component, as REMOTE §13.7 ruling 2 recommends**, from
-//! the engine's own `src/dht` (yog bl-df31): a DHT client is substrate, not
+//! the server's own `src/dht` (yog bl-df31): a DHT client is substrate, not
 //! protocol, and at under nine hundred lines a copy costs less than a fifth
 //! repository's release machinery. Nothing in it is yog-shaped and nothing
 //! in it is phone-shaped either — no world, no boundary, no wire type crosses
 //! its interface, and its one dependency is `ring`, which rustls already
 //! links (DESIGN §21). What this end uses it for is the client half alone:
-//! `get` reads the engine's presence, `put` writes the call.
+//! `get` reads the server's presence, `put` writes the call.
 //!
 //! The shape the punched wire consumes is this module root: a caller hands
 //! [`Dht::new`] a [`Transport`] (the std UDP socket [`Udp`], or a stand-in),
@@ -52,7 +52,7 @@ use std::net::SocketAddr;
 use std::time::Duration;
 
 /// The walk's parameters — stated so a test can shrink them and a caller
-/// can widen them — the engine's, walk for walk (yog bl-d9c1). K is BEP 5's;
+/// can widen them — the server's, walk for walk (yog bl-d9c1). K is BEP 5's;
 /// the deadline and α are measured (yog REMOTE §13.7 ruling 3): on the live
 /// mainline p99 of answers landed inside 0.9 s, and with ~40% of queried
 /// nodes silent a window of 8 walked in about half the time BEP 5's 3 did,
@@ -139,7 +139,7 @@ impl Dht {
     /// no node spoke to. One node's claim is only a claim. The vote is over
     /// the whole endpoint: nodes that agree on the address but not the port
     /// see a mapping that moves per destination, and no one port of it is
-    /// this client's. The engine's vote, rule for rule (yog bl-efae).
+    /// this client's. The server's vote, rule for rule (yog bl-efae).
     pub fn observed(&self) -> Vec<SocketAddr> {
         [true, false]
             .into_iter()

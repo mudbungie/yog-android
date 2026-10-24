@@ -1,5 +1,5 @@
 //! The message deposit: what a composer's submit does, and what a refusal or
-//! an unreachable engine leaves in the banner.
+//! an unreachable server leaves in the banner.
 
 use super::{
     ag_reply, conv_reply, model_against, nothing_set, outcome, settle, tr_reply, ws_reply,
@@ -65,7 +65,7 @@ fn a_refused_deposit_reaches_the_banner() {
 /// (bl-3202). One scripted connection, so once it is served the listener is
 /// gone and the post-deposit refresh fails too — and the banner carries the
 /// deposit's sentence ALONE, because a first failed pass is inside the grace.
-/// The roster the engine already gave is still painted under it.
+/// The roster the server already gave is still painted under it.
 #[test]
 fn an_unfocused_deposits_sentence_paints_while_the_refresh_behind_it_waits() {
     let (mut model, served) = model_against(vec![vec![ws_reply()]]);
@@ -91,7 +91,7 @@ fn wrong_reply_kinds_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("workspaces: the engine answered conversations instead")
+        Some("workspaces: the server answered conversations instead")
     );
     drop(model);
 
@@ -110,7 +110,7 @@ fn wrong_reply_kinds_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("conversations: the engine answered outcome instead")
+        Some("conversations: the server answered outcome instead")
     );
     drop(model);
 
@@ -131,7 +131,7 @@ fn wrong_reply_kinds_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("transcript: the engine answered workspaces instead")
+        Some("transcript: the server answered workspaces instead")
     );
     drop(model);
 
@@ -149,7 +149,7 @@ fn wrong_reply_kinds_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("agent: the engine answered transcript instead")
+        Some("agent: the server answered transcript instead")
     );
     drop(model);
 
@@ -174,7 +174,7 @@ fn wrong_reply_kinds_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("deposit: the engine answered transcript instead")
+        Some("deposit: the server answered transcript instead")
     );
 }
 

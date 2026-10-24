@@ -11,7 +11,7 @@
 //! arrives.
 //!
 //! A long press copies the row's whole words, marks and all — what the
-//! engine said, which is what an operator pastes elsewhere.
+//! server said, which is what an operator pastes elsewhere.
 
 use eframe::egui;
 

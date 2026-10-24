@@ -128,7 +128,7 @@ fn an_unaimed_listing_refuses_and_a_wrong_kind_names_it() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("proposals: the engine answered transcript instead")
+        Some("proposals: the server answered transcript instead")
     );
     assert!(snap.proposals.is_some_and(|held| held.rows.len() == 1));
     drop(model);
@@ -179,7 +179,7 @@ fn a_settle_names_both_words_and_the_listing_is_read_again() {
 /// proposal, an ambiguous one and an unknown id come back — this seat has no
 /// second opinion about any of them.
 #[test]
-fn a_refused_settle_says_the_engines_words() {
+fn a_refused_settle_says_the_servers_words() {
     let mut scripts = focused_scripts();
     scripts.push(vec![super::outcome(
         false,

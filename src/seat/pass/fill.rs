@@ -22,7 +22,7 @@ use crate::transport::{Seat, Wire};
 use super::{Focus, Snapshot, kind_err, wired};
 
 /// The standing questions, as deep as the focus goes. The first failure
-/// stops the walk: an unreachable engine is one sentence, not three.
+/// stops the walk: an unreachable server is one sentence, not three.
 ///
 /// **The failure keeps its class** (bl-eec1). The pass's grace waits out a
 /// channel and never an answer, so what it needs back is a [`Wire`] and not a

@@ -19,7 +19,7 @@ fn no_glyph_is_one_this_tree_measured_as_tofu() {
 }
 
 #[test]
-fn an_engine_sentence_is_made_paintable_and_nothing_else_moves() {
+fn a_server_sentence_is_made_paintable_and_nothing_else_moves() {
     assert_eq!(
         paintable("every ball⇄workspace binding fact"),
         "every ball↔workspace binding fact"

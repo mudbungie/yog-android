@@ -41,7 +41,7 @@ pub enum Reply {
         stderr: String,
     },
     /// The workspace enumeration, with the two staleness notes when the
-    /// engine states them — absent is "fresh", never "declined to say".
+    /// server states them — absent is "fresh", never "declined to say".
     Workspaces {
         rows: Vec<WsRow>,
         stale: Option<String>,
@@ -51,14 +51,14 @@ pub enum Reply {
     Conversations(Vec<ConvRow>),
     /// One conversation's transcript rows, in message order.
     Transcript(Vec<Entry>),
-    /// The receipt an advertisement earns, carrying **whether the engine
+    /// The receipt an advertisement earns, carrying **whether the server
     /// wrote** (REMOTE §5.1, PROTOCOL 8): `false` when it found the stored set
     /// identical to the one presented and compared, `true` when the document
     /// changed. The set itself is not echoed — what was presented is what was
     /// sent — and `wrote` is not an echo either: it is the one fact in this
     /// exchange the advertising box cannot compute for itself.
     ///
-    /// **Required rather than absent-reads-false**, which is the engine's
+    /// **Required rather than absent-reads-false**, which is the server's
     /// ruling and the right one: absent would read as *"nothing was restored"*
     /// — the reassuring answer — on exactly the build too old to tell. So a
     /// receipt in the pre-8 shape refuses here by name rather than decoding
@@ -67,12 +67,12 @@ pub enum Reply {
     /// The follow-class read's rows — this machine's work.
     Invocations(Vec<Invocation>),
     /// **A conversation that is now running** (§8.1) — what firing a staged
-    /// conversation earns, carrying the name the engine gave it. This is the
+    /// conversation earns, carrying the name the server gave it. This is the
     /// answer to `prompt` and the last frame of the two-gesture start, so a
     /// client that could not read it could stage a conversation and never
     /// learn that it started.
     Started { conversation: String },
-    /// A staged conversation, as the engine stated it (§8.1). It is carried
+    /// A staged conversation, as the server stated it (§8.1). It is carried
     /// whole into the firing gesture; nothing here is re-derived.
     Prepared(Prepared),
     /// One workspace's provider rows, each carrying its own credential fact
@@ -82,7 +82,7 @@ pub enum Reply {
     /// in to, signed in or not — the same row shape as `Providers`, read by
     /// the same reader, so the two cannot drift into two spellings of a row.
     Catalog(Vec<ProviderRow>),
-    /// One provider's model names, in the engine's order.
+    /// One provider's model names, in the server's order.
     Models(Vec<String>),
     /// **What each role is set to** (bl-e9f9). An empty list is the answer
     /// for a workspace with nothing assigned — never a refusal.
@@ -123,7 +123,7 @@ pub enum Reply {
     WorkspaceBalls(Vec<balls::WsBallRow>),
     /// **The board**: the columns, and a line per armed loop.
     Board(balls::Board),
-    /// **The ops trail's tail** (yog §4.2): what this engine last did, newest
+    /// **The ops trail's tail** (yog §4.2): what this server last did, newest
     /// last, as many rows as the ask allowed.
     Ops(Vec<OpRow>),
     /// **The conversation's own row** (DESIGN §13.11) — the records screen's
@@ -172,7 +172,7 @@ pub enum Reply {
     /// destination is NOT here: the answer is the same shape every destination
     /// earns, so the ask names it (`codec::files`' rule at a third site).
     Config(String),
-    /// **A workspace's task branch**, as the engine re-read it after a write
+    /// **A workspace's task branch**, as the server re-read it after a write
     /// or as it stands. The workspace is the ask's, for the same reason.
     Marks(String),
     /// **The receipt a deletion earns.** It carries nothing but its own `ok`:
@@ -204,14 +204,14 @@ pub enum Reply {
     Armed { armed: bool },
     /// **The receipt a retirement earns**, carrying whether the source ref
     /// went with the worktree. That is this project's own declared retention
-    /// answering, so the seat paints what the engine said rather than
+    /// answering, so the seat paints what the server said rather than
     /// predicting a policy it has not read.
     Retired { discarded: bool },
     /// The receipt an acknowledgement earns. It carries nothing, and the read
     /// that says what it did is the trail itself.
     Acked,
     /// **The receipt `seen` earns** (yog §8.5): the queue that REMAINS after
-    /// the acknowledged row was taken out of it — the engine's own words,
+    /// the acknowledged row was taken out of it — the server's own words,
     /// *"the remainder alone reads as a plain `/attention`"*.
     ///
     /// **The rows are decoded and this seat adopts none of them**, which is
@@ -230,7 +230,7 @@ pub enum Reply {
     /// the branch was driven on after it.
     Answered(Answered),
     /// **The floor that stands over the conversation now** (§8.6) — re-derived
-    /// by the engine after the write, never an echo of what was asked: a
+    /// by the server after the write, never an echo of what was asked: a
     /// restore under a still-revoked ancestor leaves the conversation floored,
     /// and this is the field that says so.
     Floored { standing: bool },

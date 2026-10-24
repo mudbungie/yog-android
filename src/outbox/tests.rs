@@ -29,7 +29,7 @@ fn a_delivered_row_at_the_tail_takes_the_echo() {
     assert!(taken(&[delivered("hello")], "hello"));
     assert!(taken(&[other(), delivered("hello")], "hello"));
     // Whitespace is not the difference between a message and its echo: the
-    // composer's text and the engine's row agree once trimmed.
+    // composer's text and the server's row agree once trimmed.
     assert!(taken(&[delivered("hello\n")], "  hello "));
 }
 
@@ -101,7 +101,7 @@ mod echo {
         assert!(matches!(echo.settle(&answered), Settled::Gone));
     }
 
-    /// The engine said no, so the text goes back to the field: saying it again
+    /// The server said no, so the text goes back to the field: saying it again
     /// is a first attempt rather than a repeat.
     #[test]
     fn a_refusal_hands_the_draft_back() {
@@ -116,7 +116,7 @@ mod echo {
     }
 
     /// **The defect this ball closes.** A lost reply is not a refusal: the
-    /// engine may have taken the message, so the draft must NOT come back —
+    /// server may have taken the message, so the draft must NOT come back —
     /// one tap on a restored draft is the resend REMOTE §3 forbids. The echo
     /// stands, saying what it is.
     #[test]

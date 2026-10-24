@@ -12,7 +12,7 @@
 //! silent misread REMOTE §3's third rule forbids.
 //!
 //! **`settings` rides through unread, and that is a decision** (the codec's
-//! grow-per-consumer rule spent inside a shape). The engine answers a config
+//! grow-per-consumer rule spent inside a shape). The server answers a config
 //! read as a typed control per setting — a provider row, a text box, a list, a
 //! bounded number — beside the file's own bytes. A form built out of them is a
 //! surface this seat does not have; what it has is the composer (§13.2), which
@@ -30,7 +30,7 @@ use serde_json::{Map, Value, json};
 
 use super::fields::str_of;
 
-/// **Which config file a gesture is about.** Three of the engine's five
+/// **Which config file a gesture is about.** Three of the server's five
 /// destinations: the two that name no place, and the one that names a
 /// workspace.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -98,7 +98,7 @@ pub struct Config {
     pub text: String,
 }
 
-/// **What a workspace's task branch is**, as the engine re-read it after the
+/// **What a workspace's task branch is**, as the server re-read it after the
 /// write — or as it stands. One shape for both, because `marks` is one op.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Marks {
@@ -119,7 +119,7 @@ pub(super) fn config(o: &Map<String, Value>) -> Result<String, String> {
     str_of(o, "text")
 }
 
-/// Read the `marks` answer: the branch, which is the engine's own re-read.
+/// Read the `marks` answer: the branch, which is the server's own re-read.
 pub(super) fn marks(o: &Map<String, Value>) -> Result<String, String> {
     str_of(o, "branch")
 }

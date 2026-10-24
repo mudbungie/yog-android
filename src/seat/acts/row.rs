@@ -24,14 +24,14 @@ use super::super::posted::{Posted, faulted};
 /// and `retarget` hand back the `outcome` of what they ran, `flag` has a
 /// receipt carrying nothing but its `ok`, and the floor pair answers with the
 /// floor that stands over the conversation AFTERWARDS. Read off the act rather
-/// than guessed at the reply, so an engine answering the other shape is a
+/// than guessed at the reply, so a server answering the other shape is a
 /// named refusal instead of a silent success.
 enum Receipt {
     Outcome,
     Flagged,
     /// The floor this act is asking for — `true` for a revoke, `false` for a
     /// restore. It is carried because the receipt is **re-derived by the
-    /// engine, never echoed**: restoring a conversation whose ancestor is
+    /// server, never echoed**: restoring a conversation whose ancestor is
     /// still revoked leaves it floored, and the answer says so. Silence there
     /// would be this seat telling an operator they got something back that
     /// they did not.
@@ -61,13 +61,13 @@ pub(crate) fn row(seat: &Seat, focus: &Focus, agent: String, act: RowAct) -> Pos
         // Yes, in the two shapes the wire has for it: the flag's own `ok`
         // (a `flagged` frame carries no other field), and the `outcome` its
         // two siblings hand back. Read against the receipt this act EXPECTS,
-        // so an engine answering the other shape falls through to the named
+        // so a server answering the other shape falls through to the named
         // refusal below rather than being taken for a success.
         (Receipt::Flagged, Ok(Reply::Flagged))
         | (Receipt::Outcome, Ok(Reply::Outcome { ok: true, .. })) => Posted::Took,
         // The floor pair's yes is the floor AGREEING with what was asked for.
         // A disagreement is not a wrong shape and not a lost reply — the
-        // engine took the write and the world came out somewhere else — so it
+        // server took the write and the world came out somewhere else — so it
         // is the one sentence an operator cannot get any other way.
         (Receipt::Floored(wanted), Ok(Reply::Floored { standing })) if standing == wanted => {
             Posted::Took
@@ -94,11 +94,11 @@ pub(crate) fn row(seat: &Seat, focus: &Focus, agent: String, act: RowAct) -> Pos
 /// object, which that screen decodes nothing of (§13.11's first ride-through).
 /// **What the floor came out as, when it is not what was asked for.** Only
 /// one of the two ever happens in practice — a restore under a still-revoked
-/// ancestor — and it is exactly the case the engine refuses to lie about, so
+/// ancestor — and it is exactly the case the server refuses to lie about, so
 /// this seat does not either.
 fn stands(wanted: bool) -> String {
     if wanted {
-        "revoke: the engine took it and says no floor stands over the conversation".to_owned()
+        "revoke: the server took it and says no floor stands over the conversation".to_owned()
     } else {
         "restore: the conversation stays floored — an ancestor of it is still revoked".to_owned()
     }

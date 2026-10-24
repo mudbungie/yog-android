@@ -43,7 +43,7 @@ fn host(scripts: Vec<Vec<Vec<u8>>>) -> Host {
     )
 }
 
-/// A host the engine refuses outright: it stops for good, which is the state
+/// A host the server refuses outright: it stops for good, which is the state
 /// that makes the slot free again.
 fn refused() -> Host {
     host(vec![vec![
@@ -82,7 +82,7 @@ fn the_process_holds_at_most_one_live_host() {
     assert!(hold(refused()));
     assert!(standing().is_some());
 
-    // It is refused by the engine and stops for good. Waited for rather than
+    // It is refused by the server and stops for good. Waited for rather than
     // assumed: the worker publishes on its own thread.
     let deadline = std::time::Instant::now() + Duration::from_secs(10);
     loop {

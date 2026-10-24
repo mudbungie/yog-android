@@ -93,16 +93,16 @@ so it lives beside the six rather than in the wire's table.
 **A step's framing reads onto them too** (`theme::framing`, REMOTE §4.4): a
 step still being written is *a step in flight* and so `Working`; one an
 interrupt cut is *an interrupt* and so `Annotation`; a failed step is `Error`
-and a complete one is `Rest`. The word beside the hue is the engine's own, and
+and a complete one is `Rest`. The word beside the hue is the server's own, and
 this seat never spells a second one for it.
 
 **A word this build has not heard of wears RESTING ink** (REMOTE §3.2, DESIGN
 §2.1). The protocol is a major now and additions ship inside one, so any of
-those vocabularies can carry a word a newer engine spells and this build does
+those vocabularies can carry a word a newer server spells and this build does
 not. It is never painted as the nearest known hue — that is the lie the rule
 exists to stop — and never costs the row. It rests, because rest is the one
 accent that claims nothing, and the label says *unknown `<noun>`: `<word>`* so
-the operator reads the engine's own word rather than a colour standing in for
+the operator reads the server's own word rather than a colour standing in for
 it.
 
 **A speaker is told by weight, not hue** (`theme::speaker`). The rule beside
@@ -269,7 +269,7 @@ brand, never the weight.
 its stops are verbs, its selectors and knobs are the model overlay's rows):
 ONE band of chips under the
 composer, `TOUCH` tall, holding every conversation-level control — the stop
-acts under the engine's own gates, the tuning pair, and the two selectors.
+acts under the server's own gates, the tuning pair, and the two selectors.
 Its width is divided by `shell::place::row` rather than equally: a chip that
 names a verb keeps the width of its own words, and the two selectors take
 what is left and elide inside it, because a model name is as long as a

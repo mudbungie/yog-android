@@ -17,14 +17,14 @@
 //!
 //! **The preface carries a second number since REMOTE §3.2** (bl-e598): the
 //! `edition`, which is the ADDITIVE line inside a major. It is not matched and
-//! it can never refuse a connection — a newer engine of this major is one this
+//! it can never refuse a connection — a newer server of this major is one this
 //! build must go on talking to, and what the number buys is a control that can
 //! grey itself rather than a reader that falls over (`crate::ledger`).
 //!
 //! Three properties this end must keep, each the refusal of something easier:
 //!
 //! - **Write before reading.** This seat writes its preface and its request in
-//!   the same breath and confirms the engine's on the way to the answer, so
+//!   the same breath and confirms the server's on the way to the answer, so
 //!   the check costs no round trip and the only connection it stops is one
 //!   that was going to be refused anyway.
 //! - **No negotiation.** No version list, no capability probe, no compat shim:
@@ -36,7 +36,7 @@
 //!   for byte the frame the codec built and the codec gains no field.
 //!
 //! **A peer that states no version is refused exactly as a peer of the wrong
-//! one** (REMOTE §3). An unversioned engine — a reply envelope where a preface
+//! one** (REMOTE §3). An unversioned server — a reply envelope where a preface
 //! belongs — a frame that is not an object, an object without the key, and a
 //! peer that hung up mid-preface are one case: none of them can be served, and
 //! three sentences for one outcome is three sentences.
@@ -54,7 +54,7 @@ pub use version::PROTOCOL;
 /// The preface's two keys. `protocol` is the major and is matched exactly;
 /// `edition` is the additive line inside it (REMOTE §3.2, `crate::ledger`) and
 /// is never matched at all — it is read, kept, and spent by a control deciding
-/// whether the engine could have said a field.
+/// whether the server could have said a field.
 const KEY: &str = "protocol";
 const EDITION_KEY: &str = "edition";
 
@@ -77,9 +77,9 @@ fn stated(r: &mut dyn Read) -> Option<(u64, u64)> {
     let value: Value = serde_json::from_slice(&body).ok()?;
     let protocol = value.get(KEY)?.as_u64()?;
     // **An absent edition is the FLOOR, not a refusal** (REMOTE §3.2). Every
-    // engine of this major that predates the field is exactly an engine at the
+    // server of this major that predates the field is exactly a server at the
     // edition the major was cut at, so the absence says precisely that — and
-    // an engine that never grows a field never has to state one.
+    // a server that never grows a field never has to state one.
     let edition = value
         .get(EDITION_KEY)
         .and_then(Value::as_u64)
@@ -87,7 +87,7 @@ fn stated(r: &mut dyn Read) -> Option<(u64, u64)> {
     Some((protocol, edition))
 }
 
-/// Read the engine's preface, refuse a MAJOR mismatch to the caller, and hand
+/// Read the server's preface, refuse a MAJOR mismatch to the caller, and hand
 /// back the edition it stated — a capability fact, never a refusal, which the
 /// held read keeps for whatever asks `crate::ledger::spells`.
 pub(crate) fn confirm(r: &mut dyn Read) -> Result<u32, String> {

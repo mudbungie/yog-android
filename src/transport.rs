@@ -1,12 +1,12 @@
 //! The seat's transport — the mirror of the server-side client
-//! (`wire/client.rs`; yog REMOTE §8, §9.5): what a client of the engine
+//! (`wire/client.rs`; yog REMOTE §8, §9.5): what a client of the server
 //! holds, and the only thing it holds.
 //!
 //! A client owns its key material and RAM, nothing else (REMOTE §6) — so
 //! this is a configuration and an address, and **every ask is its own TCP
 //! connection and its own handshake**: "the seat polls", at human cadence.
 //! A follow-class read is the same connection kept open for as long as the
-//! engine holds it (REMOTE §3: the streaming form is not a second form):
+//! server holds it (REMOTE §3: the streaming form is not a second form):
 //! [`Seat::hold`] is the one door every ask goes through, and [`Seat::ask`]
 //! is that door with every frame collected — so a held lane and a one-shot
 //! answer differ only in who reads the frames and when.
@@ -23,7 +23,7 @@
 //! holds for a dialled socket exactly as before while a PUNCHED one is held:
 //! its preface is spent once, a finished ask hands it back
 //! ([`Open::each`](open::Open::each)), and the next ask writes only its
-//! request. The engine serves a held stream request after request and pings
+//! request. The server serves a held stream request after request and pings
 //! it through its silence; the ping is discarded ahead of every answer.
 
 mod open;
@@ -46,10 +46,10 @@ use std::time::Duration;
 /// How long a seat waits on one answer before giving up on the connection.
 const ASK_TIMEOUT: Duration = Duration::from_mins(2);
 
-/// How long a fresh socket is given to carry the engine's preface — the
-/// TLS handshake and one frame, which an engine that accepted the stream
+/// How long a fresh socket is given to carry the server's preface — the
+/// TLS handshake and one frame, which a server that accepted the stream
 /// writes at once. Short, because a stream can connect and never be served:
-/// an engine that predates yog bl-5276 completed a punch's handshake
+/// a server that predates yog bl-5276 completed a punch's handshake
 /// outside any call's window and left it in its accept queue unread
 /// (DESIGN §21.9), and a whole
 /// [`ASK_TIMEOUT`] there would cost a redial two minutes.
@@ -59,7 +59,7 @@ const PREFACE: Duration = Duration::from_secs(10);
 /// readers ask the same question of one shape: `Seat::answered` here, and
 /// `seat::pass::ask::wired`, which wants the envelope beside the reply and so
 /// cannot go through it (bl-eec1).
-pub(crate) const NO_ANSWER: &str = "the engine ended the stream without answering";
+pub(crate) const NO_ANSWER: &str = "the server ended the stream without answering";
 
 /// A seat's end of the wire.
 pub struct Seat {
@@ -72,7 +72,7 @@ pub struct Seat {
 impl Seat {
     /// Build the seat from provisioned material. Nothing is dialled here: a
     /// seat is a fact about what this device may say, not about whether an
-    /// engine happens to be up. Material that roves climbs the mainline.
+    /// server happens to be up. Material that roves climbs the mainline.
     pub fn open(m: &Material) -> Result<Self, String> {
         let rove = m.pairing.clone().map(Rove::mainline);
         Self::open_with(m, rove, Arc::new(SystemClock))
@@ -127,7 +127,7 @@ impl Seat {
             .ok_or_else(|| Wire::Unusable(NO_ANSWER.to_owned()))?;
         // **The decoder already draws this line and it was being collapsed**
         // (bl-8bd0): its OUTER error is a reply this end cannot read, its
-        // INNER one is the engine's own `ok: false` sentence. They are two
+        // INNER one is the server's own `ok: false` sentence. They are two
         // different facts about who failed, and the redial matrix needs them
         // apart — a refusal on the follow read is worth another dial and an
         // unreadable answer never is.
@@ -151,7 +151,7 @@ impl Seat {
     }
 
     /// **Open one held read** (DESIGN §14.1): the request written and the
-    /// engine's preface confirmed, with no frame read yet — and the handle
+    /// server's preface confirmed, with no frame read yet — and the handle
     /// that ends it from another thread. The caller reads the frames on
     /// whatever thread it likes and hangs up from any other, which is the
     /// whole of what a lane needs and one-shot asks do not.
@@ -167,7 +167,7 @@ impl Seat {
         if let Some(lease) = lease.as_mut().filter(|_| parked) {
             lease.park();
         }
-        // The engine's half of the §3 preface, read on the way to the answer:
+        // The server's half of the §3 preface, read on the way to the answer:
         // a skew refuses here, before a frame of another protocol is decoded.
         // A held stream spent its preface on its first ask and carries the
         // edition it was told then.
@@ -220,7 +220,7 @@ impl Seat {
         // **A write that failed is not in doubt, and the framing is why**
         // (bl-07b1). An `io::Error` out of a write is that write's bytes not
         // being accepted, so a frame that failed mid-write is a frame the
-        // engine never received whole — and `frame`'s reader takes a length
+        // server never received whole — and `frame`'s reader takes a length
         // header and then exactly that many bytes, never scanning, so an
         // incomplete frame is not decoded, never mind executed. The doubt
         // therefore begins where the write ENDS, which is why the class here

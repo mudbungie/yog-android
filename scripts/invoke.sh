@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# **The invocation loop** (bl-05b6): an engine, a foot leaf, a device, and four
+# **The invocation loop** (bl-05b6): a server, a foot leaf, a device, and four
 # captures read back over the wire. `make invoke` is the door.
 #
 # WHAT THIS ANSWERS THAT NOTHING ELSE DOES. Every tool this client advertises
@@ -23,10 +23,10 @@
 # refuses that literal — rightly, since no rule can tell one routable quad from
 # another by looking. `adb reverse tcp:P tcp:P` makes the device's
 # `127.0.0.1:P` the host's, which is a literal this tree may hold and, better,
-# is the address the engine's own server certificate is minted for.
+# is the address the server's own certificate is minted for.
 #
 # EVERY KEY IT MINTS IS UNDER `target/` AND IS DELETED ON THE WAY OUT. The
-# world root is a fixture the engine is booted on and torn down with; what
+# world root is a fixture the server is booted on and torn down with; what
 # survives the run is the captures, the verdict and the logs.
 set -euo pipefail
 
@@ -66,7 +66,7 @@ die() { echo "invoke: $*" >&2; exit 1; }
 
 [ -x "$ADB_BIN" ] || die "no adb at $ADB_BIN — set ANDROID_HOME, or install platform-tools"
 [ -x "$EMULATOR_BIN" ] || die "no emulator at $EMULATOR_BIN — sdkmanager --install emulator"
-command -v openssl >/dev/null || die "openssl is required (the engine mints with it too)"
+command -v openssl >/dev/null || die "openssl is required (the server mints with it too)"
 command -v python3 >/dev/null || die "python3 is required to read the fixture's answer"
 command -v "$YOG" >/dev/null || die "no yog on PATH — build one from a yog checkout:
   cargo install --path <yog checkout>
@@ -82,12 +82,12 @@ rm -rf "$OUT"; mkdir -p "$OUT"
 
 # The two processes this script starts, and the ONLY ones it ever kills. A
 # pattern kill would take another agent's emulator — or another agent's
-# engine — with it.
+# server — with it.
 EMU=""
-ENGINE=""
+SERVER=""
 teardown() {
   local code=$?
-  [ -n "$ENGINE" ] && kill "$ENGINE" 2>/dev/null || true
+  [ -n "$SERVER" ] && kill "$SERVER" 2>/dev/null || true
   # The material and the world go, always: a minted key outlives nothing here.
   rm -rf "$OUT/world"
   if [ -n "$EMU" ]; then
@@ -104,7 +104,7 @@ teardown() {
 trap teardown EXIT
 
 # 1. THE WORLD. `yog fixture` lays a state and states everything a harness
-#    needs to dial an engine booted on it — the root, the address it is minted
+#    needs to dial a server booted on it — the root, the address it is minted
 #    for, and the operator-grade client leaf this run's seat uses. Booting is
 #    ours because tearing down is.
 echo "invoke: laying the $STATE fixture" >&2
@@ -119,7 +119,7 @@ EOF
 [ -n "$ADDRESS" ] || die "the fixture stated no address"
 WIRE_PORT=${ADDRESS##*:}
 
-# 2. THE FOOT LEAF, minted by the engine's own recipe rather than by hand: the
+# 2. THE FOOT LEAF, minted by the server's own recipe rather than by hand: the
 #    grade is `OU=foot` on the certificate (REMOTE §4.2) and `WIRE_FOOT` is the
 #    one word that puts it there. Minting it any other way would be a second
 #    spelling of the one fact this device's enrollment IS.
@@ -133,17 +133,17 @@ WIRE_DIR="$ROOT/yog/wire" WIRE_LEAF="$FOOT" WIRE_FOOT=1 "$YOG" wire-certs >/dev/
 CLIENTS="$ROOT/yog/world/state/yog/clients/$FOOT/workspaces"
 mkdir -p "$CLIENTS" && : > "$CLIENTS/$WORKSPACE"
 
-# 4. THE ENGINE, bounded: booted on the fixture root, killed in the trap, its
-#    root deleted with it. The wait watches for the death too — an engine that
+# 4. THE SERVER, bounded: booted on the fixture root, killed in the trap, its
+#    root deleted with it. The wait watches for the death too — a server that
 #    exited looks exactly like one still starting.
-echo "invoke: booting the engine on $ADDRESS" >&2
-XDG_DATA_HOME="$ROOT" "$YOG" > "$OUT/engine.log" 2>&1 &
-ENGINE=$!
-ENGINE="$ENGINE" LOG="$OUT/engine.log" timeout 60 bash -c '
+echo "invoke: booting the server on $ADDRESS" >&2
+XDG_DATA_HOME="$ROOT" "$YOG" > "$OUT/server.log" 2>&1 &
+SERVER=$!
+SERVER="$SERVER" LOG="$OUT/server.log" timeout 60 bash -c '
   until grep -q "wire: listening on" "$LOG" 2>/dev/null; do
-    kill -0 "$ENGINE" 2>/dev/null || { echo "the engine exited before it listened" >&2; exit 2; }
+    kill -0 "$SERVER" 2>/dev/null || { echo "the server exited before it listened" >&2; exit 2; }
     sleep 1
-  done' || die "the engine never listened (see $OUT/engine.log)"
+  done' || die "the server never listened (see $OUT/server.log)"
 
 # 5. THE DEVICE.
 echo "invoke: booting $AVD headless on port $PORT" >&2
@@ -160,13 +160,13 @@ echo "invoke: installing $APK" >&2
 "${ADB[@]}" uninstall "$PKG" >/dev/null 2>&1 || true
 "${ADB[@]}" install -r -g "$APK" >/dev/null || die "install failed"
 
-# The one line that makes the device's own loopback reach this engine.
+# The one line that makes the device's own loopback reach this server.
 "${ADB[@]}" reverse "tcp:$WIRE_PORT" "tcp:$WIRE_PORT" >/dev/null \
-  || die "adb reverse refused; the device cannot reach the engine"
+  || die "adb reverse refused; the device cannot reach the server"
 
 # 6. THE SEED — the same two hops `screens` uses, with a FOOT leaf instead of a
 #    seat one and an address that answers. `mint_material` is not reused: this
-#    leaf is the ENGINE's, issued under the CA the engine trusts, and minting a
+#    leaf is the SERVER's, issued under the CA the server trusts, and minting a
 #    second CA here would only prove this harness can talk to itself.
 . scripts/screens-seed.sh
 # The instruments too, for one of them: `relaunch` is force-stop, clear, start

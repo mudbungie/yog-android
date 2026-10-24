@@ -1,5 +1,5 @@
 //! **The dial ladder** (yog REMOTE §13.4; the phone's half of yog bl-0247):
-//! the four ways this device reaches its engine, tried in the order they
+//! the four ways this device reaches its server, tried in the order they
 //! cost, on every dial. *The live held connection; the entry's direct
 //! `address` where one exists; a re-call from the RAM-cached presence, which
 //! writes a call without walking for the presence first (yog bl-278f); the
@@ -11,7 +11,7 @@
 //! it, and the direct dial is today's dial, byte for byte, down to the
 //! sentence a socket that would not open earns. Only an entry that roves
 //! ever touches the DHT, and only at the moment it wants a connection: the
-//! phone pays nothing for the machinery when idle, because only the engine
+//! phone pays nothing for the machinery when idle, because only the server
 //! polls.
 //!
 //! **Redial is the feature** (DESIGN §18.6, now load-bearing; §21.3). A
@@ -34,7 +34,7 @@
 //!
 //! **The TLS is the same TLS whichever rung answered.** This module hands
 //! back a socket; `transport::Seat` runs the ordinary inner mTLS over it,
-//! verifying the same engine name off the same `address`, and the engine
+//! verifying the same server name off the same `address`, and the server
 //! reads the same leaf. §4 is untouched.
 
 mod awake;
@@ -207,7 +207,7 @@ impl Ladder {
     /// since this ladder last looked (`network`). That drops every held
     /// stream — a dead mapping after a change — and clears the backoff; the
     /// punch port goes by being of the old generation (`entries::Port`): the
-    /// engine's NAT held a mapping toward the address and port the last call
+    /// server's NAT held a mapping toward the address and port the last call
     /// named, and this box no longer sends from that address. Called on every dial, just before a
     /// call names the addresses, and at once when the platform reports;
     /// answers the generation now and the addresses in it.

@@ -120,7 +120,7 @@ extern "system" fn Java_dev_yog_Lane_attending(
 }
 
 /// **One life of the held attention lane** (DESIGN §17.6): dial, hold, and
-/// answer the first rise the engine writes. It BLOCKS — up to the engine's own
+/// answer the first rise the server writes. It BLOCKS — up to the server's own
 /// hold — which is what a held read is, and the caller is a thread the service
 /// made to park in it.
 ///

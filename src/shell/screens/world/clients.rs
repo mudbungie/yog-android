@@ -9,7 +9,7 @@
 //!
 //! **Two lifetimes on one row, and the screen says both** (lernie DESIGN
 //! §4.28, whose ruling transfers whole). `present` is an observation — true at
-//! the instant the engine answered — and the advertised set is a statement the
+//! the instant the server answered — and the advertised set is a statement the
 //! machine last made, which stands whether or not it is connected. A row
 //! therefore reads *not connected* beside a full set as the ordinary thing: a
 //! tool host holds its connection only while it is waiting for work, so a busy
@@ -74,7 +74,7 @@ fn listed(ui: &mut egui::Ui, held: Option<&Machines>) {
     }
 }
 
-/// One machine: what it is called, whether it was connected when the engine
+/// One machine: what it is called, whether it was connected when the server
 /// answered, when it last spoke, and what it says it offers.
 fn machine(ui: &mut egui::Ui, row: &ClientRow) {
     let seen = if row.present {

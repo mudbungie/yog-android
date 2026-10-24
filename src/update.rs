@@ -1,7 +1,7 @@
 //! **The phone's release channel, read half** (bl-7a68, DESIGN §20): is the
 //! newest published APK newer than this one, and where is it.
 //!
-//! Every other box in the fleet reconciles itself — the engine off `ghcr.io`,
+//! Every other box in the fleet reconciles itself — the server off `ghcr.io`,
 //! a workstation off the crates.io sparse index, the seat and the foot off
 //! their own crates. All five ask one question: *read the newest live version
 //! off a registry, compare it with what is installed, install if it differs.*

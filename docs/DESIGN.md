@@ -13,12 +13,12 @@ naming half of yog bl-15bd: the program an operator runs is the user interface,
 that is the seat, and the seat is lernie wherever it runs — yog names the
 server), and it ships all three of REMOTE §12's runnable components — the
 seat, the foot and the server — **each gated behind an explicit bootstrap rather than auto-started**. The
-default path is mTLS client enrollment; running the engine on the phone is
+default path is mTLS client enrollment; running the server on the phone is
 allowed but is the deliberate, non-default choice. §9 is that ruling made
 structural.
 
 The **phone seat** is still the scene REMOTE §1 opens with, and still the
-default: a home server runs the yog engine and keeps every log; this client
+default: a home box runs the yog server and keeps every log; this client
 talks to conversations from a phone. In REMOTE's nouns it is a **client** (a
 machine holding an operator-issued certificate) acting as a **seat** (asks
 queries, paints replies, dispatches gestures) — and, by the bl-ae9d ruling, a
@@ -29,7 +29,7 @@ it is a component with a certificate of its own (§9).
 
 What follows from that, and is invariant:
 
-- **The engine owns the world.** This client holds no durable model state.
+- **The server owns the world.** This client holds no durable model state.
   Per-seat UI state (REMOTE §7) lives server-side in the seat's own
   `ui.json`/`pane.json` documents; what the phone durably holds is its key
   material and **one cache** (§14, bl-de96), which is cache in the strict
@@ -43,7 +43,7 @@ What follows from that, and is invariant:
   listening socket on the phone but one: the punch port of §21.4, which
   exists only on an entry that roves, is bound once per entry for the run
   (§21.9), and accepts only inside a window this device opened by calling
-  its engine. The seat
+  its server. The seat
   still polls.
 - **Bootstrap rides existing trust, never the new device's own connection**
   (REMOTE §1.4, widened by bl-ae9d — §5). The app carries no enrollment,
@@ -73,7 +73,7 @@ dependency; serde *derive* stays a non-dependency, as upstream.
 **The corpus and the spoken version move together, and the version is the
 only thing that breaks an installed seat** (bl-e837). An unknown FIELD is
 tolerated — this codec is strict about the fields it spells and says nothing
-about extra ones, which `codec::conv`'s own test pins — so an engine that
+about extra ones, which `codec::conv`'s own test pins — so a server that
 grows a column does not break a seat that predates it. The §3 preface is what
 breaks it, fail-closed and on purpose. So a protocol bump upstream is a
 **re-vendor and a rebuild here**, not a compatibility shim: re-vendor
@@ -85,7 +85,7 @@ version stamp discard what the previous build stored.
 landed here bl-93cd). `PROTOCOL` is a major-compatibility number: it moves only
 on a breaking change, and every addition inside one ships with no bump at all.
 The paragraph above is still the whole procedure *for a major* — it is simply
-no longer the answer to "the engine grew a field".
+no longer the answer to "the server grew a field".
 
 **Every connection opens with a version preface (bl-93e3).** REMOTE §3 is the
 authority and this file cites rather than restates it: each end writes one
@@ -94,7 +94,7 @@ fail-closed and the refusal names both versions and the remedy; a peer that
 states no version is refused exactly as a peer of the wrong one. Landed here
 as `src/hello.rs`, the mirror of the server's preface (its number read, like this one, out of the repo-root `PROTOCOL` file — bl-6fec), with the
 same sentence word for word — one rule said two ways is two rules. This seat
-writes its preface and its request in one breath and confirms the engine's on
+writes its preface and its request in one breath and confirms the server's on
 the way to the answer, so the check costs no round trip.
 
 **The vocabulary is judged by the conformance corpus, not by fixtures written
@@ -158,21 +158,21 @@ Two kinds of move stand behind it, and only one of them is mechanical:
   records field paths and types, so nothing forced a bump and no fixture can
   fail. A client of that lane must read the section rather than re-vendor the
   fixtures and call it consumed (§14.1 — this seat holds the lane and folds
-  with the engine's own `absorb`).
+  with the server's own `absorb`).
 
 ### 2.1 The major, the edition, and the grows-only reader (bl-93cd)
 
 **Two numbers now, and they answer different questions** (yog REMOTE §3.2 is
 the authority; this section is the consumer's half). `PROTOCOL` is a
 **major**: it moves only on a breaking change — a field removed or re-typed, a
-meaning changed under a spelling still in use, a field the engine newly
+meaning changed under a spelling still in use, a field the server newly
 *requires* on a request — and the §3 preface is unchanged, strict equality,
 fail-closed, no negotiation. The **edition** is the additive line inside one
 major: a field, a word, an op or a reply kind ships with no bump and is stamped
 in `corpus/shapes.json` with the edition it appeared at. `floor` is the edition
 the current major was cut at (18, for major 19).
 
-**So a newer engine of this major is one this seat must go on talking to**, and
+**So a newer server of this major is one this seat must go on talking to**, and
 that is the whole reason the reader changed. Four obligations, each landed:
 
 1. **An unknown key is ignored** — structural, and it must stay so. Every
@@ -190,13 +190,13 @@ that is the whole reason the reader changed. Four obligations, each landed:
    tone; `records::steps`' orphan and framing; `trail`'s standing; `ws`' kind;
    `transcript`'s entry and block kinds; `files`' preview class; `search`'s
    address and tier; `hold`'s verdict and scope; and `leaf::Grade`.
-   `workdiff`'s state needed no type at all — it already rode as the engine's
+   `workdiff`'s state needed no type at all — it already rode as the server's
    own word, and an unknown one reads no ref exactly as `unreadable` does.
    `fields::pick` is where the rule lives and `fields::unknown` is the one home
    for the sentence, so no vocabulary can invent a second phrasing of
    *unknown*.
 4. **The reply `kind` and the request `op` stay strict**, refusing by name, in
-   band. *The engine refuses what it cannot act on; a reader tolerates what it
+   band. *The server refuses what it cannot act on; a reader tolerates what it
    cannot render.*
 
 **Two deliberate exceptions, both request-side, both recorded here rather than
@@ -213,18 +213,18 @@ verbatim — the catch-all says *unknown* on a glass, never on a wire.
 **The hello states the edition** (`src/hello.rs`): `{"protocol": …, "edition":
 …}`, the edition computed by `build.rs` as the newest stamp in the vendored
 `corpus/shapes.json`. It is never matched and can never refuse a connection. A
-peer that states none is read as the floor, which is exactly what every engine
+peer that states none is read as the floor, which is exactly what every server
 older than the field is. `hello::confirm` hands the peer's edition back and
 `transport::Open::edition` keeps it on the connection — not in a process-wide
 slot, because a capability question must not depend on what else has been
 dialled since.
 
 **`src/ledger.rs` is the reading a control spends**: `spells(shape, path,
-engine)` — is this path stamped at or below the engine's edition? — over a
+server)` — is this path stamped at or below the server's edition? — over a
 table `build.rs` compiles from the vendored corpus, holding the **post-floor
 paths only**. That table is EMPTY at a major's own cut and is empty today: a
-path at or below the floor is on every engine of this major and can never
-answer anything but yes. The first field an engine adds inside major 19 is its
+path at or below the floor is on every server of this major and can never
+answer anything but yes. The first field a server adds inside major 19 is its
 first row, and the control that would have shown that field greys itself
 instead of rendering the reassuring default.
 
@@ -242,10 +242,10 @@ number has to arrive.
 Projection: every reply shape, at every edition from the floor to the corpus's
 own, with every post-`e` key deleted — nothing refuses. **A shape is projected
 back only as far as it exists** (bl-892e, lernie's bl-9111 ruling): `reply/catalog`
-was born whole at edition 24, and an engine older than a shape's birth never
+was born whole at edition 24, and a server older than a shape's birth never
 writes it at all, so the loop for a shape starts at its earliest stamp rather
-than at the floor — stripping it to `{}` would judge a frame no engine sends. An
-engine of that age answers the ask with the kind-less refusal instead, which
+than at the floor — stripping it to `{}` would judge a frame no server sends. An
+server of that age answers the ask with the kind-less refusal instead, which
 is a read. Mutation: every
 string-typed path in a reply other than `kind`, replaced with a token no build
 has heard of — nothing refuses; free text passes trivially and a vocabulary
@@ -297,7 +297,7 @@ Four findings the shell module must carry, each learned the hard way:
    is the app's own native library directory — whose contents are placed there
    at install time and therefore cannot be generated. It is recorded here
    rather than only where it bites (§10, where it is one of the two stops on
-   running an engine on this device) because it bounds **anything** this app
+   running a server on this device) because it bounds **anything** this app
    might ever write and then run, and the failure it produces reads as a
    permission problem an operator could grant. There is none to grant.
 
@@ -456,11 +456,11 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/hello.rs` | REMOTE §3's version preface: state, confirm, and the one fail-closed sentence | landed (bl-93e3) |
 | `src/hello/version.rs` | the ledger of every bump, and the re-export of the constant `build.rs` compiles out of the repo-root `PROTOCOL` file — split off (bl-5070) because the preface exchange and the changelog of what moved the number are edited for unrelated reasons and together sit in the ≥200 band | landed (bl-5070) |
 | `src/codec/request.rs` | the gesture codec's decode side — the inverse the corpus is replayed through | landed (bl-93e3) |
-| `src/ledger.rs` | §2.1's edition ledger: the floor, this build's edition and the post-floor stamps `build.rs` compiles out of the vendored corpus, and the one reading a control spends — *could this engine have said that field at all* | landed (bl-93cd) |
+| `src/ledger.rs` | §2.1's edition ledger: the floor, this build's edition and the post-floor stamps `build.rs` compiles out of the vendored corpus, and the one reading a control spends — *could this server have said that field at all* | landed (bl-93cd) |
 | `tests/conformance/ledger.rs` + `conformance/editions.rs` | the same ledger read as data, and REMOTE §3.2's two replays over it: projection to every edition of this major, and word mutation over every string a reply carries | landed (bl-93cd) |
 | `corpus/` + `tests/conformance/` | the vendored wire conformance corpus and its replay: the decision table over every shape, in both directions | landed (bl-93e3) |
 | `src/codec/start.rs` | the §8.1 start family: stage a conversation, fire it, and the prepared body carried whole between them | landed (bl-b64e) |
-| `src/codec/follow.rs` | REMOTE §5.5's frame — what landed since the frame before — and the engine's own fold that reassembles a held read from them | landed (bl-4822, the fold bl-8e3c) |
+| `src/codec/follow.rs` | REMOTE §5.5's frame — what landed since the frame before — and the server's own fold that reassembles a held read from them | landed (bl-4822, the fold bl-8e3c) |
 | `src/seat/lane.rs` | the two held reads beside the pass (§14.1): a reader parked per lane handing frames down the worker's own channel, tended by every pass, hung up by a socket shutdown | landed (bl-8e3c) |
 | `src/seat/pass/adopt.rs` | what a lane's frame means to the standing: the attention fold that replaces, the follow fold that appends, and the end of a stream | landed (bl-8e3c) |
 | `src/seat/pass/publish.rs` | the one builder every published snapshot goes through, whether a pass or a frame publishes it | landed (bl-8e3c, out of `pass.rs`) |
@@ -471,10 +471,10 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/codec/pick/face.rs` | what each control on the row SAYS: the pick, then the workspace's assignment, then the control's own name — pure, host-tested | landed (bl-809d) |
 | `src/codec/pick/knob.rs` | what the selected provider's row will TAKE, and the sentence a dark knob answers a tap with — three reasons, three instructions, none of them derived from a model name — pure, host-tested | landed (bl-0691, out of `pick.rs`) |
-| `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the engine's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
+| `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the server's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — where it sits, what it drops when the focus moves, and the one listing read it asks for | landed (bl-0267, one row bl-0691) |
 | `src/shell/controls/chip.rs` | android-only: which controls the row has, what each is showing, and how wide it would like to be — the row's vocabulary, split from the row itself | landed (bl-0691) |
-| `src/shell/controls/stops.rs` | android-only: the three acts on a turn already running, each shown by the engine's own gate on the row | landed (bl-0691, out of `controls.rs`) |
+| `src/shell/controls/stops.rs` | android-only: the three acts on a turn already running, each shown by the server's own gate on the row | landed (bl-0691, out of `controls.rs`) |
 | `src/codec.rs` + `codec/{fields,ws,conv,transcript,reply}` | the chat-loop slice: encode message/workspaces/conversations/transcript, strict decode of their replies; spellings pinned to the server byte for byte | landed (bl-fe33) |
 | `src/help.rs` | the op table, vendored and compiled in (§13.14): one reader, two consumers — the parity roster folds over it and the help screen paints it | landed (bl-3685) |
 | `src/update.rs` | the release channel's decision (§20): is a published release newer than this build, and which asset under it is the APK | landed (bl-7a68) |
@@ -532,7 +532,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/state.rs` | the process's one live tool host (§18.1) — the crate's only lock, so a foot outlives the activity and a relaunch cannot build a second | landed (bl-8bd0) |
 | `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
 | `src/shell/boot.rs` (`take`) | android-only: what a host is MADE of, in the one place that makes one — reached by the activity's boot and by the service's door alike (§18.8). The DECISION beside it is `crate::pocket`, under the floor; this is glue, and the nap it hands the ladder is a line no host test takes | landed (bl-d22d, seam corrected bl-996b) |
-| `src/attention/held.rs` | the held attention lane (§17.6): one lane life — dial, hold, and the first rise the engine writes — folded onto rung 1's own memory through rung 1's own rule | landed (bl-b82d) |
+| `src/attention/held.rs` | the held attention lane (§17.6): one lane life — dial, hold, and the first rise the server writes — folded onto rung 1's own memory through rung 1's own rule | landed (bl-b82d) |
 | `android/…/Boot.java` | the device came back (§18.8): one receiver, one call, and every gate behind it is `Pocket.arm`'s | landed (bl-d22d) |
 | `android/…/Lane.java` | that lane's platform half: the three gates each kept by somebody else, and the reader that turns a frame into a wake | landed (bl-b82d) |
 | `android/…/Pocket.java` | the foreground service that holds the process: the `specialUse` grant, the standing notification it is required to carry, and the two acts that end it | landed (bl-8bd0) |
@@ -561,13 +561,13 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `android/…/App.java` | the two handles a tool-host thread cannot get for itself: this app's context, and whether it is in front | landed (bl-f34f) |
 | `src/seat.rs` + `seat/model.rs` + `seat/tests/{reads,deposit,start,grace}.rs` | the view model's handle: the commands the frame sends and the `Snapshot` it reads back | landed (bl-5a98, split bl-dfbb) |
 | `src/seat/worker.rs` | the loop that spends them: one pass, one wait, and the lanes' frames adopted inside it | landed (bl-dfbb, out of `model.rs`; the tick replaced by the lanes bl-8e3c) |
-| `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the engine did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
+| `src/seat/pass.rs` | one pass of that loop: the standing questions, and what survives a pass the server did not answer (§13.2's grace) | landed (bl-3202, out of `model.rs`) |
 | `src/seat/pass/ask.rs` | the single standing question underneath a pass — the ask, the envelope beside its rows, the CLASS a failure keeps, and the sentence a reply of the wrong kind earns | landed (bl-eec1, out of `pass.rs` at the cap) |
 | `src/seat/acts.rs` | the acts the seat posts: the message deposit, the §8.1 start pair, the turn's stop and nudge, and the worker's tuning — none of them ever sent twice (§19.2) | landed (bl-de96, out of `pass.rs`) |
 | `src/seat/acts/row.rs` | the three acts addressed to a conversation ROW rather than to the focus (§13.5), and the read that settles each in doubt — including the one that says out loud that none does | landed (bl-f97c) |
 | `src/seat/asks.rs` | the reads a gesture asks for — the selectors' three, the search and the trail (§13.8); the two follow-class reads are the lanes' (§14.1). Split from `acts.rs` on the contract's own line: an ask re-asks freely (§19.1) | landed (bl-0267, bl-e9f9, split out bl-07b1, world reads bl-35bd) |
-| `src/codec/trail.rs` | the ops trail's row: what the engine did, read as its own words (`failed`, `exit_label`, `standing` since protocol 11) and classified nowhere | landed (bl-35bd, the words bl-8e3c) |
-| `src/seat/acts/trail.rs` | the two acts over the engine's record rather than over a place: the acknowledgement and the truncation, neither naming a row | landed (bl-35bd) |
+| `src/codec/trail.rs` | the ops trail's row: what the server did, read as its own words (`failed`, `exit_label`, `standing` since protocol 11) and classified nowhere | landed (bl-35bd, the words bl-8e3c) |
+| `src/seat/acts/trail.rs` | the two acts over the server's record rather than over a place: the acknowledgement and the truncation, neither naming a row | landed (bl-35bd) |
 | `src/shell/screens/world.rs` + `world/{waiting,trail}.rs` | android-only: the two surfaces that sit over the depths rather than inside them (§13.8) — the queue as a queue, the trail with its acts, and the one armed control this app has | landed (bl-35bd) |
 | `src/shell/screens/world/aimed.rs` | android-only: the way in to the seven surfaces that name one workspace — one bar, seven equal chips, a short noun over each op token | landed (bl-6e8a, out of `world.rs`) |
 | `src/seat/posted.rs` | what became of an act — took, refused, or in doubt — and the one wording of the lost-reply contract (§19.2) | landed (bl-07b1) |
@@ -582,7 +582,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/screens/rows.rs` | android-only: the conversation list (§13.5) — its rows at their own depth under their root, their words, and the field that starts one | landed (bl-f97c, out of `screens.rs`; menu split out bl-06d3) |
 | `src/shell/screens/rows/menu.rs` | android-only: the long press a row carries — the act roster, its items and the composer they spend, placed by `shell::place` like every other popup | landed (bl-06d3, out of `rows.rs` at the cap) |
 | `src/shell/app/probe.rs` | android-only: the render-and-see probe (§15) — the screen this pass painted and where each control the harness must reach was painted, one named rectangle apiece, said to logcat once per change | landed (bl-243b, named controls bl-35bd) |
-| `scripts/screens.sh` + `screens-walk.sh` + `screens-seed.sh` + `screens-capture.sh` | the headless emulator loop (§15): boot, install and the two gates that judge a run, beside the WALK — where to go and what each beat proves — the INSTRUMENTS that read the app and write a row about it, and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without an engine | landed (bl-243b, the grade bl-8bd0, the instruments split bl-35bd on bl-46e6's seam, the walk split bl-477e) |
+| `scripts/screens.sh` + `screens-walk.sh` + `screens-seed.sh` + `screens-capture.sh` | the headless emulator loop (§15): boot, install and the two gates that judge a run, beside the WALK — where to go and what each beat proves — the INSTRUMENTS that read the app and write a row about it, and the two seeds (a minted leaf of either grade, a corpus-fed cache) that put the device on a screen without a server | landed (bl-243b, the grade bl-8bd0, the instruments split bl-35bd on bl-46e6's seam, the walk split bl-477e) |
 | `scripts/screens-platform.sh` + `screens-background.sh` + `screens-attention.sh` | what the platform granted and bound, and — split from it because these beats MOVE the device — the lanes that run while nobody is looking: the pocketed foot (§18), and beside it REMOTE §14's two attention rungs, the scheduled fetch and the held lane (§17) | landed (bl-b0a9, bl-fcc5, bl-5cbd, split bl-8bd0, split again bl-b82d on the subject) |
 | `src/shell/back.rs` | android-only: the platform back gesture — the read, and the leave when no depth took it | landed (bl-550e) |
 | `src/shell/mark.rs` | android-only: the yog mark control — the walk said in egui's primitives, toggling the configuration surface | landed (bl-387f, drawn mark bl-ff27) |
@@ -593,13 +593,13 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/composer.rs` | android-only: the composer ROW — where the field stands, how tall it may grow, and the send that is THE send. The field itself is the platform's (bl-8bbb) | landed (bl-9196, split bl-4822) |
 | `src/draft.rs` | the native composer field's two pure decisions: how its answer reads, and which side of the mirror moved — the field's text is the one home of the draft, and this is the rule that agrees the two — pure, host-tested | landed (bl-8bbb) |
 | `src/shell/field.rs` + `android/…/dev/yog/{Field,Face}.java` | android-only: the composer's native `EditText` overlaid at the rectangle egui lays out — the three static calls that place, read and hand it a draft, and the visual language applied to a platform view | landed (bl-8bbb) |
-| `src/roster.rs` | what the conversation list makes of the row fields the engine carries: newest-**subtree**-first order with the engine's descent kept inside each, how far a row hangs under its root, and how long ago each says it is — pure, host-tested | landed (bl-e837, subtree order + indent bl-06d3) |
+| `src/roster.rs` | what the conversation list makes of the row fields the server carries: newest-**subtree**-first order with the server's descent kept inside each, how far a row hangs under its root, and how long ago each says it is — pure, host-tested | landed (bl-e837, subtree order + indent bl-06d3) |
 | `src/roster/thread.rs` | which indent columns a row's connector carries a rule through, read off §2.3's descent because the wire carries no parent id — pure, host-tested | landed (bl-4d17) |
 | `src/roster/words.rs` | what one row SAYS: the three lines, each folded to one line so a provider's clause cannot take four of them — pure, host-tested | landed (bl-4d17, out of `roster.rs`) |
 | `src/shell/screens/rows/thread.rs` | android-only: one row's ink — the rails, the elbow, the box at the row's own indent, and each line elided against that box | landed (bl-4d17, out of `rows.rs`) |
 | `src/live.rs` | the streaming tail's one rule: the lane's fold replaces the transcript's own tail, and at rest there is none — pure, host-tested | landed (bl-e3d1) |
 | `src/outbox.rs` | the local echo and every decision about it: has this message come back in a transcript read yet, and which of the three fates it stands in (§19.2) — pure, host-tested | landed (bl-66fb, the echo itself bl-07b1) |
-| `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the engine's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
+| `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the server's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
 | `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
 | `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
@@ -628,7 +628,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/ladder.rs` + `src/ladder/{rove,backoff,climb}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), the rest between failed climbs, and the two seconds-scale rungs behind it (`climb`, split at the cap) | landed (bl-3d62, split bl-2ba5) |
 | `src/ladder/awake.rs` | §21.10: whether this process may climb at all — the one predicate a roving ladder parks on (activity in front, pocket service holding, a job's run) — and the return that clears the rest | landed (bl-c21d, re-call bl-c00e) |
 | `src/ladder/network.rs` | §21.11: where this box sends from and when that changed — the platform's default-network report (fallback: the routing-table read), the reachable-address filter, the scope classes the lines say, and the generation that drops held lines, rest and punch port at once | landed (bl-792e) |
-| `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port, the engine's cached presence and the last call `seq` (held for the run) | landed (bl-58a0, port bl-97ed, presence bl-c00e) |
+| `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port, the server's cached presence and the last call `seq` (held for the run) | landed (bl-58a0, port bl-97ed, presence bl-c00e) |
 | `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
 | `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
 | `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle — and the hand-back of a punched stream whose answer ended clean (split from `transport.rs`, §21.5) | landed (bl-3d62) |
@@ -670,15 +670,15 @@ the first thing the new device does with its material is an ordinary mTLS
 dial like any other client.
 
 **Upstream dependency, named:** minting from a seat requires the CA holder —
-the engine — to expose a mint act. REMOTE §3 rules that a capability a
+the server — to expose a mint act. REMOTE §3 rules that a capability a
 client needs is added to the boundary, never to the wire, so that is a
 boundary `Action` in yog, tracked as a yog ball. Until it lands, minting
-stays where it is today: `yog wire-certs` on the engine's own box, with adb
+stays where it is today: `yog wire-certs` on the server's own box, with adb
 or remote exec carrying the result.
 
 **What the phone durably holds** stays exactly §1's list: its key material,
 and nothing else. A lost phone costs one certificate distrust at the CA
-(REMOTE §4), never a history — the logs live on the engine.
+(REMOTE §4), never a history — the logs live on the server.
 
 ## 6. Tool hosting, and the one deviation from REMOTE §5.2 (bl-d366)
 
@@ -686,7 +686,7 @@ The phone is a **tool host** as well as a seat: it presents what it can run,
 rides the `invocations` follow-class read for its next work, runs it, and
 posts the capture with `complete` (REMOTE §5, §5.3). The loop is the server's
 own `src/wire/host.rs` mirrored — one loop, three gestures, all of them
-ordinary boundary verbs, the engine never speaking first — and it rides its
+ordinary boundary verbs, the server never speaking first — and it rides its
 own connection beside the seat model's, on the same material and therefore
 the same certificate common name, which §5's refcounted presence map already
 expects of one client.
@@ -698,7 +698,7 @@ tool-host gestures and **nothing else**: `advertise`, `invocations` and
 sentence in the type system — it owns the transport and never hands it out, so
 the general encode-any-gesture door is not reachable from the host loop and a
 fourth verb is a compile error rather than a refusal at the far end. It is not
-*enforcement*: the engine enforces the grade with one raise at its chokepoint,
+*enforcement*: the server enforces the grade with one raise at its chokepoint,
 in band, naming it. What the narrowing buys is that a foot-graded phone cannot
 accidentally spend a gesture its own certificate refuses.
 
@@ -743,17 +743,17 @@ tool's runtime instead of forever, and it costs an idle host nothing — no
 hand-off, no gesture.
 
 **Knowing is the other half, and it is what PROTOCOL 8 bought.** The receipt
-carries `wrote` — false when the engine found the stored set identical and
+carries `wrote` — false when the server found the stored set identical and
 compared, true when it changed the document — so a re-assertion that wrote is
 this device being told the set it offers was not the set in force. The
 restoration is automatic; being told is not. It is counted onto the standing
 (`restored`) and painted beside the tools line in the words of
 `host::RESTORED`, which name both readings an operator can act on — another
-connection bearing this device's identity, or an engine that lost the set —
+connection bearing this device's identity, or a server that lost the set —
 because the device cannot tell them apart and guessing would be worse than
 saying so. **A `true` on a channel's FIRST presentation says nothing** and is
 discarded: every fresh channel, a redial's included, presents into whatever
-the engine happens to hold, and the ordinary first presentation writes. Only a
+the server happens to hold, and the ordinary first presentation writes. Only a
 presentation made after work this device just did can tell a rival from a
 beginning. The count does not clear on a redial — unlike `advertised` it is
 not a fact about the connection that is up, it is something that happened to
@@ -762,7 +762,7 @@ this device.
 **What is NOT redialled is everything the wire refused.** `crate::transport::Wire`
 draws the line where the code already knows it, at the socket: a connection
 that would not open, a write that did not land, a read that died are the
-channel; the engine declining the advertisement, a completion posted into no
+channel; the server declining the advertisement, a completion posted into no
 slot, an answer of the wrong kind, a reply that will not decode and a version
 that cannot be spoken to are answers, and none of them changes for being asked
 again. A host that redialled a refusal would earn one refusal per pass forever
@@ -897,7 +897,7 @@ runs here runs as this app's user, and the design does not claim otherwise.
 
 **The worktree lane ends here, in a refusal (bl-0ac8).** PROTOCOL 2 added
 REMOTE §5.4's lane: an advertised entry may carry `"subject_cwd": true`, and
-the engine then routes a bare granted name to the one client of the workspace
+the server then routes a bare granted name to the one client of the workspace
 that both advertises it and consents, putting the conversation's resolved
 working directory on the invocation as `cwd`. §5.1 puts enforcement on the
 advertiser in as many words — *"it stays checkable because the box that stated
@@ -939,7 +939,7 @@ verifies.
 
 The transcript is painted the way the window paints it — collapsing
 included — because a tool-heavy conversation is unreadable at a phone's width
-without it, and because two clients of one engine showing the same
+without it, and because two clients of one server showing the same
 conversation two different ways is two readings of one fact.
 
 **The projection is pure and the paint is thin, and that seam is the point.**
@@ -968,7 +968,7 @@ expanded when `(in-flight OR its class's knob) XOR the operator flipped it`.
 So the override set holds *flips* rather than states, a row that appears
 mid-frame is already in its configured state, and a tool call that completes
 returns to it with nothing to invalidate. The two knobs are policy and the
-flips are viewport ephemera — durable per-seat state belongs on the engine
+flips are viewport ephemera — durable per-seat state belongs on the server
 (REMOTE §7) and is a later ball, so the phone keeps neither.
 
 **The spellings are the desktop's, byte for byte** — the glyphs, the
@@ -1039,7 +1039,7 @@ already looking.
 **And the prose half is gated on the flight that opens it, not on the step.**
 The lane's subject moved with the same bump: a follow read follows a STEP, so
 it stays open through the tool phase — with the settled call's words still in
-the seat's fold, while the engine's own tail stops at exactly that moment
+the seat's fold, while the server's own tail stops at exactly that moment
 (`live_tail` is gated on `InFlight`). Painting the fold on any flight would
 therefore put the committed answer on the glass a second time for as long as
 the commands run, which is bl-e3d1's defect returning through a widened lane.
@@ -1072,7 +1072,7 @@ list where the two read identically is a list that cannot be scanned."*
 *Amended by §23 item 15: the tail says the model id (`<model id>`, `<model
 id> (thinking)`), not the conversation's name.* **The growing answer is the
 speaking agent's own row, and there is exactly
-one of it** (operator ruling, bl-e3d1). The engine writes the tail into the
+one of it** (operator ruling, bl-e3d1). The server writes the tail into the
 transcript itself as a streaming entry, so a cadence read already carries
 one; the follow lane below then carries the same answer as it is written.
 Painting the lane's fold *beside* the transcript put the same words on the
@@ -1093,7 +1093,7 @@ still asks `workspaces` → `conversations` → `transcript` on every pass of th
 worker's own clock, and a gesture still wakes it immediately. While the
 focused conversation's row states a `flight`, the pass keeps a `follow` lane
 standing beside it and the worker folds each frame onto the tail as it
-lands, so arriving text appears at the engine's write cadence. The turn's end
+lands, so arriving text appears at the server's write cadence. The turn's end
 drops the fold — the finished answer arrives as an ordinary transcript row,
 and a fold left standing under it would be the same words twice.
 
@@ -1133,7 +1133,7 @@ decision lives in a place a person reads — the `follow` note in
 carries the trap at the line that would spring it, because it decodes
 `stream.last()` and the last frame of an append stream is the final delta
 alone. Since bl-8e3c this seat implements the rule (`Stream::absorb`, the
-engine's own fold) and holds the door: `Seat::hold` is what a lane parks on,
+server's own fold) and holds the door: `Seat::hold` is what a lane parks on,
 and `answered` is for the one-frame answers only.
 
 The tool host's `invocations` read (§6) is follow-**class** and is not this
@@ -1152,9 +1152,9 @@ prompted — answering a **prepared body**, then `prompt`, which carries that
 body back with the goal and fires it.
 
 **The prepared body rides through this client whole.** Every field is carried
-rather than re-derived: it is the engine's own statement about what was
+rather than re-derived: it is the server's own statement about what was
 staged, and a client that recomputed one would be inventing world state it
-does not own and would drift the first time the engine's policy moved.
+does not own and would drift the first time the server's policy moved.
 `binding`, `lineage` and `role` cross as **real nulls** — the field is present
 and its absence is the value — so what came off the wire goes back on it
 unchanged.
@@ -1229,7 +1229,7 @@ rather than pinning the field at whatever height it was first handed.
 **The ruling** (operator, 2026-08-30; the NAME amended 2026-10-08, bl-5331):
 the Android app ships all three runnable components, each gated behind an
 explicit bootstrap rather than auto-started. The default bootstrap is mTLS client enrollment — the
-seat or the foot dialing a host engine, material provisioned out of channel
+seat or the foot dialing a host server, material provisioned out of channel
 per REMOTE §1.4. Running the yog server locally on the phone is allowed but is
 the deliberate, non-default choice. The old development client is superseded:
 its landed foundations are the starting material, not discarded work.
@@ -1301,7 +1301,7 @@ still arrives out of channel.**
 
 Each choice wears the name of the component it makes this device — **Lernie**
 the seat (*operate your conversations*), **Thrall** the foot (*let
-conversations use this device's tools*), **Yog** the server (*run the engine
+conversations use this device's tools*), **Yog** the server (*run yog
 here*) — because a screen listing "seat / tool host / server" is a taxonomy
 rather than a choice. A tap opens a real screen: for the two enrollments, what
 material is needed, the directory it lands in, and DESIGN §5's three delivery
@@ -1320,7 +1320,7 @@ without killing and relaunching the process. Re-reading a directory this uid
 owns is not a bootstrap and reaches no network.
 
 **The server offer states its dependency chain and starts nothing** (bl-d6c6).
-A button that started an engine which refuses every act would be worse than a
+A button that started a server which refuses every act would be worse than a
 sentence saying what is missing, and §12's ship-inert ruling is the precedent.
 
 **The surface is standing, not first-run (bl-387f).** It shipped reachable
@@ -1347,7 +1347,7 @@ can be a client of many servers, each named by its own directory under
 lawful and is the zero-entry case, not a deviation. Multi-entry is a ball of
 its own, because it is N models and N host channels rather than a file format.
 
-## 10. Running the engine on this device: the chain, walked (bl-d6c6)
+## 10. Running the server on this device: the chain, walked (bl-d6c6)
 
 The third component §9 offers is the yog **server** — holder of the world, the
 balls, the conversations. This section is the honest evaluation the offer's
@@ -1355,7 +1355,7 @@ sentence is a summary of. **It is not landable, and the reasons are structural
 rather than effort.**
 
 **Rung 1 — the crate cross-compiles, and this is measured, not assumed.** The
-engine's library and its binaries both build for `aarch64-linux-android`
+server's library and its binaries both build for `aarch64-linux-android`
 against the pinned NDK, with `balls`, `brazen`, `litany`, `ureq`, `rustls` and
 `ring` in the graph and no C toolchain acquired: `ring` is the crypto provider
 on both ends already, for the reason this repo's own manifest gives. The
@@ -1363,20 +1363,20 @@ release link produces a ~13 MB PIE executable for `/system/bin/linker64`, min
 API 21. So *"does the Rust cross-compile"* — the question that usually decides
 this kind of question — is answered yes and is not the obstacle.
 
-**Rung 2 — the engine must be a child process, not a library.** This app is a
+**Rung 2 — the server must be a child process, not a library.** This app is a
 `.so` loaded into a zygote-forked process, so `current_exe()` here reports the
 system's app runtime, not yog. That matters because yog's spawn resolution is
 **self-multiplex**: `bl`, `litany` and `bz` all resolve to yog's own
 `current_exe()` under a leading namespace word. In-process, every one of those
 would exec the wrong program. Launched as a **child** from the app's native
 library directory the resolution is correct again, because that child's
-`/proc/self/exe` is the engine.
+`/proc/self/exe` is the server.
 
 That directory is also the only place an APK-shipped executable may be
 executed: since API 29 the platform refuses to execute a file in an app's
 private storage, and the native library directory is the documented exception.
 So the shape, if this is ever built, is a binary shipped inside the APK's
-native library set and spawned — never a linked-in engine.
+native library set and spawned — never a linked-in server.
 
 **Rung 3 — the world's agent-tool shims cannot be executed, and this is the
 first hard stop.** yog's world seeds `<world>/tools/{bl,litany,bz,…}`: small
@@ -1388,17 +1388,17 @@ write changes that: the shims are yog's mechanism, and the fix — resolving the
 agent's tools to the shipped binary directly rather than through a written file
 — is an upstream change to yog's own resolution.
 
-**Rung 4 — git is absent, and this is the second hard stop.** The engine founds
+**Rung 4 — git is absent, and this is the second hard stop.** The server founds
 its world by committing, `litany new` commits every workspace, the task store
 is a git repository on two branches, and the whole workspace read surface is
 `git`. Android ships no git and nothing in yog's dependency graph substitutes
-for one. Shipping a cross-compiled git beside the engine is conceivable and is
+for one. Shipping a cross-compiled git beside the server is conceivable and is
 a project of its own, not a step in this one.
 
-**Two smaller ones, recorded so the list is complete.** The engine's boot mints
+**Two smaller ones, recorded so the list is complete.** The server's boot mints
 its wire certificates by shelling to `openssl`, which is also absent — though a
 phone's material is provisioned out of channel anyway (§5), so the mint is the
-wrong act here regardless. And a listening engine needs to survive the
+wrong act here regardless. And a listening server needs to survive the
 platform's background limits, which means a foreground service and a
 notification, not a thread.
 
@@ -1410,7 +1410,7 @@ which refuses every act would be strictly worse than a sentence that says why.
 
 ## 11. The enroll envelope, and why pasting it is not a pairing protocol (bl-dd7b)
 
-yog's `enroll` act (yog bl-f4e3) mints a client leaf on the engine's own
+yog's `enroll` act (yog bl-f4e3) mints a client leaf on the server's own
 recipe and answers a reply carrying `{grade, name, address, ca, cert, key}`,
 shredding the leaf key server-side. The operator's seat renders that as a QR;
 this device reads it. The envelope is that payload with a version tag in
@@ -1502,7 +1502,7 @@ handed a file for.
 **Landing over a provisioned device states what it destroys** (bl-f12d). One
 device holds one leaf (§9, §13.3), so landing is not addition: `envelope::land`
 overwrites the four `material::WANTED` files in place, and the private key that
-was there is gone — the engine shredded its copy at the mint (above), so
+was there is gone — the server shredded its copy at the mint (above), so
 nothing on either side can hand it back and the only recovery is a fresh mint.
 The operator hit this live: a device running as a seat took a Thrall envelope,
 derived Foot on the next boot, and every chat screen lawfully vanished, which
@@ -1628,8 +1628,8 @@ here is a defect.
   changes what runs — and the enrollment screen says so before it is taken:
   the running identity and the fact that landing replaces it and destroys
   the old key stand beside the control that acts (§11, bl-f12d), because
-  the act is one keystroke and its remedy is a trip to the engine.
-- **W6 — the engine on this phone.** The Yog offer explains the recorded
+  the act is one keystroke and its remedy is a trip to the server.
+- **W6 — the server on this phone.** The Yog offer explains the recorded
   blockers and starts nothing (§10). It is the deliberate, non-default
   choice and reads like one.
 
@@ -1828,7 +1828,7 @@ here is a defect.
   both are **shown only when the selected provider's own row states the
   capability** — the widened `reply/providers` carries `effort` and
   `priority` booleans, and reading them is the same discipline the greyed
-  credential fact keeps: the engine states it, this seat never derives it
+  credential fact keeps: the server states it, this seat never derives it
   (§8). The gate is answered in covered code (`codec::pick::tunable`), not in
   the paint.
 
@@ -1839,7 +1839,7 @@ here is a defect.
   control that vanishes teaches nothing; the greyed provider row has said so
   since bl-0267, and this is that rule applied one control along. Nothing
   about WHO decides moves: `codec::pick::knob::tunable` still answers it off
-  the engine's own row, and the answer now picks the control's *state*
+  the server's own row, and the answer now picks the control's *state*
   instead of its existence. It also stops the walk needing a provider that
   takes both before the parity gate can see either.
 
@@ -1867,7 +1867,7 @@ here is a defect.
     assignments.
   - **The tap on a dark knob is spent on a sentence.** There is no hover on a
     phone, and there are exactly three reasons a knob is dark, each a
-    different instruction: no provider is set (set one), the engine has not
+    different instruction: no provider is set (set one), the server has not
     listed this provider (nothing has answered yet), or the row states it
     does not take this knob (nothing to do). One grey could never carry
     three, so `codec::pick::knob` makes the sentence — under the coverage
@@ -1885,7 +1885,7 @@ here is a defect.
   had a model assigned. `codec::pick::face` is the one home for those words
   and it is under the coverage floor: an optimistic pick first, the
   workspace's own assignment next, and the control's own NAME where neither
-  exists. That third arm is §8 — an engine that predates the assignments read
+  exists. That third arm is §8 — a server that predates the assignments read
   answers nothing, and a seat painting `effort off` there would be inventing
   the assignment to keep its face tidy. Two readings fall out of the same
   rule: the model face shows the workspace's model only under the workspace's
@@ -1922,7 +1922,7 @@ here is a defect.
 - **Tap is the act, and the controls load what the workspace actually has**
   (operator ruling, bl-e9f9 — this replaces the *shows only what this device
   set* rule the row shipped with). Nothing in the row holds a draft: picking
-  a model IS the assignment, and an engine that refuses one says so in the
+  a model IS the assignment, and a server that refuses one says so in the
   same banner every other refusal uses. What a selector DISPLAYS is now the
   workspace's own assignment, read from the lineage tip the tuning gestures
   write to, so a seat reads its own write back and a fresh install shows what
@@ -1934,7 +1934,7 @@ here is a defect.
   **An act is optimistic and the read is truth.** A tap paints immediately,
   because the round trip is seconds; the assignments are re-read straight
   after the act, and when that lands the optimistic value goes. A refusal is
-  covered by the same motion — the engine never took it, so the read never
+  covered by the same motion — the server never took it, so the read never
   carries it, so the control snaps back to what IS set and the banner says
   why. Nothing needs a second mechanism for the refused case.
 
@@ -1954,13 +1954,13 @@ here is a defect.
   set* would be this app lying about the workspace to keep its own
   vocabulary tidy.
 
-  **An engine that predates the read says nothing.** The deployed build
+  **A server that predates the read says nothing.** The deployed build
   refuses the op in band by name, and that means *no preload* — silently. A
   banner there would be this app telling an operator off for running the
-  engine they have; the controls simply start empty, exactly as they did
+  server they have; the controls simply start empty, exactly as they did
   before the read existed. The same silence covers the listing read the row
   now asks for: a refusal leaves the knobs dark, and what they say when tapped
-  is *the engine has not listed this provider*, which is exactly true.
+  is *the server has not listed this provider*, which is exactly true.
 
   The selection belongs to the workspace it was made in and goes when the
   focus leaves it. A provider row is greyed **by the credential fact it
@@ -1970,14 +1970,14 @@ here is a defect.
   round trip and a chat app that shows nothing for the length of one is a
   chat app you press twice, so the composer's text appears the instant it is
   sent, in muted ink, where its row will be. Three states and three signals
-  the app already has: **sent** is local (muted); **landed** is the engine's
+  the app already has: **sent** is local (muted); **landed** is the server's
   receipt (ordinary ink, with a rule under it — the rule is the *not yet in
   the transcript* mark); **taken** is the message coming back in a transcript
   read, at which point the echo dissolves into the row it became. A refusal
-  gives the text back to the composer and the banner carries the engine's own
+  gives the text back to the composer and the banner carries the server's own
   sentence.
   The echo is the composer's own state and lives beside it in the shell —
-  `crate::rows` is pure over what the engine has written down, and this is a
+  `crate::rows` is pure over what the server has written down, and this is a
   message it has not written down yet — while the *rule* for when it stops
   being an echo is `crate::outbox`, host-tested under the floor. **The known
   weakness, named rather than hidden:** a deposit's receipt carries no id
@@ -2062,14 +2062,14 @@ here is a defect.
   three emptied lists, for about a second. Both halves of that were one pass
   discarding what it already had, so both are answered in the model, where
   there is one clock — the frame renders what it is handed and carries no
-  timer of its own. A failed pass **republishes the last answer the engine
+  timer of its own. A failed pass **republishes the last answer the server
   gave**, under the focus it was asked at (a moved focus gets the empty lists
   it honestly has — pairing one focus's rows with another's is the one thing
   a snapshot promises never to do), and its **sentence waits**: the cadence
   is the clock, so counting consecutive failures is counting rests. A pass
   that answers clears the banner at once, because a standing success is never
   in doubt. **A gesture's own answer never waits** — a refused deposit, a
-  start the engine would not run — since the operator just acted, and silence
+  start the server would not run — since the operator just acted, and silence
   there is a message that vanished.
 - **And the wait is SAID, in the working accent** (bl-eec1). One rest was not
   enough: the operator went on seeing a red name-lookup banner that cleared
@@ -2085,7 +2085,7 @@ here is a defect.
   address and the reason the socket gave.
 
   **The grace is the channel's alone.** A reply of a kind this build cannot
-  use is the engine ANSWERING, not the radio — the sixth ask gets the same
+  use is the server ANSWERING, not the radio — the sixth ask gets the same
   answer as the first — so it paints on the pass that met it and never reads
   as a reconnection. That is why the failure a pass carries keeps its
   `transport::Wire` class instead of being flattened to a sentence
@@ -2104,7 +2104,7 @@ parenthesized after the brand, because they name what the certificate may
 say, not what the operator chose. The identity line reads
 `<name> · Lernie` / `<name> · Thrall`. **One device, one name, one leaf**:
 the grade is what a leaf may say, never a second registration — the Thrall
-screen says so while a seat runs (W3), and the engine's own enrollment
+screen says so while a seat runs (W3), and the server's own enrollment
 refusal for a taken name is upstream's half of the same sentence.
 
 ### 13.4 The parity ledger is a file, not this section (bl-fe4c)
@@ -2113,12 +2113,12 @@ This section used to carry the ledger itself: a paragraph of what a phone LLM
 app has and where this seat stood, kept by hand, in three groups — in-wire and
 built, in-wire and unbuilt, upstream ask. **It is now `parity.toml`**, one line
 per absent op with a citation, machine-checked on every walk against the
-engine's own roster (§15.5). One home, and a loud one.
+server's own roster (§15.5). One home, and a loud one.
 
 **The fold was not bookkeeping — the prose had rotted and only a machine
 noticed.** The ledger filed *conversation search* under upstream asks, "the
 wire does not carry the fact; a ball on the server's board, not a shim here".
-The engine's help table carries `search`, classed `control`, summarised by
+The server's help table carries `search`, classed `control`, summarised by
 upstream as *find the text anywhere: balls, workspaces, conversations,
 transcripts*. It was an unbuilt surface wearing an upstream ask's clothes, and
 the board had already corrected itself (bl-4c2b) while this paragraph went on
@@ -2140,14 +2140,14 @@ What stays here is the shape of the ledger and nothing that can go stale in it:
   retired and no line may cite DESIGN §2 as an absence's reason again.
 - **An upstream ask** — the wire does not carry the fact at all — is the one
   class the roster cannot see, because an op that does not exist is in no help
-  table. Entries — one device as a client of many engines — is the standing
+  table. Entries — one device as a client of many servers — is the standing
   example (REMOTE §8.2, bl-d0d2).
 
   **Push notifications used to be the other, and are not one any more**
-  (bl-fcc5). The line read: *"the engine dials nothing, so a channel is a
+  (bl-fcc5). The line read: *"the server dials nothing, so a channel is a
   REMOTE design act rather than an app feature."* The first half is still
   true and is now a ruling rather than a gap — REMOTE §14.3 refuses
-  engine-initiated contact on physics before posture, and refuses the vendor
+  server-initiated contact on physics before posture, and refuses the vendor
   relay on what it costs. The second half was the error: the want behind
   "push" is *attention reaches a pocketed phone*, and §17 answers it entirely
   app-side, with no wire change and nothing asked of anyone. An absence
@@ -2187,7 +2187,7 @@ conversation off mid-work and sends it the composer's text; `retarget` settles
 it onto this workspace's config lineage; `flag` raises a human look with a
 reason. `fork` is the group's fourth act and is not offered: its `from` is a
 fork point, a commit of the conversation's own history or a `config/<name>`
-head, and the engine's own `fork::Attempt` says *"Empty is not a value — the
+head, and the server's own `fork::Attempt` says *"Empty is not a value — the
 composer refuses to fire without one, because a fork with no ref is a different
 gesture."* Nothing this seat reads names one — the marks and the tip ride the
 `agent` read (bl-146b) and the lineage names ride `lineages` (bl-3685), both
@@ -2258,15 +2258,15 @@ here says which* — the gap is bl-146b's, and it is cited.
 `src/codec/search.rs`, `src/seat/asks.rs`, `src/shell/screens/search.rs`.
 
 The wire has answered `search` all along — §13.4's own rot lesson is about
-this very op, filed as an upstream ask while the engine's help table classed
+this very op, filed as an upstream ask while the server's help table classed
 it `control`. Upstream's bl-764a is what made it usable from off the box: a
 hit's address now crosses as **wire names** (the §5.1 project name, the §3.1
-workspace leaf, the agent id) rather than engine-local paths, so a hit is an
+workspace leaf, the agent id) rather than server-local paths, so a hit is an
 address this seat already focuses instead of a path it would have to derive a
 name from — which §8 forbids it to do.
 
 **The field's depth states the query's scope.** `search` names no workspace
-and no conversation; it is the one read this seat makes that asks the engine
+and no conversation; it is the one read this seat makes that asks the server
 *where to look*. So the field sits at the top depth, where the whole world is
 already what is on the glass. A field on the conversation list would have
 implied a search scoped to that workspace — a promise the wire does not carry,
@@ -2282,8 +2282,8 @@ no screen enumerated anywhere and no second mechanism. The probe names it
 rule rather than two special cases.** Before the wire: a cleared field is
 answered in `seat::asks::search` and crosses nothing, because the answer being
 dropped is this seat's own copy and an operator must be able to leave a search
-with the engine unreachable — a clear that needed a round trip would be a
-screen a broken channel could trap someone on. After it: the engine's own
+with the server unreachable — a clear that needed a round trip would be a
+screen a broken channel could trap someone on. After it: the server's own
 spelling of *no search* is an answer whose needle is empty (upstream's `/search`
 clear), and it means the same thing. Nothing downstream tells a cleared search
 from a search that was never made.
@@ -2297,17 +2297,17 @@ where `None` is *no search was made* and an empty `hits` under a needle is
 tells them apart.
 
 **It rides the snapshot and never the §14 cache.** The cache is the world the
-engine wrote down; a search is a question this operator asked a moment ago, and
+server wrote down; a search is a question this operator asked a moment ago, and
 reviving one on the next boot would open the app on a search nobody just made.
 The answer is held by `Standing` like the deposit counters — a gesture's
 answer, not a pass's — so a pass that re-reads the world does not drop the hits
 the operator is reading, and a failed search does not drop them either: losing
-an answer the engine gave over one it did not is the same defect the §13.2
+an answer the server gave over one it did not is the same defect the §13.2
 grace exists to prevent.
 
 **A ball hit paints and does not tap.** There is no ball surface on this device
 yet (bl-d587), and a row that navigates nowhere is worse than a row that
-plainly does not. The hit is still shown, because *the engine found it* is part
+plainly does not. The hit is still shown, because *the server found it* is part
 of the answer, and hiding a third of a reply to keep the list uniformly
 tappable would be this app editing what came back. The matched field's own word
 (`name`/`summary`/`text`) rides beside every excerpt for a related reason: a
@@ -2317,7 +2317,7 @@ saying why the row is there.
 **What the walk can reach, and what it cannot** (§15.6). The field paints on
 the roster, which the walk visits, so `act:search` is observed and the
 `parity.toml` line is deleted. The hits screen is NOT walked: reaching it means
-typing a needle and an engine answering it, and this walk dials nothing by
+typing a needle and a server answering it, and this walk dials nothing by
 design. That is the honest state — the gate proves the affordance is reachable,
 and what the answer looks like is asserted in host tests over the codec and the
 seat instead.
@@ -2335,7 +2335,7 @@ person. That is the one thing on this wire an operator must **answer** rather
 than notice, and answering it from a pocket is the workflow §17's notification
 exists to start.
 
-**Whether a call is parked is the engine's statement, never a reading taken
+**Whether a call is parked is the server's statement, never a reading taken
 here.** The transcript already shows a tool call with no result and this seat
 already labels one *running* — but *unresolved* is not *held*: a driver that
 died leaves exactly the same tail. Guessing would put an approval in front of
@@ -2367,21 +2367,21 @@ parking is a park.
 
 **The band is three rows and the sentence is folded** (bl-8c94, operator
 screenshot 2026-09-08). It printed the control's sentence entire, and the
-engine writes that sentence as `<tool> <the call's JSON input, clipped to 160
+server writes that sentence as `<tool> <the call's JSON input, clipped to 160
 chars> classified <class> (<the evidence>)` — so what stood between the
 message field and the answers was ten wrapped lines of
 `{"execution":"parallel","invocations":[…`. The composer's floor is where an
 operator types; it is not where a call is read.
 
-So the sentence is SPLIT at the engine's own clause
+So the sentence is SPLIT at the server's own clause
 (`codec::queue::folded`), never rewritten — the same seam yog reads its own
 class back out of (`control::reason::class_of`), which is why no new field was
 asked for. The line says `held: <tool> · <class>`; a `why` control opens the
 decision paragraph above it; and **the call's input is not in this band at
 all**, because the transcript row that carries the call already holds it whole
 (below), one screen-length up and on the glass. A sentence carrying no clause
-of the engine's is kept entire behind the fold: this seat cannot tell a call
-from prose in a sentence it does not recognise, and dropping the engine's
+of the server's is kept entire behind the fold: this seat cannot tell a call
+from prose in a sentence it does not recognise, and dropping the server's
 words is worse than a fold onto an input.
 
 The verdicts are a band of chips like the scopes above them (STYLE.md §5),
@@ -2399,22 +2399,22 @@ eleven holds and eleven releases of one narrow routed tool in a single run.
 It is a chooser and not a fourth verdict because it is orthogonal to all three:
 a wide `refuse` is as real a decision as a wide `pass`. It sits **above** the
 verdicts, because reach is read before the verdict is tapped, which is the same
-ordering the engine's sentence above them already has. Three chips of a band
+ordering the server's sentence above them already has. Three chips of a band
 (STYLE.md), narrowest first, the picked one in the brand — the one ink that
 says *the operator's own act* — exactly as the admin screen tells its picked
 destination.
 
 **The default is `call`, and it is reset whenever the parked call changes.**
 The band remembers which `tool_use` the reach was chosen for and drops it the
-moment the engine says a different call is held: a width carried from one call
+moment the server says a different call is held: a width carried from one call
 to the next would widen an answer nobody widened. That is the same use this
 seat already had for the id it never sends (`codec::hold`).
 
 **Nothing here decides whether a wide answer is allowed.** A destructive or
 credential-reaching call takes the bare scope only, and that refusal is the
-ENGINE's — it arrives in band, which is where every capability decision this
+SERVER's — it arrives in band, which is where every capability decision this
 seat does not own arrives. The class the wide scopes stand over is derived at
-the engine too, out of the sentence it wrote into the hold mark, so this seat
+the server too, out of the sentence it wrote into the hold mark, so this seat
 spells a decision and never a key.
 
 **And the chat says a call is held, in the one hue that means *asking for
@@ -2452,7 +2452,7 @@ parked, which is when an operator decides that this conversation should stop
 acting alone. Answering is the opposite: it is about one call, and the call has
 to be read first, so it lives where the transcript is.
 
-**Their receipt is what STANDS, not what was asked for.** The engine
+**Their receipt is what STANDS, not what was asked for.** The server
 re-derives the floor after the write, and the case it refuses to lie about is
 restoring a conversation whose ancestor is still revoked: the floor stays, and
 the receipt says so. So this seat reads the receipt against what the act asked
@@ -2461,7 +2461,7 @@ here shows the standing floor at all (it rides the `agent` machinery read,
 bl-146b). Silence on a disagreement would be this app telling an operator they
 got their auto-approval back when they did not.
 
-**What the walk reaches.** The `make screens` cache seed carries the engine's
+**What the walk reaches.** The `make screens` cache seed carries the server's
 own queue answer with its one held row re-addressed at the conversation the
 seed opens, so the band paints on the transcript screens and `act:answer` is
 observed; `act:revoke` and `act:restore` ride the row menu the walk already
@@ -2476,8 +2476,8 @@ with the queue surface below.
 `src/codec/trail.rs`, `src/seat/asks.rs`, `src/seat/acts/trail.rs`,
 `src/seat/acts/seen.rs`, `src/shell/screens/world.rs`.
 
-Two reads of this engine name no place at all: the decision queue is every
-workspace's, and the ops trail is the engine's own record of what it did. Both
+Two reads of this server name no place at all: the decision queue is every
+workspace's, and the ops trail is the server's own record of what it did. Both
 were readable nowhere on this device — the queue only as a band under one open
 conversation (§13.7), the trail not at all, which left the read every recovery
 sentence in this client points at (*"the world is the durable record"*, REMOTE
@@ -2493,7 +2493,7 @@ whole of the back rule, inherited rather than written.
 **The trail does not join the standing set; opening it IS the ask.** It is
 read by nothing standing, so a surface nobody has opened costs this device no
 radio at all — REMOTE §14.1's own argument for the attention lane, applied at
-the seat rather than at the engine. The queue is the other way round since
+the seat rather than at the server. The queue is the other way round since
 bl-8e3c: it is that lane's, standing for the seat's whole life (§14.1), and
 opening its screen asks nothing.
 
@@ -2525,7 +2525,7 @@ answer a ball hit gets on the search screen for the same reason.
 
 **A queue row can be ANSWERED, and until bl-2889 no mark on this device
 could be.** The attention mark painted on two screens — the roster's rollup
-and the conversation row's — and nothing in the app fired the engine's `seen`,
+and the conversation row's — and nothing in the app fired the server's `seen`,
 so the one thing an operator could do about a mark was watch it accumulate.
 Three decisions make it one control rather than three:
 
@@ -2560,7 +2560,7 @@ re-implements them — *"a seat that wanted the banner had to re-implement …
 five derivations this document names one home for apiece, and whose failure
 mode is a seat quietly disagreeing rather than failing to build."* Since the
 protocol-13 re-vendor (bl-8e3c) the row reads all three: the line paints the
-engine's `exit_label` where it painted a number, and a `failed` row says so
+server's `exit_label` where it painted a number, and a `failed` row says so
 and says its `standing` word, so the alarm (`live`) is told from a row a newer
 clean run retired or the ack covered. What is not built is the banner over
 them — §7.3's *rows standing `live`, grouped by `origin`* — which is a
@@ -2590,7 +2590,7 @@ and `act:ops` are observed there; the walk taps each in turn — from a fresh
 launch rather than by backing out, because the way back is a bar control that
 carries no rectangle — and the trail screen's own two controls give `act:ack`
 and `act:clear-trail`. The queue screen has rows because the roster seed now
-carries the engine's own queue answer, which the §14 cache allows at any depth:
+carries the server's own queue answer, which the §14 cache allows at any depth:
 the queue pairs with nothing — and since bl-2889 each of those rows carries
 its own `act:seen`, observed on the same `waiting` capture. All five
 `parity.toml` lines are deleted.
@@ -2631,7 +2631,7 @@ along. The pane holds one answer tagged with the read that produced it
 own emptiness rather than the list under the board's name — the same refusal
 `cache::read` makes of rows that disagree with their focus. Two emptinesses,
 two sentences: *nothing read yet* is nobody asked, and *no balls here* is the
-engine answering with none. One sentence over both would say *there are no
+server answering with none. One sentence over both would say *there are no
 balls* about a question nobody put.
 
 **Opening is the ask, and nothing standing carries it.** The trail's rule
@@ -2659,7 +2659,7 @@ of the eight.
 **What the walk reaches.** Three new steps: `balls` and `board` from the
 roster's own entries, each from a fresh launch, and `workspace-balls` from a
 workspace's conversation list, walked before the row menu because a menu left
-open would be over the entry. The engine is not dialled, so what the pane
+open would be over the entry. The server is not dialled, so what the pane
 paints there is a read that failed and said so — which is what the parity gate
 asks of these three anyway, the control being on the roster either way.
 
@@ -2685,7 +2685,7 @@ one of the three reads that names a workspace, so on that screen the stamp is
 the pane's own subject. bl-f36e proposed offering `assign` on a board row too,
 with the stamp being *the row's own claimant-to-be*; that is the desktop's
 placement, and the reason it works there is stated in its own section — *"the
-wall it would be claimed for is the aim"*. On this seat the board is opened
+workspace it would be claimed for is the aim"*. On this seat the board is opened
 from the ROSTER, where nothing is aimed, so there is no claimant-to-be to read
 and the stamp would be a name this app invented. One rule with no holes beats
 two placements with one.
@@ -2728,7 +2728,7 @@ once*.
 
 **Nothing new is decoded and no receipt is invented.** All five answer with a
 captured run, which the deposit already reads the same way: a refusal arrives
-in the engine's own words on the banner, and a success says nothing. The
+in the server's own words on the banner, and a success says nothing. The
 silence is paid for by a re-read — the pane is not a standing read, so a
 filing, a claim or a close would be invisible until the view it happened in is
 asked again, and `worker::fold::balled` asks it. That is `reread`'s rule on the
@@ -2751,7 +2751,7 @@ misread REMOTE §3's third rule forbids —
 **What the walk reaches.** No new step: the five controls paint on the
 `workspace-balls` screen the walk already visits, and a disabled control's
 rectangle is on the glass, which is what the parity inventory records (§15.5,
-PARITY §4). The engine is not dialled there, so what an operator would see is a
+PARITY §4). The server is not dialled there, so what an operator would see is a
 pane that could not read and five controls saying which ball to tap first —
 which is what the gate asks of them.
 
@@ -2793,7 +2793,7 @@ screen already had, which is `searched`'s rule at a sixth site.
 **They answer as one value or as one sentence.** The first read that fails is
 the whole gesture's answer, because a partial fold would put one
 conversation's spine under another's steps the first time one read failed on
-its own. The cost is stated rather than hidden: an engine that answers four
+its own. The cost is stated rather than hidden: a server that answers four
 of the five and refuses the fifth by name gives this screen nothing. That is
 the same trade `Records` was chosen for, and the remedy if it ever bites is a
 protocol bump, not five fields.
@@ -2814,7 +2814,7 @@ PROTOCOL 18, yog bl-ab53). The census is where a person looks to see what a
 conversation has been DOING, and until `in_flight` the step being written right
 now was spelled `killed` — the one word that makes a real interrupt legible —
 so watching a working conversation showed a false interrupt on every step. The
-word stays the engine's; what the seat adds is the hue, read off one table
+word stays the server's; what the seat adds is the hue, read off one table
 (`theme::framing`): `complete` is `Rest`, `failed` is `Error`, `killed` is
 `Annotation` (STYLE.md's own *an interrupt*) and `in_flight` is `Working`
 (its own *a step in flight*).
@@ -2843,9 +2843,9 @@ open* to drift from the answer. `worker::fold::drilled` folds it INTO the
 records it belongs to, so a drill-in whose five were retired is dropped rather
 than held.
 
-**Nothing here recomputes a figure the engine rendered** (§13.9's rule at a
+**Nothing here recomputes a figure the server rendered** (§13.9's rule at a
 second site). The flight strip's characteristics are prose one derivation
-assembles with per-segment omission rules; the money is the engine's spelling
+assembles with per-segment omission rules; the money is the server's spelling
 of the integer beside it; the context percent is its own rounding,
 deliberately **unclamped**, so a context that has outgrown its window reads as
 `140%`. A seat that divided the two figures itself would be re-taking a
@@ -2871,17 +2871,17 @@ the decoder (`codec::records::spine`), where whoever paints the number is
 reading.
 
 **`governing` asked ABOUT a commit is the picking surface's read** (§13.16).
-The engine also answers *which config governed this conversation at commit X*;
+The server also answers *which config governed this conversation at commit X*;
 `at` is a fork point, and until bl-99fd built the surface that names one the
 anchored frame was refused by name rather than answered as the standing read —
 the silent misread REMOTE §3's third rule forbids. It is now the read a picked
 notch earns, and `governing` reads whole.
 
-**The engine's tokens are carried whole here, and picked on the conversation
+**The server's tokens are carried whole here, and picked on the conversation
 row.** `agent` states the §5.1 state and the §11 flight class, which
 `codec::conv` reads against tables because the row's controls BRANCH on them.
 Nothing on this screen branches on either — it paints them — so they cross as
-the engine's own words, exactly as a step's `framing`, its `wound` and a child
+the server's own words, exactly as a step's `framing`, its `wound` and a child
 card's `state` do. That is the difference between the two readings rather than
 an inconsistency between them, and it is recorded as `codec.rs`'s third
 narrowing. The alternative was a reverse lookup over the same table, which
@@ -2893,7 +2893,7 @@ on the glass — where the entry control carries the `act:` tags of every read
 opening it asks (six since §13.14) (PARITY §2, *"the owed interactable for a read is the
 affordance that reaches the view it populates"*) and its own rectangle, which
 is the only way a harness reaches a control this app paints (§15.2). The
-engine is not dialled there, so what it captures is a screen that opened and
+server is not dialled there, so what it captures is a screen that opened and
 said nothing was read — and `step`, disabled, saying which row to tap first,
 which is what the parity gate asks of it either way.
 
@@ -2973,7 +2973,7 @@ they get instead is the unmaking's ORDER: accept above release.
 at a second site — the banner says the one thing an operator cannot see by
 looking at the screen they are on. Whether a retirement's source ref went with
 its worktree is this project's own declared retention acting, invisible on
-this listing, and the engine states it; the seat PAINTS that answer rather
+this listing, and the server states it; the seat PAINTS that answer rather
 than predicting a policy it has not read. And a delivery that landed **no
 commit** moved nothing — a silent success there would report a delivery that
 did not happen.
@@ -2989,7 +2989,7 @@ were a fourth and are not: the work screen paints them off the SAME value
 one reader (`codec::workdiff`).
 
 **What the walk reaches.** One new step: `science`, tapped from the workspace's
-conversation list. The engine is not dialled, so what it captures is a screen
+conversation list. The server is not dialled, so what it captures is a screen
 that opened and said nothing was read — and the four controls, three of them
 disabled with the reason beside them, which is what the parity gate asks of
 them either way.
@@ -3016,7 +3016,7 @@ off the reply would be guessing between two settings.
 **There is no `fleet` READ and the screen reads nothing at all.** Whether a
 loop is armed, how full it is and what it holds are on the `board` answer,
 which the ball pane already paints (§13.9) — one fact, one home. So opening
-this screen asks the engine nothing, and the screen says where the answer
+this screen asks the server nothing, and the screen says where the answer
 lives (*"what a loop is doing is on the board"*) rather than asking for a
 second copy of it. It is the first surface in this app that is acts and
 nothing else, and that is the ledger being honest rather than a gap.
@@ -3026,7 +3026,7 @@ its keep.** Everywhere else in this crate a success is silent because a read
 straight after shows what it did (§13.10's rule); this screen has no read, and
 the state it changed is on a screen reached from another depth — so silence
 would leave an operator with no confirmation at all. The sentence is the
-engine's boolean read against the op that earned it, which is the same
+server's boolean read against the op that earned it, which is the same
 composition the naming trap forces.
 
 **It holds the workspace it was opened on**, which is what this app does with
@@ -3077,7 +3077,7 @@ op table itself.
 
 **`clients` gets a screen, and the screen carries no control** (lernie DESIGN
 §4.28, whose rulings transfer whole). **Two lifetimes on one row and it says
-both**: `present` is an OBSERVATION — true at the instant the engine answered,
+both**: `present` is an OBSERVATION — true at the instant the server answered,
 recorded nowhere on either end — and the advertised set is a STATEMENT the
 machine last made, which stands whether or not it is connected. A tool host
 holds its connection only while it is waiting for work, so a busy machine and
@@ -3121,8 +3121,8 @@ the whole gesture's answer.
 is a reading rather than a shortcut.** §2 rules that the corpus and the spoken
 version move together — *"a protocol bump upstream is a re-vendor and a
 rebuild here"* — and a peer of another version is refused fail-closed at the
-§3 preface. So for any engine this build can talk to, the vendored table IS
-that engine's table, and asking for it would be a radio spend for an answer
+§3 preface. So for any server this build can talk to, the vendored table IS
+that server's table, and asking for it would be a radio spend for an answer
 already compiled in, on the device §14.1 exists to keep asleep. The screen
 therefore works with nothing dialled, which is the right shape for the surface
 an operator opens when they do not know what a control does.
@@ -3185,17 +3185,17 @@ underneath — config, login.
 conversation list and every chip opens a screen that REPLACES that list, so
 the bar and the surface it names are never on the glass together. It is a way
 in, not a tab strip, and a tab strip is the shape that was refused. And
-*greying where the engine does not offer the op for this workspace* has no
+*greying where the server does not offer the op for this workspace* has no
 fact to read: the help table classes these seven `control` world-wide (§15.5)
 and no answer this seat holds narrows one to a workspace. Inventing the
 narrowing here would be §8's forbidden re-derivation of world state; if the
-engine ever carries a per-workspace offer set, it goes on the wire first and
+server ever carries a per-workspace offer set, it goes on the wire first and
 this bar reads it — the same order the tuning pair's capability took
 (§9.4, bl-dfbb).
 
 **What the walk reaches.** Two new steps: `clients`, tapped from the aimed
 band, and `help`, tapped from the roster beside the queue and the trail. The
-help screen is the only one in this app that needs neither an engine nor a
+help screen is the only one in this app that needs neither a server nor a
 seed — the table is compiled in — so its picture is the vocabulary itself.
 
 ### 13.15 Work review from the glass: what an agent wrote, and what it changed (bl-5a56)
@@ -3237,7 +3237,7 @@ desktop's.** lernie composes the bare listing of both reads and never asks for
 a patch at all, so its ledger records the field as one that *"can never arrive
 here"* (§4.33). This seat asks — a phone is where a review happens when the
 desk is elsewhere — and what it does with the answer is paint it. Nothing
-parses a unified diff into hunks: the engine bounded the bytes, and a second
+parses a unified diff into hunks: the server bounded the bytes, and a second
 reading of them here would be this app deriving what §8 says it may not. It is
 the one shape in this app that gets §13.2's horizontal scroller, because every
 line of a patch MEANS something and a wrapped line is a changed line.
@@ -3251,7 +3251,7 @@ fields. The two screens then differ in the QUESTION and not in the shape: what
 an attempt cost is §13.12's, what it changed is this one's.
 
 **The state token is READ here, and it is the counter-example to the rule
-beside it.** `codec::records` carries the engine's state and flight words
+beside it.** `codec::records` carries the server's state and flight words
 because nothing branches on them; a diff row's `state` decides which fields the
 row HAS — `unreadable` states no refs, `absent` states no oids — so a decoder
 that carried it whole would be guessing at every field under it. An unknown
@@ -3276,7 +3276,7 @@ a word.
 entry band — where `records` now shares a band with it rather than taking a
 full-width row of its own — and `work-diff`, tapped from the aimed band, which
 is five entries and therefore chunked rather than written out in pairs. The
-engine is not dialled, so each captures a screen that opened and said nothing
+server is not dialled, so each captures a screen that opened and said nothing
 was read, which is what the parity gate asks of them either way.
 
 ### 13.16 The fork point: the picking surface, and the act that hangs on it (bl-99fd)
@@ -3311,14 +3311,14 @@ light it (*"fork — tap a notch or a lineage"*, then *"fork — say what the ch
 should do"*).
 
 **A notch with no commit is not a control.** Upstream states the commit exactly
-where the notch is reachable, so *unpinnable* is the engine's answer rather
+where the notch is reachable, so *unpinnable* is the server's answer rather
 than this app's reading, and an unreachable notch paints as a label — the trail
 row's rule (§13.8) at another site.
 
 **What crosses is the whole commit; what paints is the clipped one.** `rail`
 answers both and this seat now reads both — `spine.rs`'s own doc anticipated
 the day the pinning gesture existed. A gesture naming the short form would be
-asking the engine to resolve a prefix this app chose the length of.
+asking the server to resolve a prefix this app chose the length of.
 
 **Picking a commit asks what governs THERE, and that is what lifts the
 anchored refusal.** `governing`'s `at` was refused by name while no surface
@@ -3377,7 +3377,7 @@ REMOTE §3's third rule forbids, so `tests/conformance/requests.rs` records
 `config` as `Partial { reads: 6 }` with that reason.
 
 **`settings` rides through unread, and that is the fifth ride-through.** The
-engine answers a config read as a typed control per setting — a provider row, a
+server answers a config read as a typed control per setting — a provider row, a
 text box, a list, a bounded number — beside the file's own bytes. A form built
 out of them is a surface this seat does not have; what it has is the composer,
 which edits the FILE. Painting both would be two renderings of one file, and
@@ -3388,8 +3388,8 @@ destination reads that file and loads its bytes into the field, so the flow is
 read, edit, write. It seeds **once per destination**: a re-read of the file
 being edited keeps the draft — a tap that discarded work is a tap nobody dares
 make — and switching destinations loads the new file, which is also how a bad
-draft is thrown away. A write KEEPS the draft too, because the engine may refuse
-it and clearing the editor would charge a retype for the engine's *no* (lernie
+draft is thrown away. A write KEEPS the draft too, because the server may refuse
+it and clearing the editor would charge a retype for the server's *no* (lernie
 §4.20's toll).
 
 **Which arming each deletion takes, and the wire is what decides** — the ruling
@@ -3399,7 +3399,7 @@ anything modal, and a confirmation a back press can answer is one nobody read).
 This app has two idioms, and each deletion takes the one its own op's grammar
 implies:
 
-- **`delete-workspace` takes bl-f36e's typed box, as an ENABLEMENT.** The engine
+- **`delete-workspace` takes bl-f36e's typed box, as an ENABLEMENT.** The server
   refuses unless `typed` matches the workspace's own name, so the box IS the
   arming and the seat invents nothing: the control is dark until the field holds
   that name, and **dark rather than absent**, because the parameter is missing
@@ -3422,7 +3422,7 @@ screen's own unmaking is the workspace's.
 
 **`marks` is a read and a write under one op token**, exactly as `config` is: a
 frame with no `branch` asks what the workspace is marked with, one with a branch
-sets it, and the write's receipt is the branch the engine RE-READ — so nothing
+sets it, and the write's receipt is the branch the server RE-READ — so nothing
 asks again after it. `codec::request` splits its ask and act tables on exactly
 that field.
 
@@ -3430,7 +3430,7 @@ that field.
 §9.22, bl-5070). litany's reviewer stages what it learned as a real config
 patch on a branch of its own, and the whole loop turns on a person reading it
 and saying yes or no; before the two ops there was nothing on this wire that
-could, so the veto lived at a command on the engine's own box — an `ssh` and a
+could, so the veto lived at a command on the server's own box — an `ssh` and a
 container `exec` on a server install, which is the thing this boundary exists
 to make unnecessary. They are **new shapes, so `PROTOCOL` did not move for
 them**; what a client owes them is a re-vendor to gain them.
@@ -3453,7 +3453,7 @@ from beneath the thumb that tapped.
 
 **`fresh` is read and never inferred.** An empty `lineages` would imply it, but
 the wire states the derivation so a seat need not own one (REMOTE §9.4) — only
-the engine can be sure the two were read in one pass, and this is the site where
+the server can be sure the two were read in one pass, and this is the site where
 getting it wrong means accepting a patch written against a config that no
 longer governs anything. It paints as its own state: `fresh` at rest, `stale`
 in the annotation accent.
@@ -3472,13 +3472,13 @@ surface along. Accepting fast-forwards the lineage and deletes the staging
 branch and rejecting deletes it, so either way the row is gone and a screen
 standing on the old listing would still be offering it. A refusal is litany's
 own sentence, painted verbatim: a stale proposal, an ambiguous one and an
-unknown id come back in the engine's words, and this seat has no second opinion
+unknown id come back in the server's words, and this seat has no second opinion
 about any of them.
 
 **`scan` unmakes nothing** and is not armed: it delivers the mail that is there.
 
 **What the walk reaches.** One new step: `config`, tapped from the aimed band,
-which is six entries now. The engine is not dialled, so it captures a screen
+which is six entries now. The server is not dialled, so it captures a screen
 that opened and said nothing was read, and four controls — three dark, each
 saying which word would light it. `act:delete-agent` rides the records screen,
 which the walk already visits.
@@ -3486,9 +3486,9 @@ which the walk already visits.
 **The settle band rides that same step** (bl-5070), and the walk sees it for
 the reason the deletions are seen: both verdicts are painted whether or not a
 proposal is picked, dark and saying what would light them, so `act:proposal` is
-observed on a screen with no engine behind it. `act:proposals` rides the
+observed on a screen with no server behind it. `act:proposals` rides the
 listing's rows, which a corpus-seeded walk carries; a walk that opened this
-screen against a dialled engine with nothing staged sees the read's own
+screen against a dialled server with nothing staged sees the read's own
 sentence and no rows, which is why the settle band and not the listing is what
 the parity inventory rests on.
 
@@ -3513,7 +3513,7 @@ on both ends of it.
 symmetric.** `crate::envelope` reads a payload a camera saw and checks the
 stated grade and name against the leaf the same payload carries, because a
 photograph has no provenance. The minting half does not, because the answer
-arrived over mTLS from the engine that minted it — re-deriving would be a
+arrived over mTLS from the server that minted it — re-deriving would be a
 second authority for a fact the channel already settled. What the two share is
 the VALUE: one `Envelope`, so what this seat displays and what the next device
 reads are the same six fields said once, and `envelope::write` is the exact
@@ -3570,7 +3570,7 @@ the value is gone — the one command in this vocabulary that crosses no wire an
 unmakes something.
 
 **A repeat is worse than useless and the sentence says so.** A second mint
-under one name is refused by the certificate the engine kept, so a resend on a
+under one name is refused by the certificate the server kept, so a resend on a
 lost reply would turn a mint whose material was lost into a refusal saying the
 name is taken. The read that settles one is the workspace's own machines
 (§13.14).
@@ -3578,18 +3578,18 @@ name is taken. The read that settles one is the workspace's own machines
 **What the walk reaches.** No new step: the admin screen already walks, and
 what it now captures is two more controls on that foot, both dark, each saying
 that a device has to be named first. The covering surface needs a mint to
-exist, which needs an engine, so what a walk with nothing dialled can reach is
+exist, which needs a server, so what a walk with nothing dialled can reach is
 the controls — which is what the parity gate asks of them either way.
 
 ### 13.19 Sign-in from the glass: the act, and the third held lane (bl-5a41)
 
 REMOTE §8.3's pair, consumed. The gap it closes is upstream's own and is
 structural rather than a misclick: a sign-in performed at THIS seat spawns
-`bz --login` on this phone with a wall derived here, so the credential lands
-where no agent will ever read it. The engine runs it instead, inside the named
-workspace's own wall, and streams the flow back — **nothing credential-shaped
+`bz --login` on this phone with a workspace directory derived here, so the credential lands
+where no agent will ever read it. The server runs it instead, inside the named
+workspace's own directory, and streams the flow back — **nothing credential-shaped
 crosses this wire**, at either end (§8.3: the token moves from the provider to
-the engine's box over the provider's own channel).
+the server's box over the provider's own channel).
 
 **Two gestures, and the wire already had both.** `login` is the act: it starts
 the run and answers the run's STANDING rather than waiting a browser's minutes
@@ -3618,20 +3618,20 @@ the credential store and never the network. A fresh workspace therefore has an
 empty table and a full catalog, so a sign-in screen painted from the table
 would offer nothing to sign into — which is why this screen reads
 `snap.catalog` and the composer's selector reads `snap.providers`, each the
-engine's own rows with the engine's own sentences on them, and neither derives
+server's own rows with the server's own sentences on them, and neither derives
 anything. One row reader serves both (`codec::pick::row`); the catalog rides the
 §14 cache beside the table under the same per-workspace pairing, so the screen
-opens on what the engine last said and corrects itself a round trip later.
+opens on what the server last said and corrects itself a round trip later.
 Opening the screen IS the `catalog` ask, exactly as opening the records screen
 is its five, and the chip that opens it carries `act:catalog` beside
 `act:login` for that reason (PARITY §4).
 
 **Tapping a row opens its tail; the button beside it starts a run.** The two
 are different gestures and the wire says so, one a read and one an act. A row
-that cannot be signed in shows the engine's reason where the verb would be and
+that cannot be signed in shows the server's reason where the verb would be and
 its button is dark — the greying discipline the selector already keeps, which
-never derives the reason and never hides the row. The engine's refusal for an
-unsigned wall arrives as the act's own `ok: false` and is painted in the
+never derives the reason and never hides the row. The server's refusal for an
+unsigned workspace arrives as the act's own `ok: false` and is painted in the
 banner, where every refusal in this app is.
 
 **The lane's stop condition, which is this rung's real decision.** The other
@@ -3646,7 +3646,7 @@ neither, so it is bounded from both ends and needs both.
   reader, one authority"), and the snapshot carries it back with the lines —
   so which row is open has one home and the screen paints rather than
   remembers it.
-- **The run says when it is over.** The engine's lane ends at the outcome
+- **The run says when it is over.** The server's lane ends at the outcome
   frame, so a seat that went on wanting one would redial a FINISHED sign-in
   once a cadence for as long as the screen stood open — replaying a settled
   buffer and ending again, forever. The fold's own `outcome` is the gate, and
@@ -3654,7 +3654,7 @@ neither, so it is bounded from both ends and needs both.
   failed sign-in is the reason and the fallback command, and a screen that
   cleared itself at the moment of failure would take both away.
 
-**A frame folds by the LANE it came from, never by the subject.** The engine's
+**A frame folds by the LANE it came from, never by the subject.** The server's
 cursor is per read, so a lane that expired at its hold hands the next one the
 whole buffer from zero (§8.3: *"a dropped lane, a re-attached seat and a
 settled run are one case"*). Folding that onto what stands would print every
@@ -3670,12 +3670,12 @@ streams paint the same and neither is coloured. It is upstream's own defect
 
 **What this does not solve, and it is upstream's shape.** A browser-only
 provider row cannot be completed from a phone at all: the redirect binds to
-the ENGINE's loopback, and reaching it wants a port-forward from a terminal
+the SERVER's loopback, and reaching it wants a port-forward from a terminal
 this device has not got. §8.3 states the remedy and refuses to build it into
-the channel; this screen paints the engine's own sentence and offers no verb
+the channel; this screen paints the server's own sentence and offers no verb
 that could not finish. A device-capable row completes from here in full — the
 URL and the user code paint, the human finishes in any browser, and bz polls
-the token endpoint from the engine.
+the token endpoint from the server.
 
 ### 13.20 The conversation list is a tree, and the recency order is taken over it (bl-06d3)
 
@@ -3687,7 +3687,7 @@ the token endpoint from the engine.
 was.** A workspace whose root had dispatched two named children painted three
 sibling rows in age order with nothing distinguishing them — the operator
 could not see the tree that stopping, messaging and adjudication all address.
-The engine had already said so: `depth` is on the conversations row and has
+The server had already said so: `depth` is on the conversations row and has
 been since REMOTE §9.4's rung landed, and this seat read it and dropped it.
 
 **Two facts, and the second was the reason the first could not simply be
@@ -3699,12 +3699,12 @@ indent depends on: an indented row three places from its parent says less than
 no indent at all.
 
 **So the recency order moved one rung up.** The SUBTREES are ordered newest
-first and each keeps the engine's own descent inside it. Nothing is derived to
+first and each keeps the server's own descent inside it. Nothing is derived to
 do it: a root row's `last_active_unix` is already *the subtree's* last action
 (REMOTE §9.9 says so in those words), which is exactly the key a subtree wants
 — and a child's own stamp never lifts its tree, because that would count one
 fact twice and put a busy tree in two places. The sort stays stable, so
-subtrees sharing a stamp keep the engine's order between them.
+subtrees sharing a stamp keep the server's order between them.
 
 **A row whose root this answer did not carry is a subtree of one, not a
 special case.** The first row opening a subtree even at depth 2 is the general
@@ -3784,7 +3784,7 @@ The fixture that proves it is the walk's own: `screens-seed.sh` hangs two fans
 off the roots the corpus answer already carries, at the `conversations` depth
 only — three depths, siblings that continue and siblings that end, one long
 preview that must elide and one failure with a hard break in it. Every row is
-a COPY of an engine row with the fields that say where it sits moved onto it;
+a COPY of a server row with the fields that say where it sits moved onto it;
 no field is invented, which is the rule the `running` seed already keeps.
 
 ## 14. The standing pass: the paint-first cache (bl-de96), and the held lanes beside it (bl-8e3c)
@@ -3794,16 +3794,16 @@ while the operator watched three empty lists fill. The operator's ruling is
 recorded with its own caveat — *generally opposed to caches, amenable here* —
 and this section is what that permission is bounded by. §14.1, added when the
 wire moved to protocol 13, is the other half of what stands between passes:
-the two reads the engine answers as a sequence, and how this seat holds them.
+the two reads the server answers as a sequence, and how this seat holds them.
 
 **One writer, one reader, one authority.** The model's worker writes after a
-pass the engine ANSWERED; the model's boot reads it once, synchronously,
+pass the server ANSWERED; the model's boot reads it once, synchronously,
 before the first frame; the next cadence read replaces whatever it painted.
 Nothing consults it to decide anything — it decides only what is on the glass
 for the second before the first answer lands. It is never consulted again for
 the life of the process. The queue's envelope in the file is the attention
 lane's last frame (§14.1) rather than a read of the pass's — still an answer
-the engine gave, written by the same writer at the same moment.
+the server gave, written by the same writer at the same moment.
 
 **The focus rides with the rows, because rows are only paintable under the
 focus they were asked at.** That is the invariant `Snapshot` already keeps,
@@ -3811,17 +3811,17 @@ and the file keeps it too: a stored depth that disagrees with the stored focus
 is refused rather than half-read. It also means the app reopens where the
 operator was, which is the same fact rather than a second feature.
 
-**It stores the engine's own envelopes, and that is a deliberate deviation
+**It stores the server's own envelopes, and that is a deliberate deviation
 from the ball's sketch.** bl-de96 asked for the decoded snapshot serialized
 with a version stamp; writing that means writing a reply ENCODER, and
 `tests/conformance/replies.rs` records why this client has none — *"a reply
-encoder would be a second implementation of the engine's own spelling with
+encoder would be a second implementation of the server's own spelling with
 nothing to check it against"*. `Entry` alone is a tree of blocks and untyped
 usage, and an encoder for it would drift from the decoder the first time a
 field moved, silently and only in the cache. So the file holds the reply
 envelopes verbatim and reading them goes through the ONE decoder every wire
 answer goes through. What the sketch was protecting against — a local file
-speaking with the engine's authority — is answered instead by strictness:
+speaking with the server's authority — is answered instead by strictness:
 **any doubt discards the whole file**. Absent, unreadable, not JSON, another
 layout version, another protocol version, an envelope the decoder refuses,
 an envelope of the wrong kind, a depth that disagrees with the focus: one
@@ -3866,7 +3866,7 @@ held lane blocks for the whole hold. `follow` was already in that class, so
 the 500 ms live tick was blocking for a step at a time and decoding the last
 append alone; protocol 10 put `attention` in the same class (REMOTE §14.1),
 which made the standing pass — it asked the queue on every cycle under an
-open conversation — wait a hold per pass. The engine's own note names the
+open conversation — wait a hold per pass. The server's own note names the
 hang and the remedy: the strict-equality preface is what converts it into the
 upgrade sentence, and this seat is the upgrade.
 
@@ -3875,9 +3875,9 @@ mechanism.** The alternative was attacked first and refused on its own
 terms. A one-shot ask with an explicit bound needs the wire to offer one, and
 it does not — neither `attention` nor `follow` carries a field a seat could
 shorten the hold with. The seat-side bound is a hang-up after the first
-frame, and that parks an engine thread per read for the hold's length: sixty
+frame, and that parks a server thread per read for the hold's length: sixty
 of them a minute at the tail's old rest, on a lane whose whole reason is to
-cost the engine nothing while nothing changes. So the seat holds, which is
+cost the server nothing while nothing changes. So the seat holds, which is
 the desktop seat's shape (lernie DESIGN §4.12: *"a read that deliberately
 never finishes, and therefore one that must never be in the serial pass"*),
 and the three costs §7 priced for holding are paid or dissolved:
@@ -3894,8 +3894,8 @@ and the three costs §7 priced for holding are paid or dissolved:
   standing keeps its one home — `queue` and the tail's fold are fields of
   `Standing`, written by the worker and by nothing else. The desktop crosses
   a lock here; this seat already had a channel.
-- **The real append fold.** `Stream::absorb` is the engine's own operation
-  copied — `fold(a).absorb(fold(b)) == fold(a ++ b)` — so an engine frame and
+- **The real append fold.** `Stream::absorb` is the server's own operation
+  copied — `fold(a).absorb(fold(b)) == fold(a ++ b)` — so a server frame and
   this seat's accumulation agree by contract. The attention frame replaces
   (REMOTE §14.1's own ruling) and the follow frame appends (§5.5's), and the
   two folds are two arms of one `adopt`, chosen by the lane's subject and
@@ -3912,10 +3912,10 @@ and the three costs §7 priced for holding are paid or dissolved:
 lane is opened by a pass and only by a pass: every pass ends by making what
 stands match what is wanted — the attention lane always, the follow lane
 while the focused row flies — hanging up what is no longer wanted first and
-dialling what is missing after, and only when the engine has just answered.
+dialling what is missing after, and only when the server has just answered.
 A lane that ended, for any reason (the hold's bound, the step's commit, a
 socket that went away, a dial that failed), is reopened at the next pass and
-never by itself. One rule covers the redial-storm case (an engine that is
+never by itself. One rule covers the redial-storm case (a server that is
 down costs one failed dial a pass, and the pass's own grace is the
 sentence), the hold-expiry case (REMOTE §10's *"a stream that ended and a
 dial that failed are one case"*, re-asked within a cadence), and the
@@ -3938,7 +3938,7 @@ lane, so a stop is seen at once rather than at the next frame.
 `Cmd::Attention` and `Model::list_queue` are gone: the queue screen (§13.8)
 opens and asks nothing, and the pass under an open conversation asks three
 questions again rather than four. The live tick (`LIVE_REST`) is gone with
-the one-shot follow read: arriving text appears at the engine's write
+the one-shot follow read: arriving text appears at the server's write
 cadence, which is what bl-4822 was reaching for with a poll. `Seat::ask` is
 now `Seat::hold` with every frame collected, so a held lane and a one-shot
 answer differ only in who reads the frames and when — the one door REMOTE
@@ -3951,7 +3951,7 @@ a worker on the glass to adopt it. Rung 1's scheduled fetch is untouched —
 it asks `workspaces`, which is not follow-class, and is answered in one
 frame by any intake.
 
-**The harness holds too.** The scripted engine (`src/test_support/serve.rs`)
+**The harness holds too.** The scripted server (`src/test_support/serve.rs`)
 gained two turns — `Hold`, frames and then the connection kept open until the
 seat hangs up, and `Feed`, frames written as the test sends them, the
 terminator when it drops the sender — so a test is the world changing at
@@ -4071,7 +4071,7 @@ silent the day that file moves. Every fact is frame-scoped like
 `Shell::back` — taken at the end of the pass — so a screen that stops painting
 stops saying it is there, and a stale rectangle can never be tapped.
 
-### 15.3 The engine is not dialled, and does not need to be
+### 15.3 The server is not dialled, and does not need to be
 
 Two seeds put the app on any screen with no server anywhere:
 
@@ -4114,7 +4114,7 @@ The walk, and the standing assertions it exists for:
 | `conversations` | focus at a workspace | the conversation list paints under its focus |
 | `row-menu` | — hold the first row | **the long-press synthesis works on a device**, and the three conversation acts are on the glass (§13.5) |
 | `transcript` | focus at a conversation, at rest | the chat screen paints under its focus, and the nudge is offered |
-| `running` | the same, with the stop gates on | the two stop controls paint under the engine's own gates |
+| `running` | the same, with the stop gates on | the two stop controls paint under the server's own gates |
 | `parity` | — every dump above | **every `control`-classed op is reachable or cited** (§15.5) |
 
 **The seeds grew a state, not a screen** (bl-fe4c). `transcript` and `running`
@@ -4166,7 +4166,7 @@ line, an installer that took it, the grant — and the emulator installs with
 failure it exists to catch is silent everywhere else: an undeclared permission
 is not refused at install, it is simply never granted, and the tool then
 refuses forever on a device where the operator did everything right. It does
-not invoke a tool — an invocation through the host channel needs an engine, a
+not invoke a tool — an invocation through the host channel needs a server, a
 foot leaf and something to fire `/invoke`, which is §15.8's own loop and not
 this walk's (bl-05b6) — so the refusal halves stay host tests, where they
 belong.
@@ -4216,7 +4216,7 @@ exist here**, caught mechanically rather than noticed by hand.
 **Against one roster, never against the other client.** Components meet at the
 interface, never pairwise (PARITY §2): a client-vs-client diff has no authority
 when the two disagree and goes quadratic at a third surface. The authority is
-the engine's own help table, whose rows carry `surface` since protocol 7 —
+the server's own help table, whose rows carry `surface` since protocol 7 —
 `control` for an op every seat owes a discoverable interactable, `machine` for
 one spoken only by programs — and it reaches this repo inside the corpus that
 is already vendored and already replayed. Raising the bar is therefore an edit
@@ -4252,7 +4252,7 @@ for a format, so the changeover at bl-a6f3 deletes code instead of adding a
 gate. **The half that needs no device gates on every `make
 check`**: `src/parity/tests.rs` reads this tree's own `parity.toml` against the
 vendored roster, so an exemption that stops parsing, stops citing, or names an
-op the engine no longer classes `control` reddens without an emulator.
+op the server no longer classes `control` reddens without an emulator.
 
 **Presence is the claim; depth is this harness's** (PARITY §5). The gate says a
 tagged node exists in the walked tree. That it is reachable in bounded
@@ -4268,7 +4268,7 @@ The screens behind a text button — the two enrollment screens and the server
 bootstrap — are named by the probe but not walked, because reaching them means
 tapping a labelled control and the probe states only the mark's rectangle.
 **The hits screen (§13.6) is unwalked for a second reason**: reaching it means
-typing a needle AND an engine answering it, and this walk dials nothing. Its
+typing a needle AND a server answering it, and this walk dials nothing. Its
 affordance is reached — `act:search` is observed on the roster, which is what
 the parity gate asks — and what the answer paints is asserted off-device.
 Extending it to every control is the point at which this stops being a probe
@@ -4365,7 +4365,7 @@ and looks at screens; this dials and opens none. The seeds differ (a
 **foot**-grade leaf, and an address that answers), the run needs a `yog`
 binary, and the two answer different questions — so it is its own script beside
 `screens.sh`, its own emulator, and its own target. Neither can be part of
-`make check`, and this one doubly: an emulator AND an engine.
+`make check`, and this one doubly: an emulator AND a server.
 
 **`yog gesture` will not do, and that is the ball's own finding.** The
 invocation mailbox is per-process in-memory state, so an `/invoke` run in a
@@ -4381,16 +4381,16 @@ JSON without the product's vocabulary growing a verb it must not have.
 **The world is `yog fixture`'s**, which exists for exactly this: it lays a
 state, states the address it minted material for, and hands back an
 operator-grade leaf. Two acts are the harness's own and both are the operator's
-elsewhere — the foot leaf, minted by the engine's own recipe (`WIRE_FOOT=1`
+elsewhere — the foot leaf, minted by the server's own recipe (`WIRE_FOOT=1`
 puts `OU=foot` on the certificate, REMOTE §4.2), and the registration, which is
 an empty file whose existence is the fact (REMOTE §1.5: no gesture manages one).
 
-**The device reaches the engine over `adb reverse`, and that is a disclosure
+**The device reaches the server over `adb reverse`, and that is a disclosure
 decision as much as a plumbing one.** The emulator's host alias is what a human
 reaches for and this repo's leak gate refuses that literal — rightly, since no
 rule can tell one routable quad from another by looking. `adb reverse tcp:P
 tcp:P` makes the device's own `127.0.0.1:P` the host's, which is a literal this
-tree may hold and, better, is the address the engine's server certificate is
+tree may hold and, better, is the address the server's certificate is
 already minted for.
 
 **Every invocation is answered with the app in the BACKGROUND**, which is the
@@ -4404,7 +4404,7 @@ this state.
 
 | beat | what it proves that a host test cannot |
 | --- | --- |
-| `shell` | the whole route, with a value this run minted: engine → device → tool → capture |
+| `shell` | the whole route, with a value this run minted: server → device → tool → capture |
 | `device` | a figure that is THIS device's — the platform is asked for the battery level a second way and the two must agree |
 | `notify` | a row on the platform's own shade, read back out of `dumpsys notification` on the tools channel |
 | `open` | a refusal **Android** makes, not this app: nothing of yog's is on the screen, and the capture says so in band naming the act that fixes it |
@@ -4685,7 +4685,7 @@ standing:
    — is the operator's explicit enrollment of *this device as hands* (§9: the
    grade is on the certificate, and minting it is the friction §4.2 wants).
 2. **Registration.** Which workspaces' agents can ever see the advertisement is
-   REMOTE §1.5's partition, decided at the engine by the operator.
+   REMOTE §1.5's partition, decided at the server by the operator.
 3. **The platform's own grants.** Each capability class is an OS permission or
    a service enable the operator grants in system settings — severable there,
    per capability, enforced by the one party that actually can (the OS), and
@@ -4697,7 +4697,7 @@ standing:
 
 Two standing rules carry over unchanged: **the advertisement is static and
 whole** (§6's two-tables argument, and one more since the usurper guard — a set
-that tracked permission state would rewrite the engine-side document on every
+that tracked permission state would rewrite the server-side document on every
 grant flip), and **`subject_cwd` stays never-consented** (§6's invariant, with
 its test). A model reaches a phone tool only through the §5.2 `load` act, after
 a `get` that showed the descriptions — which is where the per-tool background
@@ -4709,7 +4709,7 @@ not reverse.** Three facts, verified against the yog store and REMOTE §5.4:
 
 - bl-5710 is **resolved, not standing**: the operator ruling of 2026-08-31
   (*ship some basic tools — a default install must be able to write a file*)
-  landed as the worktree lane's last rung — the engine performs its own
+  landed as the worktree lane's last rung — the server performs its own
   builtins at its front door. Its residual (does thrall ship a *pool* corpus)
   is thrall's question and blocks nothing here.
 - It **never governed a foot's advertised set**. Its defect was the shipped
@@ -4724,7 +4724,7 @@ not reverse.** Three facts, verified against the yog store and REMOTE §5.4:
 
 **The usurper hazard is inherited as a fix, not a defect.** thrall bl-2d78
 found the advertised set last-writer-wins under one identity; yog bl-1462
-closed it engine-side (REMOTE §5.1: a second parked `invocations` read refuses
+closed it server-side (REMOTE §5.1: a second parked `invocations` read refuses
 in band, and a set-changing advertisement is refused while one is parked). The
 phone inherits that guard for free, and the visible residual is the same guard
 working — two processes serving under one CN is refused loudly, which §6's
@@ -4738,7 +4738,7 @@ re-assert at the end of every hand-off, which bounds the window to one tool's
 runtime, and read the receipt's `wrote` (PROTOCOL 8), which turns a silent
 self-heal into a sentence on the roster. Neither half is a client amending
 REMOTE: the re-assertion is an ordinary §5.1 gesture, and `wrote` is a field
-the engine now states.
+the server now states.
 
 **Refused shapes, recorded**: the SMS permission pair (above); a generic
 run-any-intent tool (the wrapper meta-tool REMOTE §5.2 refused twice — `open`
@@ -4756,7 +4756,7 @@ longer a reason: every line now cites the ball that will build its surface, or
 a reason that survives the ruling. **No line may cite §2 again.**
 
 **All forty-three became unbuilt-with-ball, and zero became
-per-platform-never.** Attacked before settling: every one is an engine act or
+per-platform-never.** Attacked before settling: every one is a server act or
 read fired from glass — the typed-name armings, count fields and text bodies
 they want are things this app's composer and rows already do, and nothing
 about a phone refuses any of them. The reasons that DO survive are structural,
@@ -4809,14 +4809,14 @@ that only reads binds nothing, and the rung is a binding.
 Rung 1 of yog REMOTE §14, whole. The gap it closes is stated there and is
 platform-shaped, not wire-shaped: *"a phone seat learns its turn has come at
 its next read, and a phone in a pocket performs none: the platform ends a
-backgrounded app's sockets and schedules it nothing."* The engine initiates
+backgrounded app's sockets and schedules it nothing."* The server initiates
 nothing toward a client (REMOTE §3) and §14.3 refuses every shape that would
-change that — an engine-side punch at a phone whose NAT mapping is dead, a
+change that — a server-side punch at a phone whose NAT mapping is dead, a
 vendor push relay, an out-of-band mail adapter. What is left is the platform's
 own door, and this section is this app walking through it.
 
 **The whole of it: the OS runs a job, the job performs one ordinary ask, a
-rise becomes a notification.** No wire change, no new gesture, no engine
+rise becomes a notification.** No wire change, no new gesture, no server
 dependency, nothing upstream to wait for.
 
 ### 17.1 What it asks
@@ -4825,7 +4825,7 @@ dependency, nothing upstream to wait for.
 Its rows carry `attention`, the per-workspace count the roster screen paints
 its attention mark from (`src/shell/screens.rs`), and that is the cheapest
 attention-shaped read the vendored corpus answers: one connection, one frame,
-rows a handful long, and nothing derived on this end that the engine did not
+rows a handful long, and nothing derived on this end that the server did not
 already say. It is deliberately NOT `Query::Attention`: that read is
 follow-class since protocol 10 (REMOTE §14.1) and the wire intake holds it,
 so a scheduled job that asked it one shot would wait a hold. The seat holds
@@ -4848,7 +4848,7 @@ pocketed phone carries one standing attention row rather than a stack of
 them. That is REMOTE §14.1's own rule about frames, arriving at the same
 answer from the platform's side.
 
-**Every failure is silence.** No material, an engine that will not answer, an
+**Every failure is silence.** No material, a server that will not answer, an
 answer this end cannot read: the run ends with no notification and *no state
 written*, and the next schedule tries again. A phone in a pocket must never
 nag about network — the operator did not ask for a fetch report. The one
@@ -4919,7 +4919,7 @@ it), and an empty string is silence.
 dials a real one-shot mTLS server on loopback (the transport's own recipe) and
 the suite drives a first rise, a repeat, a fall, an empty roster, and every
 class of silence — no material, half material, material that will not build a
-seat, an engine that does not answer, an answer to another question. What only
+seat, a server that does not answer, an answer to another question. What only
 a device can prove is that the platform actually RUNS the job: `make screens`
 reads `dumpsys jobscheduler` back and fails if this app has no periodic job
 armed after a launch.
@@ -4957,7 +4957,7 @@ explicit operator act."* This section is that rung, and the two decisions it
 had to make for itself.
 
 **The whole of it: a foreground service holds the process, a thread parks in
-`Query::Attention`, and a frame is the wake.** No wire change and no engine
+`Query::Attention`, and a frame is the wake.** No wire change and no server
 work — the lane landed upstream at protocol 10 (REMOTE §14.1) and this is the
 seat's second consumer of it, beside the one on the glass (§14.1).
 
@@ -5018,12 +5018,12 @@ who revokes the exemption, silences the channel, or re-provisions this device
 as a foot has the hold taken down without visiting a second place.
 
 **A life is one dial, and a life that said nothing rests one hold.**
-`attention::wake` dials, holds, and answers the first rise the engine writes;
-`Lane` posts it and dials again. The rest is thirty seconds — the engine's own
+`attention::wake` dials, holds, and answers the first rise the server writes;
+`Lane` posts it and dials again. The rest is thirty seconds — the server's own
 hold width, REMOTE §5.1's stated number, taken from where it is already
 stated. The price is that a change can wait one rest before it is heard, which
 is still seconds against rung 1's quarter-hours; what it buys is the bound on
-an engine that is simply gone, two connections a minute rather than a spin.
+a server that is simply gone, two connections a minute rather than a spin.
 There is no ladder and no attempt counter, for §18.5's own reason: a phone that
 changes networks hourly has no number of failures after which giving up is
 right.
@@ -5031,7 +5031,7 @@ right.
 **Both rungs decide with ONE memory, and that is what stops them
 double-waking.** `attention/seen.json` (§17.2) holds what was last announced
 per workspace, and rung 2 writes it through the same `risen` rule rung 1 does.
-The two are comparable because the engine derives them from one predicate: a
+The two are comparable because the server derives them from one predicate: a
 `workspaces` row's `attention` is the count of that workspace's agents whose §6
 predicate fires (yog `answer::chrome::workspace_stats`), and the attention
 queue is every agent whose predicate fires across every workspace
@@ -5041,7 +5041,7 @@ either rung is silent at the other, and the post lands on rung 1's own fixed
 notification id, so a pocketed phone carries one standing attention row
 whichever wrote it.
 
-**Every failure is silence**, unchanged from §17.2: no material, an engine that
+**Every failure is silence**, unchanged from §17.2: no material, a server that
 will not answer, a frame of a kind this end does not expect. A frame this
 codec cannot read ENDS the lane rather than being guessed at (REMOTE §3's third
 rule), and the rest before the next dial is what keeps that from spinning.
@@ -5055,8 +5055,8 @@ exemption when it is granted; a consenting seat holds `dev.yog/.Pocket`
 promoted to the foreground; the standing row is on `yog.attention.held`; and
 taking the exemption back stops the hold.
 
-**The wake itself was measured, once, with an engine beside the device**, which
-the walk cannot do because it dials nothing. A `busy` fixture engine on
+**The wake itself was measured, once, with a server beside the device**, which
+the walk cannot do because it dials nothing. A `busy` fixture server on
 loopback through `adb reverse`, a seat leaf registered into its workspace, the
 battery exemption granted, the app launched once and then sent HOME: the
 platform held `dev.yog/.Pocket` foreground with `types=0x40000000` and its
@@ -5084,7 +5084,7 @@ wrong for a device enrolled AS hands.
 
 **The whole of it: a foreground service holds the PROCESS, and the host was
 moved out of the activity so there is a process worth holding.** No new tool,
-no new gesture, no engine dependency. `invocations` is the same follow-class
+no new gesture, no server dependency. `invocations` is the same follow-class
 read it always was.
 
 ### 18.1 The host belongs to the process now
@@ -5238,19 +5238,19 @@ box that roams less. Reading it against this client's landed ladder (bl-8641)
 found a defect that would have made this whole rung a lie, so the ledger is not
 a formality. **Adopted:**
 
-- **Classification by who failed at which leg, never by the engine's prose.** A
+- **Classification by who failed at which leg, never by the server's prose.** A
   device that decided its own lifetime by reading sentences would be one the far
   end could rewrite by rewording. `Stop::Wire { why, read, served }` carries the
   leg; `crate::transport::Wire` carries the class.
 - **The three-row matrix, which needed a third class here.** `Wire` had two
-  variants and collapsed *the engine said no* with *the engine said something
+  variants and collapsed *the server said no* with *the server said something
   unreadable* — the decoder already draws that line (its outer error is
-  unreadable, its inner one is the engine's `ok: false`) and `answered` was
+  unreadable, its inner one is the server's `ok: false`) and `answered` was
   discarding it. `Wire::Unusable` is that line made visible: a stream that ended
   without answering, a frame that is not JSON, a reply of a kind the gesture does
   not earn, a version that cannot be spoken to.
 - **THE ONE REFUSAL THAT MUST BE RETRIED, and it is the defect.** A read parked
-  when the connection dropped does not leave until the engine tries to answer
+  when the connection dropped does not leave until the server tries to answer
   it, so a redial inside that window meets REMOTE §5.1's one-reader guard
   refusing **this very device** — its own dying predecessor, not a rival. This
   client treated every refusal as final, so a phone's *first wifi handover*
@@ -5270,7 +5270,7 @@ a formality. **Adopted:**
   matters: a rival holding this device's read accepts every advertisement while
   refusing every read, so the weaker predicate would reset the ladder forever on
   the one ending that has to back off. An answered read — an empty one counts —
-  is the engine having parked this device for its own hold.
+  is the server having parked this device for its own hold.
 - **No disarm knowledge across redials.** A `wrote: true` on a channel's FIRST
   presentation says nothing and is discarded (`host::serve`, bl-cc54); a redial
   makes a fresh channel, so that silence holds across one. Nothing is remembered
@@ -5299,7 +5299,7 @@ a formality. **Adopted:**
   which the roster and the shade both read. Same requirement, and this end
   already had the channel for it.
 - **A single-entry process does not exit.** thrall still exits when it cannot be
-  a foot at all, because supervision is the right owner on a server box. There is
+  a foot at all, because supervision is the right owner on the server's box. There is
   no supervisor on a phone and no exit code anything would read; the equivalent
   is `Health::Stopped` reaching both surfaces, which §18.4 is about.
 
@@ -5491,10 +5491,10 @@ yog's REMOTE §3 gained one bullet (its bl-d1f1) and it is the whole of this
 section's premise:
 
 > **A lost reply leaves an act IN DOUBT, and the recovery is a read — never a
-> resend.** A connection that dies between the engine completing an act and the
+> resend.** A connection that dies between the server completing an act and the
 > reply frame landing tells the client nothing about whether the effect ran, and
 > nothing on the wire can be added to say it: an act is not idempotent (§9.8 —
-> two clicks of Nudge are two nudges), an engine-side receipt journal could only
+> two clicks of Nudge are two nudges), a server-side receipt journal could only
 > assert *dispatched*, never *committed* [...] So no idempotency token rides the
 > act envelope and no redelivery slot exists for acts: a client whose act earned
 > a transport error instead of a reply paints the failure and consults the world,
@@ -5514,13 +5514,13 @@ a flag on an existing one:
 |---|---|---|---|
 | `Transport` | the channel failed **before** the gesture left | yes | no |
 | `Lost` | the gesture was written and **nothing answered it** | yes | **yes** |
-| `Refused` | the engine spoke, and said no | the leg decides (§18.5) | no |
-| `Unusable` | the engine spoke, and this end cannot read it | no | no |
+| `Refused` | the server spoke, and said no | the leg decides (§18.5) | no |
+| `Unusable` | the server spoke, and this end cannot read it | no | no |
 
 **The line is drawn by the framing, not by a guess.** An `io::Error` out of a
 write is that write's bytes not being accepted, and `frame`'s reader takes a
 length header and then exactly that many bytes without ever scanning — so a
-frame that failed mid-write is a frame no engine decoded, and a socket that
+frame that failed mid-write is a frame no server decoded, and a socket that
 would not open said nothing at all. Both are ordinary failures. A frame written
 whole is the opposite: this end cannot learn whether it arrived, whether it was
 answered, or whether the answer went into a socket that had already gone.
@@ -5530,7 +5530,7 @@ answered, or whether the answer went into a socket that had already gone.
 reads it, and `Lost` answers yes, because a foot that stopped on a dropped
 completion would be exactly the wifi-handover defect §18.5 exists to prevent.
 `Wire::in_doubt()` is *may the act have run anyway*, and only `Lost` answers
-yes. The engine's own preface is the one exchange after the write that is still
+yes. The server's own preface is the one exchange after the write that is still
 definite, so a version this end cannot read stays `Unusable`: yog's listener
 writes its version before it reads a request frame (`wire::hello::admit`), so a
 peer that never stated one never read the gesture.
@@ -5549,10 +5549,10 @@ that must not.
 
 **The defect this closed is one tap wide.** The composer's echo watches the
 deposit counters move (bl-66fb): on a refusal it takes the operator's text back
-into the field, because the engine said no and saying it again is an ordinary
+into the field, because the server said no and saying it again is an ordinary
 first attempt. A lost reply used to count as a refusal — so a phone that
 dropped its connection mid-deposit handed the draft back, one tap from a second
-copy of a message the engine may already have taken. On a device whose radio
+copy of a message the server may already have taken. On a device whose radio
 drops connections routinely, that is the tempting reconnect-and-replay loop the
 contract forbids, wearing an operator's finger as its retry.
 
@@ -5581,7 +5581,7 @@ a particular message rather than a transient failure.
 
 The pocketed foot redials forever (§18.5), and a redial re-asserts the
 advertised set on every fresh channel. That is lawful and stays: a presentation
-is idempotent by design, and since PROTOCOL 8 the engine's own `wrote` reports
+is idempotent by design, and since PROTOCOL 8 the server's own `wrote` reports
 whether it changed anything. **The completion is the gesture that may not be
 repeated**, and the loop already did the right thing — the capture is moved into
 the gesture and goes with the channel that could not carry it, and the redial
@@ -5589,7 +5589,7 @@ presents and reads afresh rather than carrying an answer over. What was missing
 was that anyone had said so, and a test: the ladder had been proven on the
 `invocations` leg and never with a hangup on `complete`.
 
-**The recovery here is the engine's, and this device must not help.** REMOTE
+**The recovery here is the server's, and this device must not help.** REMOTE
 §5.3's invocation leg is at-least-once *by design*: a claim whose taker vanished
 is requeued (yog bl-e658), so the work this device could not answer is offered
 again on the next `invocations` read, and this device runs the tool again and
@@ -5601,7 +5601,7 @@ twice, and it is the effect owner's to make safe, never the wire's to promise.
 
 **Nothing new is painted for it.** The shade and the roster already say
 `reconnecting` with the sentence that broke the channel, and a doubted
-completion adds nothing an operator can act on: the engine re-delivers, this
+completion adds nothing an operator can act on: the server re-delivers, this
 device answers, and a mark for the seconds in between would be noise on the one
 surface a pocketed phone has.
 
@@ -5616,7 +5616,7 @@ full CD — any new publication should result in an upgrade of the running
 versions.* Four of the five components already answer it, and every one of
 them answers the same question: **read the newest live version off a registry,
 compare it with what is installed, install if it differs, restart only when the
-box says it is idle.** The engine box runs the OCI image with a reconciler
+box says it is idle.** The server's box runs the OCI image with a reconciler
 timer off `ghcr.io`; a workstation runs the native binary with an hourly
 reconciler off the crates.io sparse index; the seat and the foot install the
 newest live `lernie` and `thrall` and adopt them at the next launch.
@@ -5778,7 +5778,7 @@ live conversation is the interruption this suite's notice discipline exists to
 avoid. Tapping it downloads the asset and hands it to the system installer
 through a `FileProvider` content URI; the person taps again. Two taps and no
 surprise. The row carries **no `act:` tag**: the parity gate judges tags
-against the engine's op roster and this control fires no op, so a tag here
+against the server's op roster and this control fires no op, so a tag here
 would name an op that does not exist.
 
 **What is deliberately not built.** No silent install and no self-update path —
@@ -5795,31 +5795,31 @@ here is *delete the release and publish another*.
 
 ### 20.5 The protocol-skew consequence
 
-A seat that updates ahead of its engine speaks a newer `PROTOCOL`, and REMOTE
+A seat that updates ahead of its server speaks a newer `PROTOCOL`, and REMOTE
 §9.5's hello is fail-closed. Every other box in the fleet closes that skew
 within the hour on its own; **a phone cannot**, because the last rung needs a
 tap — so a phone whose person is not holding it stays skewed indefinitely. The
 row is what makes that recoverable: the refusal names both versions, and the
 one act that fixes it is on the screen an operator lands on.
 
-## 21. The punched wire: the phone reaches its engine from anywhere (bl-3d62)
+## 21. The punched wire: the phone reaches its server from anywhere (bl-3d62)
 
 The app half of yog bl-0247. REMOTE §12.1 holds — nothing is owed a phone
 that is not owed a laptop — so this is the same client contract thrall
 carries (thrall bl-0a8b), reimplemented here per REMOTE §13.7 ruling 2 and
-tested against the same byte fixtures, which were pinned from the engine's
+tested against the same byte fixtures, which were pinned from the server's
 own output. REMOTE §13.2–§13.4 is the authority; this section says only what
 the phone does with it.
 
 ### 21.1 The material: two files beside the leaf
 
-An entry that roves holds `rendezvous.pub` (the engine's ed25519 public key)
+An entry that roves holds `rendezvous.pub` (the server's ed25519 public key)
 and `pairing.salt` beside `ca.pem`, 32 bytes of hex each, **both or
 neither**. Neither is today's entry, byte for byte; one alone is the
 half-provisioned store `material::read_dir` already names, one rung over
 (`rendezvous::read_dir`). They arrive the way the leaf does: the §8.4
 enrollment envelope carries them as `rendezvous_pub` and `pairing_salt`
-(yog bl-9043, edition 20), an engine that does not rove sends neither, and
+(yog bl-9043, edition 20), a server that does not rove sends neither, and
 half a pair refuses before anything lands (`envelope::roving`). The QR stays
 at level M: the pair grows a mint to about 1729 bytes, past Q, inside M.
 
@@ -5831,14 +5831,14 @@ ends compute and this device stores no keypair of its own.
 ### 21.2 The DHT client
 
 `src/dht` is a pure client of the mainline — outbound UDP, never a node, no
-listener, nothing offered. It is the engine's module reimplemented, including
-the two defects the engine's live walks found: the bootstrap routers are asked
+listener, nothing offered. It is the server's module reimplemented, including
+the two defects the server's live walks found: the bootstrap routers are asked
 `find_node` and never BEP 44's `get` (yog bl-f6e1), and the bootstrap is a
 door and never a result, so a walk whose learned nodes are all silent is a
 dark commons rather than an empty read (yog bl-9408). The roster is the
-engine's four routers.
+server's four routers.
 
-**The walk is the engine's, rule for rule** (bl-066c, porting yog bl-d00f and
+**The walk is the server's, rule for rule** (bl-066c, porting yog bl-d00f and
 bl-d9c1; the evidence is yog REMOTE §13.7 ruling 3's tables). It converges on
 a *frontier*, not on everything it has heard of: the K closest nodes that
 replied, are not yet asked, or are still in the air. A node silent past its
@@ -5852,7 +5852,7 @@ answers names a single random node eight times per query, so its first seeds
 are often all silent and re-asking draws fresh ones. **A re-ask knocks only
 where the door answered** (bl-29dd, porting yog bl-f519): a bootstrap address
 silent past its first deadline leaves the door for the rest of the walk, as a
-silent node leaves the frontier. From the engine's box the roster resolves to
+silent node leaves the frontier. From the server's box the roster resolves to
 five addresses of which three never answer, and re-asking all five spent
 three of every five door queries on nothing — in the walks that ended dark,
 most of the cap. The walk is a **sliding
@@ -5861,9 +5861,9 @@ own deadline, and the next frontier node asked the moment any answers or times
 out, so a silent node costs its own slot for one deadline and never delays an
 answer beside it; the door's queries hold no α slot. `put` spends its tokens
 in one flight, every holder at once, each with its own deadline. The defaults
-are the engine's measured ones — α 8, K 8, a 1 s deadline per query, a
+are the server's measured ones — α 8, K 8, a 1 s deadline per query, a
 64-query cap — pinned by `the_defaults_are_the_measured_window_and_deadline`.
-Measured from the engine's box after both fixes: `lookup` 10/10 at a median
+Measured from the server's box after both fixes: `lookup` 10/10 at a median
 ~6.5 s, `put` 10/10 at ~7.5 s, `get` 9/10 at ~7.5 s. yog bl-f519 measured
 the `put` that occasionally drew no acknowledgement and found a dark walk, not
 a silent `put`: a walk that reached no token holder sent nothing and borrowed
@@ -5889,7 +5889,7 @@ lockstep walk at the same cap (bl-d00f lockstep: `put` 19.2 s median), and α 8
 is what does it — the same queries, sent faster. What bounds the total is the
 ladder, not the walk: a rung that fails arms the backoff (1 s doubling to
 64 s, `ladder/backoff.rs`), and a network change is what clears it early. **Nothing here
-was measured on a phone or over cellular**, so the engine's defaults stand;
+was measured on a phone or over cellular**, so the server's defaults stand;
 a smaller cap or α is a trade for a lower success rate and wants a
 measurement from a handset before it is taken.
 
@@ -5909,7 +5909,7 @@ and a climb already past the gate stops at its next rung boundary (§21.10,
 plain connect, down to the same sentence.
 
 **The TLS is the same TLS whichever rung answered.** The ladder hands back a
-socket; `transport::Seat` runs the inner mTLS over it verifying the engine
+socket; `transport::Seat` runs the inner mTLS over it verifying the server
 name off `address`, so `address` stays required on a roving entry — it is
 the name's one home (thrall's deviation 1, for the same reason).
 
@@ -5920,7 +5920,7 @@ settles instead of walking a dark commons per dial; a connection, a served
 stream, or a network change resets it.
 
 **One ladder per entry, one dial in flight** (bl-58a0). A pairing's inbox
-is one item — newest `seq` wins — and the engine punches the call it reads
+is one item — newest `seq` wins — and the server punches the call it reads
 once a poll, so two ladders climbing one entry at once write two calls from
 two punch ports and only one is ever answered; measured live, where the
 roster read, the conversations read and the attention fetch each climbed
@@ -5940,7 +5940,7 @@ line out with an **ask** is waited for without a bound of the gate's own —
 the ask is answered inside its timeout — so no caller climbs beside it
 (§21.12). A line held by a **parked read** (`transport::Seat::hold`: the
 seat's lanes, the attention fetch; `Lease::park` marks it) comes back only
-when the engine's hold ends, up to thirty seconds, so a waiter that has
+when the server's hold ends, up to thirty seconds, so a waiter that has
 watched only parked reads' lines out for **10 s**, with no dial in flight,
 dials its own — still one at a time, and **beside** the line still out: a
 fresh call from a port of its own that is forgotten after its window
@@ -5959,16 +5959,16 @@ that differs from the last moves the generation the same way. A new
 generation drops every held stream (dead mappings) and clears the backoff
 **at once**, on the platform's thread, for every ladder alive; and the punch
 port is the entry's only in the generation it was bound in, so the next
-dial binds afresh and its call names the new port (§21.9): the engine's NAT
+dial binds afresh and its call names the new port (§21.9): the server's NAT
 held a mapping toward the address and port the last call named, and this
 box no longer sends from that address. The cached presence stays — it says
-where the engine is, and this box moving does not move it (§21.12). The call's
+where the server is, and this box moving does not move it (§21.12). The call's
 own addresses are read as it is written, not at the dial's start. A flap
 back to the same set is caught by the held stream's own reader instead.
 
 **The call carries the observed address** (bl-544b, porting yog bl-efae;
 yog REMOTE §13.2). The addresses this box sends from are route-local, and on
-cellular that is a carrier-private address the engine cannot reach — yog
+cellular that is a carrier-private address the server cannot reach — yog
 REMOTE §13.8 measured the observed endpoint as the only one there is on that
 path. So every walk keeps what each answering node says it saw the query come
 from (BEP 42's `ip`, 6 or 18 bytes, anything else ignored), and
@@ -5986,16 +5986,16 @@ defect on cellular.
 ### 21.4 The punch
 
 `rendezvous::punch` binds one port on both families with `SO_REUSEADDR` and
-`SO_REUSEPORT`, listens there, and connects toward every engine endpoint
+`SO_REUSEPORT`, listens there, and connects toward every server endpoint
 *from* that port, v6 first, one SYN per 2 s — the simultaneous open a NAT pair
 needs. The first stream that lands is kept. That takes `socket2`, the one new
 crate, under the operator's 2026-09-23 ruling (REMOTE §13.7 ruling 1). The
-window is **35 s**, not the engine's 20: the engine polls its inbox every
+window is **35 s**, not the server's 20: the server polls its inbox every
 15 s and punches for 20 after, so a client that stopped at 20 would miss a
 late poll entirely — thrall's figure, a default to revisit on evidence. This
 listener is the one exception to §1's no-listening-socket rule. It is bound
 once per entry for the run (§21.9) and accepts only inside a window: a
-stream the kernel queued between windows — an engine that read a call late
+stream the kernel queued between windows — a server that read a call late
 and punched after this end gave up — is dropped unread when the next
 window opens.
 
@@ -6006,7 +6006,7 @@ ladder (`transport::Open::each`) with its preface spent; the next ask writes
 only its request. Between asks a holder thread reads it: `{"ping":true}` is
 discarded (and discarded ahead of a reply too, where one written just before
 the request sits in the buffer), any other frame drops the stream, and **two
-minutes with no frame at all hangs up** — the engine's own bound, mirrored,
+minutes with no frame at all hangs up** — the server's own bound, mirrored,
 on the injected clock so the suite walks it in an instant. A dialled socket is
 still one ask, one connection, as before. A ladder that goes away takes its
 held streams with it — and since bl-58a0 it goes away only when no seat on
@@ -6018,10 +6018,10 @@ ended cannot shut down the line the pool now holds (§21.8).
 ### 21.6 What is proved, and what is not
 
 Host tests, no device, no network: the HKDF labels, seal/unseal and the
-signed item against the engine's byte fixtures; the walk against a fake DHT
+signed item against the server's byte fixtures; the walk against a fake DHT
 on loopback UDP with a router that answers only `find_node`; every rung taken
-and fallen through against a scripted engine that holds its connection; the
-backoff; a network change; an engine that moved (cache miss, then
+and fallen through against a scripted server that holds its connection; the
+backoff; a network change; a server that moved (cache miss, then
 rendezvous); ping discard and the silence hang-up.
 
 **Not proved, and stated:** no walk against the live mainline from a phone;
@@ -6036,7 +6036,7 @@ foreground seat's cache.
 
 A dial that fails silently is indistinguishable from one never made, so the
 rungs say each event in logcat — yog REMOTE §13.4's *operator's view of the
-loop*, the engine's bl-355c, from the phone's end. One line apiece, every one
+loop*, the server's bl-355c, from the phone's end. One line apiece, every one
 built in `ladder::say` and beginning `yog.rendezvous:` (in the message, not the
 tag, for `shell::app::probe`'s reason):
 
@@ -6060,7 +6060,7 @@ tag, for `shell::app::probe`'s reason):
     yog.rendezvous: held stream handed to an ask — <p> ping(s) discarded while held
     yog.rendezvous: held stream dropped — <reason>; <p> ping(s) discarded while held
 
-A drop's reason is one of five classes: two minutes of silence, the engine
+A drop's reason is one of five classes: two minutes of silence, the server
 ended it, a frame that is not a ping, the stream closed or failed, or released
 (the network changed or the ladder went away). A line carries counts,
 sequence numbers, nonces and address families, each v6 counted by its scope
@@ -6084,9 +6084,9 @@ covers the silence between asks, which is where a held stream lives.
 
 Measured live on two dials (yog bl-65dc, wifi, build c5eac49): *punch
 landed* at +3 s, handed/kept pairs, then at +6 s *re-punch at 2 cached
-endpoint(s)* with the line still up, expiring at +41 s while the engine said
+endpoint(s)* with the line still up, expiring at +41 s while the server said
 *call nonce N already punched — no punch*. Once, the held stream dropped
-*closed or failed* about 40 s after landing in the foreground, the engine
+*closed or failed* about 40 s after landing in the foreground, the server
 saying *served stream ended* in the same second.
 
 **The re-punch was a caller that read the entry as idle.** `Pool::take` pops
@@ -6102,20 +6102,20 @@ before the look and handed back quietly on a miss (`ladder::gate`). Neither
 direction is a change — no waiter waits for a line to leave, and a miss is
 nothing appearing.
 
-**The forty-second close was this end.** The engine hangs up a held stream
+**The forty-second close was this end.** The server hangs up a held stream
 only after two minutes of silence it pings through every 25 s (`Quiet::held`)
 — it cannot close at 40 s by itself. The seat's lanes (§14.1) are follow-class
-reads the engine holds for thirty seconds and then ends with the terminator;
+reads the server holds for thirty seconds and then ends with the terminator;
 a punched lane's stream then goes back to the pool (`Open::each`), and the
 worker, told the lane is over, drops it — and `Lane`'s drop hangs up through
 its `Hangup`, a second descriptor on the same socket, now the pool's. The
-`shutdown` reached the holder as a closed stream and the engine as an EOF in
+`shutdown` reached the holder as a closed stream and the server as an EOF in
 the same second: a lane opened a few seconds after landing, plus its
 thirty-second hold. **Fix:** the hang-up is disarmed once the stream is kept
 (§21.5).
 
 **The 10 s exit no longer re-punches.** A caller that waits past the bound on
-a parked read wants a *second* line; the engine punches a call's nonce once,
+a parked read wants a *second* line; the server punches a call's nonce once,
 toward the port that call named, so a re-punch at the first line's endpoints
 from a fresh port could never be answered. That dial writes a fresh call.
 
@@ -6130,17 +6130,17 @@ retired, replaced by the re-call (§21.12).
 for the life of the process, as lernie (`Worked::punch`) and thrall do.
 Until then every climb bound a fresh port.
 
-**The reasoning, checked against yog REMOTE §13.3 and the engine's
-`wire/rendezvous`.** The engine punches only on a new call, from its one
+**The reasoning, checked against yog REMOTE §13.3 and the server's
+`wire/rendezvous`.** The server punches only on a new call, from its one
 port held for its run, toward the endpoints and the port that call named,
 so its NAT then holds a mapping toward exactly (this box's address, that
-port). A port kept for the run is one the engine's NAT has let in before.
+port). A port kept for the run is one the server's NAT has let in before.
 
 **Where it lives.** The entry table (`ladder::entries`) holds each roving
 entry's `Port` strongly, beside its weakly held ladder, so the port survives
 across climbs and across seats: a ladder that goes away with its last seat
 leaves the port, and the next seat's ladder climbs from it. The same value
-carries the engine's cached presence (§21.12) and the entry's last call
+carries the server's cached presence (§21.12) and the entry's last call
 `seq` — a second ladder on the entry inside the same clock second must
 still write a higher one, or the commons refuses its put. Two things
 replace the port, each forced:
@@ -6148,8 +6148,8 @@ replace the port, each forced:
 - **A network change** (§21.3) lets it go: the mapping names an address
   this box no longer sends from. The next climb binds afresh.
 - **A dial beside a line still out** (§21.3) binds a fresh port: the line
-  out holds the entry's port toward the engine's one port, TCP carries one
-  connection per pair of ends, and the engine would punch the new call
+  out holds the entry's port toward the server's one port, TCP carries one
+  connection per pair of ends, and the server would punch the new call
   toward a pair already in use. **That port is the beside call's alone and
   is never stored** (bl-c21d): measured live, storing it left the entry on
   a port whose call had not landed.
@@ -6157,18 +6157,18 @@ replace the port, each forced:
 **The re-punch rung this section used to keep is retired** (yog bl-278f,
 §21.12). It punched at the cached endpoints from this port with no call
 behind it, riding a NAT mapping it assumed outlived the window. Measured on
-three wifi dials against engine 0.0.74, the re-punch left from exactly the
-landed port for 35 s and nothing reached the engine's kernel: the engine's
-home NAT holds no mapping once the served stream has ended, and the engine
+three wifi dials against server 0.0.74, the re-punch left from exactly the
+landed port for 35 s and nothing reached the server's kernel: the server's
+home NAT holds no mapping once the served stream has ended, and the server
 sends SYNs only inside a call's window, so a punch with no call is
 one-sided. Its guards went with it — the "armed" flag a re-punch spent and
 a served line re-armed, and the reasoning about a re-punch landing in an
-engine's accept queue unread (the engine serves its punch port at any time
+server's accept queue unread (the server serves its punch port at any time
 since yog bl-5276). The 10 s preface bound (`transport`, `PREFACE`) stays: a
 fresh socket that connects and is never served still costs that, not the
 ask's two minutes.
 
-**Proved on the fake bench** (`ladder/tests/port.rs`, whose engine can
+**Proved on the fake bench** (`ladder/tests/port.rs`, whose server can
 answer only the port the call named, as a NAT that punched toward it
 would): a second seat on the entry, opened after the first went away,
 climbs from the port the first call named; a network change binds a new
@@ -6176,7 +6176,7 @@ port and the next call names it; a beside call names a port of its own and
 the entry keeps the landed one. Beside them: a stream queued between
 windows is dropped (`rendezvous/punch/tests.rs`), and an unserved stream
 gives up at the preface bound (`transport/tests.rs`). Still unmeasured:
-whether a TIME_WAIT pair (punch port, engine endpoint) left by this end's
+whether a TIME_WAIT pair (punch port, server endpoint) left by this end's
 own close refuses the next call's SYNs for its minute outside loopback.
 
 ### 21.10 No climb while the process sleeps, and the return (bl-c21d)
@@ -6202,8 +6202,8 @@ An entry that does not rove has no ladder policy and is unchanged.
 
 **A wake after sleep is a return, and the first caller after one clears the
 rest** (`Ladder::wake`). The failures the platform caused behind the app
-are evidence about the platform, not about the engine, so the first climb
-back does not rest; with the engine's presence cached it is a re-call — one
+are evidence about the platform, not about the server, so the first climb
+back does not rest; with the server's presence cached it is a re-call — one
 call from the entry's port, the port whose call landed (§21.9), with no
 presence walk (§21.12). Two lines say it: `parked — the app is not in the
 foreground; nothing climbs` (once per sleep) and `back in the foreground —
@@ -6283,24 +6283,24 @@ the call then names only its observed address.
 
 ### 21.12 Rung 3 is a re-call; parking stops a climb; an ask's line is waited for (bl-c00e)
 
-Measured 2026-09-29 on three wifi dials (engine 0.0.74, a build carrying
+Measured 2026-09-29 on three wifi dials (server 0.0.74, a build carrying
 §21.10): the return's re-punch left from exactly the landed port and could
-not land — the engine's home NAT holds no mapping once the served stream
+not land — the server's home NAT holds no mapping once the served stream
 has ended (§21.9). The ruling is yog bl-278f's (yog REMOTE §13.3–§13.4, being
 amended to say it): **the rungs are held line → direct → re-call → full
 rendezvous.** Two drifts from bl-c21d rode with it.
 
-**The re-call** (`ladder::climb`). The engine's presence — its endpoints,
+**The re-call** (`ladder::climb`). The server's presence — its endpoints,
 its punch port among them — is cached on the entry (`entries::Port`) the
 moment a walk reads it. A climb that holds it writes a fresh call at those
 endpoints without reading the presence first — one DHT walk (the put's), not
 two, about 8 s cheaper — and punches from the entry's port, which the call
 names. **A call that expires unanswered drops the cache**, the one evidence
-that the engine may have moved, so the next climb reads the presence again;
+that the server may have moved, so the next climb reads the presence again;
 that climb is the next one, not a fall-through inside the same climb, since
-a call that expired usually means an engine that did not read it, and a
+a call that expired usually means a server that did not read it, and a
 second call behind it would double the wait for the same answer. The cache
-survives a network change (it is the engine's fact) and a beside dial uses
+survives a network change (it is the server's fact) and a beside dial uses
 it too, from its own port. The return's line says `re-call armed` when the
 cache holds a presence and `presence to be read` when it does not. **The
 held line with its 25 s pings is the only thing that keeps a NAT mapping
@@ -6312,7 +6312,7 @@ climb already past the gate at HOME wrote its call in the background and
 landed there. The climb now asks `Awake` at each rung boundary — before the
 walk and before the call — and a process not awake stops it there with
 `climb stopped — the app left the foreground; no call written`. A call
-already written runs its punch window out, because the engine is punching
+already written runs its punch window out, because the server is punching
 toward it. The presence the stopped walk read stays cached, so the return is
 a re-call.
 
@@ -6327,7 +6327,7 @@ line is a change; the 10 s exit (`LENT`) runs only when every line out is a
 parked read's, and never while a dial is in flight. So a second ask climbs
 beside nothing it will be handed.
 
-**Proved on the fake bench**, whose engine accepts only the port a call
+**Proved on the fake bench**, whose server accepts only the port a call
 named: a dropped line's next climb is one re-call from the landed port,
 with the commons' presence made unreadable first so a walk would have
 failed (`ladder/tests/rungs.rs`); a second seat on the entry re-calls from
@@ -6335,7 +6335,7 @@ the first seat's port (`port.rs`); the return after the line died says
 `re-call armed` and writes exactly one call, no presence walk and no
 re-punch line (`awake.rs`); HOME during the presence walk writes no call,
 and the return is one re-call (`awake.rs`); a re-call that expires drops
-the cache and the next climb reads the engine's new home (`fallthrough.rs`);
+the cache and the next climb reads the server's new home (`fallthrough.rs`);
 a caller behind an ask's line past three times `LENT` climbs nothing and is
 served over the line, and two asks on an idle entry are one climb and one
 call with the clock run past `LENT` mid-climb (`shared.rs`); the parked
@@ -6356,7 +6356,7 @@ becomes under a thumb, with the reason. **Where it contradicts §7, §8, §13.2,
 §13.5, §13.7, §13.8, §13.14 and §13.20, this section wins**, and each of those
 carries a line at its head saying so; their paragraphs stay as the record of
 what was tried and why, and the rulings in them that are about the wire (the
-engine states, the seat never derives; the queue is the engine's statement;
+server states, the seat never derives; the queue is the server's statement;
 the row acts address the row; the outbox; the floor's order; the inset spent
 once) are untouched.
 
@@ -6370,9 +6370,9 @@ is LAID OUT beside it — above it, never on top of it — and anything that mus
 cover the window hides the field (a field nothing placed is hidden, keeping
 its text).
 
-**Words are the phone's own** (§13.3): a *workspace* where the desktop says
-*wall*; *conversations* for the list; no *engines* level, because this device
-is a client of one engine (entries are an upstream ask, §13.4).
+**Words are the phone's own** (§13.3): a *workspace*, the one word at both ends of the wire
+(REMOTE §2); *conversations* for the list; no *servers* level, because this device
+is a client of one server (entries are an upstream ask, §13.4).
 
 1. *Amended by §23 item 4: the box stands directly under the transcript and the rule takes the bottom edge — the desktop's order; this item's floor is the order it replaced.* **One column → the chat is the home screen.** The transcript fills the
    glass; under it, in the floor's order (§13.2, bl-192c — claimed bottom-up,
@@ -6398,7 +6398,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    selected; **the banner stands in the state slot** (§13.2's *status where
    it happened*: a refusal in the error accent, *reconnecting…* in the working
    accent, a note in the annotation accent) and a tap on it puts it down,
-   which is the Esc the desktop spends. `N engines` is deleted: it is always
+   which is the Esc the desktop spends. `N servers` is deleted: it is always
    one here. `spend` is absent until this seat reads what a conversation
    spent (it reads no price today) — the rule says nothing rather than `$0`.
    **Order, and the drop:** `N waiting` stands before the model because it is
@@ -6439,7 +6439,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    which `codec::records` already decodes; see the note below*); then the name, the switcher's
    door, where it fits. **Only facts about this conversation**: `N waiting`
    leaves the rule (the switcher's head and `/attention` carry it) and
-   there is no engines count. **Drop order**: the name, then the diagnostics
+   there is no servers count. **Drop order**: the name, then the diagnostics
    from the right, then priority, then effort; workspace, provider and model
    never drop and elide inside their share. The selectors set the worker
    role on the focused workspace through the acts the controls band spent
@@ -6463,7 +6463,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    rule**, not a slot in it: at a phone's width the three selectors that
    never drop leave no room for a sentence. It says, in order, the
    operator's own act's sentence (a verb's refusal, a dark knob's reason) in
-   the annotation accent, the engine's failure in the error accent, or the
+   the annotation accent, the server's failure in the error accent, or the
    redial in the working accent; a tap puts it down (a failure stays down
    until a different sentence replaces it). The rule's type stays `SMALL`
    (STYLE §4's band exception, carried over from the band it replaces). The
@@ -6494,7 +6494,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    below the touch floor, accepted because back and `/conversations` are
    touch-tall ways to the same overlay. **Context:** the wire states it on
    the `agent` row (`context`: the model, the prompt tokens, the window and
-   the engine's own unclamped percent; lernie bl-d74b paints it on the
+   the server's own unclamped percent; lernie bl-d74b paints it on the
    desktop); this seat paints `context N%` from the focused conversation's
    `agent` row, and nothing where no row is held or the row states none —
    absent is never `0%`.
@@ -6641,14 +6641,14 @@ is a client of one engine (entries are an upstream ask, §13.4).
    bl-0691, kept). The back gesture with the sheet open removes the `/` and
    leaves the remainder. **The rows are the words the phone's controls
    carried** (§4.42's own rule — nothing renamed, the `act:` tags move with
-   the words), filtered by what the engine offers on the focused row:
+   the words), filtered by what the server offers on the focused row:
    - nouns: `/conversations` (the switcher, 7), `/records`, `/files`,
      `/attention` (the queue — the roster's `waiting`), `/trail`, `/balls`
      (this workspace's — the aimed chip's word) and `/balls all` (the
      roster's — both controls said `balls`, so the wider one takes a word
      rather than a new name), `/board`, `/science`, `/diff`, `/fleet`, `/clients`, `/config`,
      `/login`, `/model` (10), `/help`, `/find <needle>` (§13.6's field);
-   - verbs on the focused conversation, listed under the engine's own gates
+   - verbs on the focused conversation, listed under the server's own gates
      (REMOTE §3.1, §9.4): `/stop`, `/stop all`, `/nudge`, `/interrupt
      <words>`, `/retarget`, `/flag <reason>`, `/revoke`, `/restore`;
    - toggles: `/full`, `/steps` (4).
@@ -6789,7 +6789,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    the rule.** While the focused conversation asks (`Standing::asking` — the
    queue's read stands), a box framed and named in the attention accent
    stands between the transcript and the rule: one line of the queue row's
-   words, folded at the engine's own clause (`codec::queue::folded`,
+   words, folded at the server's own clause (`codec::queue::folded`,
    bl-8c94 — `held: <tool> · <class>`, with `why +` unfolding the decision
    above it, the call's input never here), then the choices. **Six rows at 48
    points is 288 points, more than the room above a keyboard on a 360-wide
@@ -6800,7 +6800,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    desktop's spelling (§7's *byte for byte*) and carry no input meaning here;
    a tap answers. **The scope chooser goes**: reach is a cell, so the verdict
    and its scope are one tap, and the *reset when the parked call changes*
-   rule (§13.7) dissolves with the state it guarded. The engine still decides
+   rule (§13.7) dissolves with the state it guarded. The server still decides
    whether a wide answer is allowed. `go to it` is not among them, as on the
    desktop: the operator is there.
 
@@ -6848,9 +6848,9 @@ is a client of one engine (entries are an upstream ask, §13.4).
    `pass for this…` would make cells 3 and 4 the same words, and 104 is
    `3. pass for this` at `SMALL` plus the padding, so no cell's words ever
    need a third line. **The walk shows the class** (bl-c9ea): the corpus's
-   held reason is the bare class word, a sentence the engine's control never
+   held reason is the bare class word, a sentence the server's control never
    writes, so the folded line read `held: Bash` alone; the transcript seed
-   now gives its held row the engine's own shape (`<tool> <input>
+   now gives its held row the server's own shape (`<tool> <input>
    classified <class> (<evidence>)`) and the transcript's last words, and
    the line reads `held: Bash · writes`.
 
@@ -6865,7 +6865,7 @@ is a client of one engine (entries are an upstream ask, §13.4).
    **As landed (bl-365c).** Which rows and what they say are `crate::dock`,
    pure and host-tested (`running`, `line`, `row_words`): the focused
    workspace's conversation rows the pass already holds, filtered to the
-   engine's `live` and `in-flight`, in the switcher's order
+   server's `live` and `in-flight`, in the switcher's order
    (`roster::ordered`), so the first named is the newest subtree's. A row
    says its name in ink, its state in its tone's ink and its age as the
    switcher spells it (`roster::stamp`). `shell/dock.rs` paints it between
@@ -6875,12 +6875,12 @@ is a client of one engine (entries are an upstream ask, §13.4).
    memory. A tap on a row focuses that conversation, as a switcher row does;
    the dock carries no `act:` tag, because it is a second door onto the
    switcher's focus and no deleted control's op moved onto it. The walk:
-   the `running` seed puts a second row the engine calls `live`, and
+   the `running` seed puts a second row the server calls `live`, and
    `docked` is that screen with the line tapped open (probe name `dock`).
 
 10. *Amended by §23 item 14: the knobs on the rule are doors, not chips.* **The controls band under the composer → deleted, and spent three ways.**
     Its stops (`stop`, `stop all`, `nudge`) are verbs (5) under the same
-    engine gates. Its two selectors and the tuning pair (§13.2, bl-0267,
+    server gates. Its two selectors and the tuning pair (§13.2, bl-0267,
     bl-dfbb, bl-809d, bl-0691) move, whole and unchanged in rule — tap is the
     act, the read is truth, the dark knob says why, `effort: <level>` —
     into **the model overlay**, opened by the rule's model segment or
@@ -6967,11 +6967,11 @@ bare `horizontal` in a bottom-up layout (bl-9cfd's defect, a new site), so
 it is allocated its touch-tall band first, as the ball pane's is;
 and **the `headed` beat never showed the panel** — the running seed's
 queue row put an ask box over the rule and scrolled the panel away, so the
-held row is the transcript seed's alone. **Glyphs** (item 12): an engine
+held row is the transcript seed's alone. **Glyphs** (item 12): a server
 sentence can carry what the bundled proportional face lacks — the op
 table's `balls` summary says `ball⇄workspace` — so `theme::glyph::SWAPPED`
 stands `↔` (in the emoji face the family falls back to, as `✔` is) for `⇄`
-where the table is read; the corpus is the engine's and is not edited.
+where the table is read; the corpus is the server's and is not edited.
 **Model prose** (item 4, bl-7355): `crate::markdown` reads a model's
 fenced blocks (the code face on the surface, scrolled sideways — the
 desktop's bl-beef block), `#` headings (the heading size), code spans (the
@@ -7057,7 +7057,7 @@ earning one.
    the focus down to the workspace; a tab the listing no longer knows
    leaves with it — **judged only by a listing that knows the focused
    conversation** (bl-6f02): a listing that lacks the focus was not read
-   under it (a moved focus with the engine unreachable publishes an empty
+   under it (a moved focus with the server unreachable publishes an empty
    one, §14), and the walk caught the strip emptied by exactly that; a start's tab is its claim's and is renamed in place when
    the listing resolves it. **Two phone readings.** The strip is `TOUCH`
    tall and **scrolls sideways** rather than wrapping — a wrapped strip of
@@ -7187,14 +7187,14 @@ earning one.
    (10) go through the same painters, and a control painted elsewhere fails
    the rule in 10.
 
-9. **The held call offers only the scopes the engine permits** (lernie
+9. **The held call offers only the scopes the server permits** (lernie
    bl-da16; yog REMOTE §9.26, corpus edition 23; amends §22 item 8's six
-   cells). The engine states on each held row which scopes a pass may take
+   cells). The server states on each held row which scopes a pass may take
    (`held.scopes`: `call` alone for a secret or destructive call, all three
    otherwise); the ask's cells are `seen`, a pass per listed scope, `refuse`
    and `hold` — four cells on a secret call, six on an ordinary one — so a
-   tap is never an answer the engine will refuse in band. A row that states
-   no scopes (an older engine) offers all three, the desktop's rule. The
+   tap is never an answer the server will refuse in band. A row that states
+   no scopes (an older server) offers all three, the desktop's rule. The
    corpus moves to edition 23 to carry the field, which is the vendoring
    this seat has deferred since 19.
 
@@ -7228,7 +7228,7 @@ earning one.
     `src/settings.rs`, `shell/settings.rs`; `/settings`, a row of the verb
     sheet, an overlay named `settings`). Everything on it is a fact about
     this device — REMOTE §7's per-seat state — and it is **not the mark's
-    configuration surface** (W5, §13.2), which is the engine's enrollment
+    configuration surface** (W5, §13.2), which is the server's enrollment
     and the foot's: the mark stays, the pane is new. Each knob is a row of
     `settings::KNOBS` — key, label, help sentence, kind (a toggle, or a
     number with unit, floor, ceiling and step), default — and the pane, the
@@ -7249,7 +7249,7 @@ earning one.
     file is `settings.json` beside the cache in the app's private storage,
     holding only knobs set off their default — a device that touched nothing
     writes nothing and a default moved in a later build reaches it — and it
-    is the operator's, never the engine's: the cache's fail-closed rule does
+    is the operator's, never the server's: the cache's fail-closed rule does
     not apply, an unreadable file is the defaults. The wheel, the delay, the
     linger, the ease, the two widths, the pin and the delete confirmation
     have no phone fact to tune and are **not ported**.

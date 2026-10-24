@@ -46,14 +46,14 @@ pub(super) fn spend(
         // no other way to know its message landed (bl-66fb), and since bl-07b1
         // there are three fates to count rather than two — a lost reply is not
         // a refusal, and an echo that read it as one would hand the operator
-        // back a draft the engine may already have taken.
+        // back a draft the server may already have taken.
         Cmd::Deposit(content) => {
             let posted = acts::deposit(seat, focus, content);
             standing.posted(&posted);
             posted.note()
         }
         // The three selector gestures. A read's answer is learned as the
-        // engine's own envelope (bl-0267); a failure is a sentence for the
+        // server's own envelope (bl-0267); a failure is a sentence for the
         // banner exactly as an act's is.
         Cmd::Providers => learned(asks::providers(seat, focus), None, standing),
         Cmd::Catalog => fold::catalogued(asks::catalog(seat, focus), standing),
@@ -79,7 +79,7 @@ pub(super) fn spend(
         // **The world reads a gesture makes** (§13.8, §13.9, §13.11, §13.12;
         // the queue is the lane's, §14.1). Each replaces what it answers and a
         // failure keeps what was there, which is `searched`'s rule and is here
-        // for its reason: losing an answer the engine gave over one it did not
+        // for its reason: losing an answer the server gave over one it did not
         // is the defect §13.2's grace exists to prevent.
         Cmd::Ops => fold::opened(asks::ops(seat), standing),
         Cmd::Balls(view) => fold::paned(asks::balls(seat, focus, view), standing),
@@ -186,7 +186,7 @@ fn aimed(seat: &Seat, focus: &mut Focus, standing: &mut Standing, moved: Focus) 
 }
 
 /// **The controls row's own pair** (bl-0691), both swallowed like the preload
-/// they are: neither is a gesture the operator made, so an engine that cannot
+/// they are: neither is a gesture the operator made, so a server that cannot
 /// answer either leaves the row exactly where it stood — dark, and saying so
 /// when it is tapped.
 fn options(seat: &Seat, focus: &Focus, standing: &mut Standing) -> Option<String> {

@@ -1,6 +1,6 @@
 //! The ball pane's three shapes, read strictly — and the two absences that are
 //! facts rather than zeros: a ball nobody holds, and a workspace whose spend
-//! the engine rendered no dollars for.
+//! the server rendered no dollars for.
 
 use super::{Pane, View};
 use serde_json::{Value, json};
@@ -36,11 +36,11 @@ fn a_row_that_is_not_an_object_and_a_row_missing_its_id_both_refuse_by_name() {
     );
 }
 
-/// **The money is the engine's rendering and its absence is a fact**: a spend
+/// **The money is the server's rendering and its absence is a fact**: a spend
 /// with no `usd` paints nothing, and nothing here multiplies the counters
 /// beside it by a rate of its own.
 #[test]
-fn a_held_ball_carries_the_spend_the_engine_rendered_and_no_second_opinion() {
+fn a_held_ball_carries_the_spend_the_server_rendered_and_no_second_opinion() {
     let priced = super::bound(&json!({ "id": "bl-1", "project": "p", "state": "delivered",
                                        "owner": "alba", "badge": "delivered",
                                        "spend": { "usd": "$2.50", "micro_usd": 2_500_000 } }))

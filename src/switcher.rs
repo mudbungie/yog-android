@@ -51,9 +51,9 @@ pub enum Taken {
     Start(String),
 }
 
-/// **The rows, in order**: every workspace in the engine's order, and under
+/// **The rows, in order**: every workspace in the server's order, and under
 /// the focused one `+ new`, then its conversations — newest subtree first,
-/// each in the engine's descent.
+/// each in the server's descent.
 pub fn entries(
     workspaces: &[WsRow],
     focused: Option<&str>,

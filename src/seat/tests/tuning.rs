@@ -1,5 +1,5 @@
 //! **The tuning pair's gestures** (REMOTE §9.4, bl-dfbb): the two envelopes
-//! the engine reads back, the role this seat spends, and the two sentences a
+//! the server reads back, the role this seat spends, and the two sentences a
 //! misdirected one earns.
 
 use super::pick::applied;
@@ -7,7 +7,7 @@ use super::{conv_reply, nothing_set, settle, ws_reply};
 use serde_json::{Value, json};
 
 /// **The two tuning gestures** (REMOTE §9.4, bl-dfbb): the envelopes the
-/// engine reads back, the role this seat spends, and the receipt each earns.
+/// server reads back, the role this seat spends, and the receipt each earns.
 /// `off` is a real null and not a fourth word.
 #[test]
 fn the_tuning_gestures_state_the_role_and_the_level_the_wire_spells() {
@@ -89,6 +89,6 @@ fn tuning_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("tune: the engine answered workspaces instead")
+        Some("tune: the server answered workspaces instead")
     );
 }

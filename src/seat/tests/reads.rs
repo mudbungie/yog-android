@@ -93,12 +93,12 @@ fn the_cadence_refreshes_unprompted() {
     let mut model = Model::start(seat, Duration::from_millis(400), cache_in(&dir));
     settle(&mut model, &|s| !s.workspaces.is_empty());
     served.join().unwrap();
-    // Which sentence the dead engine earns depends on where the dial met
+    // Which sentence the dead server earns depends on where the dial met
     // the dying listener (refused outright, or reset after accept) — the
     // fact under test is only that an UNPROMPTED refresh ran: no command
     // was ever sent, so reaching the error at all took the timeout arm.
     let snap = settle(&mut model, &|s| s.error.is_some());
-    // And the roster the engine did give is still under the banner: a failed
+    // And the roster the server did give is still under the banner: a failed
     // pass republishes the last answer rather than blanking the screen
     // (bl-3202).
     assert!(!snap.workspaces.is_empty());

@@ -76,7 +76,7 @@ fn a_prepared_reply_reads_back() {
     assert_eq!(read.workspace, "home");
     assert_eq!(read.origin, "world");
     // `prepare` answers a null role — litany's `worker`, spelled as the
-    // absence the engine writes.
+    // absence the server writes.
     assert_eq!((read.binding, read.lineage, read.role), (None, None, None));
 }
 
@@ -101,7 +101,7 @@ fn a_malformed_prepared_body_refuses_by_name() {
 
 #[test]
 fn an_origin_token_this_client_cannot_spell_still_rides_through() {
-    // The token is carried as the word the engine wrote: this client never
+    // The token is carried as the word the server wrote: this client never
     // branches on it, and refusing an unknown one would refuse a staging it
     // has no quarrel with.
     let v = json!({ "workspace": "home", "binding": null, "lineage": null,

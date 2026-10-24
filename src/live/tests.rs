@@ -9,7 +9,7 @@ mod window;
 use super::settled;
 use crate::codec::{Block, Call, Entry, EntryKind, Flight, Stream};
 
-/// The flight the engine states while a model call is streaming, which is the
+/// The flight the server states while a model call is streaming, which is the
 /// only one that opens the prose half (REMOTE §5.5).
 const SPEAKING: Option<Flight> = Some(Flight::Inference);
 /// A step live with its tools running: the window's flight, and not the
@@ -156,9 +156,9 @@ fn an_empty_fold_is_no_row() {
     assert_eq!(kinds(&out), ["delivered"]);
 }
 
-/// Two tails in one read — a shape the engine does not write. With a fold to
+/// Two tails in one read — a shape the server does not write. With a fold to
 /// replace them the rule leaves exactly one; with none it hands back what the
-/// engine said, because inventing a reading of a shape the engine does not
+/// server said, because inventing a reading of a shape the server does not
 /// write is worse than carrying it.
 #[test]
 fn a_fold_leaves_exactly_one_tail_whatever_the_read_carried() {

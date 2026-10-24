@@ -15,15 +15,15 @@
 //! naming the offender: the frame is wrong, and a guess is worse than none. An
 //! unknown WORD does not, since bl-93cd — it becomes that vocabulary's named
 //! catch-all carrying the word, because `PROTOCOL` is a major now and an
-//! engine of the same major may spell words this build has never heard of.
+//! server of the same major may spell words this build has never heard of.
 //! The two exceptions are the reply `kind` and the request `op`, which refuse
-//! by name: *the engine refuses what it cannot act on; a reader tolerates what
+//! by name: *the server refuses what it cannot act on; a reader tolerates what
 //! it cannot render.*
 //!
 //! Three recorded narrowings sit beside that: a conversation row's `alignment`
 //! verdict and a ball chip's `state` token ride through untyped (`Value` /
 //! `String`) until a surface here paints them, and the records screen carries
-//! the engine's state and flight WORDS rather than picking them, because
+//! the server's state and flight WORDS rather than picking them, because
 //! nothing there branches on either (`codec::records`). A diff row's `state`
 //! is the counter-example and says why the rule is not "carry every token": it
 //! DECIDES which fields the row has, so it is read (`codec::workdiff`) — and a
@@ -146,7 +146,7 @@ pub enum Act {
         act: RowAct,
     },
     /// **Answer the tool call parked at a conversation** (yog §8.6, DESIGN
-    /// §13.7). The subject is the conversation and never the call: the engine
+    /// §13.7). The subject is the conversation and never the call: the server
     /// reads the held mark itself at fire time, so this gesture cannot be
     /// spent on a call that is no longer the one held.
     Answer {
@@ -160,7 +160,7 @@ pub enum Act {
     },
     /// **Set a role's reasoning level** (REMOTE §9.4, bl-dfbb) — how much
     /// reasoning its model calls request. `None` is `off`: the absence of a
-    /// level rather than a fourth level, which is what the engine reads.
+    /// level rather than a fourth level, which is what the server reads.
     Effort {
         workspace: String,
         role: String,
@@ -219,7 +219,7 @@ pub enum Act {
     /// start with n in the middle, not a second start path"* (lernie DESIGN
     /// §4.36), which is why it sits beside [`Act::Prepare`] and
     /// [`Act::Prompt`] rather than beside the two handle acts above. The
-    /// prepared body is the engine's own and rides through whole; what comes
+    /// prepared body is the server's own and rides through whole; what comes
     /// back is one body per candidate, and each is fired by the ordinary
     /// firing gesture.
     Fan {
@@ -243,7 +243,7 @@ pub enum Act {
         workspace: String,
         parent: String,
         /// The fork point: an operable notch's commit, or a `config/<name>`
-        /// head. Empty is not a value — the engine's own `fork::Attempt` says
+        /// head. Empty is not a value — the server's own `fork::Attempt` says
         /// a fork with no ref is a different gesture — so nothing composes one
         /// without a picked point.
         from: String,
@@ -267,8 +267,8 @@ pub enum Act {
     /// [`Act::Ball`].
     Admin(AdminAct),
     /// **Sign one provider in** (REMOTE §8.3, DESIGN §13.19): start
-    /// `bz --login` for the row, inside the named workspace's wall, on the
-    /// ENGINE. It answers the run's standing at once rather than waiting a
+    /// `bz --login` for the row, inside the named workspace's directory, on the
+    /// SERVER. It answers the run's standing at once rather than waiting a
     /// browser's minutes out, and [`Ask::LoginTail`](Ask::LoginTail) is how
     /// the rest of it is watched. Firing it again on a row already signing in
     /// cancels that run and starts a fresh one — the restart IS the cancel,

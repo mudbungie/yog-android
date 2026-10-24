@@ -1,5 +1,5 @@
 //! **One pass of the model's loop**: the standing questions asked as deep as
-//! the focus goes, and what survives a pass the engine did not answer. Split
+//! the focus goes, and what survives a pass the server did not answer. Split
 //! from `model.rs` when the grace gave a pass state to carry between calls
 //! (bl-3202) — the handle and the loop are there, what a pass MEANS is here.
 //! The two acts the seat POSTS are `seat::acts`: a pass is what the seat
@@ -35,7 +35,7 @@ mod publish;
 /// rest was still short enough to redden the glass on a resume: a phone taken
 /// out of a pocket wakes its radio while this loop is already asking, and a
 /// name lookup that fails twice in four seconds is an ordinary resume rather
-/// than an engine that is down. The grace could not simply be lengthened
+/// than a server that is down. The grace could not simply be lengthened
 /// while it was silence — an app that says nothing for ten seconds is an app
 /// that has hung — so the passes inside it now say *reconnecting* in the
 /// working accent ([`Snapshot::reconnecting`]), and a wait that is honest can
@@ -44,7 +44,7 @@ mod publish;
 /// asking what is wrong.
 pub(in crate::seat) const GRACE: u32 = 5;
 
-/// What the worker carries between passes: the last answer the engine
+/// What the worker carries between passes: the last answer the server
 /// actually gave, and how many passes have failed since one did.
 #[derive(Default)]
 pub(super) struct Standing {
@@ -57,7 +57,7 @@ pub(super) struct Standing {
     /// end empties it. It is painted into every published snapshot and never
     /// into `last`: a tail that grows several times a second must not make
     /// the §14 cache rewrite itself as often, and what the cache is for is
-    /// the world the engine has written down.
+    /// the world the server has written down.
     live: Option<crate::codec::Stream>,
     /// **The held reads** (§14.1), tended by every pass: the attention lane
     /// always, the follow lane while the focused row states a flight, and the
@@ -86,11 +86,11 @@ pub(super) struct Standing {
     /// How many times the assignments have been read (bl-e9f9) — the
     /// controls' watermark for "your optimistic value has been overtaken".
     pub(super) reads: usize,
-    /// Passes the engine answered, and option lists it answered — the
+    /// Passes the server answered, and option lists it answered — the
     /// dropups' freshness watermarks (§22 item 2).
     pub(super) passed: usize,
     pub(super) listed: usize,
-    /// The deposits the engine took, refused, and **left in doubt** (bl-66fb,
+    /// The deposits the server took, refused, and **left in doubt** (bl-66fb,
     /// widened in bl-07b1). Carried between passes because a deposit is a
     /// gesture, not a pass — and painted into every published snapshot for the
     /// same reason the options are.
@@ -154,7 +154,7 @@ pub(super) struct Standing {
 }
 
 impl Standing {
-    /// Standing seeded from the cache: the rows the engine last gave, held as
+    /// Standing seeded from the cache: the rows the server last gave, held as
     /// last-good so a first pass that fails republishes them rather than
     /// blanking the screen. `stored` is seeded with them too — they ARE what
     /// the file holds, so an unchanged pass rewrites nothing.
@@ -171,7 +171,7 @@ impl Standing {
             passed: 0,
             listed: 0,
             posted: (0, 0, 0),
-            // The cached queue is an answer the engine gave, so it is held as
+            // The cached queue is an answer the server gave, so it is held as
             // one: the band paints from the file on the way to the first pass
             // exactly as the rows beside it do (§14).
             queue: snap.queue.clone(),
@@ -203,7 +203,7 @@ impl Standing {
     /// it is handed.
     ///
     /// - **The rows survive.** A failed pass republishes the last answer the
-    ///   engine gave, *under the focus it was asked at*: pairing one focus's
+    ///   server gave, *under the focus it was asked at*: pairing one focus's
     ///   rows with another's is the one thing [`Snapshot`] promises never to
     ///   do, so a focus that moved gets the empty lists it honestly has.
     /// - **The sentence waits, and `note` never does** — `Self::publish`,
@@ -233,12 +233,12 @@ impl Standing {
         kept.options_workspace = self.options.workspace();
         kept.attention.clone_from(&self.queue_envelope);
         // The queue rides the comparison below because it is an answer the
-        // engine gave and the file holds it (§14); it is written by the lane
+        // server gave and the file holds it (§14); it is written by the lane
         // rather than by this pass, which changes nothing about that.
         fresh.queue.clone_from(&self.queue);
         if failed.is_none() {
             self.last = fresh;
-            // The cache is written from a pass the engine ANSWERED, and only
+            // The cache is written from a pass the server ANSWERED, and only
             // when what it says changed: a live conversation changes every
             // pass and a quiet one never does, and the write is proportionate
             // either way — this app already paid to receive the same bytes
@@ -246,7 +246,7 @@ impl Standing {
             if self.last != self.stored {
                 // A cache that cannot be written is a cache miss next boot
                 // and nothing else — never the banner, which is for what the
-                // engine said, and never a stop. (`log` is the shell's
+                // server said, and never a stop. (`log` is the shell's
                 // dependency, not the core's, so there is nowhere here to
                 // say it either.)
                 let _ = crate::cache::write(cache, focus, &kept);
@@ -257,7 +257,7 @@ impl Standing {
         }
         // **The lanes are tended after the rows** (§14.1): what should stand
         // is read off the pass's own answer — the focused row's flight — and
-        // a lane is dialled only by a pass the engine answered, so an engine
+        // a lane is dialled only by a pass the server answered, so a server
         // that is down costs one failed dial a pass and not two. The drop
         // half runs regardless: a lane on a subject the focus has left must
         // not go on writing its frames under the new one.

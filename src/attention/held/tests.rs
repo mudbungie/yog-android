@@ -167,7 +167,7 @@ fn an_emptied_queue_is_remembered_and_says_nothing() {
 }
 
 /// **Every failure is silence**, which is rung 1's rule at this rung: no
-/// material, an engine that will not answer, and a frame of another kind each
+/// material, a server that will not answer, and a frame of another kind each
 /// end the lane with nothing said and nothing written.
 #[test]
 fn every_failure_is_silence() {
@@ -178,7 +178,7 @@ fn every_failure_is_silence() {
     let keys = pki();
     let files = provisioned(&keys, "127.0.0.1:9");
     assert_eq!(wake(&files), None);
-    // An engine that answers another shape: the lane ends rather than
+    // A server that answers another shape: the lane ends rather than
     // guessing at it, and nothing is remembered.
     let (address, _served) = lane(
         &keys,

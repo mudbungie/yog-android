@@ -44,13 +44,13 @@ fn gated() -> (Nap, mpsc::Receiver<Duration>, mpsc::Sender<()>) {
     )
 }
 
-/// **A dead engine is redialled, not mourned** (bl-8641). The channel is the
+/// **A dead server is redialled, not mourned** (bl-8641). The channel is the
 /// class a phone breaks every time it changes networks, so the host climbs
 /// the ladder with the sentence that broke it standing where the frame can
 /// read it — and the presentation is dropped with the connection that carried
 /// it, because a new channel has to present again.
 #[test]
-fn a_dead_engine_is_redialled_with_the_dial_that_failed_standing() {
+fn a_dead_server_is_redialled_with_the_dial_that_failed_standing() {
     let dir = pki();
     let (address, served) = serve_many(&dir, "ca", "server", vec![vec![advertised()]]);
     let foot = Foot::open(&material(&dir, "ca", "client", &address)).unwrap();
@@ -67,7 +67,7 @@ fn a_dead_engine_is_redialled_with_the_dial_that_failed_standing() {
         unreachable!()
     };
     // **The class is the assertion, not the verb** (bl-1ae2). Which of the
-    // transport's three words a dead engine earns is the kernel's to decide:
+    // transport's three words a dead server earns is the kernel's to decide:
     // a dial that arrives after the listener's thread ended is refused at the
     // connect, and one that lands in its backlog a moment earlier completes
     // and dies at the write or the read instead. All three are the channel,
@@ -109,7 +109,7 @@ fn the_ladder_doubles_to_a_minute_and_stays_there() {
 
 /// **The defect a pocketed phone would have died of** (bl-8bd0, adopting
 /// thrall's bl-916d). A read parked when the connection dropped does not leave
-/// until the engine tries to answer it, so the redial a second later meets
+/// until the server tries to answer it, so the redial a second later meets
 /// REMOTE §5.1's one-reader guard refusing *this very device* — its own
 /// predecessor, not a rival. Taken as final it made the first wifi handover
 /// permanent; taken as what it is, the host waits one hold's width and asks
@@ -127,7 +127,7 @@ fn a_refusal_of_the_follow_read_waits_out_this_devices_own_predecessor() {
         // One connection per GESTURE, as every foot gesture is: the
         // advertisement lands, and the refusal is the answer to the follow
         // read that follows it. The read after the redial is HELD, as the
-        // engine would hold it: a script that ended there let the host meet
+        // server would hold it: a script that ended there let the host meet
         // a closed listener and publish a second `Redialling` — a connection
         // refused — that raced this test's read of the first.
         vec![

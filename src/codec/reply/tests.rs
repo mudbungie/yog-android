@@ -144,12 +144,12 @@ fn the_routing_legs_replies_read_back() {
     assert_eq!(capture.unwrap_or_default().stdout, "o");
 }
 
-/// **The advertisement's receipt carries the engine's own reading** (REMOTE
+/// **The advertisement's receipt carries the server's own reading** (REMOTE
 /// §5.1, PROTOCOL 8): whether it wrote the stored set or found it identical
 /// and compared. Both values read back as themselves — the whole point of the
 /// field is that they are different answers.
 #[test]
-fn the_advertisement_receipt_carries_whether_the_engine_wrote() {
+fn the_advertisement_receipt_carries_whether_the_server_wrote() {
     for wrote in [false, true] {
         assert_eq!(
             decode(&json!({ "ok": true, "kind": "advertised", "wrote": wrote }))
@@ -162,7 +162,7 @@ fn the_advertisement_receipt_carries_whether_the_engine_wrote() {
 
 /// **A receipt with no `wrote` refuses, naming the field.** Absent must not
 /// read as `false`: `false` is "nothing was restored", the reassuring answer,
-/// and an engine too old to tell would hand this device exactly that on the
+/// and a server too old to tell would hand this device exactly that on the
 /// one event the field exists to make audible.
 #[test]
 fn a_receipt_that_states_no_reading_refuses_rather_than_reassuring() {
@@ -175,11 +175,11 @@ fn a_receipt_that_states_no_reading_refuses_rather_than_reassuring() {
 
 /// **The answer to a firing** (§8.1), and the last frame of the two-gesture
 /// start. It was missing until the conformance corpus said so: this client
-/// could stage a conversation and then read the engine's `started` as an
+/// could stage a conversation and then read the server's `started` as an
 /// unknown kind, so the one gesture that makes a conversation reported a
 /// failure over a conversation that was in fact running.
 #[test]
-fn a_fired_conversation_reads_back_with_the_name_the_engine_gave_it() {
+fn a_fired_conversation_reads_back_with_the_name_the_server_gave_it() {
     let frame = json!({ "ok": true, "kind": "started", "conversation": "brave-fox" });
     let started = decode(&frame).unwrap().unwrap();
     assert_eq!(
@@ -230,7 +230,7 @@ fn the_selector_replies_read_back() {
 
 /// **The receipt `seen` earns** (bl-2889): the queue that remains, read with
 /// the same strictness the queue itself is read with — the rows are the
-/// engine's `attention` rows, so a malformed one refuses here rather than
+/// server's `attention` rows, so a malformed one refuses here rather than
 /// being skipped as a field nobody spends.
 #[test]
 fn the_acknowledgement_carries_the_queue_that_remains() {
@@ -252,7 +252,7 @@ fn the_acknowledgement_carries_the_queue_that_remains() {
 }
 
 /// **The ball pane's three reads** (DESIGN §13.9) read back as themselves, and
-/// each says its own kind — the word every "the engine answered X instead"
+/// each says its own kind — the word every "the server answered X instead"
 /// sentence is built from, so a pane asked for one view and answered another
 /// can name what it got.
 #[test]

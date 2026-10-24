@@ -54,7 +54,7 @@ pub(super) fn catalogued(
 /// answer is the worker's business, and what a PASS means is `seat::pass`'s.
 ///
 /// The answer replaces whatever was held. A failure does NOT: the operator is
-/// still looking at the hits they have, and dropping an answer the engine gave
+/// still looking at the hits they have, and dropping an answer the server gave
 /// because of one it did not is the defect §13.2's grace exists to prevent.
 pub(super) fn searched(
     read: Result<Option<crate::codec::Found>, String>,
@@ -71,7 +71,7 @@ pub(super) fn searched(
 
 /// **The trail's read, folded.** The answer replaces what it answers and a
 /// failure keeps what was there, which is `searched`'s rule and is here for
-/// its reason: losing an answer the engine gave over one it did not is the
+/// its reason: losing an answer the server gave over one it did not is the
 /// defect §13.2's grace exists to prevent.
 pub(super) fn opened(
     read: Result<Vec<crate::codec::OpRow>, String>,
@@ -104,7 +104,7 @@ pub(super) fn paned(
 
 /// **The records screen's five reads, folded** — `paned`'s terms exactly, and
 /// here for its reason: the answer replaces what was held and a failure keeps
-/// what was there, because losing an answer the engine gave over one it did
+/// what was there, because losing an answer the server gave over one it did
 /// not is the defect §13.2's grace exists to prevent.
 pub(super) fn recorded(
     read: Result<crate::codec::Records, String>,

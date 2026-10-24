@@ -103,7 +103,7 @@ fn an_answer_of_the_wrong_kind_names_clients_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("clients: the engine answered transcript instead")
+        Some("clients: the server answered transcript instead")
     );
     assert!(
         snap.clients

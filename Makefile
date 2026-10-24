@@ -147,11 +147,11 @@ deploy-phone:
 screens:
 	scripts/screens.sh $(SCREENS_ARGS)
 
-# The invocation loop (bl-05b6, DESIGN §15.8): an engine, a foot leaf, a
+# The invocation loop (bl-05b6, DESIGN §15.8): a server, a foot leaf, a
 # device, and four captures read back over the wire. Beside `screens` rather
 # than inside it — it needs a yog binary and dials a listener, where the walk
 # needs neither and looks at screens this one never opens. Not part of `check`
-# for `screens`' reason, doubled: an emulator AND an engine.
+# for `screens`' reason, doubled: an emulator AND a server.
 #
 #   make invoke                     # a yog on PATH
 #   make invoke YOG=/path/to/yog    # or one named outright
@@ -265,7 +265,7 @@ cross-clippy:
 # the other direction). yog mints the wire protocol version and this app
 # VENDORS a copy of the constant, so the skew is two-directional: yog must not
 # publish a bump ahead of its consumers, and this repository must not RELEASE
-# one ahead of the engine. thrall took the second road first — 0.0.15 shipped
+# one ahead of the server. thrall took the second road first — 0.0.15 shipped
 # PROTOCOL 16 while the newest published yog spoke 15 — and the phone's landing
 # is worse, because the §20 update offer carries a released APK to every device
 # that taps it.

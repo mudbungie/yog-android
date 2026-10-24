@@ -40,7 +40,7 @@ impl Shell {
         ui.separator();
         match encode(&crate::envelope::write(envelope)) {
             Ok(symbol) => paint(ui, &symbol),
-            // A payload the format cannot carry is the engine's material and
+            // A payload the format cannot carry is the server's material and
             // this seat's problem to state, not to hide: the operator can
             // still mint again, and a blank square would say nothing.
             Err(why) => {
@@ -55,7 +55,7 @@ pub(in crate::shell) const SCREEN: &str = crate::overlay::MINTED;
 
 /// What an operator has to do while it is on the glass, said once.
 const SAID: &str = "scan this from the new device now — leaving this screen forgets it, and \
-                    the engine kept no key";
+                    the server kept no key";
 
 /// **The symbol as one mesh at a whole-pixel pitch** (`crate::symbol`, and
 /// lernie bl-5e0e's ruling): egui feathers every fill by a device pixel, so a

@@ -88,7 +88,7 @@ fn a_stop_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("stop: the engine answered workspaces instead")
+        Some("stop: the server answered workspaces instead")
     );
 }
 
@@ -160,6 +160,6 @@ fn a_nudge_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("nudge: the engine answered workspaces instead")
+        Some("nudge: the server answered workspaces instead")
     );
 }

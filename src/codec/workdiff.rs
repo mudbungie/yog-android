@@ -28,7 +28,7 @@
 //! The desktop composes the bare listing and never asks for a patch at all;
 //! this seat asks — a phone is where a review happens away from the desk — and
 //! what it does with the answer is paint it. Nothing here parses a unified
-//! diff into hunks: the engine bounded the bytes and the glass shows them.
+//! diff into hunks: the server bounded the bytes and the glass shows them.
 
 use serde_json::{Map, Value};
 
@@ -50,7 +50,7 @@ pub struct Churn {
     pub binary: bool,
 }
 
-/// **One attempt's diff**, in the engine's own spelling. Which of the fields
+/// **One attempt's diff**, in the server's own spelling. Which of the fields
 /// below are said is what `state` decides: `unreadable` says none of them,
 /// `absent` says the two refs and what is missing, `diff` says the refs, both
 /// oids, the churn and whether it was cut short.
@@ -77,7 +77,7 @@ pub struct Diff {
     pub truncated: bool,
 }
 
-/// One `work-diff` answer, as the engine spelled it.
+/// One `work-diff` answer, as the server spelled it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Churned {
     pub rows: Vec<Diff>,
@@ -188,7 +188,7 @@ fn churn(v: &Value) -> Result<Churn, String> {
     })
 }
 
-/// A string the engine may not have written. Absence is a fact and never a
+/// A string the server may not have written. Absence is a fact and never a
 /// zero: an attempt with no handle is the claim, and it paints as nothing
 /// rather than as a value this seat invented.
 fn said(o: &Map<String, Value>, key: &str) -> String {

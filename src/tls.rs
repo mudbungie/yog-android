@@ -2,7 +2,7 @@
 //! (yog REMOTE §1.3, §4): a rustls configuration built from [`Material`].
 //!
 //! **Both ends authenticate with certificates, and that is the entire
-//! authentication story.** This seat requires the engine's leaf to chain to
+//! authentication story.** This seat requires the server's leaf to chain to
 //! the operator CA and presents its own; there is no password, token or
 //! account anywhere in the channel, so there is nothing in it to phish,
 //! rotate or leak, and an unauthenticated peer gets a TLS refusal, never a

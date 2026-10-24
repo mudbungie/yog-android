@@ -2,17 +2,17 @@
 //! starts `bz --login` for one provider row, and the held read of what that
 //! run says.
 //!
-//! **The run is the engine's, and that is the whole point of the pair.** A
+//! **The run is the server's, and that is the whole point of the pair.** A
 //! sign-in performed at this seat would land the credential in this phone's
-//! wall, where no agent reads it; the act names a workspace, the engine runs
-//! bz inside that workspace's own wall, and the credential lands where the
+//! own directories, where no agent reads it; the act names a workspace, the server runs
+//! bz inside that workspace's own directory, and the credential lands where the
 //! agents that need it run. **Nothing credential-shaped crosses this wire**
 //! and this codec could not carry one if it did: what a frame holds is bz's
 //! human-facing stream — the authorize URL, a device code, a failure's reason
-//! and its remedy — and the token moves from the provider to the engine's box
+//! and its remedy — and the token moves from the provider to the server's box
 //! over the provider's own channel.
 //!
-//! **A frame is an append, and the settled exit is the last one.** The engine
+//! **A frame is an append, and the settled exit is the last one.** The server
 //! hands each read the lines it has not sent yet, so [`LoginView::absorb`] is
 //! `codec::follow`'s fold one subject along: lines accrete in order, and
 //! `outcome` and `fallback` arrive with the frame that ends the run. A read
@@ -47,10 +47,10 @@ pub struct LoginView {
     /// The terminal exit code once the run settles — `None` while it is
     /// still going, which is the one thing a surface must not read as zero.
     pub outcome: Option<i64>,
-    /// The engine's own workspace-bound spelling of the command, set only on
+    /// The server's own workspace-bound spelling of the command, set only on
     /// a non-zero exit. It is carried and never composed here: yog mints it
     /// while the workspace is in hand, and a second spelling of it at this
-    /// end would drift from what that engine actually accepts.
+    /// end would drift from what that server actually accepts.
     pub fallback: Option<String>,
 }
 

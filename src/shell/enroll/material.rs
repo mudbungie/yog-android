@@ -128,7 +128,7 @@ fn envelope(
     // (bl-f12d). One device holds one leaf (§9), so an envelope does not join
     // this device's identities — it REPLACES the one running, overwriting the
     // material in place and destroying a private key nothing on this device
-    // or the engine can hand back. Not a dialog and not a confirmation:
+    // or the server can hand back. Not a dialog and not a confirmation:
     // §13.2 keeps this app unmodal, and a consequence an operator reads
     // beside the button is worth more than one they dismiss to reach it.
     if let Some(running) = &landing.replacing {
@@ -140,7 +140,7 @@ fn envelope(
                 "this device is {running}. Landing an envelope replaces that \
                  identity: this device's certificate and its private key are \
                  overwritten in place, the old key is destroyed, and getting it \
-                 back is a fresh mint from the engine.",
+                 back is a fresh mint from the server.",
             ),
         );
     }

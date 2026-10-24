@@ -2,7 +2,7 @@
 //! conversation's inbox that nothing has taken yet.
 //!
 //! **The parse is what a phone paints, and the raw bytes are not read.** Each
-//! row carries the file verbatim beside the envelope the engine parsed out of
+//! row carries the file verbatim beside the envelope the server parsed out of
 //! it; the two are one deposit said twice, and a seat with one column shows
 //! the words rather than the frontmatter around them.
 

@@ -82,7 +82,7 @@ fn a_caller_past_the_bound_beside_a_parked_read_calls_afresh_and_does_not_re_pun
     std::thread::sleep(Duration::from_millis(400));
     assert!(!second.is_finished(), "the second caller waits on the line");
     clock.advance(gate::LENT);
-    // The scripted engine serves one connection at a time: the parked read
+    // The scripted server serves one connection at a time: the parked read
     // ends once the second line has landed, so the second can be served.
     assert!(heard.wait("punch landed"), "a second line landed");
     hangup.hang_up();

@@ -69,11 +69,11 @@ pub enum EntryKind {
     /// the same conversation at the same moment as the entries around it: a
     /// second list painted beside them would be a second ordering rule and a
     /// second set of fold keys. `crate::live` mints these — never
-    /// [`entry`](self::entry), which reads only what the engine wrote — and
+    /// [`entry`](self::entry), which reads only what the server wrote — and
     /// mints one only for a call no committed block carries, so the record
     /// stays the record and the lane paints only what it is ahead of.
     ///
-    /// `exit_code` is carried as the engine's own number and read for its
+    /// `exit_code` is carried as the server's own number and read for its
     /// PRESENCE alone (§5.5): absent is a call in flight, present is one whose
     /// capture landed, and what the value means is not this lane's to say.
     /// `held` is the same discipline one field over (PROTOCOL 18): present is
@@ -93,7 +93,7 @@ pub enum EntryKind {
     },
     /// **The settled-failure notice** (REMOTE §9.16): *this conversation is
     /// not coming back*, said as the third virtual trailing entry. The class
-    /// token crosses and the sentence does not — `wound` is the engine's own
+    /// token crosses and the sentence does not — `wound` is the server's own
     /// word (`no_response` / `output_limit` / `refused` / `none`), carried
     /// verbatim for `delta`'s reason; `reason` is the adapter's last words
     /// where the class left any; `auth_row` the provider row a refusal
@@ -105,7 +105,7 @@ pub enum EntryKind {
     },
     /// An entry the parser could not read — surfaced, never dropped.
     Raw,
-    /// **A kind a newer engine of this major spells** (REMOTE §3.2's
+    /// **A kind a newer server of this major spells** (REMOTE §3.2's
     /// catch-all). Nothing under the word is read, because the word is what
     /// says which keys are there — but `raw` is beside the kind, not inside
     /// it, so the entry still paints its own bytes. That is the same answer
@@ -125,7 +125,7 @@ pub enum Block {
         name: String,
         input: String,
     },
-    /// A block kind a newer engine of this major spells (REMOTE §3.2). The
+    /// A block kind a newer server of this major spells (REMOTE §3.2). The
     /// word only, for [`EntryKind::Unknown`]'s reason.
     Unknown(String),
 }

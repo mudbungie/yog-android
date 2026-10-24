@@ -20,15 +20,15 @@ impl Model {
     }
 
     /// **Assign the worker role's model** in the focused workspace. One act,
-    /// no apply step (§13.2): the tap is the gesture, and the engine's
+    /// no apply step (§13.2): the tap is the gesture, and the server's
     /// refusal — if it refuses — arrives in the banner.
     pub fn pick_model(&self, provider: String, model: String) {
         let _ = self.cmds.send(Cmd::Pick(provider, model));
     }
 
     /// **Sign one provider in** (REMOTE §8.3, §13.19) in the focused
-    /// workspace: the engine starts `bz --login` inside that workspace's own
-    /// wall, and what the run says arrives on the held tail this same gesture
+    /// workspace: the server starts `bz --login` inside that workspace's own
+    /// directory, and what the run says arrives on the held tail this same gesture
     /// opens.
     ///
     /// Not idempotent and never re-sent: firing it again TERMINATES a run
@@ -82,7 +82,7 @@ impl Model {
     /// focused workspace, under `name` and at `grade`.
     ///
     /// Not idempotent and never re-sent: a second mint under one name is
-    /// refused by the certificate the engine kept, so a repeat on a lost reply
+    /// refused by the certificate the server kept, so a repeat on a lost reply
     /// would report the name as taken rather than minting it
     /// (`seat::acts::enroll`).
     pub fn enroll(&self, name: String, grade: crate::leaf::Grade) {
@@ -194,7 +194,7 @@ impl Model {
 
     /// Start a new conversation in the focused workspace with `goal` as its
     /// first instruction. The staging and the firing are one gesture from
-    /// here because they are one act to the operator; the engine's two-step
+    /// here because they are one act to the operator; the server's two-step
     /// is the wire's business, not the composer's.
     pub fn start_conversation(&self, goal: String) {
         let _ = self.cmds.send(Cmd::Start(goal));

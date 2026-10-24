@@ -6,7 +6,7 @@
 
 /// The four ways a gesture ends without an answer, told apart by **where the
 /// exchange stopped** rather than by what the far end said. A device that
-/// decided anything by reading sentences would be one the engine could
+/// decided anything by reading sentences would be one the server could
 /// rewrite by rewording (thrall's bl-916d, adopted in DESIGN §18.5).
 ///
 /// Two questions ride these variants and no third:
@@ -25,7 +25,7 @@ pub enum Wire {
     Transport(String),
     /// **The gesture was written and nothing answered it** — yog REMOTE §3's
     /// lost reply, and the whole of what this crate calls in doubt: *"A
-    /// connection that dies between the engine completing an act and the reply
+    /// connection that dies between the server completing an act and the reply
     /// frame landing tells the client nothing about whether the effect ran,
     /// and nothing on the wire can be added to say it."*
     ///
@@ -33,18 +33,18 @@ pub enum Wire {
     /// than a guess: an `io::Error` out of a write is that write's bytes not
     /// being accepted, and [`crate::frame`]'s reader takes a length header and
     /// then exactly that many bytes without ever scanning — so a frame that
-    /// failed mid-write is a frame no engine decoded. A frame written whole is
+    /// failed mid-write is a frame no server decoded. A frame written whole is
     /// the opposite: this end has no way to learn whether it arrived, was
     /// answered, or was answered into a socket that had already gone.
     ///
-    /// The engine's own preface is the one exchange *after* the write that is
+    /// The server's own preface is the one exchange *after* the write that is
     /// still definite, so it is [`Self::Unusable`] and not this: yog's
     /// listener writes its version before it reads a request frame
     /// (`wire::hello::admit`), so a peer that never stated one never read the
     /// gesture.
     Lost(String),
-    /// **The engine spoke, and what it said is no** — its own refusal,
-    /// written as a sentence for an operator. Definite: an act the engine
+    /// **The server spoke, and what it said is no** — its own refusal,
+    /// written as a sentence for an operator. Definite: an act the server
     /// refused did not run. Whether it is worth asking again is the LEG's
     /// answer and not this one's (`host::serve`, following thrall's bl-916d):
     /// a refusal of this device's *read* is REMOTE §5.1's one-reader guard,
@@ -52,7 +52,7 @@ pub enum Wire {
     Refused(String),
     /// **An answer this end cannot use**: a frame that is not JSON, a reply of
     /// a kind the gesture does not earn, a version that cannot be spoken to, a
-    /// stream ended clean with nothing in it. The engine spoke in every one of
+    /// stream ended clean with nothing in it. The server spoke in every one of
     /// them, and asking again asks the same question and gets the same answer
     /// on every leg, so this class always stops.
     Unusable(String),

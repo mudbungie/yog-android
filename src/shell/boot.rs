@@ -114,7 +114,7 @@ pub(crate) fn boot(android: &AndroidApp) -> Running {
 /// definition.
 /// **Where the operator's knobs live** (DESIGN §23 item 11): a sibling of
 /// the cache under the same private root, and the operator's file rather
-/// than the engine's — never inside the material directory.
+/// than the server's — never inside the material directory.
 pub(super) fn settings_file(android: &AndroidApp) -> std::path::PathBuf {
     android
         .internal_data_path()
@@ -164,7 +164,7 @@ fn host(android: &AndroidApp, foot: Foot) {
 /// process no Activity created (§18.8). bl-d22d first put this in
 /// `crate::pocket` so the two would share one spelling, and that was one
 /// function too far: the nap handed to the ladder is never taken by any host
-/// test — every one drives an engine that refuses or answers — so a line under
+/// test — every one drives a server that refuses or answers — so a line under
 /// the coverage floor could only ever be uncovered. What `crate::pocket` owns
 /// is the DECISION (`footed`, `line`, `attending`), and this is glue.
 pub(super) fn take(foot: Foot, data_dir: String) -> bool {

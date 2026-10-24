@@ -6,7 +6,7 @@ use crate::test_support::scratch;
 
 fn pairing() -> Pairing {
     Pairing {
-        engine: [1u8; 32],
+        server: [1u8; 32],
         salt: [2u8; 32],
     }
 }
@@ -49,26 +49,26 @@ fn hex_round_trips_and_refuses_what_is_not_hex() {
     assert_eq!(unhex("é0"), None, "not even ASCII");
 }
 
-/// **The engine's derivations, byte for byte.** These literals were produced
-/// by the same HKDF the engine's `material.rs` runs over the same salt and
+/// **The server's derivations, byte for byte.** These literals were produced
+/// by the same HKDF the server's `material.rs` runs over the same salt and
 /// labels; the presence salt is where its presence is filed, the inbox key
 /// is the public half of the keypair its poll expects the call signed under.
 #[test]
-fn every_derivation_is_the_engines() {
+fn every_derivation_is_the_servers() {
     let p = pairing();
     assert_eq!(hex(&p.presence_salt()), PRESENCE_SALT);
     assert_eq!(hex(&p.inbox_salt()), INBOX_SALT);
     assert_eq!(hex(&p.seal_key()), SEAL_KEY);
     assert_eq!(hex(&p.inbox_keypair().unwrap().public()), INBOX_PUBLIC);
     let other = Pairing {
-        engine: [1u8; 32],
+        server: [1u8; 32],
         salt: [3u8; 32],
     };
     assert_ne!(other.seal_key(), p.seal_key(), "another salt, another key");
     assert_ne!(
         p.inbox_keypair().unwrap().public(),
-        p.engine,
-        "the inbox key is derived from the salt, never the engine's own"
+        p.server,
+        "the inbox key is derived from the salt, never the server's own"
     );
 }
 

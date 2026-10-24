@@ -1,5 +1,5 @@
 //! **The table**: every row the sheet offers right now, read off what is
-//! focused and what the engine says the focused conversation offers (REMOTE
+//! focused and what the server says the focused conversation offers (REMOTE
 //! §3.1, §9.4). Nouns first, then the acts on the conversation, then the two
 //! toggles — the order §22 item 5 lists them in.
 
@@ -19,7 +19,7 @@ pub struct Gates {
     pub conversation: Option<Offers>,
 }
 
-/// What the engine's own gates on the focused row say (REMOTE §9.4).
+/// What the server's own gates on the focused row say (REMOTE §9.4).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Offers {
     /// It holds the executor lock: a turn is running.
@@ -155,7 +155,7 @@ const KNOBS: [(&str, &[&str], Slot, &str); 3] = [
     ),
 ];
 
-/// The acts on the focused conversation, under the engine's own gates: the
+/// The acts on the focused conversation, under the server's own gates: the
 /// stops while something runs, nudge while it rests, the row acts always.
 fn acts(offers: Offers, out: &mut Vec<Row>) {
     if offers.stoppable {

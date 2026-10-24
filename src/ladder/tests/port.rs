@@ -96,7 +96,7 @@ fn a_network_change_rebinds_the_port_and_the_next_call_names_the_new_one() {
 
 /// A dial beside a line still out names its own fresh port for its own
 /// window, and is forgotten (bl-c21d): the entry's port stays the one whose
-/// call landed, whose mapping the engine's NAT holds.
+/// call landed, whose mapping the server's NAT holds.
 #[test]
 fn a_beside_call_does_not_change_the_entrys_port() {
     let _serial = serial();

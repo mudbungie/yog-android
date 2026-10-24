@@ -1,5 +1,5 @@
 //! **Sign-in from the glass** (REMOTE §8.3, DESIGN §13.19): the act that
-//! starts a run inside the focused workspace's wall, the third held lane that
+//! starts a run inside the focused workspace's directory, the third held lane that
 //! follows it, and the two ends of that lane's life — a watch the glass sets,
 //! and a run that settles.
 //!
@@ -74,7 +74,7 @@ fn the_act_seeds_the_tail_before_the_lane_says_anything() {
         ["open https://auth.invalid"]
     );
     // The act is fired at the focused workspace, and the lane is the pass's
-    // own dial after it — both spelled the way the engine reads them.
+    // own dial after it — both spelled the way the server reads them.
     drop(model);
     let requests = served.join().unwrap();
     assert_eq!(
@@ -146,17 +146,17 @@ fn a_catalog_of_the_wrong_kind_says_which_kind_came_instead() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("catalog: the engine answered applied instead")
+        Some("catalog: the server answered applied instead")
     );
     assert!(snap.catalog.is_empty());
 }
 
 /// **A refused sign-in is the banner's sentence and no tail at all**: a run
-/// that never started has said nothing. An unsigned wall crosses here, as
+/// that never started has said nothing. An unsigned workspace crosses here, as
 /// every refusal does — the act's own `ok: false`.
 #[test]
 fn a_refused_sign_in_paints_the_reason_and_no_tail() {
-    let refusal = json!({ "ok": false, "error": "this wall has no signature" })
+    let refusal = json!({ "ok": false, "error": "this workspace has no signature" })
         .to_string()
         .into_bytes();
     let (mut model, _served) = focused(vec![
@@ -166,7 +166,10 @@ fn a_refused_sign_in_paints_the_reason_and_no_tail() {
     ]);
     model.sign_in("acme".into());
     let snap = settle(&mut model, &|s| s.error.is_some());
-    assert_eq!(snap.error.as_deref(), Some("this wall has no signature"));
+    assert_eq!(
+        snap.error.as_deref(),
+        Some("this workspace has no signature")
+    );
     assert!(snap.login.is_none());
 }
 
@@ -184,13 +187,13 @@ fn an_answer_of_the_wrong_kind_says_which_kind_came_instead() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("login: the engine answered applied instead")
+        Some("login: the server answered applied instead")
     );
 }
 
 /// **No workspace, no sign-in.** The act names one and the focus is where it
 /// comes from, so a seat at the roster refuses here rather than sending a
-/// frame the engine would refuse.
+/// frame the server would refuse.
 #[test]
 fn a_sign_in_with_no_workspace_focused_never_leaves_this_device() {
     let (mut model, served) = super::model_turns(vec![Turn::Answer(vec![ws_reply()])]);

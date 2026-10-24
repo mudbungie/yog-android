@@ -10,13 +10,13 @@
 //! typed value and never the table.
 //!
 //! **Nothing here crosses the boundary**, and nothing here is the mark's
-//! configuration surface (§13.2): that is the engine's enrollment and the
+//! configuration surface (§13.2): that is the server's enrollment and the
 //! foot's; these are the operator's own knobs, REMOTE §7's per-seat state.
 //!
 //! **Written only where set.** [`to_json`] writes a knob only when it stands
 //! off its default, so a device that touched nothing writes nothing and a
 //! default moved in a later build reaches it. **The file is the operator's,
-//! never the engine's**: the cache's fail-closed rule does not apply, and an
+//! never the server's**: the cache's fail-closed rule does not apply, and an
 //! unreadable file is the defaults.
 
 use std::collections::BTreeSet;

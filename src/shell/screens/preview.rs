@@ -3,7 +3,7 @@
 //! patch.
 //!
 //! **The bytes are painted and never parsed.** A patch is a unified diff and
-//! this app does not read one: the engine bounded it, and what a review from
+//! this app does not read one: the server bounded it, and what a review from
 //! the glass wants is what it says. The desktop does not decode it either
 //! (lernie DESIGN §4.33).
 //!
@@ -16,7 +16,7 @@ use eframe::egui;
 
 use crate::codec::Preview;
 
-/// Paint one bounded file: what the engine could say about it, then the bytes
+/// Paint one bounded file: what the server could say about it, then the bytes
 /// it handed over. A binary file has no bytes to show and says so — an empty
 /// monospace block would read as an empty file.
 pub(super) fn bytes(ui: &mut egui::Ui, preview: &Preview) {

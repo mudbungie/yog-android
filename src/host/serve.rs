@@ -6,7 +6,7 @@
 //! the ladder.
 //!
 //! **The set is re-asserted at the end of every hand-off** (REMOTE §5.1,
-//! bl-cc54, following thrall's bl-2d78). Both of the engine's guards over the
+//! bl-cc54, following thrall's bl-2d78). Both of the server's guards over the
 //! advertised set stand on this client holding a *parked read* — the second
 //! follow-class read is refused, and an advertisement that would change the
 //! set in force is refused while the read is parked — and this loop is serial,
@@ -22,7 +22,7 @@
 //! until the field existed. It is counted onto the standing and painted, which
 //! is the whole remedy ([`super::RESTORED`]). **A `true` on a channel's FIRST
 //! presentation says nothing** and is discarded: every fresh channel presents
-//! into whatever the engine happens to hold, and an ordinary first one writes.
+//! into whatever the server happens to hold, and an ordinary first one writes.
 //! Only a presentation this device made after work it just did can tell a
 //! rival from a beginning.
 
@@ -57,7 +57,7 @@ const LONGEST: Duration = Duration::from_secs(64);
 
 /// **How long a vanished predecessor of THIS device can still hold its claim**
 /// (REMOTE §5.1, adopted from thrall's redial in bl-8bd0). A read parked when
-/// its connection died does not leave until the engine tries to answer it, so
+/// its connection died does not leave until the server tries to answer it, so
 /// a redial inside that window is refused naming this very device — the stale
 /// predecessor, not a rival. REMOTE states the bound as a contract rather than
 /// an accident: *"Its life is the hold and not the connection's ...
@@ -82,12 +82,12 @@ enum Stop {
         /// Which class failed ([`crate::transport::Wire`]).
         why: Wire,
         /// Whether the gesture in flight was the follow-class read. It is the
-        /// LEG and never the engine's prose, because a device that decided its
+        /// LEG and never the server's prose, because a device that decided its
         /// own lifetime by reading sentences would be one the far end could
         /// rewrite by rewording.
         read: bool,
-        /// Whether the engine answered a read on this channel before it ended.
-        /// One answered read — even an empty one — is the engine having parked
+        /// Whether the server answered a read on this channel before it ended.
+        /// One answered read — even an empty one — is the server having parked
         /// this device for its own hold, which is the evidence that the
         /// channel was real, and a hammering loop cannot manufacture it.
         served: bool,
@@ -103,7 +103,7 @@ enum Stop {
 /// REMOTE §5.1's one-reader guard naming a predecessor whose claim is already
 /// expiring, so it waits one hold's width and asks again; every other refusal
 /// and every unusable answer ends the host. Taking the read's refusal as final
-/// is what made a phone's first network flap permanent — the engine still held
+/// is what made a phone's first network flap permanent — the server still held
 /// the dead connection's parked read, refused the redial naming this very
 /// device, and the foot stopped for good three seconds after a wifi handover.
 pub(super) fn serve(
@@ -140,7 +140,7 @@ pub(super) fn serve(
         };
         // **A channel that ANSWERED A READ starts the ladder over**, which is
         // thrall's rule and not "a channel that was accepted": an answered
-        // read is the engine having parked this device for its own hold, and
+        // read is the server having parked this device for its own hold, and
         // an accepted advertisement is not — a rival holding this device's
         // read refuses every read while accepting every advertisement, so the
         // weaker predicate would reset the ladder forever on exactly the
@@ -178,7 +178,7 @@ fn hold(
 ) -> Stop {
     let mut served = false;
     // The first presentation's reading is discarded on purpose: a fresh
-    // channel writes whenever the engine held something else, and there is no
+    // channel writes whenever the server held something else, and there is no
     // rival in that. Only the re-assertion below can mean one.
     if let Err(why) = foot.advertise(tools.clone()) {
         return Stop::Wire {

@@ -9,7 +9,7 @@
 //! so an act there would be stamped with a name this seat made up, or with a
 //! claimant read off a row for a claim it is not making. That is the desktop's
 //! own placement seen from a phone: there, four of the five sit in the aimed
-//! wall's section and `assign` sits on a board row *because the wall it would
+//! workspace's section and `assign` sits on a board row *because the workspace it would
 //! be claimed for is the aim*; here the board is opened from the roster, where
 //! there is no aim to be it.
 //!

@@ -60,7 +60,7 @@ pub(super) fn run(
 /// The world is re-read at the model's own cadence. What arrives between
 /// passes is the held lanes' frames — the queue as it changes, the tail as it
 /// is written — each adopted onto the standing and published at once, so
-/// arriving text appears at the engine's write cadence rather than once a
+/// arriving text appears at the server's write cadence rather than once a
 /// pass. A frame is not a gesture: it wakes no pass, and the wait goes on to
 /// the same deadline. (The tail used to be re-asked here one shot at a time
 /// on a 500 ms rest, bl-4822; the intake holds that read, so a one-shot ask

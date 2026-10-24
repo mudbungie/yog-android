@@ -112,7 +112,7 @@ pub fn tone(tone: &Tone) -> Rgb {
         Tone::Plain => INK,
         Tone::Weak => INK_WEAK,
         // `Good` is a result that came back and is done. **`Unknown` is
-        // REMOTE §3.2's catch-all** — a hue word a newer engine of this major
+        // REMOTE §3.2's catch-all** — a hue word a newer server of this major
         // spells — and it rests for a different reason: every other accent
         // would claim this build knows what the row is doing. One arm, because
         // rest is the answer that claims nothing and there is only one of it.
@@ -125,7 +125,7 @@ pub fn tone(tone: &Tone) -> Rgb {
 }
 
 /// **A step's §4.4 framing read as a state** (REMOTE §3, PROTOCOL 18), the
-/// same shape [`tone`] has one surface along: the engine states the word and
+/// same shape [`tone`] has one surface along: the server states the word and
 /// this table says what colour that word IS, so no screen decides.
 ///
 /// The four readings are `docs/STYLE.md` §3's own sentences. A step still

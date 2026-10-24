@@ -6,7 +6,7 @@
 //!
 //! **But strictness is bounded by the grows-only rule** (yog REMOTE §3.2,
 //! bl-e598): `PROTOCOL` is a major and additions ship inside one, so a reader
-//! must be able to meet a frame written by a newer engine of the same major
+//! must be able to meet a frame written by a newer server of the same major
 //! without falling over. Three parts, and this module is where two of them
 //! live:
 //!
@@ -17,18 +17,18 @@
 //! 2. **A key stamped above the corpus `floor` reads as its DEFAULT when
 //!    absent, and the default is the fact before the field existed.** Such a
 //!    key is optional to read: [`opt`]/[`opt_val`] on the way in, and the
-//!    default chosen so an engine that cannot spell it says the same thing it
+//!    default chosen so a server that cannot spell it says the same thing it
 //!    said before the field was minted. No field in today's vendored corpus is
 //!    stamped above the floor, so this is the rule every future one is added
 //!    under rather than a branch anything takes now. Where the absence must
 //!    NOT read as the default — where the operator would be told a
 //!    reassuring falsehood — [`crate::ledger::spells`] answers whether the
-//!    engine could have said it at all, and the surface says *this engine
+//!    server could have said it at all, and the surface says *this server
 //!    cannot say* instead.
 //! 3. **An unknown WORD in a vocabulary becomes that vocabulary's named
 //!    catch-all**, carrying the word — see [`pick`]. The two exceptions are
 //!    the reply envelope's `kind` and a request envelope's `op`: a reader
-//!    asks only what it paints and an engine refuses only what it cannot act
+//!    asks only what it paints and a server refuses only what it cannot act
 //!    on, so those two stay strict and refuse by name, in band.
 
 use serde_json::{Map, Value};
@@ -146,7 +146,7 @@ pub(crate) fn pick<T: Clone>(
 /// **How a catch-all reads on the glass** (REMOTE §3.2): the noun the
 /// vocabulary is, and the word this build has never heard of. One home, so
 /// every vocabulary says *unknown* the same way and no surface invents a
-/// second phrasing — and so the sentence never reads as a value the engine
+/// second phrasing — and so the sentence never reads as a value the server
 /// might really have sent.
 pub(crate) fn unknown(noun: &str, word: &str) -> String {
     format!("unknown {noun}: {word}")

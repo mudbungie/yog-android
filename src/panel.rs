@@ -41,7 +41,7 @@ impl Fact {
 }
 
 /// **The card's facts**, in order. `rows` is the focused workspace's list in
-/// the engine's descent, `agent` the focused conversation's id.
+/// the server's descent, `agent` the focused conversation's id.
 pub fn conversation(
     rows: &[ConvRow],
     agent: &str,
@@ -86,7 +86,7 @@ pub(crate) fn answered_by(transcript: &[Entry]) -> Option<String> {
 }
 
 /// **Where the row at `at` hangs**: its ancestors' names, root first, or
-/// `None` for a root. The list is the engine's pre-order descent (§13.20), so
+/// `None` for a root. The list is the server's pre-order descent (§13.20), so
 /// a row's parent is the nearest row above it one level shallower.
 fn hangs(rows: &[ConvRow], at: usize) -> Option<String> {
     let mut depth = rows.get(at)?.depth;

@@ -84,7 +84,7 @@ impl Shell {
             ],
         );
         // **What the row does, told** (§23 item 10): the word and its own
-        // summary where the engine gave one.
+        // summary where the server gave one.
         let help = if row.summary.is_empty() {
             format!("/{} — opens it, or fires it", row.word)
         } else {

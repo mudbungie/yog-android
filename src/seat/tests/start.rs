@@ -43,7 +43,7 @@ fn starting_a_conversation_stages_then_fires_carrying_the_body_whole() {
         json!({ "op": "prepare", "workspace": "home",
                 "payload": { "rung": "bare" } })
     );
-    // The body the engine stated goes back to it unchanged.
+    // The body the server stated goes back to it unchanged.
     let firing: Value = serde_json::from_slice(&requests[5]).unwrap();
     assert_eq!(
         firing,
@@ -85,7 +85,7 @@ fn a_staging_answered_with_the_wrong_kind_names_it() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("start: the engine answered workspaces instead")
+        Some("start: the server answered workspaces instead")
     );
 }
 
@@ -111,7 +111,7 @@ fn a_refused_firing_reaches_the_banner_and_a_re_staging_is_accepted() {
 
 #[test]
 fn a_firing_answered_with_a_prepared_body_is_accepted() {
-    // Some engine paths answer the fire with the staging it fired, which is
+    // Some server paths answer the fire with the staging it fired, which is
     // a receipt and not a refusal — a client that called it wrong would
     // redden a banner over a conversation that had in fact started.
     let (mut model, _served) = model_against(vec![
@@ -152,6 +152,6 @@ fn a_firing_answered_with_the_wrong_kind_names_it() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("start: the engine answered conversations instead")
+        Some("start: the server answered conversations instead")
     );
 }

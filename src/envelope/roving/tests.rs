@@ -4,7 +4,7 @@ use crate::envelope::tests::minted;
 use crate::envelope::{land, read, write};
 use crate::test_support::scratch;
 
-/// **The roving pair** (DESIGN §21.1): an engine that roves adds two hex
+/// **The roving pair** (DESIGN §21.1): a server that roves adds two hex
 /// fields; the reader lands them under `rendezvous`'s names, the writer
 /// carries them, and the material reads back as a pairing. One without the
 /// other, or one that is not 32 bytes of hex, is refused before anything
@@ -25,7 +25,7 @@ fn the_roving_pair_rides_beside_the_six_and_lands_as_a_pairing() {
     assert_eq!(
         material.pairing,
         Some(crate::rendezvous::Pairing {
-            engine: [1u8; 32],
+            server: [1u8; 32],
             salt: [2u8; 32],
         })
     );

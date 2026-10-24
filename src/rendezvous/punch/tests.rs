@@ -10,13 +10,11 @@ fn loopback(port: u16) -> SocketAddr {
 
 #[test]
 fn a_punch_lands_on_the_peers_listener_and_carries_bytes() {
-    let engine = Punch::bind(0).expect("bind");
+    let far = Punch::bind(0).expect("bind");
     let client = Punch::bind(0).expect("bind");
-    let target = loopback(engine.port());
+    let target = loopback(far.port());
     let served = std::thread::spawn(move || {
-        let mut stream = engine
-            .punch(vec![], Duration::from_secs(5))
-            .expect("accepted");
+        let mut stream = far.punch(vec![], Duration::from_secs(5)).expect("accepted");
         let mut byte = [0u8; 1];
         stream.read_exact(&mut byte).expect("read");
         byte[0]
@@ -77,12 +75,12 @@ fn v6_is_punched_first() {
 
 #[test]
 fn a_v6_loopback_punch_lands_where_the_box_has_v6() {
-    let engine = Punch::bind(0).expect("bind");
-    let target: SocketAddr = format!("[::1]:{}", engine.port()).parse().expect("v6");
-    let has_v6 = engine.listeners.len() == 2;
+    let far = Punch::bind(0).expect("bind");
+    let target: SocketAddr = format!("[::1]:{}", far.port()).parse().expect("v6");
+    let has_v6 = far.listeners.len() == 2;
     let client = Punch::bind(0).expect("bind");
     let served =
-        std::thread::spawn(move || engine.punch(vec![], Duration::from_millis(600)).is_some());
+        std::thread::spawn(move || far.punch(vec![], Duration::from_millis(600)).is_some());
     let landed = client
         .punch(vec![target], Duration::from_millis(500))
         .is_some();

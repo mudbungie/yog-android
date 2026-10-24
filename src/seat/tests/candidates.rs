@@ -147,7 +147,7 @@ fn an_answer_of_the_wrong_kind_names_science_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("science: the engine answered transcript instead")
+        Some("science: the server answered transcript instead")
     );
     assert!(snap.candidates.is_some_and(|spread| spread.rows.len() == 2));
     drop(model);

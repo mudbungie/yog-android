@@ -13,7 +13,7 @@ use crate::codec::reply::Reply;
 use crate::codec::{Ask, Gesture, encode};
 use crate::transport::{Seat, Wire};
 
-/// One standing question, and **the engine's own envelope beside the rows it
+/// One standing question, and **the server's own envelope beside the rows it
 /// decoded to** (bl-de96). The raw value is what the cache stores, so the
 /// file holds the wire's spelling rather than a second one this client would
 /// have to keep in step — see `crate::cache`.
@@ -32,7 +32,7 @@ pub(in crate::seat) fn wired(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), W
         .ok_or_else(|| Wire::Unusable(crate::transport::NO_ANSWER.to_owned()))?;
     // **The decoder's two errors are two different facts about who failed**
     // (bl-8bd0, `Seat::answered`'s own note): the OUTER one is a reply this
-    // end cannot read, the INNER one is the engine's own `ok: false`
+    // end cannot read, the INNER one is the server's own `ok: false`
     // sentence. Neither is the channel, so neither waits out the grace — but
     // saying which is free here and a caller that wants only the sentence
     // gets it from [`answer`].
@@ -52,5 +52,5 @@ pub(in crate::seat) fn answer(seat: &Seat, ask: &Ask) -> Result<(Reply, Value), 
 /// The wrong-kind sentence names the kind, never the rows it carried. Shared
 /// with `seat::acts`, which asks the same question of a receipt.
 pub(in crate::seat) fn kind_err(asked: &str, got: &Reply) -> String {
-    format!("{asked}: the engine answered {} instead", got.kind())
+    format!("{asked}: the server answered {} instead", got.kind())
 }

@@ -12,7 +12,7 @@ const GROWN: [(&str, &str, u32); 2] = [
 ];
 
 #[test]
-fn a_path_the_engine_is_too_old_for_is_one_it_cannot_spell() {
+fn a_path_the_server_is_too_old_for_is_one_it_cannot_spell() {
     assert!(spells_at(
         &GROWN,
         "reply/conversations",
@@ -34,11 +34,11 @@ fn a_path_the_engine_is_too_old_for_is_one_it_cannot_spell() {
     assert!(!spells_at(&GROWN, "reply/steps", "/rows/[]/cadence", 21));
 }
 
-/// A path the table does not name is at or below the floor, and every engine
+/// A path the table does not name is at or below the floor, and every server
 /// of this major has it — which is why the table carries the post-floor paths
 /// only and why its absence is an answer rather than a gap.
 #[test]
-fn a_path_at_or_below_the_floor_is_spelled_by_every_engine() {
+fn a_path_at_or_below_the_floor_is_spelled_by_every_server() {
     assert!(spells_at(&GROWN, "reply/conversations", "/rows/[]/tone", 0));
     assert!(spells_at(&[], "reply/steps", "/rows/[]/framing", 0));
 }
@@ -53,6 +53,6 @@ fn this_builds_ledger_is_its_own_corpus() {
         assert!(*stamp > FLOOR, "{shape}{path} is not post-floor");
     }
     // Nothing is post-floor at the cut, so every path answers *yes* — for the
-    // oldest engine of this major as much as for the newest.
+    // oldest server of this major as much as for the newest.
     assert!(spells("reply/conversations", "/rows/[]/tone", FLOOR));
 }

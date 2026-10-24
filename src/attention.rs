@@ -1,6 +1,6 @@
 //! **The scheduled fetch** (DESIGN §17; yog REMOTE §14 rung 1): one ordinary
 //! ask, performed on the platform's own schedule, so attention reaches a
-//! pocketed phone with no engine work and no push path.
+//! pocketed phone with no server work and no push path.
 //!
 //! **What it asks, and why that one.** `Query::Workspaces` — the roster read
 //! this seat already performs at cadence. Its rows carry `attention` (yog's
@@ -8,10 +8,10 @@
 //! per-workspace count the roster screen paints its attention mark from. It is the
 //! cheapest attention-shaped read the vendored corpus answers: one
 //! connection, one frame, rows a handful long, and nothing derived here that
-//! the engine did not already say. REMOTE §14.1's `Query::Attention` lane is
+//! the server did not already say. REMOTE §14.1's `Query::Attention` lane is
 //! upstream's ball (yog bl-09aa) and rung 2's; this rung waits on nobody.
 //!
-//! **Silence is the failure mode, deliberately.** No material, an engine that
+//! **Silence is the failure mode, deliberately.** No material, a server that
 //! will not answer, an answer this end cannot read — every one of them ends
 //! the run with no notification and no state written, and the next schedule
 //! tries again. A phone in a pocket must never nag about network: the

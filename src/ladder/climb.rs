@@ -13,25 +13,25 @@ use std::time::Duration;
 
 impl Ladder {
     /// **One walk or two, then a call and a punch** (yog bl-278f). With the
-    /// engine's presence cached the climb is a **re-call**: it writes a
+    /// server's presence cached the climb is a **re-call**: it writes a
     /// fresh call at the cached endpoints without reading the presence
     /// first. Without it, the full rendezvous reads the presence, caches it,
     /// and calls. Either way the call names the port the climb punches from,
-    /// because the engine punches a call once, toward the port it named, and
+    /// because the server punches a call once, toward the port it named, and
     /// its NAT lets back nothing else — a punch with no call behind it is
     /// one-sided, which is why the old re-punch rung is gone. A call that
     /// expires unanswered drops the cached presence: the next climb reads it.
     ///
     /// The port is the entry's (`bound`), except for a dial `beside` a line
     /// still out (`gate::Dialling::beside`): that line holds the entry's
-    /// port toward the engine's, and TCP carries one connection per pair of
+    /// port toward the server's, and TCP carries one connection per pair of
     /// ends, so a beside call names a fresh port of its own, which is
     /// forgotten after its window (bl-c21d).
     ///
     /// **A climb stops at a rung boundary once the process is not awake**
     /// (bl-c00e; `awake`): before the walk and before the call, so nothing is
     /// written in the background. A punch whose call is already written runs
-    /// its window out — the engine is punching toward it.
+    /// its window out — the server is punching toward it.
     pub(super) fn climb(&self, rove: &Rove, beside: bool) -> Result<TcpStream, String> {
         let punch = if beside {
             Arc::new(Punch::bind(0)?)

@@ -1,9 +1,9 @@
-//! The split, both directions: the engine's real sentence comes apart at the
-//! engine's own clause, and a sentence with no clause in it is kept whole.
+//! The split, both directions: the server's real sentence comes apart at the
+//! server's own clause, and a sentence with no clause in it is kept whole.
 
 use super::folded;
 
-/// The engine's own shape (`control::reason::reason`): the tool, a clip of the
+/// The server's own shape (`control::reason::reason`): the tool, a clip of the
 /// call's JSON input, the class clause, and the evidence in brackets. This is
 /// the sentence from the operator's 2026-09-08 screenshot, shortened only in
 /// the evidence — the head is verbatim, because the head is what must not
@@ -26,7 +26,7 @@ fn the_line_is_the_tool_and_the_class_and_never_the_input() {
     );
 }
 
-/// **The decision is the engine's own words, from its own clause on.** Split,
+/// **The decision is the server's own words, from its own clause on.** Split,
 /// never rewritten (REMOTE §8.1) — so the tail is byte-equal to the tail of
 /// the sentence that crossed.
 #[test]
@@ -55,7 +55,7 @@ fn the_last_clause_is_the_one_that_counts() {
 
 /// **A sentence with no clause of ours is the decision entire**, and the line
 /// says only what is held: the seat cannot tell a call from prose in a
-/// sentence it does not recognise, and dropping the engine's words would be
+/// sentence it does not recognise, and dropping the server's words would be
 /// worse than showing an input behind a fold.
 #[test]
 fn a_sentence_with_no_clause_is_kept_whole() {

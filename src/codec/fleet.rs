@@ -80,7 +80,7 @@ impl FleetAct {
         }
     }
 
-    /// **What the engine's boolean MEANS, read against the op that was
+    /// **What the server's boolean MEANS, read against the op that was
     /// sent.** The reply says only whether something is armed; which of the
     /// two settings it is talking about is this gesture's own name, and
     /// nothing but the sender knows it.

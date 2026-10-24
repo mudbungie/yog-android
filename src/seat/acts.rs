@@ -6,7 +6,7 @@
 //! than a row for a list.
 //!
 //! **Every act here ends in one of three states and never in two** (yog
-//! REMOTE §3, bl-d1f1, consumed in bl-07b1). The engine took it, the engine
+//! REMOTE §3, bl-d1f1, consumed in bl-07b1). The server took it, the server
 //! refused it, or *the reply was lost* — and the third is not a failure. An
 //! act is not idempotent (REMOTE §9.8: two clicks of Nudge are two nudges),
 //! no idempotency token rides the envelope and no redelivery slot exists for
@@ -79,13 +79,13 @@ const TRANSCRIPT: &str = "The transcript says whether it landed, and the echo ab
 /// for the wire's own word rather than the handle's, which is `Model::start`
 /// for the worker and cannot be this.
 ///
-/// The prepared body the engine answers with is carried into the firing
-/// gesture **whole**: it is the engine's own statement about what was staged,
+/// The prepared body the server answers with is carried into the firing
+/// gesture **whole**: it is the server's own statement about what was staged,
 /// and a client that re-derived any field of it would be inventing world
 /// state it does not own.
 ///
 /// **A lost `prepare` is in doubt for the same reason a lost `prompt` is**,
-/// and the sentence is the same read: staging mints a body in the engine, so
+/// and the sentence is the same read: staging mints a body in the server, so
 /// re-staging on a dead reply would leave two, and only the list can say
 /// whether anything started.
 pub(super) fn started(seat: &Seat, focus: &Focus, goal: String) -> Posted {
@@ -113,7 +113,7 @@ const LIST: &str = "The workspace's conversation list says whether one started."
 
 /// **The pick** (bl-0267): one assignment, stated whole. The role is this
 /// seat's own — a phone assigns the worker and nothing else — and the
-/// receipt is read rather than discarded, so an engine that refused the
+/// receipt is read rather than discarded, so a server that refused the
 /// assignment says so on the glass instead of the selector claiming it took.
 pub(super) fn pick(seat: &Seat, focus: &Focus, provider: &str, model: &str) -> Posted {
     let workspace = match focused(focus) {
@@ -129,7 +129,7 @@ pub(super) fn pick(seat: &Seat, focus: &Focus, provider: &str, model: &str) -> P
     match seat.answered(&encode(&Gesture::Act(act))) {
         Ok(Reply::Applied) => Posted::Took,
         // No `outcome` arm, deliberately: a pick is a config write and the
-        // engine answers it `applied` or refuses in band (the kind-less
+        // server answers it `applied` or refuses in band (the kind-less
         // envelope, which `answered` has already turned into a `Refused`). A
         // deposit has an outcome because a deposit RUNS something.
         Ok(other) => Posted::Refused(kind_err("model", &other)),
@@ -139,11 +139,11 @@ pub(super) fn pick(seat: &Seat, focus: &Focus, provider: &str, model: &str) -> P
 
 /// **The two §9.4 tuning gestures** (bl-dfbb): how much reasoning the
 /// worker's model calls request, and whether they ask for the provider's
-/// priority lane. Both are role config the engine switches at the next step,
+/// priority lane. Both are role config the server switches at the next step,
 /// so they take mid-conversation and neither restarts anything.
 ///
 /// One body for the pair because they are one act with two shapes: the
-/// receipt is `applied` either way, and a refusal is the engine's own
+/// receipt is `applied` either way, and a refusal is the server's own
 /// sentence in the banner every other refusal uses.
 fn tune(seat: &Seat, tuning: Act) -> Posted {
     match seat.answered(&encode(&Gesture::Act(tuning))) {

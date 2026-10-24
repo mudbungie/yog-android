@@ -19,7 +19,7 @@
 //! module's, and they are the delivery channels' write contract.
 //!
 //! **Beside the four, an optional pair** (DESIGN §21.1, yog REMOTE §13.2):
-//! the engine's rendezvous public key and the pairing salt, read by
+//! the server's rendezvous public key and the pairing salt, read by
 //! [`crate::rendezvous::read_dir`] with the same three answers one rung
 //! over. Both or neither — an entry with an address and no rendezvous
 //! material is today's entry and never touches the DHT (REMOTE §13.4).
@@ -27,7 +27,7 @@
 use crate::rendezvous::Pairing;
 use std::path::{Path, PathBuf};
 
-/// The operator CA this seat verifies the engine against.
+/// The operator CA this seat verifies the server against.
 pub const ANCHORS: &str = "ca.pem";
 /// This seat's certificate chain — the leaf that *is* its identity.
 pub const CHAIN: &str = "client.pem";

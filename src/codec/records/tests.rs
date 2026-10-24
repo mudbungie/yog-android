@@ -30,7 +30,7 @@ fn the_conversation_reads_what_it_states_and_nothing_it_does_not() {
 }
 
 #[test]
-fn the_engines_own_renderings_cross_as_it_wrote_them() {
+fn the_servers_own_renderings_cross_as_it_wrote_them() {
     let mut said = object(&bare());
     said.insert("flight".to_owned(), json!("tools"));
     said.insert("marks".to_owned(), json!(["held"]));
@@ -57,7 +57,7 @@ fn the_engines_own_renderings_cross_as_it_wrote_them() {
     );
     assert_eq!(head.usd, "$4.00");
     // Unclamped on purpose: a context that has outgrown its window reads as
-    // what the engine said it is, never as a hundred.
+    // what the server said it is, never as a hundred.
     assert_eq!(head.context.map(|full| full.percent), Some(140));
 }
 
@@ -98,7 +98,7 @@ fn a_step_row_states_its_total_and_refuses_when_it_states_no_counters() {
 }
 
 /// **The four framing words, and the line each one labels a row with**
-/// (PROTOCOL 18). The word is the engine's own — a second wording here would
+/// (PROTOCOL 18). The word is the server's own — a second wording here would
 /// be a second vocabulary for one that already has an authority — and the line
 /// lives beside the decode because it joins six fields and two optional ones.
 #[test]

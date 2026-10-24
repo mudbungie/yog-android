@@ -26,7 +26,7 @@ pub struct ConvRow {
     /// Carried rather than derived: a seat holding `age_secs` alone could
     /// subtract it from its own clock, and then every client says a different
     /// time for one instant. It rides BESIDE the age and is not a second copy
-    /// of it — the age is the distance from the ENGINE's clock at answer time
+    /// of it — the age is the distance from the SERVER's clock at answer time
     /// and is that clock's only carrier, the stamp is absolute, and the pair
     /// says strictly more than either half.
     pub last_active_unix: i64,
@@ -107,7 +107,7 @@ pub enum Tone {
     InFlight,
     /// **Parked for the operator.** Never decoded: no wire token maps here.
     Held,
-    /// A hue word a newer engine spells and this build does not.
+    /// A hue word a newer server spells and this build does not.
     Unknown(String),
 }
 

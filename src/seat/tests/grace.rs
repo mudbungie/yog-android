@@ -41,7 +41,7 @@ fn hangups() -> Vec<Turn> {
 
 /// The whole rule in one walk: a broken channel says *reconnecting* and keeps
 /// the rows it had; the pass that spends the grace turns that into the
-/// engine's own sentence; a pass that answers clears both at once. Each stage
+/// server's own sentence; a pass that answers clears both at once. Each stage
 /// is read off a roster that names its own pass, so no assertion here can be
 /// satisfied by a snapshot from another one.
 #[test]
@@ -59,7 +59,7 @@ fn a_broken_channel_reconnects_until_the_grace_is_spent_and_a_success_clears_it(
     assert_eq!(snap.error, None);
     assert_eq!(snap.workspaces[0].workspace, "home");
     // It goes on breaking until the grace is spent, and then it is an error —
-    // and the roster is still the one the engine gave, under the banner
+    // and the roster is still the one the server gave, under the banner
     // rather than replaced by it.
     wait_out_the_grace(&mut model);
     let snap = settle(&mut model, &|s| s.error.is_some());
@@ -73,7 +73,7 @@ fn a_broken_channel_reconnects_until_the_grace_is_spent_and_a_success_clears_it(
 }
 
 /// **The grace is the CHANNEL's alone** (bl-eec1). A reply of a kind this
-/// build cannot use is the engine answering, not the radio — asking again
+/// build cannot use is the server answering, not the radio — asking again
 /// gets the same answer — so it paints on the pass that met it and never
 /// reads as a reconnection.
 #[test]
@@ -82,28 +82,28 @@ fn an_answer_this_build_cannot_use_paints_at_once_and_is_not_a_reconnection() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("workspaces: the engine answered conversations instead")
+        Some("workspaces: the server answered conversations instead")
     );
     assert!(!snap.reconnecting);
 }
 
 /// **A stream that ended without an answer is unusable, not a reconnection.**
-/// The channel worked — the engine wrote its terminator and nothing else — so
+/// The channel worked — the server wrote its terminator and nothing else — so
 /// there is nothing to re-dial, and the sentence says what happened rather
 /// than promising a retry.
 #[test]
-fn an_engine_that_answers_nothing_at_all_is_not_a_reconnection() {
+fn a_server_that_answers_nothing_at_all_is_not_a_reconnection() {
     let mut model = model_turns(vec![Turn::Answer(Vec::new())]);
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("the engine ended the stream without answering")
+        Some("the server ended the stream without answering")
     );
     assert!(!snap.reconnecting);
 }
 
 /// **A frame this end cannot read is unusable too**, and for the same reason:
-/// the engine spoke, so asking again asks the same question. The sentence is
+/// the server spoke, so asking again asks the same question. The sentence is
 /// the decoder's own, uninterpreted.
 #[test]
 fn a_reply_this_build_cannot_read_is_not_a_reconnection() {
@@ -115,11 +115,11 @@ fn a_reply_this_build_cannot_read_is_not_a_reconnection() {
 
 /// **The error names what failed.** A banner that says only that something
 /// went wrong sends an operator to a log; the class an operator meets on a
-/// resume — a socket that would not open — carries the engine's address and
+/// resume — a socket that would not open — carries the server's address and
 /// the reason the platform gave.
 ///
 /// An empty script is a listener that is already gone, which is what a dial
-/// against an engine that is not there does.
+/// against a server that is not there does.
 #[test]
 fn the_error_names_the_address_it_could_not_reach() {
     let mut model = model_turns(Vec::new());

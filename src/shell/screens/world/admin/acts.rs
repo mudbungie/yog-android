@@ -7,7 +7,7 @@
 //! own above the other three, which is the fleet screen's ORDER (§13.13) at
 //! the one site where the act really is an unmaking — and it is an
 //! ENABLEMENT rather than an arming, because the wire's own `typed` is what
-//! the engine checks (lernie DESIGN §4.20): the parameter is missing, not the
+//! the server checks (lernie DESIGN §4.20): the parameter is missing, not the
 //! subject, so the control stays on the glass saying what would fill it.
 //!
 //! **One field, four acts, and the LABEL says which word it wants** (§13.13's
@@ -178,8 +178,8 @@ impl Shell {
     }
 
     /// Fire one act, spending the field where the act reads it. A config write
-    /// KEEPS the draft: the engine may refuse it, and clearing the editor
-    /// would charge a retype for the engine's no (lernie §4.20's toll).
+    /// KEEPS the draft: the server may refuse it, and clearing the editor
+    /// would charge a retype for the server's no (lernie §4.20's toll).
     fn fire(&mut self, act: AdminAct) {
         let text = self.composer.clone();
         let act = match act {

@@ -28,7 +28,7 @@
 //! whole, which is the same op at its second depth.
 //!
 //! **`delete-workspace` is an ENABLEMENT, not an arming, and the wire is what
-//! says so** (lernie DESIGN §4.20). The engine refuses unless the typed name
+//! says so** (lernie DESIGN §4.20). The server refuses unless the typed name
 //! matches the workspace's own, so the control is dark until the field holds
 //! that name — the parameter is missing, not the subject, which is why it
 //! stays on the glass saying what would fill it rather than vanishing.
@@ -131,7 +131,7 @@ impl Shell {
 }
 
 /// The three destinations this seat spells, in the order a thumb meets them:
-/// the workspace's own first, the engine's two under it.
+/// the workspace's own first, the server's two under it.
 fn files(workspace: &str) -> [Destination; 3] {
     [
         Destination::Brazen {

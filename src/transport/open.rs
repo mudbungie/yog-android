@@ -1,6 +1,6 @@
 //! **A connection with its request on it** (split from `transport.rs` when
 //! the punched wire gave a stream a life after its answer, DESIGN §21): the
-//! frames left to read, the edition the engine stated, and the handle that
+//! frames left to read, the edition the server stated, and the handle that
 //! ends the read from another thread.
 
 use super::Wire;
@@ -16,7 +16,7 @@ use std::sync::Arc;
 /// answer's frames are what is left on it.
 pub struct Open {
     tls: StreamOwned<ClientConnection, TcpStream>,
-    /// **What the engine on the other end can spell** (REMOTE §3.2): the
+    /// **What the server on the other end can spell** (REMOTE §3.2): the
     /// edition its preface stated, or `ledger::FLOOR` where it stated none.
     /// Kept on the connection rather than in a process-wide slot, because a
     /// capability question must not depend on what else has been dialled
@@ -42,7 +42,7 @@ pub struct Open {
 /// handle is a second descriptor on the stream, and a punched stream whose
 /// answer ended goes back to the ladder's pool — so a lane dropped after its
 /// hold ended used to shut down the line the pool was holding for the next
-/// ask, and the holder and the engine each read the other end close in the
+/// ask, and the holder and the server each read the other end close in the
 /// same second: measured live about forty seconds after a punch landed, the
 /// follow lane's thirty-second hold plus the pass that opened it. Keeping and
 /// hanging up are decided under one lock, so exactly one of them happens to
@@ -68,9 +68,9 @@ impl Open {
         (open, kept)
     }
 
-    /// **The edition the engine stated**, for whoever asks
+    /// **The edition the server stated**, for whoever asks
     /// `crate::ledger::spells` — the one question a control has that no
-    /// protocol bump ever answered: *could this engine have said that field
+    /// protocol bump ever answered: *could this server have said that field
     /// at all* (REMOTE §3.2).
     #[must_use]
     pub fn edition(&self) -> u32 {
@@ -79,12 +79,12 @@ impl Open {
 
     /// Read every frame up to the terminator, handing each to `adopt` as it
     /// lands. `adopt` answering `false` ends the read here — the connection
-    /// is dropped, which is how the engine learns its answer has no reader.
+    /// is dropped, which is how the server learns its answer has no reader.
     /// A socket that ends without the terminator is a lost stream (REMOTE
     /// §10: a stream that ended and a dial that failed are one case).
     ///
     /// **A ping is never a frame of the answer** (REMOTE §13.4): one the
-    /// engine wrote into the silence just before the request landed sits in
+    /// server wrote into the silence just before the request landed sits in
     /// the buffer ahead of the reply, and is dropped here. And a punched
     /// stream whose answer ended with the terminator goes back to the ladder
     /// for the next ask — only then, because a stream left mid-answer is not
@@ -93,7 +93,7 @@ impl Open {
         loop {
             // **Lost and not `Transport`** (bl-07b1): the gesture is on the
             // wire by the time this reads, so a channel that dies here is yog
-            // REMOTE §3's lost reply — the engine may have completed the act.
+            // REMOTE §3's lost reply — the server may have completed the act.
             // The channel question is unchanged (`Wire::transport` answers yes
             // to both), so the tool host's ladder reads exactly what it read.
             let frame = frame::read_frame(&mut self.tls)

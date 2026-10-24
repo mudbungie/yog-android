@@ -112,25 +112,25 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   So each direction of the skew is gated where it can be decided: **yog does
   not publish a bump ahead of its consumers** (held at its release PR until
   this repository's `main`, lernie's and thrall's carry the number), and **this
-  repository does not release one ahead of the engine** (`merge-release-pr`
+  repository does not release one ahead of the server** (`merge-release-pr`
   guard 6 holds a release whose `PROTOCOL` *exceeds* the newest published
-  yog's). Strictly greater, not different: an app *behind* the engine is the
+  yog's). Strictly greater, not different: an app *behind* the server is the
   first defect and its release is the fix. **The ordering that produces, and
   the whole of what to remember: the consumers' mains carry the number first,
   then yog publishes, then the consumers publish.** Landing the constant on
   `main` is held by neither gate. `make protocol-gate` proves the decision both
   ways in `lint`, because the workflow that spends it cannot run locally.
   **A held release is re-judged by a `workflow_dispatch` of Release-plz**
-  (bl-de23): guard 6 clears when the ENGINE publishes, an event this repository
+  (bl-de23): guard 6 clears when the SERVER publishes, an event this repository
   never sees, so without a hand-wakeable door a held release waits for an
   unrelated landing on `main`. `merge-release-pr` therefore runs on a dispatch
   as well as on a push.
   **Bump it by editing `PROTOCOL`**: both gates read that path at the root of
   whatever tree, tag or main they judge, and no gate, workflow or roster in any
   of the four repositories names a Rust path for the number (bl-6fec). It used
-  to — this repository fetched the engine's constant from `src/wire/hello.rs`,
+  to — this repository fetched the server's constant from `src/wire/hello.rs`,
   yog split that file, and the fetch went on succeeding while the read found
-  nothing, so the hold would have become permanent at the next engine
+  nothing, so the hold would have become permanent at the next server
   publish.
 - **The disclosure gate** (`make leak-scan`) reads INDEX blobs and self-tests
   its own rules per line before every scan. `scripts/leak-rules.sh` is the one

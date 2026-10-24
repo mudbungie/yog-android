@@ -1,5 +1,5 @@
 //! The search answer, both directions of the strictness contract: the
-//! engine's own three address shapes read back, the empty answer is a value
+//! server's own three address shapes read back, the empty answer is a value
 //! rather than an absence, and every malformed shape refuses **naming the
 //! shape** — which is what the conformance replay asserts of a refusal.
 
@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 
 use super::{Address, HitField, found_of};
 
-/// The engine's own envelope, as `corpus/reply/search.json` carries it.
+/// The server's own envelope, as `corpus/reply/search.json` carries it.
 fn envelope(rows: Value, unreadable: Value) -> serde_json::Map<String, Value> {
     json!({ "ok": true, "kind": "search", "needle": "gate",
             "rows": rows, "unreadable": unreadable })

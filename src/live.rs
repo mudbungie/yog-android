@@ -3,7 +3,7 @@
 //! when it is not — and, since the lane widened (REMOTE §5.5, PROTOCOL 15),
 //! the tool window beside it.
 //!
-//! **Why there was ever more than one.** The engine writes the growing answer
+//! **Why there was ever more than one.** The server writes the growing answer
 //! into the transcript itself as an `EntryKind::Streaming`, so a cadence read
 //! already carries a tail; bl-4822 then added the follow lane, which carries
 //! the same answer as it is written. Painting the lane's fold *beside* the
@@ -14,7 +14,7 @@
 //! So the lane does not paint anything of its own. It **replaces** the
 //! transcript's own tail with a fresher copy of the same entry, which leaves
 //! one row on the glass with one label, and makes the dedupe structural
-//! rather than a content match: when the engine's read stops carrying a tail,
+//! rather than a content match: when the server's read stops carrying a tail,
 //! there is nothing to replace and nothing to dissolve.
 //!
 //! **The prose is painted while a model call is streaming, and not merely
@@ -23,15 +23,15 @@
 //! the instant a call settled — the seat's fold was emptied by the stream's
 //! end and there was nothing stale to hold. The lane now follows the STEP, so
 //! it stays open through the tool phase with the settled call's words still in
-//! the fold, and the engine's own tail (`live_tail`) is gated on `InFlight` —
+//! the fold, and the server's own tail (`live_tail`) is gated on `InFlight` —
 //! it stops carrying one at exactly that moment. Painting the fold on any
 //! flight would therefore put the committed answer on the glass a second time
 //! for as long as the tools run. So this reads the same two liveness questions
-//! §5.5 tells apart, off the field the engine already states on the row:
+//! §5.5 tells apart, off the field the server already states on the row:
 //! `Flight::Inference` opens the prose, any flight at all opens the window.
 //!
 //! **And at rest there is neither.** `flight` is the row's own (REMOTE §9.4
-//! puts the gate on the row), so a conversation the engine says is not working
+//! puts the gate on the row), so a conversation the server says is not working
 //! shows no growing text and no window — whatever the response file still
 //! holds.
 //!
@@ -53,7 +53,7 @@
 
 use crate::codec::{Block, Call, Entry, EntryKind, Flight, Stream};
 
-/// The name the engine gives its streaming entry, and therefore the name a
+/// The name the server gives its streaming entry, and therefore the name a
 /// replacement wears: the row keys a fold override is remembered by are built
 /// from it, so a tail that changed its name mid-turn would drop the
 /// operator's own flips.
@@ -85,7 +85,7 @@ pub fn settled(
     };
     let windowed = windowed(live.filter(|_| flight.is_some()), &out);
     out.extend(windowed);
-    // The tail goes last because it IS the tail: the engine writes it at the
+    // The tail goes last because it IS the tail: the server writes it at the
     // end of the response file, and everything before it has committed.
     out.extend(fresh);
     out

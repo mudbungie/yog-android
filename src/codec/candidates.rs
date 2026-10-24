@@ -51,7 +51,7 @@ impl Spread {
     }
 }
 
-/// One attempt, as the engine measured it.
+/// One attempt, as the server measured it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Attempt {
     /// **What this attempt changed**, whole, in the one spelling a diff row
@@ -157,7 +157,7 @@ fn object(v: &Value, kind: &str) -> Result<Map<String, Value>, String> {
         .ok_or_else(|| format!("{kind}: row is not an object"))
 }
 
-/// A string the engine may not have written. Absence is a fact and never a
+/// A string the server may not have written. Absence is a fact and never a
 /// zero (`codec::balls`' rule): an attempt with no handle is the claim, and it
 /// paints as nothing rather than as a value this seat invented.
 fn said(o: &Map<String, Value>, key: &str) -> String {

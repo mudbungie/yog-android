@@ -113,13 +113,13 @@ pub struct Board {
     pub fleet: Vec<String>,
 }
 
-/// One ball on the board, in the column the engine put it in.
+/// One ball on the board, in the column the server put it in.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardRow {
     pub id: String,
     pub project: String,
-    /// The engine's own column word, carried through: a column this build has
-    /// not heard of still paints, because the word is the engine's to mint.
+    /// The server's own column word, carried through: a column this build has
+    /// not heard of still paints, because the word is the server's to mint.
     pub column: String,
     pub title: String,
     pub claimant: String,
@@ -193,7 +193,7 @@ fn column(v: &Value) -> Result<BoardRow, String> {
 }
 
 /// One string field of every object in an array field — the drones' names, the
-/// gates' ids. An absent array is none of them, which is what the engine
+/// gates' ids. An absent array is none of them, which is what the server
 /// writes for a row with neither.
 fn names(o: &Map<String, Value>, key: &str, field: &str) -> Result<Vec<String>, String> {
     match o.get(key) {
@@ -216,7 +216,7 @@ fn object(v: &Value, kind: &str) -> Result<Map<String, Value>, String> {
         .ok_or_else(|| format!("{kind}: row is not an object"))
 }
 
-/// A string the engine may not have written. **Absence is a fact and never a
+/// A string the server may not have written. **Absence is a fact and never a
 /// zero**: an unclaimed ball names no claimant and a workspace with no price
 /// table renders no dollars, and both paint as nothing rather than as a value
 /// this seat invented.

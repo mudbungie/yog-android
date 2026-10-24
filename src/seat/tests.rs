@@ -13,7 +13,7 @@
 pub(super) use super::Model;
 use super::Snapshot;
 
-/// The scripted engine's handle: the requests it read, in accept order.
+/// The scripted server's handle: the requests it read, in accept order.
 pub(super) type JoinHandle = std::thread::JoinHandle<Vec<Vec<u8>>>;
 pub(super) use crate::test_support::{Turn, material, serve_lanes, serve_many, serve_turns};
 use crate::test_support::{mint_ca, mint_leaf, scratch};
@@ -114,7 +114,7 @@ pub(super) fn ws_named(workspace: &str) -> Vec<u8> {
     .into_bytes()
 }
 
-/// A conversation row that is WRITING: the `flight` the engine puts on the
+/// A conversation row that is WRITING: the `flight` the server puts on the
 /// row is the whole gate the live lane reads (bl-4822).
 pub(super) fn conv_flying() -> Vec<u8> {
     json!({ "ok": true, "kind": "conversations",

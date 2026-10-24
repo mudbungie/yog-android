@@ -6,7 +6,7 @@
 //!
 //! **counts, sequence numbers, nonces and address families — never an
 //! address, a key, a salt or a sealed byte.** A DHT failure is said without
-//! its reason for the engine's reason: the walk's refusals name the target it
+//! its reason for the server's reason: the walk's refusals name the target it
 //! walked toward, a derivation of the key and the salt.
 //!
 //! **A repeated outcome is said once.** A redial re-enters the ladder on

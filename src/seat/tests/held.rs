@@ -3,7 +3,7 @@
 //! the one success that still owes the operator a sentence.
 //!
 //! The load-bearing assertion is that the gesture names the CONVERSATION and
-//! not the call: the engine reads the held mark itself at fire time, so a
+//! not the call: the server reads the held mark itself at fire time, so a
 //! `tool_use` in this envelope would be a client answering a call that may
 //! already have moved on.
 
@@ -83,7 +83,7 @@ fn the_parked_call_reaches_the_snapshot_and_the_verdict_names_the_conversation()
     );
     model.answer(Verdict::Pass, Scope::Call);
     // The answered call is gone from the lane's next frame, which is the
-    // engine saying the answer changed (§14.1) — and the read that settles
+    // server saying the answer changed (§14.1) — and the read that settles
     // this act.
     feed.send(queue_quiet()).unwrap();
     settle(&mut model, &|s| s.queue.is_empty() && s.error.is_none());
@@ -221,6 +221,6 @@ fn an_answer_with_nothing_focused_and_a_wrong_kind_both_name_themselves() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("answer: the engine answered workspaces instead")
+        Some("answer: the server answered workspaces instead")
     );
 }

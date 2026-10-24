@@ -3,7 +3,7 @@
 //!
 //! **This device is on both sides of §8.4 now, and the two are not symmetric.**
 //! `crate::envelope` reads a payload a camera saw; this reads an answer the
-//! engine gave over mTLS. The scanning half checks the stated grade and name
+//! server gave over mTLS. The scanning half checks the stated grade and name
 //! against the leaf the same payload carries, because a photograph has no
 //! provenance; this half does not, because the channel already settled it.
 //! What the two share is the VALUE — one `Envelope`, one home — so what the
@@ -57,9 +57,9 @@ pub(super) fn enrolled(o: &Map<String, Value>) -> Result<Envelope, String> {
 
 /// **The route the enrolled device will dial is a fact about THAT device**
 /// (REMOTE §8.4, PROTOCOL 14), and this seat has no field to state one in. The
-/// engine takes an optional `address` for a device that does not share its own
+/// server takes an optional `address` for a device that does not share its own
 /// view of itself — an emulator reaching its host by the emulator's alias, a
-/// phone on the LAN — and absent is the engine's own `wire/address`, which is
+/// phone on the LAN — and absent is the server's own `wire/address`, which is
 /// the only spelling this seat can honestly send: a phone minting for the next
 /// box knows nothing about the route that box will take. So a frame stating
 /// one is refused by name rather than read as the mint without it, which is
@@ -71,7 +71,7 @@ fn unrouted(address: Option<&Value>) -> Result<(), String> {
     }
 }
 
-/// The §4.2 grade, in the engine's own two words, or the catch-all.
+/// The §4.2 grade, in the server's own two words, or the catch-all.
 fn grade(o: &Map<String, Value>) -> Result<Grade, String> {
     Ok(match str_of(o, "grade")?.as_str() {
         "foot" => Grade::Foot,

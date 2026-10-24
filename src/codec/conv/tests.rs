@@ -28,7 +28,7 @@ fn minimal_row_reads_back() {
     assert_eq!(r.tone, Tone::Plain);
     assert_eq!(r.age_secs, 12);
     // The stamp rides beside the age and is not a second copy of it: the age
-    // is the distance from the ENGINE's clock at answer time, the stamp is
+    // is the distance from the SERVER's clock at answer time, the stamp is
     // absolute (REMOTE §9.9).
     assert_eq!(r.last_active_unix, 1_700_000_000);
     assert_eq!(r.failure, None, "absent is no failure");
@@ -127,7 +127,7 @@ fn refusals_name_the_offender() {
 }
 
 /// **The three word vocabularies of a conversation row grow** (REMOTE §3.2):
-/// a state, a flight or a tone a newer engine of this major spells becomes the
+/// a state, a flight or a tone a newer server of this major spells becomes the
 /// catch-all carrying it, and every other field of the row still reads. The
 /// tone's catch-all is the one with a paint consequence, and
 /// `crate::theme::tone` gives it resting ink.
@@ -147,7 +147,7 @@ fn a_word_this_build_has_not_heard_of_rides_as_the_catch_all() {
 /// **The compat fact this whole re-vendor turned on** (bl-e837): a field this
 /// build has never heard of does not break the row. Strict decode is strict
 /// about the fields it SPELLS — a missing one, a mistyped one, an unknown
-/// token — and says nothing about extra ones, so an engine that grows a
+/// token — and says nothing about extra ones, so a server that grows a
 /// column does not break an installed seat. What DOES break one is the §3
 /// version preface, which is fail-closed on purpose (`crate::hello`), and
 /// that is why the answer to a protocol bump is a new build rather than a
@@ -155,13 +155,13 @@ fn a_word_this_build_has_not_heard_of_rides_as_the_catch_all() {
 #[test]
 fn a_field_this_build_has_never_heard_of_is_ignored() {
     let v = with(base(), "some_future_column", json!({ "nested": [1, 2, 3] }));
-    let v = with(v, "another", json!("whatever the engine grew"));
+    let v = with(v, "another", json!("whatever the server grew"));
     let r = row(&v).unwrap();
     assert_eq!(r.root_id, "a1");
     assert_eq!(r.last_active_unix, 1_700_000_000);
 }
 
-/// The stamp is required and the clause is not, which is the engine's own
+/// The stamp is required and the clause is not, which is the server's own
 /// spelling: `last_active_unix` is written for every row, `failure` only for
 /// a row that has one (REMOTE §9.10's absent-not-null).
 #[test]

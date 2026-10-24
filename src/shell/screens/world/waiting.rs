@@ -19,7 +19,7 @@
 //! whose workspace comes from the row rather than from the focus, because the
 //! queue spans workspaces — `seat::acts::seen` is where that is argued.
 //!
-//! **What a row says is the engine's, painted as it came.** The signals are
+//! **What a row says is the server's, painted as it came.** The signals are
 //! its own tokens, carried through as strings on purpose (a table here would
 //! refuse a whole answer the day a ninth signal is minted), and the held
 //! call's sentence crosses unrewritten for REMOTE §8.1's reason — rewriting
@@ -48,7 +48,7 @@ impl Shell {
             });
     }
 
-    /// One waiting conversation: the tap that opens it, then the engine's own
+    /// One waiting conversation: the tap that opens it, then the server's own
     /// words for why it is here.
     fn row(&mut self, ui: &mut egui::Ui, row: &QueueRow) {
         let label = format!(
@@ -64,7 +64,7 @@ impl Shell {
             model.focus_conversation(row.workspace.clone(), row.agent.clone());
             self.close(crate::overlay::Close::Leave);
         }
-        // **Why it fires, in the engine's words** (REMOTE §9.11 at protocol
+        // **Why it fires, in the server's words** (REMOTE §9.11 at protocol
         // 12): the sentence has one home and crosses rather than being
         // re-worded here; the tokens beside it are what a row with no words
         // still says.

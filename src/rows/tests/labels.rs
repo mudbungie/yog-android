@@ -241,7 +241,7 @@ fn a_windowed_call_that_closed_states_the_number_and_no_verdict() {
 /// `raw` rides beside the kind, so the transcript shows what the entry SAYS
 /// even where it cannot say what it MEANS — and a stray block says its word in
 /// resting ink. Refusing either would blank the whole transcript for one word
-/// an engine added.
+/// a server added.
 #[test]
 fn a_kind_this_build_has_not_heard_of_paints_as_unknown() {
     let stray = Entry {

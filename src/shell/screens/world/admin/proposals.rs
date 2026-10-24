@@ -72,7 +72,7 @@ impl Shell {
 
     /// One staged patch, as a row. The id is the address and the subject is
     /// what a person recognises it by, so both ride the first line; `fresh` is
-    /// the engine's own word and is painted as its own state, because a stale
+    /// the server's own word and is painted as its own state, because a stale
     /// patch was written against a config that no longer governs anything.
     fn staged_row(&mut self, ui: &mut egui::Ui, row: &Proposal) {
         let picked = self.proposal.as_deref() == Some(row.id.as_str());

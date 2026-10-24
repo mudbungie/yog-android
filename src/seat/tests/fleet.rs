@@ -131,7 +131,7 @@ fn a_wrong_kind_names_the_op_and_a_lost_reply_names_the_board() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("disarm: the engine answered transcript instead")
+        Some("disarm: the server answered transcript instead")
     );
     drop(model);
     served.join().unwrap();

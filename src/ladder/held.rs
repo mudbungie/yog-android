@@ -2,7 +2,7 @@
 //! returns its connection to, and the holder that reads each one through
 //! its silence until the next ask takes it or the silence says it is gone.
 //!
-//! **Why a holder thread at all.** The engine writes `{"ping":true}` into a
+//! **Why a holder thread at all.** The server writes `{"ping":true}` into a
 //! held connection every 25 seconds of silence and hangs up after two
 //! minutes of it; a stream nobody reads cannot tell a live mapping from a
 //! dead one, and an ask written into a dead one is a lost reply — REMOTE §3's
@@ -33,7 +33,7 @@ use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 /// How long a held stream may carry nothing at all before this end hangs
-/// up: the engine's own bound, mirrored.
+/// up: the server's own bound, mirrored.
 pub(crate) const SILENCE: Duration = Duration::from_mins(2);
 
 /// How often a holder looks up from the socket for a taker.
@@ -47,7 +47,7 @@ const TICK: Duration = Duration::from_millis(250);
 const TAKE: Duration = Duration::from_secs(5);
 
 /// A punched connection with its preface spent: the stream, and the edition
-/// the engine stated on it (`transport::Open::edition`).
+/// the server stated on it (`transport::Open::edition`).
 pub struct Held {
     pub tls: StreamOwned<ClientConnection, TcpStream>,
     pub edition: u32,
@@ -155,7 +155,7 @@ fn hold(
             break Some("two minutes of silence");
         }
         // The terminator, a frame that is not a ping where no reply is due,
-        // or the socket failing: the engine is not speaking this protocol on
+        // or the socket failing: the server is not speaking this protocol on
         // this stream any more, and it is dropped, not kept.
         match read_frame(&mut held.tls) {
             Ok(Some(body)) if is_ping_body(&body) => {
@@ -163,7 +163,7 @@ fn hold(
                 pings += 1;
             }
             Err(e) if timed_out(&e) => {}
-            Ok(None) => break Some("the engine ended it"),
+            Ok(None) => break Some("the server ended it"),
             Ok(Some(_)) => break Some("a frame that is not a ping"),
             Err(_) => break Some("the stream closed or failed"),
         }
@@ -173,7 +173,7 @@ fn hold(
 
 /// One frame off a held stream, patient about the body: the header is read
 /// at the tick, so a taker is never kept waiting, and once a header has
-/// promised a body the body is waited for on the silence bound — the engine
+/// promised a body the body is waited for on the silence bound — the server
 /// writes the two in one breath, and a tick between them must not leave
 /// four bytes consumed and the stream misframed. `frame::read_frame` is not
 /// used here for exactly that reason and nowhere else.

@@ -52,7 +52,7 @@ pub fn offers() -> Vec<Offer> {
                   every transcript, and this device's tools offered \
                   alongside — one identity, two connections. It needs an \
                   operator-grade leaf (a subject with no OU=foot, REMOTE \
-                  §4.2) plus the one host:port it dials. The engine's own \
+                  §4.2) plus the one host:port it dials. The server's own \
                   box mints it; a cable, an already-trusted device's tools, \
                   or a screen you photographed carries it here. This app \
                   never mints and never enrolls itself."
@@ -79,16 +79,16 @@ pub fn offers() -> Vec<Offer> {
         Offer {
             component: Component::Server,
             brand: Component::Server.brand(),
-            tagline: "the server — run the engine here".to_owned(),
-            how: "Not yet, and here is exactly why. The engine cross-compiles \
+            tagline: "the server — run yog here".to_owned(),
+            how: "Not yet, and here is exactly why. The server cross-compiles \
                   to this architecture and links — that rung is walked. Two \
-                  are not. An engine founds its world with git, commits every \
+                  are not. A server founds its world with git, commits every \
                   workspace and keeps its tasks in a git repository, and \
                   Android ships no git. And the world seeds shell shims its \
                   own agents run, which land in this app's private storage — \
                   where Android refuses to execute anything, by policy, since \
                   API 29. Both are upstream shapes, not settings. A button \
-                  that started an engine which refuses every act would be \
+                  that started a server which refuses every act would be \
                   worse than this sentence."
                 .to_owned(),
             default: false,
@@ -105,6 +105,6 @@ pub fn channels() -> Vec<String> {
     vec![
         "a cable — adb push the files into this app's storage".to_owned(),
         "an already-trusted device — its tools write the files here".to_owned(),
-        "a screen — the engine shows the material and this device reads it".to_owned(),
+        "a screen — the server shows the material and this device reads it".to_owned(),
     ]
 }

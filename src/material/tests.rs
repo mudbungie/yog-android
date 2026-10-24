@@ -70,7 +70,7 @@ fn the_roving_pair_is_read_beside_the_four_and_half_of_it_refuses() {
     assert_eq!(
         read_dir(&dir).unwrap().unwrap().pairing,
         Some(crate::rendezvous::Pairing {
-            engine: [1u8; 32],
+            server: [1u8; 32],
             salt: [2u8; 32],
         })
     );

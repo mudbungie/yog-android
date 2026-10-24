@@ -17,7 +17,7 @@ fn pki() -> std::path::PathBuf {
     dir
 }
 
-/// A foot over a one-shot engine that answers `reply`, and the envelope it
+/// A foot over a one-shot server that answers `reply`, and the envelope it
 /// read back.
 fn dialled(reply: Value) -> (Foot, std::thread::JoinHandle<Vec<u8>>) {
     let dir = pki();
@@ -51,11 +51,11 @@ fn advertising_sends_the_table_and_names_no_client() {
 }
 
 /// **The receipt's reading is handed back, not swallowed** (REMOTE §5.1,
-/// PROTOCOL 8). This surface reports what the engine said about its own
+/// PROTOCOL 8). This surface reports what the server said about its own
 /// document and judges none of it: what a `true` MEANS depends on which
 /// presentation earned it, and only the host loop knows that.
 #[test]
-fn advertising_answers_whether_the_engine_wrote() {
+fn advertising_answers_whether_the_server_wrote() {
     for wrote in [false, true] {
         let (foot, _served) = dialled(json!({ "ok": true, "kind": "advertised", "wrote": wrote }));
         assert_eq!(foot.advertise(vec![]), Ok(wrote));
@@ -102,7 +102,7 @@ fn completing_quotes_the_handle_and_the_captures_three_facts() {
 }
 
 /// **One sentence for all three**, because it is the same question three
-/// times: an engine that answered a kind this gesture does not earn is a
+/// times: a server that answered a kind this gesture does not earn is a
 /// channel this device cannot go on using, not content to paint.
 #[test]
 fn an_answer_of_the_wrong_kind_stops_each_gesture_the_same_way() {
@@ -111,7 +111,7 @@ fn an_answer_of_the_wrong_kind_stops_each_gesture_the_same_way() {
     let refused = foot.advertise(vec![]).unwrap_err();
     assert_eq!(
         refused.sentence(),
-        "the engine answered workspaces, not this machine's work"
+        "the server answered workspaces, not this machine's work"
     );
     // And it is a REFUSAL, not a channel failure: the connection worked
     // perfectly and carried an answer this gesture does not earn, so the host
@@ -126,11 +126,11 @@ fn an_answer_of_the_wrong_kind_stops_each_gesture_the_same_way() {
     );
 }
 
-/// A refusal the engine wrote crosses as the engine's own sentence — which is
+/// A refusal the server wrote crosses as the server's own sentence — which is
 /// what a foot refused for its grade would read as (REMOTE §4.2: *"in band and
 /// naming the grade"*).
 #[test]
-fn a_carried_refusal_is_the_engines_sentence() {
+fn a_carried_refusal_is_the_servers_sentence() {
     let refusal = json!({ "ok": false, "error": "client \"phone\" is foot grade" });
     let (foot, _served) = dialled(refusal);
     let refused = foot.invocations().unwrap_err();
@@ -139,10 +139,10 @@ fn a_carried_refusal_is_the_engines_sentence() {
 }
 
 /// The address is carried for the sentence a stopped host publishes; opening
-/// dials nothing, so a foot exists before its engine does.
+/// dials nothing, so a foot exists before its server does.
 #[test]
 fn a_foot_is_opened_without_dialling() {
     let dir = pki();
-    let foot = Foot::open(&material(&dir, "ca", "phone", "engine.example.com:7737")).unwrap();
-    assert_eq!(foot.address(), "engine.example.com:7737");
+    let foot = Foot::open(&material(&dir, "ca", "phone", "server.example.com:7737")).unwrap();
+    assert_eq!(foot.address(), "server.example.com:7737");
 }

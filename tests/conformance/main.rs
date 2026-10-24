@@ -34,9 +34,9 @@
 //! the remedy is a row in `requests.rs`/`replies.rs`, decided rather than
 //! defaulted.
 //!
-//! **And the corpus is only ONE engine's** — the one it was cut from. Since
+//! **And the corpus is only ONE server's** — the one it was cut from. Since
 //! REMOTE §3.2 (bl-e598) `PROTOCOL` is a major and additions ship inside one,
-//! so an engine older or newer than this corpus is one this seat must still
+//! so a server older or newer than this corpus is one this seat must still
 //! read. [`editions`] is that half: the same fixtures projected back to every
 //! edition of this major, and every word in them replaced with one no build
 //! has heard of.

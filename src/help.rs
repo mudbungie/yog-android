@@ -1,4 +1,4 @@
-//! **The op table, vendored** (DESIGN §13.14): what every gesture the engine
+//! **The op table, vendored** (DESIGN §13.14): what every gesture the server
 //! speaks is called, which surface owes it a control, and what it does — read
 //! out of `corpus/reply/help.json`, which this repository already carries.
 //!
@@ -6,8 +6,8 @@
 //! that is a reading rather than a shortcut.** DESIGN §2 rules that the corpus
 //! and the spoken version move together: *"a protocol bump upstream is a
 //! re-vendor and a rebuild here"*, and a peer of another version is refused
-//! fail-closed at the §3 preface. So for any engine this build can talk to,
-//! the vendored table IS that engine's table — asking for it would be a radio
+//! fail-closed at the §3 preface. So for any server this build can talk to,
+//! the vendored table IS that server's table — asking for it would be a radio
 //! spend for an answer already compiled in, on the device §14.1 exists to keep
 //! asleep. `tests/conformance/requests.rs` records the wire shape as one this
 //! codec never sends.
@@ -23,14 +23,14 @@ use serde_json::Value;
 /// judges the walk against — one file, one authority.
 pub const TABLE: &str = include_str!("../corpus/reply/help.json");
 
-/// One op, as the engine describes it.
+/// One op, as the server describes it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Row {
     /// The op token — the name that already exists everywhere: the envelope's
     /// `op`, the corpus filename, and the `act:` tag a control carries.
     pub verb: String,
     /// `control` (a seat owes it a discoverable interactable) or `machine`
-    /// (spoken only by programs). Carried as the engine's own word: a third
+    /// (spoken only by programs). Carried as the server's own word: a third
     /// class is a classification decision made upstream, and what this app
     /// OWES for one is `crate::parity`'s question, not this reader's.
     pub surface: String,
@@ -38,7 +38,7 @@ pub struct Row {
     pub summary: String,
     /// How it is said as a slash line.
     pub usage: String,
-    /// The paragraph beneath, in the engine's own words.
+    /// The paragraph beneath, in the server's own words.
     pub detail: String,
 }
 
@@ -76,7 +76,7 @@ fn row(v: &Value) -> Result<Row, String> {
 }
 
 /// A prose column, made paintable (`theme::glyph::paintable`, bl-8353): the
-/// engine's words, with what the bundled face cannot draw stood in for. The
+/// server's words, with what the bundled face cannot draw stood in for. The
 /// verb and the surface are tokens and are read raw.
 fn said(v: &Value, key: &str) -> Option<String> {
     raw(v, key).map(|words| crate::theme::glyph::paintable(&words))

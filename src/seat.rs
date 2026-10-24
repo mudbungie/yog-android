@@ -29,7 +29,7 @@ pub struct Snapshot {
     /// its transcript on every pass — what the rule's context and spend are
     /// painted from. `None` when none is focused.
     pub head: Option<crate::codec::Agent>,
-    /// **The focused workspace's providers**, as the engine last listed them
+    /// **The focused workspace's providers**, as the server last listed them
     /// (bl-0267). Empty until the selectors have been opened once, and empty
     /// again the moment the focus moves to another workspace: a sign-in is a
     /// per-workspace fact, so one workspace's list under another's name would
@@ -47,8 +47,8 @@ pub struct Snapshot {
     /// another's name.
     pub models: std::collections::BTreeMap<String, Vec<String>>,
     /// **What the focused workspace's roles are actually set to** (bl-e9f9),
-    /// as the engine last answered. Empty is two things a control must not
-    /// tell apart wrongly: a workspace with nothing assigned, and an engine
+    /// as the server last answered. Empty is two things a control must not
+    /// tell apart wrongly: a workspace with nothing assigned, and a server
     /// too old to answer the read at all — both mean *nothing to seed from*,
     /// and neither is an error.
     pub roles: Vec<RoleRow>,
@@ -56,13 +56,13 @@ pub struct Snapshot {
     /// move to know their optimistic value has been overtaken by truth —
     /// they never read the number.
     pub roles_read: usize,
-    /// **How many passes the engine has answered, and how many option lists
+    /// **How many passes the server has answered, and how many option lists
     /// it has** (§22 item 2's reload mark): a dropup remembers the count when
     /// it asks and reads *fresh* once it moves. Watermarks, never numbers.
     pub passed: usize,
     pub listed: usize,
     /// **What this seat's deposits have earned** (bl-66fb): how many the
-    /// engine took, and how many it refused, since the worker started. The
+    /// server took, and how many it refused, since the worker started. The
     /// composer's echo reads the CHANGE and never the number — it remembers
     /// both at the moment it sent and watches for either to move, which is
     /// what tells a muted echo from an inked one without a receipt id the
@@ -71,13 +71,13 @@ pub struct Snapshot {
     pub refused: usize,
     /// **How many deposits earned no reply at all** (yog REMOTE §3, bl-07b1).
     /// A third counter and not a second reading of `refused`, because the two
-    /// are opposite instructions to the operator: a refusal is the engine
+    /// are opposite instructions to the operator: a refusal is the server
     /// saying no, and the composer takes its draft back; an act in doubt may
     /// have been taken, and the one thing that must not happen is its being
     /// said again. The echo watches this move exactly as it watches the other
     /// two, and stands where it is when it does.
     pub doubted: usize,
-    /// **The decision queue as the engine last answered it, whoever asked**
+    /// **The decision queue as the server last answered it, whoever asked**
     /// (§13.7, §13.8). Two surfaces spend it now — the held-call band under an
     /// open conversation, which a pass reads it for, and the queue screen,
     /// which asks for it when it opens (bl-35bd) — so the rows are held by
@@ -94,7 +94,7 @@ pub struct Snapshot {
     pub queue: Vec<QueueRow>,
     /// **The ops trail as it was last read** (yog §4.2, DESIGN §13.8). Empty
     /// is two things that paint the same and are not worth telling apart: an
-    /// engine that has done nothing since the trail was cleared, and a seat
+    /// server that has done nothing since the trail was cleared, and a seat
     /// that has not opened the surface. Neither is an error, and both mean
     /// *there is nothing here to read*.
     ///
@@ -165,7 +165,7 @@ pub struct Snapshot {
     /// anything that reads only the hit count, and they are opposite screens.
     ///
     /// It rides the snapshot and never the §14 cache: the cache is the world
-    /// the engine wrote down, and a search is a question this operator asked
+    /// the server wrote down, and a search is a question this operator asked
     /// a moment ago — reviving one on the next boot would be the app opening
     /// on a search nobody just made.
     pub search: Option<Found>,
@@ -175,7 +175,7 @@ pub struct Snapshot {
     /// the pairing law every read here keeps, one subject along.
     pub login: Option<Signing>,
     /// The last refresh's failure or a refused deposit, one sentence for
-    /// the banner. `None` is "the engine answered".
+    /// the banner. `None` is "the server answered".
     ///
     /// **A wire that is being re-dialled is not in here** (bl-eec1) — that is
     /// [`Snapshot::reconnecting`] below. This field is the Error state: what

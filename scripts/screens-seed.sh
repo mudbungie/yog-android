@@ -36,7 +36,7 @@ pull_parity() {       # pull_parity <destination>
 }
 
 # A CA and one leaf under it. Nothing here is ever a secret: it is minted per
-# run, into the build directory, and the engine it would authenticate does not
+# run, into the build directory, and the server it would authenticate does not
 # exist. It is written where nothing tracked can reach it for the same reason
 # the disclosure gate refuses a committed key — a fabricated one still reads
 # like one.
@@ -99,7 +99,7 @@ body = {"yog-seat-cache": version, "protocol": protocol,
 # depth may carry it — which is what puts rows on the queue screen (§13.8) for
 # a walk that dials nothing. The transcript seeds below REPLACE it with the
 # same answer re-addressed at the conversation they open, because the band
-# there paints only where the engine says THAT conversation holds a call.
+# there paints only where the server says THAT conversation holds a call.
 body["attention"] = frame("attention")
 # The pairing law `cache::read` enforces on the FILE: rows deeper than the
 # focus they were asked at are unpaintable, and a file carrying them is
@@ -114,7 +114,7 @@ if depth in ("conversations", "transcript", "running"):
     # actually set to, and one provider's models. Without them the row has no
     # provider, so the model selector is disabled and the §9.4 tuning band —
     # which paints only where the picked provider's own row says it takes
-    # effort or priority — does not paint at all. They are the engine's own
+    # effort or priority — does not paint at all. They are the server's own
     # envelopes like everything else here; the worker role's provider in the
     # roles fixture is the one the models map is keyed by.
     # **A tree to draw the threading over** (DESIGN §13.20, bl-4d17). The
@@ -123,7 +123,7 @@ if depth in ("conversations", "transcript", "running"):
     # ever continues past one and no elbow ever has a second child to reach.
     # So the conversations depth — and only it, because the transcript seeds
     # below pick a row out of this same list — hangs two fans off the roots
-    # the engine already answered with. Every row is a COPY of one of those,
+    # the server already answered with. Every row is a COPY of one of those,
     # with the four fields that say where a row sits and what it says moved
     # onto it: no field is invented and no spelling this codec does not
     # already decode is used, which is the same rule the `running` seed keeps.
@@ -161,12 +161,12 @@ if depth in ("conversations", "transcript", "running"):
     if depth in ("transcript", "running"):
         rows = conversations["rows"]
         # **Two transcript seeds, because three controls are gated by the
-        # engine's own reading of the conversation** (REMOTE §3.1, §9.4): the
+        # server's own reading of the conversation** (REMOTE §3.1, §9.4): the
         # nudge is offered exactly while nothing is in flight, and the two
         # stop controls exactly while something is. A walk that only ever
         # sees one state cannot observe the other's controls, and unproven is
         # red (yog PARITY §5) — so the walk states which gate it wants and
-        # visits both. The `running` seed sets the two booleans the engine
+        # visits both. The `running` seed sets the two booleans the server
         # puts ON the row to their other lawful value; it invents no field
         # and reads no spelling this codec does not already decode.
         if depth == "running":
@@ -174,7 +174,7 @@ if depth in ("conversations", "transcript", "running"):
             row["stoppable"] = True
             row["stop_children"] = True
             # **Two running, so the dock says a plural** (§22 item 9): a
-            # second row the engine calls live — its own lawful word, on
+            # second row the server calls live — its own lawful word, on
             # the row's own two fields.
             rows[2]["state"] = "live"
             rows[2]["tone"] = "live"
@@ -236,8 +236,8 @@ if depth in ("conversations", "transcript", "running"):
         # the conversation this seed opened, the queue row's treatment below.
         body["agent"] = dict(frame("agent"), agent=row["root_id"])
         # **The parked tool call** (DESIGN §13.7): the capability band paints
-        # only where the engine says a call is held, so the walk seeds the
-        # engine's own queue answer with its one held row addressed at the
+        # only where the server says a call is held, so the walk seeds the
+        # server's own queue answer with its one held row addressed at the
         # conversation this seed opened. Re-addressed and not re-written: the
         # row is the corpus's, and only the two keys that name a conversation
         # are moved onto the ones this cache is focused at — the same thing

@@ -4,7 +4,7 @@
 //! each row say; `shell/dock.rs` paints them and performs the taps. The
 //! desktop's shape (lernie `ui::dock`), at a thumb's size.
 //!
-//! **The dock asks nothing of its own.** Running is the engine's word on the
+//! **The dock asks nothing of its own.** Running is the server's word on the
 //! conversation rows this seat already holds for the focused workspace —
 //! `live` or `in-flight` (`AgentState`) — so the dock is a reading of those
 //! rows, in the switcher's order (`crate::roster::ordered`).

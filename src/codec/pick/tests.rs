@@ -1,5 +1,5 @@
 //! The provider/model family, both directions of the strictness contract:
-//! the engine's spelling reads back, a real null is a fact, every malformed
+//! the server's spelling reads back, a real null is a fact, every malformed
 //! shape refuses by name, and the pick's envelope is pinned byte for byte.
 
 use super::{Effort, LEVELS, encode_effort, encode_pick, encode_priority, level_of, names, row};
@@ -120,7 +120,7 @@ fn the_level_vocabulary_is_three_words_and_an_absence() {
 }
 
 /// Both tuning envelopes, in the server's own spelling. The level key is
-/// written always — a real null for off, which is what the engine reads.
+/// written always — a real null for off, which is what the server reads.
 #[test]
 fn the_tuning_envelopes_are_the_servers_spelling() {
     assert_eq!(

@@ -1,4 +1,4 @@
-//! **Every way a channel stops the host**, in one file: a refusal the engine
+//! **Every way a channel stops the host**, in one file: a refusal the server
 //! wrote, an answer of a kind the gesture does not earn, and a frame that
 //! stopped reading — from between two channels and from inside a run. Split
 //! from the parent for `consent.rs`'s reason (bl-cc54): the parent is the
@@ -16,7 +16,7 @@ use crate::test_support::{material, serve_many};
 use serde_json::json;
 
 #[test]
-fn a_refused_advertisement_stops_the_host_with_the_engines_sentence() {
+fn a_refused_advertisement_stops_the_host_with_the_servers_sentence() {
     let refusal = json!({ "ok": false, "error": "not registered here" })
         .to_string()
         .into_bytes();
@@ -52,7 +52,7 @@ fn a_wrong_reply_to_the_follow_read_names_what_came_instead() {
     let standing = settle(&mut host, &|s| stopped(s).is_some());
     let said = stopped(&standing).unwrap_or_default();
     assert!(
-        said == "the engine answered advertised, not this machine's work",
+        said == "the server answered advertised, not this machine's work",
         "stopped: {said}"
     );
 }
@@ -99,7 +99,7 @@ fn a_frame_that_goes_away_mid_run_stops_the_host_after_it_answers() {
     settle(&mut host, &|s| s.advertised);
     drop(host);
     // The invocation still ran and was still answered: a frame going away does
-    // not abandon work the engine is waiting on.
+    // not abandon work the server is waiting on.
     assert_eq!(
         ops(&served.join().unwrap()),
         ["advertise", "invocations", "complete", "advertise"]
@@ -108,7 +108,7 @@ fn a_frame_that_goes_away_mid_run_stops_the_host_after_it_answers() {
 
 /// **A refusal to the hand-off's re-assertion stops the host too** (bl-cc54).
 /// The re-presentation is an ordinary §5.1 gesture and earns no exemption: an
-/// engine that declines it — this device no longer registered, its grade
+/// server that declines it — this device no longer registered, its grade
 /// withdrawn, another connection holding a parked read with a different set in
 /// force — has said something no redial changes, and a host that read on
 /// regardless would go on waiting for work under a set nobody confirmed.

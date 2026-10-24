@@ -33,7 +33,7 @@ fn receipt(kind: &str) -> Vec<u8> {
     json!({ "ok": true, "kind": kind }).to_string().into_bytes()
 }
 
-/// The trail crosses as the engine's own ask — a bounded tail — and its rows
+/// The trail crosses as the server's own ask — a bounded tail — and its rows
 /// reach the snapshot with the row's own facts on them.
 #[test]
 fn the_trail_is_asked_for_and_its_rows_reach_the_snapshot() {
@@ -133,7 +133,7 @@ fn an_answer_of_the_wrong_kind_is_named_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("ops: the engine answered acked instead")
+        Some("ops: the server answered acked instead")
     );
     assert_eq!(
         snap.trail.len(),
@@ -161,11 +161,11 @@ fn an_act_answered_with_the_wrong_kind_is_refused_by_name() {
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.ack_trail();
     settle(&mut model, &|s| {
-        s.error.as_deref() == Some("ack: the engine answered nudged instead")
+        s.error.as_deref() == Some("ack: the server answered nudged instead")
     });
     model.clear_trail();
     settle(&mut model, &|s| {
-        s.error.as_deref() == Some("clear-trail: the engine answered applied instead")
+        s.error.as_deref() == Some("clear-trail: the server answered applied instead")
     });
     drop(model);
     served.join().unwrap();
@@ -226,7 +226,7 @@ fn a_read_that_failed_keeps_the_rows_it_had() {
     settle(&mut model, &|s| !s.trail.is_empty());
     model.list_trail();
     let snap = settle(&mut model, &|s| s.error.is_some());
-    assert_eq!(snap.trail.len(), 1, "the answer the engine gave stands");
+    assert_eq!(snap.trail.len(), 1, "the answer the server gave stands");
     drop(model);
     served.join().unwrap();
 }

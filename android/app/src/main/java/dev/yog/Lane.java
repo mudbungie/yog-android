@@ -38,7 +38,7 @@ import android.content.Context;
  * <h2>A frame is the wake, and a life that said nothing rests</h2>
  *
  * Each pass is one lane LIFE on the Rust side — dial, hold, read frames —
- * which returns when the engine writes a rise or when the hold ends. What it
+ * which returns when the server writes a rise or when the hold ends. What it
  * posts goes on the ATTENTION channel at rung 1's own notification id, off
  * rung 1's own memory of what was last announced, so a pocketed phone carries
  * one standing attention row whichever rung wrote it and the two can neither
@@ -46,12 +46,12 @@ import android.content.Context;
  */
 final class Lane implements Runnable {
     /**
-     * How long the lane rests after a life that said nothing. The engine's own
+     * How long the lane rests after a life that said nothing. The server's own
      * hold is thirty seconds (REMOTE §5.1's stated width), so a lane that
      * ended without a rise is redialled a hold later — one number, from the
      * place that already states it. The honest price is that a change can wait
      * one rest before it is heard, which is still seconds against rung 1's
-     * fifteen minutes; what it buys is the bound on an engine that is simply
+     * fifteen minutes; what it buys is the bound on a server that is simply
      * gone, two connections a minute rather than a spin. No ladder and no
      * counter: a phone that changes networks hourly has no number of failures
      * after which giving up is right (DESIGN §18.5's own finding).
@@ -84,9 +84,9 @@ final class Lane implements Runnable {
     private static native String attending(String dir);
 
     /**
-     * One life of the lane: dial, hold, and answer the first rise the engine
+     * One life of the lane: dial, hold, and answer the first rise the server
      * writes — the title, then the line under it, or an empty string for
-     * silence. It BLOCKS for up to the engine's own hold, which is what a held
+     * silence. It BLOCKS for up to the server's own hold, which is what a held
      * read is. {@code crate::attention::wake}.
      */
     private static native String wake(String dir);

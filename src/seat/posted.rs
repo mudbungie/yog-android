@@ -15,13 +15,13 @@
 use crate::transport::Wire;
 
 /// **What became of an act.** Three and not two, because a lost reply is
-/// neither: the engine may have completed the act, and this end cannot learn
+/// neither: the server may have completed the act, and this end cannot learn
 /// which. The caller's whole duty on [`Self::InDoubt`] is to say so and to
 /// send nothing again.
 pub(super) enum Posted {
-    /// The engine answered, and its answer was yes.
+    /// The server answered, and its answer was yes.
     Took,
-    /// The engine answered, and its answer was no — definite: nothing ran.
+    /// The server answered, and its answer was no — definite: nothing ran.
     Refused(String),
     /// **The act was written and nothing answered it** — REMOTE §3's in doubt.
     InDoubt(String),

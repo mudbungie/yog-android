@@ -20,7 +20,7 @@ use blocks::block_row;
 mod blocks;
 
 /// **The senders that are the operator's own** (lernie `rows::role::OPERATOR`):
-/// the engine writes a deposit from a seat with `user`, and `op` is the same
+/// the server writes a deposit from a seat with `user`, and `op` is the same
 /// claim written short. Reading either as a peer would paint the operator's
 /// own words in a peer's weight.
 const OPERATOR: [&str; 2] = ["user", "op"];
@@ -164,7 +164,7 @@ pub(super) fn push_entry(entries: &[Entry], entry: &Entry, out: &mut Vec<Row>) {
             auth_row.as_deref(),
         )),
         // **The bytes, in resting ink** — an entry nothing could parse, and
-        // an entry kind a newer engine of this major spells (REMOTE §3.2),
+        // an entry kind a newer server of this major spells (REMOTE §3.2),
         // which is the same row said twice: `raw` rides BESIDE the kind, so
         // this seat can show what an entry SAYS even where it cannot say what
         // the entry MEANS. Only the header differs, so only the header is

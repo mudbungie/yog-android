@@ -7,11 +7,11 @@
 //! be answered from a list.
 //!
 //! **The verdict and its SCOPE are the parameters, and the call is not one**
-//! (PROTOCOL 18, yog bl-94a5). The engine reads the held mark off the branch
+//! (PROTOCOL 18, yog bl-94a5). The server reads the held mark off the branch
 //! at fire time, so this gesture cannot land on a call that is no longer the
 //! one held — which is also why nothing here carries the `tool_use` the queue
 //! read gave it. The scope says how far the answer stands, and a wide one on a
-//! call the control classified destructive is refused by the ENGINE, in band:
+//! call the control classified destructive is refused by the SERVER, in band:
 //! this seat offers the choice and never adjudicates it.
 //!
 //! **One receipt, and one sentence worth saying about a success.** A releasing
@@ -50,7 +50,7 @@ pub(crate) fn answer(seat: &Seat, focus: &Focus, verdict: Verdict, scope: Scope)
     }
 }
 
-/// What a receipt means. The engine took it either way — this decides whether
+/// What a receipt means. The server took it either way — this decides whether
 /// there is anything left to say about what it did.
 fn took(answered: &Answered) -> Posted {
     if answered.verdict.releases() && !answered.advanced {

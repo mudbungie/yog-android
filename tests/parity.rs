@@ -1,5 +1,5 @@
 //! **The standing parity assertion** (yog `docs/PARITY.md` §5): the ops the
-//! engine says every seat owes a control, against the `act:` tags a walk of
+//! server says every seat owes a control, against the `act:` tags a walk of
 //! this app actually observed.
 //!
 //! **It is `#[ignore]`d, and that is the honest spelling.** The inventory does
@@ -14,7 +14,7 @@
 //! What DOES gate on every `make check` is the half that needs no device:
 //! `src/parity/tests.rs` reads this tree's own `parity.toml` against the
 //! vendored roster, so an exemption that stops citing, stops parsing, or names
-//! an op the engine no longer classes `control` reddens immediately.
+//! an op the server no longer classes `control` reddens immediately.
 //!
 //! Two files reach it as text and one as a directory:
 //!

@@ -54,7 +54,7 @@ fn a_malformed_frame_refuses_naming_the_field() {
     );
 }
 
-/// **The fold is the engine's own** (REMOTE §5.5): `fold(a).absorb(fold(b))
+/// **The fold is the server's own** (REMOTE §5.5): `fold(a).absorb(fold(b))
 /// == fold(a ++ b)`. Text accretes, the newer delta kind wins, and a part
 /// that never spoke stays absent rather than becoming an empty string.
 #[test]

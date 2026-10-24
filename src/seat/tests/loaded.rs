@@ -1,6 +1,6 @@
 //! **What the controls load** (REMOTE §9.4's read, bl-e9f9): the assignments
 //! a workspace actually has, the count that tells an optimistic control it
-//! has been overtaken, and the older engine that cannot answer at all.
+//! has been overtaken, and the older server that cannot answer at all.
 
 use super::pick::applied;
 use super::{conv_reply, model_against, ops, settle, ws_reply};
@@ -49,18 +49,18 @@ fn focusing_a_workspace_reads_what_its_roles_are_set_to() {
     );
 }
 
-/// **An engine that predates the read says nothing** (bl-e9f9): the deployed
+/// **A server that predates the read says nothing** (bl-e9f9): the deployed
 /// build refuses the op in band by name, and that means *no preload* — never
-/// a banner. An operator running the engine they have is not being told off
+/// a banner. An operator running the server they have is not being told off
 /// by this app.
 #[test]
-fn an_engine_without_the_read_is_silent_not_an_error() {
+fn a_server_without_the_read_is_silent_not_an_error() {
     let refusal = json!({ "ok": false, "error": "unknown op \"roles\"" })
         .to_string()
         .into_bytes();
     let (mut model, _served) = super::model_against(vec![
         vec![ws_reply()],
-        vec![refusal], // the focus preload, refused by an older engine
+        vec![refusal], // the focus preload, refused by an older server
         vec![ws_reply()],
         vec![conv_reply()],
     ]);
@@ -173,12 +173,12 @@ fn the_controls_row_reads_the_assignments_and_the_provider_rows_together() {
     assert_eq!(ops(&requests)[5], "providers");
 }
 
-/// **An engine that answers neither leaves the row where it stood.** The pair
+/// **A server that answers neither leaves the row where it stood.** The pair
 /// is a preload and not a gesture the operator made, so a refusal of either
 /// half is silent — the controls stay dark and say why when they are tapped,
 /// which is what they were already doing.
 #[test]
-fn a_controls_read_the_engine_refuses_is_silent() {
+fn a_controls_read_the_server_refuses_is_silent() {
     let refusal = json!({ "ok": false, "error": "unknown op \"providers\"" })
         .to_string()
         .into_bytes();
@@ -199,7 +199,7 @@ fn a_controls_read_the_engine_refuses_is_silent() {
     let snap = settle(&mut model, &|s| s.workspaces.len() == 1);
     assert_eq!(
         snap.error, None,
-        "a preload the engine refuses is not an error"
+        "a preload the server refuses is not an error"
     );
     assert!(snap.roles.is_empty() && snap.providers.is_empty());
     assert_eq!(snap.roles_read, 0, "nothing was read, so nothing overtakes");

@@ -49,7 +49,7 @@ impl Shell {
         if crate::drawer::opens(origin, now) {
             self.open(crate::overlay::Overlay::Switcher);
         }
-        // **Which call is parked is the engine's answer, never a reading
+        // **Which call is parked is the server's answer, never a reading
         // taken here** (§13.7): the queue read names it, and the projection
         // marks the row it already committed rather than guessing from a
         // tool call with no result.
@@ -155,7 +155,7 @@ impl Shell {
                                 });
                                 at += block.lines;
                             }
-                            // The message this seat has sent and the engine
+                            // The message this seat has sent and the server
                             // has not shown back yet (bl-66fb), where its row
                             // will be — above the answer to it, on the
                             // operator's own bubble (§23 item 5).

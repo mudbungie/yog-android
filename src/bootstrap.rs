@@ -85,9 +85,9 @@ impl Component {
 pub struct Enrollment {
     pub component: Component,
     /// The leaf's subject common name — REMOTE §2's *"one certificate = one
-    /// client identity"*, and the name the engine's registry knows this
+    /// client identity"*, and the name the server's registry knows this
     /// device by. Empty when the certificate carries none, which is a leaf the
-    /// engine will refuse; saying so at the glass beats a silent empty roster.
+    /// server will refuse; saying so at the glass beats a silent empty roster.
     pub client: String,
     pub material: Material,
 }

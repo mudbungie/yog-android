@@ -13,7 +13,7 @@
 //! band are gone. The acts are §13.7's own (`seat::acts::held`,
 //! `seat::acts::seen`), unchanged on the wire.
 //!
-//! **What it says of the parked call is the engine's sentence, folded**
+//! **What it says of the parked call is the server's sentence, folded**
 //! (bl-8c94): `held: <tool> · <class>` on one line, the decision and the
 //! row's other words behind the `why` fold on the box's first line, and the call's input never here — it
 //! is a field of the transcript row that carries the call (`rows::held`).

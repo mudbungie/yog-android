@@ -12,7 +12,7 @@
 //!
 //! **`typed` is a PARAMETER on one and an ARMING on the other, and this codec
 //! reads which off the wire's own grammar** (lernie DESIGN §4.20, whose ruling
-//! transfers whole). `delete-workspace` is refused by the engine unless the
+//! transfers whole). `delete-workspace` is refused by the server unless the
 //! typed name matches, so the seat makes it an enablement; `delete-agent`'s
 //! empty string deletes the one conversation and its name typed back admits
 //! the descendants, so both values are gestures somebody meant. Nothing about
@@ -29,7 +29,7 @@ use super::{Destination, destination, target};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AdminAct {
     /// **Write one config file whole.** The text is the file, not a patch:
-    /// the engine takes the staged bytes and runs them through that
+    /// the server takes the staged bytes and runs them through that
     /// destination's own pipeline.
     Config { at: Destination, text: String },
     /// **Point a workspace's balls space at this branch.** Undone by marking
@@ -44,7 +44,7 @@ pub enum AdminAct {
         agent: String,
         typed: String,
     },
-    /// **Delete a workspace.** The engine refuses unless `typed` is its name,
+    /// **Delete a workspace.** The server refuses unless `typed` is its name,
     /// which is what makes the control an enablement rather than an arming.
     DeleteWorkspace { workspace: String, typed: String },
     /// **Take a reviewer's staged config patch, or throw it away** (REMOTE

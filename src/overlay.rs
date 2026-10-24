@@ -9,7 +9,7 @@
 //! fold into one `Option<Overlay>`, the desktop's rule (lernie DESIGN §4.42)
 //! and a subtraction here.
 //!
-//! **The search hits are an overlay whose standing is the engine's answer**,
+//! **The search hits are an overlay whose standing is the server's answer**,
 //! not a held value: the hits stand while an answer does, at the depth the
 //! search was asked from (§13.6). So `Search` is never held; [`standing`] is
 //! where that is decided, once.
@@ -23,7 +23,7 @@ use crate::codec::View;
 pub enum Overlay {
     /// Everything waiting on the operator, across every workspace (§13.8).
     Queue,
-    /// What the engine last did (§13.8).
+    /// What the server last did (§13.8).
     Trail,
     /// What each attempt on this workspace's obligations cost (§13.12).
     Candidates,

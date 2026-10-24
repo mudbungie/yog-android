@@ -31,7 +31,7 @@ fn the_bare_listing_carries_rows_and_no_reading() {
     assert_eq!(rows[0].diffstat, "1 file changed, 6 insertions(+)");
     assert_eq!(rows[0].subject, "notes: record what the span taught");
     // **`fresh` is read and never inferred** (REMOTE §9.22): a stale row still
-    // states its lineages, and only the engine can be sure the two were read
+    // states its lineages, and only the server can be sure the two were read
     // in one pass.
     assert!(!rows[1].fresh);
     assert_eq!(whole, None);
@@ -70,7 +70,7 @@ fn a_row_missing_a_field_refuses() {
 }
 
 /// Both verdicts round-trip through their own word, and the words are the
-/// engine's.
+/// server's.
 #[test]
 fn every_verdict_round_trips_through_its_own_word() {
     assert_eq!(Verdict::ALL, [Verdict::Accept, Verdict::Reject]);

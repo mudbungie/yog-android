@@ -13,7 +13,7 @@ use super::{call, delivered, model, text};
 use crate::codec::{Entry, Held};
 use crate::rows::{AutoExpand, Row, Tone, rows};
 
-/// The engine's own sentence shape: the tool, a clip of the call's JSON input,
+/// The server's own sentence shape: the tool, a clip of the call's JSON input,
 /// the class clause, and the evidence.
 const REASON: &str = "Bash {\"command\":\"rm -rf build\"} classified destructive (rm on a path \
                       inside the writable root)";
@@ -59,7 +59,7 @@ fn the_parked_call_becomes_the_held_row() {
 }
 
 /// **The decision leads and the command follows it under the fold** — the
-/// preview/body split doing what it is for. The clip of the input the engine
+/// preview/body split doing what it is for. The clip of the input the server
 /// wrote into its own sentence is gone: the row already carries the input
 /// whole, and two truncations of one string are two answers to one question.
 #[test]

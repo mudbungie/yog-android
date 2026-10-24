@@ -36,7 +36,7 @@ pub struct Tool {
     pub input_schema: Value,
     /// **The consent** (REMOTE §5.1, PROTOCOL 2): `true` states that this box
     /// will run the tool at a working directory the invocation names, which is
-    /// the fact the engine routes the worktree lane on. Absent reads false,
+    /// the fact the server routes the worktree lane on. Absent reads false,
     /// and it rides the wire only when true — so a host that consents to
     /// nothing advertises exactly the three facts it always did.
     pub subject_cwd: bool,
@@ -48,12 +48,12 @@ pub struct Tool {
 /// no `NaN` literal — so equality here is reflexive by construction.
 impl Eq for Tool {}
 
-/// What this machine is handed to run: the engine's handle and the two facts
+/// What this machine is handed to run: the server's handle and the two facts
 /// the far end needs. It carries no client — the read is answered to one
 /// identity, and a host being told its own name would be a fact it holds.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Invocation {
-    /// The engine's handle, minted at the post and quoted by the completion.
+    /// The server's handle, minted at the post and quoted by the completion.
     pub id: String,
     pub tool: String,
     /// The model's own `tool_use.input`, verbatim.

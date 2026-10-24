@@ -11,7 +11,7 @@
 //! argument — *"they arrive together, differing only in the one parameter"* —
 //! refuses it.
 //!
-//! **`from` is a ref and empty is not a value.** The engine's own
+//! **`from` is a ref and empty is not a value.** The server's own
 //! `fork::Attempt` says so: *"a fork with no ref is a different gesture."*
 //! The refs this seat can name are the operable notches of the conversation's
 //! spine and the workspace's `config/<name>` heads — both read by the records
@@ -30,7 +30,7 @@ use super::Act;
 use super::fields::str_of;
 
 /// Encode one attempt. `skills` is written always and always empty — the
-/// engine reads an absent field as the empty list, but a client that omitted
+/// server reads an absent field as the empty list, but a client that omitted
 /// it could not read its own frame back, which is the round trip REMOTE §3
 /// asks for.
 pub(crate) fn encode(workspace: &str, parent: &str, from: &str, role: &str, goal: &str) -> Value {

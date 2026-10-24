@@ -1,6 +1,6 @@
 //! **The composer row**: the one editable field plus its send control, at
 //! both depths (DESIGN §8). Split from `chat` on the seam between saying and
-//! showing — that file paints what the engine wrote down, this one is the
+//! showing — that file paints what the server wrote down, this one is the
 //! control an operator writes with.
 //!
 //! **The field itself is not egui's** (bl-8bbb). It is a native Android

@@ -2,9 +2,9 @@
 //! each provider's models, held between passes and painted into the snapshot
 //! the frame reads.
 //!
-//! **Held as the engine's own envelopes, decoded at the publish.** The cache
+//! **Held as the server's own envelopes, decoded at the publish.** The cache
 //! stores what is here (§14), and §14's ruling is that a cache holds the
-//! engine's bytes rather than a second spelling of them — so this holds the
+//! server's bytes rather than a second spelling of them — so this holds the
 //! same bytes, one representation, and the decode is done where the snapshot
 //! is built. It costs a handful of rows per pass and buys no second home for
 //! the fact.
@@ -32,7 +32,7 @@ pub(super) struct Options {
     /// The `catalog` reply, verbatim (bl-892e) — what the sign-in screen
     /// paints. The same per-workspace fact as the row above under the same
     /// pairing law, and the §14 cache stores it beside the rest so the screen
-    /// opens on what the engine last said and corrects itself a round trip
+    /// opens on what the server last said and corrects itself a round trip
     /// later.
     catalog: Option<Value>,
     /// Each `models` reply, verbatim, keyed by the provider asked for.

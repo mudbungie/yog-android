@@ -11,9 +11,9 @@
 //! the four selectors — workspace, provider, model, effort — and priority
 //! where the provider's row takes it; then this conversation's diagnostics —
 //! its state and how long since it acted, tokens in and out, what it has
-//! spent and how full its context is where the engine's `agent` row says —
+//! spent and how full its context is where the server's `agent` row says —
 //! and its name, the switcher's door. **Only facts about this conversation**:
-//! the seat-wide waiting count and the engines count are not here, and an
+//! the seat-wide waiting count and the servers count are not here, and an
 //! unpriced spend says nothing rather than `$0`.
 //!
 //! **One line where everything fits, else two** (bl-96fc, [`layout`]): the
@@ -80,7 +80,7 @@ pub struct Said {
 /// **The conversation's diagnostics and name**, in rule order: the state and
 /// how long since it acted, the tokens, then off the conversation's own
 /// `agent` row (`head`) the spend in the ledger's words and the context's
-/// fullness as the engine's own percent — each absent where the row is not
+/// fullness as the server's own percent — each absent where the row is not
 /// held or states none, never `$0` or `0%` — and the name. Nothing focused is
 /// nothing said.
 pub fn diagnostics(
@@ -256,7 +256,7 @@ fn paid(standing: &[(Slot, f32)], room: f32, gap: f32, fits: bool) -> Vec<f32> {
 
 /// **The banner line over the rule**: a sentence this seat said about the
 /// operator's own act (a verb's refusal, a dark knob's reason) in the
-/// annotation accent; else the engine's failure in the error accent unless
+/// annotation accent; else the server's failure in the error accent unless
 /// it was put down; else the redial in the working accent unless it was.
 pub fn banner(
     said: Option<&str>,

@@ -70,10 +70,10 @@ fn an_act_is_stamped_with_the_focused_workspace_and_the_pane_is_read_again() {
     assert_eq!(ops(&requests)[8], "workspace-balls");
 }
 
-/// **A refusal arrives in the engine's own words**, named by the op that
+/// **A refusal arrives in the server's own words**, named by the op that
 /// earned it — nothing here re-words what the child said.
 #[test]
-fn a_refused_act_says_what_the_engine_said_and_names_the_op() {
+fn a_refused_act_says_what_the_server_said_and_names_the_op() {
     let (model, served) = on_the_pane(vec![
         vec![outcome(false, "bl: no such ball")],
         vec![held("bl-1")],
@@ -117,7 +117,7 @@ fn an_answer_of_the_wrong_kind_names_the_op() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("create: the engine answered workspaces instead")
+        Some("create: the server answered workspaces instead")
     );
     drop(model);
     served.join().unwrap();

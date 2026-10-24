@@ -21,9 +21,9 @@ use super::records::words;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Lineage {
     pub name: String,
-    /// The commit it stands at, clipped by the engine.
+    /// The commit it stands at, clipped by the server.
     pub short_oid: String,
-    /// When that commit landed, as the engine's own epoch second. Carried
+    /// When that commit landed, as the server's own epoch second. Carried
     /// rather than rendered: this seat has one ladder for *how long ago*
     /// (`crate::roster::ago`) and no second opinion about it.
     pub committed: i64,

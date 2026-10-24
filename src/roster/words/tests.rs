@@ -34,7 +34,7 @@ fn a_waiting_row_carries_the_mark_before_the_stamp() {
 
 /// The defect this fold exists for: a provider clause with hard breaks in it
 /// took four lines of the list. One line in, one line out, whatever the
-/// engine's words did.
+/// server's words did.
 #[test]
 fn a_failure_is_one_line_however_the_provider_wrote_it() {
     let mut row = under("c-4", 0, 0);

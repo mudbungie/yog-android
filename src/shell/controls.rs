@@ -6,7 +6,7 @@
 //!
 //! **Tap is the act; there is no apply.** Picking a model IS the assignment
 //! (§13.2), so nothing here holds a draft the operator could leave unsent,
-//! and an engine that refuses one says so in the banner the model already
+//! and a server that refuses one says so in the banner the model already
 //! publishes. What the selectors show is what the workspace ACTUALLY has,
 //! overtaking an optimistic pick as soon as the roles read lands (bl-e9f9).
 //!

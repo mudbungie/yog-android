@@ -5,14 +5,14 @@
 //! at this one: what an answer IS, and how it is SPELLED.
 //!
 //! It is named here rather than at each caller because two readers already
-//! need it — the seat model and the tool host both say *"the engine answered
+//! need it — the seat model and the tool host both say *"the server answered
 //! X instead"* — and a second table of these words would drift from the
 //! decoder's own.
 
 use super::Reply;
 
 impl Reply {
-    /// This answer's `kind` token — the word the engine wrote.
+    /// This answer's `kind` token — the word the server wrote.
     pub fn kind(&self) -> String {
         match self {
             Self::Outcome { .. } => "outcome",

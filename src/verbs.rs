@@ -47,7 +47,7 @@ pub enum Does {
     Knob(crate::status::Slot),
 }
 
-/// **One row of the sheet**: the word typed, what it does in the engine's own
+/// **One row of the sheet**: the word typed, what it does in the server's own
 /// words where it has them, the ops its firing spends (its `act:` tags), and
 /// what words it needs, if any.
 #[derive(Debug, Clone, PartialEq, Eq)]

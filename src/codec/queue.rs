@@ -1,9 +1,9 @@
 //! **The decision queue's rows** (yog DESIGN §8.5, VISION §5 V5.2) — every
-//! conversation the engine says is waiting on the operator, and why.
+//! conversation the server says is waiting on the operator, and why.
 //!
 //! **This seat reads it for one fact: the parked tool call** (DESIGN §13.7,
 //! bl-b39d). A held invocation is the only thing on the wire that an operator
-//! must *answer* rather than merely notice, and the three facts the engine
+//! must *answer* rather than merely notice, and the three facts the server
 //! puts in `held` — which tool, which call, and the control's own sentence
 //! about it — are what makes an answer an informed one. REMOTE §8.1 is
 //! explicit that this sentence must cross unrewritten: rewriting it *"would
@@ -42,10 +42,10 @@ pub struct QueueRow {
     pub display: String,
     pub state: AgentState,
     pub uncertain: bool,
-    /// Why this row fires, in the engine's own tokens (the narrowing above).
+    /// Why this row fires, in the server's own tokens (the narrowing above).
     pub signals: Vec<String>,
     /// **Why this row fires, in words** (REMOTE §9.11 at protocol 12): the
-    /// firing rules' own sentence, kept in one home on the engine so it
+    /// firing rules' own sentence, kept in one home on the server so it
     /// crosses rather than being re-worded per seat. Empty is a row that
     /// fires for no rule with words — the tokens above still say which.
     pub says: String,
@@ -63,17 +63,17 @@ pub struct QueueRow {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Held {
     /// The call's own id. Carried, never spent: the answer gesture names the
-    /// conversation and the engine reads the mark itself at fire time, so
+    /// conversation and the server reads the mark itself at fire time, so
     /// nothing here can answer a call that is no longer the one held.
     pub tool_use: String,
     pub tool: String,
     /// The control's sentence about this call — what it is about to do, in
-    /// the words the engine chose. Painted verbatim (REMOTE §8.1).
+    /// the words the server chose. Painted verbatim (REMOTE §8.1).
     pub reason: String,
     /// **The scopes a pass may take on this call** (REMOTE §9.26, corpus
     /// edition 23; DESIGN §23 item 9): `call` alone for a secret or
-    /// destructive call, all three otherwise. **Empty means *the engine did
-    /// not say*** — an older engine wrote no such key — and the seat then
+    /// destructive call, all three otherwise. **Empty means *the server did
+    /// not say*** — an older server wrote no such key — and the seat then
     /// offers every reach it knows and lets the refusal land in band, as it
     /// did before the key existed.
     pub scopes: Vec<super::Scope>,

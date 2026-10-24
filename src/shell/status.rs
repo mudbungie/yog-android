@@ -205,7 +205,7 @@ impl Shell {
     }
 
     /// **The banner line**, while one stands: the operator's own act's
-    /// sentence, the engine's failure, or the redial — and a tap puts it
+    /// sentence, the server's failure, or the redial — and a tap puts it
     /// down.
     fn banner_line(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         let said = self.verb_said.clone().or_else(|| self.tuning_said.clone());

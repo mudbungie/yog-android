@@ -1,5 +1,5 @@
 //! Which cells the ask offers, their words and order, what each fires, and
-//! the words above them — off the engine's own queue rows.
+//! the words above them — off the server's own queue rows.
 
 use serde_json::Value;
 
@@ -78,7 +78,7 @@ fn the_box_is_the_focused_conversations_own_row_by_both_keys() {
 }
 
 #[test]
-fn the_parked_call_is_folded_at_the_engines_clause() {
+fn the_parked_call_is_folded_at_the_servers_clause() {
     let folded = parked(&corpus()[0]).unwrap();
     assert_eq!(folded.line, "held: Bash · open-world");
     assert_eq!(folded.why, "classified open-world (reaches the network)");
@@ -101,7 +101,7 @@ fn the_words_are_the_flag_the_reason_the_failure_and_the_last_words() {
         )
     );
     assert_eq!(said[3], ("p".to_owned(), theme::INK));
-    // A row whose engine wrote no sentence says its tokens.
+    // A row whose server wrote no sentence says its tokens.
     rows[0].says.clear();
     assert_eq!(words(&rows[0])[1].0, "held · mail · flagged");
     assert!(words(&rows[1]).is_empty());

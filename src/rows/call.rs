@@ -1,5 +1,5 @@
 //! **A call and its result, met on one row** (DESIGN §22 item 4, lernie
-//! bl-eb4e). The engine writes a call and its result as two entries; the
+//! bl-eb4e). The server writes a call and its result as two entries; the
 //! operator reads them as one act — `bash("cargo test") ✔`, with what came
 //! back folded beneath it. The meeting happens at the projection, keyed on the
 //! tool-use id both halves carry, and the id stops there: it is the wire's

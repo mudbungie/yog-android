@@ -9,7 +9,7 @@
 //! same file read by a parser this seat has no use for.
 //!
 //! **The answer says which row it belongs to.** `seq` is echoed back by the
-//! engine, so a drill-in that lands after the operator tapped another row
+//! server, so a drill-in that lands after the operator tapped another row
 //! cannot paint under the wrong one — and nothing in the model holds a second
 //! name for *which step is open* to drift from it (lernie DESIGN §4.32).
 
@@ -21,7 +21,7 @@ use super::agent::object;
 /// One step, whole.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Step {
-    /// The step this answer is about — the engine's own echo of the ask.
+    /// The step this answer is about — the server's own echo of the ask.
     pub seq: String,
     pub meta: Record,
     pub request: Record,
@@ -52,11 +52,11 @@ pub struct Log {
 /// One record file, as its class and the bytes behind it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Record {
-    /// `json`, `absent` or `unparsed` — the engine's own token, carried whole.
+    /// `json`, `absent` or `unparsed` — the server's own token, carried whole.
     pub kind: String,
     /// What the file says, where the class carries bytes at all.
     pub raw: String,
-    /// The engine's sentence about an unparseable one.
+    /// The server's sentence about an unparseable one.
     pub note: String,
 }
 
@@ -116,7 +116,7 @@ fn tool(v: &Value) -> Result<ToolRecord, String> {
     })
 }
 
-/// A captured log, when the engine wrote the key at all.
+/// A captured log, when the server wrote the key at all.
 fn preview(o: &Map<String, Value>, key: &str) -> Result<Option<Log>, String> {
     let Some(log) = o.get(key) else {
         return Ok(None);

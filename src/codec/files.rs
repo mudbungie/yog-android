@@ -24,7 +24,7 @@ use serde_json::{Map, Value};
 use super::fields::{arr_of, bool_of, opt, opt_val, str_of, u64_of};
 
 /// **A bounded file, in the three classes every seat renders.** The bytes are
-/// carried and never parsed: what a preview IS is the engine's reading of a
+/// carried and never parsed: what a preview IS is the server's reading of a
 /// file it bounded, and a client that re-derived a class from the text would
 /// be a second authority for one fact.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,7 +37,7 @@ pub enum Preview {
     /// Bytes nothing could read as text. There is no text field at all: an
     /// empty string would read as *an empty file*.
     Binary { size: u64 },
-    /// REMOTE §3.2's catch-all: a fourth class a newer engine of this major
+    /// REMOTE §3.2's catch-all: a fourth class a newer server of this major
     /// bounds a file into. Nothing under the word is read, because which keys
     /// it carries is exactly what the word says — so the screen states the
     /// class and shows no bytes, rather than guessing at either.
@@ -53,7 +53,7 @@ pub struct FileRow {
     pub dir: bool,
 }
 
-/// One `files` answer, as the engine spelled it.
+/// One `files` answer, as the server spelled it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Listing {
     /// Whether there is a worktree at all. `false` is the whole answer: the
@@ -127,7 +127,7 @@ fn entry(v: &Value) -> Result<FileRow, String> {
     })
 }
 
-/// A bounded file, in the engine's own three classes, and the catch-all for a
+/// A bounded file, in the server's own three classes, and the catch-all for a
 /// fourth (REMOTE §3.2). An unknown class reads NO field beside the word: the
 /// word is what says which keys are there, so guessing at them is the misread
 /// the rule exists to stop — but the listing row it hangs under is kept.

@@ -11,7 +11,7 @@
 //! bound. A one-shot read of that blocks for the whole hold, and the ask
 //! carries no bound a seat could shorten it with (neither `attention` nor
 //! `follow` has a field for one). Hanging up after the first frame would
-//! park an engine thread per read for a hold's length — sixty of them a
+//! park a server thread per read for a hold's length — sixty of them a
 //! minute at the tail's old 500 ms rest. So the lane is held, which is the
 //! desktop seat's own shape (lernie DESIGN §4.12) with one difference: the
 //! phone's worker owns the fold, and no lock is added — the frame is a
@@ -118,13 +118,13 @@ pub(super) struct Lanes {
 
 impl Lanes {
     /// **Make what stands match what is wanted.** Every lane whose subject is
-    /// not wanted is hung up first; then, when `open` says the engine is
+    /// not wanted is hung up first; then, when `open` says the server is
     /// answering, every wanted subject with no lane gets one.
     ///
     /// **A dial that fails is not a sentence.** The pass that called this has
-    /// just been answered by the same engine at the same address, so a lane
+    /// just been answered by the same server at the same address, so a lane
     /// it cannot open is a moment's failure the next pass dials again — and
-    /// if the engine is in fact gone, the next pass is what says so, through
+    /// if the server is in fact gone, the next pass is what says so, through
     /// the one grace every refresh failure waits out (§13.2). A second
     /// sentence here would count one outage twice.
     pub(super) fn tend(

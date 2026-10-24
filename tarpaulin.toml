@@ -55,7 +55,7 @@
 # `src/shell/controls/chip.rs` is the controls row split at bl-0691 (its
 # `stops.rs` sibling became verbs at bl-0d15), and it inherits `controls.rs`'s entry
 # exactly: a `match` from a chip to the widget that paints it, and three
-# `ui.button` calls under the engine's own gates, `cfg(target_os = "android")`
+# `ui.button` calls under the server's own gates, `cfg(target_os = "android")`
 # to the last line. Both halves that can be decided elsewhere are: WHAT each
 # control says is `codec::pick::face`, WHETHER a tuning knob may be set and the
 # sentence it answers a tap with is `codec::pick::knob`, and HOW WIDE each
@@ -75,7 +75,7 @@
 # taps, `cfg(target_os = "android")` to the last line. Everything it decides is
 # somewhere else and under the floor — WHAT a hit is and how it reads back is
 # `codec::search`, and WHEN an answer stands (the empty needle that crosses no
-# wire, the engine's own empty-needle answer) is `seat::asks::search`, both
+# wire, the server's own empty-needle answer) is `seat::asks::search`, both
 # asserted by host tests. What is left here is which widget shows which of them.
 #
 # `src/shell/screens/rows.rs` is the conversation list split out of

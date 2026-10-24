@@ -9,7 +9,7 @@
 //! `OU=foot` is operator grade."*
 //!
 //! **This reads the grade; it does not enforce it.** Enforcement is one raise
-//! at the engine's chokepoint, in band, naming the grade — nothing here can
+//! at the server's chokepoint, in band, naming the grade — nothing here can
 //! grant this device anything. What reading it buys is that the app knows
 //! **which component it is** before it starts one: a phone on a foot-grade
 //! leaf that ran the seat's standing-question loop would earn a refusal per

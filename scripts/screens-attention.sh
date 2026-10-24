@@ -11,7 +11,7 @@
 # What they can prove here is the PLATFORM's half — a job the OS really holds
 # and runs, a service the OS really promotes, a consent switch the OS really
 # keeps. What rises and what stays silent is `crate::attention`, at the
-# coverage floor; what only an engine beside the device can show is the wake
+# coverage floor; what only a server beside the device can show is the wake
 # itself, and that is measured by hand (§17.6).
 #
 # They read `${ADB[@]}`, `$PKG`, `$OUT`, `verdict` and `relaunch` from the walk
@@ -72,7 +72,7 @@ fetch_beats() {
   # The job RUN, forced: the platform binds the service, the job process loads
   # the library, `Java_dev_yog_Watch_probe` resolves, the sweep answers, and our
   # own thread calls jobFinished — which is the line read back. It reaches
-  # everything a device can reach without an engine: this walk's material points
+  # everything a device can reach without a server: this walk's material points
   # at a closed port (§15.3), so the sweep's answer here is silence, which is
   # the behaviour a pocketed phone must have and not an absence of proof.
   #

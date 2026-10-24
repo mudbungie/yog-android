@@ -51,7 +51,7 @@ impl Shell {
             });
     }
 
-    /// The rows, or the sentence saying the engine answered with none.
+    /// The rows, or the sentence saying the server answered with none.
     fn churned(&mut self, ui: &mut egui::Ui, work: &Work) {
         if work.rows.is_empty() {
             crate::shell::clip::weak(ui, "nothing changed here");

@@ -3,7 +3,7 @@
 //!
 //! What is load-bearing here is that **the material rides back with the
 //! outcome and lives in exactly one place**. No read can fetch it again — the
-//! engine shredded the key as it answered — so a seat that dropped it would
+//! server shredded the key as it answered — so a seat that dropped it would
 //! have lost it, and a seat that wrote it down would have leaked it.
 
 use serde_json::{Value, json};
@@ -12,7 +12,7 @@ use super::{conv_reply, nothing_set, ops, settle, tr_reply, ws_reply};
 
 fn enrolled(grade: &str) -> Vec<u8> {
     json!({ "ok": true, "kind": "enrolled", "grade": grade, "name": "phone-2",
-            "address": "engine.invalid:7737",
+            "address": "server.invalid:7737",
             "ca": "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n",
             "cert": "-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n",
             "key": "-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n" })
@@ -126,7 +126,7 @@ fn a_mint_with_no_workspace_crosses_nothing_and_a_wrong_kind_names_it() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("enroll: the engine answered transcript instead")
+        Some("enroll: the server answered transcript instead")
     );
     assert!(snap.minted.is_none());
     drop(model);

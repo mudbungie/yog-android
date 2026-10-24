@@ -6,7 +6,7 @@
 //! visible."*
 //!
 //! **Every one of them swallows its failure**, and that is the whole of what
-//! they share: losing what the engine already gave over an answer it did not
+//! they share: losing what the server already gave over an answer it did not
 //! is the defect §13.2's grace exists to prevent, so an act whose follow-up
 //! read fails leaves the rows exactly where they stood.
 
@@ -19,9 +19,9 @@ use crate::transport::Seat;
 /// operator made: its absence means the controls seed from nothing, which is
 /// exactly where they stood before this read existed. So every way it can
 /// fail is swallowed — including the one that will be common for a while, an
-/// engine that predates the read and refuses the op in band by name. A
+/// server that predates the read and refuses the op in band by name. A
 /// banner for that would be this app telling an operator off for running the
-/// engine they have.
+/// server they have.
 pub(super) fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
     if let Ok((workspace, envelope)) = asks::roles(seat, focus) {
         standing.options.assigned(&workspace, envelope);
@@ -35,7 +35,7 @@ pub(super) fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
 /// is `reread`'s rule, on the pane.
 ///
 /// **The `--as` stamp is the focused workspace's own name**, or the empty
-/// string where nothing is focused — which the engine refuses in its own
+/// string where nothing is focused — which the server refuses in its own
 /// words, and is the right end for that sentence to come from. The pane that
 /// fires these is only ever painted under a focused workspace, so the empty
 /// case is unreachable from the glass and is not a second refusal here.
@@ -71,7 +71,7 @@ fn repane(seat: &Seat, focus: &Focus, standing: &mut Standing) {
 /// Four of the six need no read after them — what a config write did is read
 /// by tapping the destination again, and what a deletion did is that its
 /// subject is gone, which the next pass re-reads — `marks` answers with the
-/// engine's own re-read, so there is nothing to ask twice, and `proposal` is
+/// server's own re-read, so there is nothing to ask twice, and `proposal` is
 /// the one that needs one: a settle takes the staging branch with it, so the
 /// listing an operator is looking at still carries a row that no longer
 /// exists (the trail acts' rule, one surface along).
@@ -101,7 +101,7 @@ pub(super) fn administered(
 
 /// **The mint, and the material it answered** (§13.18). It is here beside the
 /// other acts that write to the standing rather than in `fold`, because what
-/// it holds is not a read's answer: no read can fetch it back, the engine
+/// it holds is not a read's answer: no read can fetch it back, the server
 /// having shredded the key as it answered.
 pub(super) fn minted(
     seat: &Seat,

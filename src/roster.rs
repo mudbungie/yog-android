@@ -2,19 +2,19 @@
 //! §9.9, bl-e837): what order the rows go in, and what each one says about
 //! *when*.
 //!
-//! Both spend `last_active_unix` — the engine's own epoch second for the
+//! Both spend `last_active_unix` — the server's own epoch second for the
 //! subtree's last action — and neither derives it. §9.9 is explicit about
 //! why it is carried rather than computed from `age_secs`: *"A seat holding
 //! `age_secs` alone could subtract it from its own clock, and then every
 //! client says a different time for one instant."*
 //!
 //! **Why the stamp and not the age, when the age is right there.** The age is
-//! the distance from the ENGINE's clock *at answer time*, which is exactly
+//! the distance from the SERVER's clock *at answer time*, which is exactly
 //! right for the instant it was answered and wrong a minute later — and this
 //! app paints a cached roster before any answer at all (§14), where an age is
 //! frozen and a stamp keeps ticking. So the label is the stamp against this
 //! device's clock, which is the one thing that ages correctly while the
-//! engine is unreachable.
+//! server is unreachable.
 //!
 //! **Order is a list's own business, not world state — but the tree is world
 //! state** (bl-06d3). The wire's order is §2.3's descent: id-sorted siblings,
@@ -26,10 +26,10 @@
 //! work.
 //!
 //! So the recency order is taken **one rung up**: the SUBTREES are ordered
-//! newest first, and each keeps the engine's own descent inside it. Nothing is
+//! newest first, and each keeps the server's own descent inside it. Nothing is
 //! derived to do it — a root row's `last_active_unix` is already *the
 //! subtree's* last action, which is exactly the key a subtree is ordered by.
-//! The sort is stable, so subtrees sharing a stamp keep the engine's order
+//! The sort is stable, so subtrees sharing a stamp keep the server's order
 //! underneath. And a child now always sits directly under its parent, which is
 //! what makes [`indent`] mean anything.
 
@@ -41,7 +41,7 @@ mod words;
 pub use thread::threads;
 pub use words::{ATTENTION_MARK, lines};
 
-/// The list, newest subtree first, each subtree still in the engine's descent.
+/// The list, newest subtree first, each subtree still in the server's descent.
 ///
 /// A row at depth 0 opens a subtree and everything under it belongs to that
 /// one. The first row opening a subtree even when it is deeper than 0 is not a
@@ -85,13 +85,13 @@ const DAY: i64 = 24 * HOUR;
 const WEEK: i64 = 7 * DAY;
 
 /// How long ago, in the shortest true thing that can be said about it. A
-/// clock ahead of the engine's reads as `now` rather than as a negative age:
+/// clock ahead of the server's reads as `now` rather than as a negative age:
 /// the two clocks disagreeing is not a fact about the conversation.
 pub fn stamp(last_active_unix: i64, now_unix: i64) -> String {
     ago(now_unix.saturating_sub(last_active_unix))
 }
 
-/// The same spelling over an age the engine already took (§13.8): a queue row
+/// The same spelling over an age the server already took (§13.8): a queue row
 /// carries `age_secs` rather than a stamp, and the two must read alike or one
 /// screen's *4h* is another's *4 hours ago*. One home, spent twice — [`stamp`]
 /// is this function with the subtraction in front of it.

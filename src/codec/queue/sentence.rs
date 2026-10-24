@@ -1,7 +1,7 @@
 //! **The control's sentence, read** (DESIGN §13.7, bl-8c94): the two parts a
 //! surface shows of what the capability boundary wrote about a parked call.
 //!
-//! **The sentence has a shape, and it is the engine's own.** yog's control
+//! **The sentence has a shape, and it is the server's own.** yog's control
 //! writes `<tool> <input, clipped to 160 chars> classified <class> (<the
 //! evidence>)` in one place (`control::reason::reason`), and reads its own
 //! clause back out of it to learn which class a wide answer stands over
@@ -16,15 +16,15 @@
 //! leaves out is not lost either: the input is a field of its own on the row
 //! that carries the call (`rows::held`), which is where an operator reads the
 //! command rather than under the composer, and a surface reaching for a fold
-//! opens onto the engine's own words.
+//! opens onto the server's own words.
 //!
 //! **A sentence with no clause of ours in it is the decision entire.** The
 //! seat cannot tell a call from prose in a sentence it does not recognise, and
-//! dropping the engine's words would be worse than showing a call's input
+//! dropping the server's words would be worse than showing a call's input
 //! behind a fold — so the split simply does not happen, and the one line says
 //! what is held and nothing about its class.
 
-/// The clause the engine's control writes between the call it parked and the
+/// The clause the server's control writes between the call it parked and the
 /// class it landed in. Spelled with both its spaces: the class word follows it
 /// and a bare `classified` at the head of a sentence is not this clause.
 const CLAUSE: &str = " classified ";
@@ -40,7 +40,7 @@ pub struct Folded {
     /// the call's input — that is the whole point of the split.
     pub line: String,
     /// The decision: the class clause and the evidence behind it, in the
-    /// engine's own words. What a fold opens onto.
+    /// server's own words. What a fold opens onto.
     pub why: String,
 }
 

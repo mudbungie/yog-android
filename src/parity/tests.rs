@@ -239,7 +239,7 @@ fn a_file_that_will_not_parse_refuses_the_whole_judgement() {
 /// **This tree's own two files, judged for everything that does not need a
 /// device.** The inventory arrives only after a walk, so coverage and
 /// staleness are `tests/parity.rs`'s; that every exemption parses, cites, and
-/// still names an op the engine classes `control` is answerable here — and so
+/// still names an op the server classes `control` is answerable here — and so
 /// it is answered on every `make check`, where a re-vendor that retires an op
 /// reddens immediately instead of waiting for an emulator.
 #[test]

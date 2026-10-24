@@ -3,10 +3,10 @@
 //! config patch, and the two deletions.
 //!
 //! **Three receipts for six acts**, read off the act rather than guessed at
-//! the reply — `acts::row`'s rule at a second site, so an engine answering the
+//! the reply — `acts::row`'s rule at a second site, so a server answering the
 //! other shape is a named refusal instead of a silent success. A config write
 //! answers the bare `applied`; `marks` answers the branch it landed on, which
-//! is the engine's own re-read and the reason nothing here asks again; a scan
+//! is the server's own re-read and the reason nothing here asks again; a scan
 //! answers the `outcome` of what it ran; and both deletions answer `deleted`,
 //! which carries nothing because what a deletion DID is that its subject is
 //! gone.

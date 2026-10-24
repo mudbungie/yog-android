@@ -6,10 +6,10 @@
 //! phone's width can hold. What it declines and why is the module doc next
 //! door; nothing is decided twice here.
 //!
-//! **Three of these facts are the engine's own rendering and none is
+//! **Three of these facts are the server's own rendering and none is
 //! recomputed** (lernie DESIGN §4.32): the flight strip's characteristics are
 //! prose one derivation assembles with per-segment omission rules, the money
-//! is the engine's spelling of the integer beside it, and the context percent
+//! is the server's spelling of the integer beside it, and the context percent
 //! is its own rounding — deliberately unclamped, so a context that has
 //! outgrown its window reads as `140%`. A seat that divided the two figures
 //! itself would be re-taking a decision upstream took on purpose.
@@ -18,14 +18,14 @@ use serde_json::{Map, Value};
 
 use super::super::fields::{bool_of, i64_of, opt, str_of};
 
-/// The conversation, as the engine states it.
+/// The conversation, as the server states it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Agent {
     /// The display ladder's answer — what the transcript's bar already says.
     pub display: String,
     /// The root of the subtree this conversation belongs to.
     pub root: String,
-    /// **The §5.1 state and the §11 flight class, as the engine's own
+    /// **The §5.1 state and the §11 flight class, as the server's own
     /// words.** Nothing on this screen branches on either — it paints them —
     /// so they are carried whole exactly as a step's `framing`, its `wound`
     /// and a child card's `state` are. The conversation ROW picks the same two
@@ -34,15 +34,15 @@ pub struct Agent {
     /// between them. Empty `flight` is a conversation at rest.
     pub state: String,
     pub flight: String,
-    /// Whether the engine can see the conversation at all, and whether its
+    /// Whether the server can see the conversation at all, and whether its
     /// latest model call was refused. Two independent readings, both the
-    /// engine's, and `failure` is what the provider actually said — absent
+    /// server's, and `failure` is what the provider actually said — absent
     /// rather than empty, so *no failure* and *a failure with nothing to
     /// say* stay apart.
     pub present: bool,
     pub refused: bool,
     pub failure: Option<String>,
-    /// **The §6 marks** in the engine's badge order. A fork point is one of
+    /// **The §6 marks** in the server's badge order. A fork point is one of
     /// the things these name (`parity.toml`'s `fork` line), which is why an
     /// unknown token rides through as itself rather than being picked against
     /// a table this build would have to grow for.
@@ -51,7 +51,7 @@ pub struct Agent {
     /// conversation that has recorded none.
     pub tip: String,
     /// **The in-flight strip's characteristics, as prose.** Absent for a
-    /// conversation at rest; carried as the engine wrote it.
+    /// conversation at rest; carried as the server wrote it.
     pub strip: Option<String>,
     /// **The §5.1 live mark**: one entry per agent in the conversation, named
     /// and with what it is doing.
@@ -63,14 +63,14 @@ pub struct Agent {
     pub context: Option<Context>,
 }
 
-/// One agent of the conversation and what it is doing, in the engine's words.
+/// One agent of the conversation and what it is doing, in the server's words.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SeatRow {
     pub name: String,
     pub doing: String,
 }
 
-/// The context fullness: the model whose window it is, and the engine's own
+/// The context fullness: the model whose window it is, and the server's own
 /// percentage of it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Context {
@@ -130,7 +130,7 @@ fn seats(o: &Map<String, Value>) -> Result<Vec<SeatRow>, String> {
 }
 
 /// An optional array of bare strings — absent is none of them, which is what
-/// the engine writes for a conversation carrying no marks at all.
+/// the server writes for a conversation carrying no marks at all.
 pub(in crate::codec) fn words(o: &Map<String, Value>, key: &str) -> Result<Vec<String>, String> {
     let Some(_) = o.get(key) else {
         return Ok(Vec::new());

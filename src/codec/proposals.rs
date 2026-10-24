@@ -6,7 +6,7 @@
 //! whole loop turns on a person reading it and saying yes or no. Nothing on
 //! this wire could: `lineages` enumerates the config heads and `governing`
 //! answers the commit a conversation resolves, never a candidate — so the veto
-//! lived at a command on the engine's own box, which is an `ssh` and a
+//! lived at a command on the server's own box, which is an `ssh` and a
 //! container `exec` on a server install and is exactly the thing this boundary
 //! exists to make unnecessary.
 //!
@@ -21,7 +21,7 @@
 //!
 //! **`fresh` crosses even though an empty `lineages` would imply it.** REMOTE
 //! §9.22: that inference is a rule, and the wire states a derivation so a seat
-//! need not own one — only the engine can be sure the two were read in one
+//! need not own one — only the server can be sure the two were read in one
 //! pass. This seat therefore reads the word and infers nothing, which is
 //! §9.4's rule at the site where getting it wrong means accepting a patch
 //! written against a config that no longer governs anything.
@@ -37,7 +37,7 @@ pub struct Proposal {
     /// address it has.
     pub id: String,
     /// The lineages this patch would move. Empty is a patch whose lineage has
-    /// advanced under it; `fresh` is the engine's own word for that and is
+    /// advanced under it; `fresh` is the server's own word for that and is
     /// what this seat reads.
     pub lineages: Vec<String>,
     /// The commit the reviewer read when it wrote the patch.
@@ -46,7 +46,7 @@ pub struct Proposal {
     pub fresh: bool,
     /// git's own summary line for the change — carried verbatim, because
     /// counting the lines a second time here would be a second answer to the
-    /// engine's own question.
+    /// server's own question.
     pub diffstat: String,
     /// What the reviewer called it.
     pub subject: String,
@@ -95,7 +95,7 @@ impl Verdict {
     /// listing an operator opened is one they mean to read and take.
     pub(crate) const ALL: [Self; 2] = [Self::Accept, Self::Reject];
 
-    /// The engine's own word — the wire token and the control's label at once,
+    /// The server's own word — the wire token and the control's label at once,
     /// so a control cannot say one thing and send another.
     pub(crate) fn word(self) -> &'static str {
         match self {

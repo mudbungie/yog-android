@@ -14,7 +14,7 @@ fn framed(body: &[u8]) -> Vec<u8> {
 }
 
 /// A peer stating `protocol` and no edition, framed — which REMOTE §3.2 reads
-/// as the floor, and which is every engine older than the field.
+/// as the floor, and which is every server older than the field.
 fn peer(protocol: u64) -> Vec<u8> {
     framed(json!({ "protocol": protocol }).to_string().as_bytes())
 }
@@ -41,7 +41,7 @@ fn this_build_states_one_framed_object_and_nothing_else() {
 /// **The edition is read and kept, and it never refuses** (REMOTE §3.2). A
 /// peer of this major that states a newer edition is one this build goes on
 /// talking to — the number's whole use is a control that can grey itself — and
-/// a peer that states none is at the floor, which is what every engine older
+/// a peer that states none is at the floor, which is what every server older
 /// than the field is.
 #[test]
 fn the_edition_a_peer_states_is_kept_and_an_absent_one_is_the_floor() {
@@ -58,7 +58,7 @@ fn the_edition_a_peer_states_is_kept_and_an_absent_one_is_the_floor() {
 }
 
 #[test]
-fn an_engine_of_this_version_is_confirmed() {
+fn a_server_of_this_version_is_confirmed() {
     assert_eq!(
         confirm(&mut Cursor::new(peer(u64::from(PROTOCOL)))),
         Ok(crate::ledger::FLOOR)

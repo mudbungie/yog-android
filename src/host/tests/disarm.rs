@@ -12,11 +12,11 @@ use super::super::RESTORED;
 use super::{advertised, host_against, restored, routed, settle, work};
 use serde_json::json;
 
-/// **A re-assertion that WROTE is a disarming.** The engine writes only a set
+/// **A re-assertion that WROTE is a disarming.** The server writes only a set
 /// that differs, so this device presenting what it has always presented and
 /// being told the document changed means the set in force was somebody else's
 /// — put there while this box was running a tool and therefore holding no
-/// parked read for the engine's two guards to work with.
+/// parked read for the server's two guards to work with.
 ///
 /// It is counted rather than stopped on: the set has already been restored by
 /// the presentation that discovered it, and there is nothing left to fix from
@@ -29,7 +29,7 @@ fn a_reassertion_that_wrote_is_counted_as_a_disarming() {
             json!([{ "invocation": "i1", "tool": "echo", "input": {} }]),
         )],
         vec![routed("i1")],
-        // The hand-off's re-assertion, and the engine says it changed the
+        // The hand-off's re-assertion, and the server says it changed the
         // document: something had replaced this device's set.
         vec![restored()],
         vec![],
@@ -44,11 +44,11 @@ fn a_reassertion_that_wrote_is_counted_as_a_disarming() {
         RESTORED.contains("bearing this device's identity"),
         "{RESTORED}"
     );
-    assert!(RESTORED.contains("engine lost the set"), "{RESTORED}");
+    assert!(RESTORED.contains("server lost the set"), "{RESTORED}");
 }
 
 /// **A `true` on a channel's FIRST presentation says nothing.** Every fresh
-/// channel presents into whatever the engine happens to be holding — nothing,
+/// channel presents into whatever the server happens to be holding — nothing,
 /// or an older set from a build ago — and the ordinary first presentation
 /// writes. Only a presentation made after work this device just did can tell a
 /// rival from a beginning, so the first one's reading is discarded and the

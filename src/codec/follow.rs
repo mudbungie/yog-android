@@ -6,7 +6,7 @@
 //! bl-8e3c). §5.5's rule is one line — *"Absorb every frame of a read, in
 //! order, onto an empty fold. What you hold after the last frame you have
 //! received is what you paint"* — and [`Stream::absorb`] is that fold, the
-//! engine's own operation copied so that an engine frame and this seat's
+//! server's own operation copied so that a server frame and this seat's
 //! accumulation agree by contract: `fold(a).absorb(fold(b)) == fold(a ++ b)`
 //! on any line boundary. A read starts holding nothing, so the first frame
 //! is the whole tail so far and a lane that re-asks is whole again with
@@ -23,7 +23,7 @@
 //! **Every prose field is optional, including all of them.** The corpus's own
 //! first frame is `{"stream": {}}` — an answer that has begun and said
 //! nothing yet — and `delta` names the kind of the last content event rather
-//! than the shape of the frame. It rides as the token the engine wrote: this
+//! than the shape of the frame. It rides as the token the server wrote: this
 //! seat paints the text, and typing a token it does not spend would be
 //! inventing a vocabulary (the `alignment` narrowing's own reasoning).
 
@@ -39,7 +39,7 @@ pub(crate) use window::window;
 /// The answer in flight, as much of it as has landed.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Stream {
-    /// The kind of the last content event — the engine's token, untyped here.
+    /// The kind of the last content event — the server's token, untyped here.
     pub delta: Option<String>,
     /// The answer so far.
     pub text: Option<String>,

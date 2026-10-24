@@ -4,9 +4,9 @@
 //! ruling 2).
 //!
 //! **Listen and connect from one port.** A [`Punch`] binds its port twice
-//! over — a listener per address family — and a punch toward the engine
+//! over — a listener per address family — and a punch toward the server
 //! binds a *third* socket to the same port per target and connects from it.
-//! Whichever SYN lands first is the connection: the engine's on our
+//! Whichever SYN lands first is the connection: the server's on our
 //! listener, ours on its, or both crossing in the middle, which is the
 //! simultaneous open a NAT pair needs (REMOTE §13.8: a "one side just
 //! listens" shortcut has no chance). That takes `SO_REUSEADDR` and
@@ -14,14 +14,14 @@
 //! a dependency (REMOTE §13.7 ruling 1, operator 2026-09-23; DESIGN §21.4).
 //!
 //! **The first stream that lands is the connection** — the client's half of
-//! REMOTE §13.3's rule. The engine serves every stream that lands and lets
+//! REMOTE §13.3's rule. The server serves every stream that lands and lets
 //! the one nobody speaks on die in its handshake, so this end keeps the
 //! first and drops the rest, and no negotiation over which is needed.
 //!
 //! **The one socket this app ever listens on, and it accepts only inside a
 //! window.** It exists only on an entry holding rendezvous material, is
 //! bound once per entry for the run (`ladder::entries`, bl-97ed — the
-//! engine's NAT lets back only the port its call named), and accepts only
+//! server's NAT lets back only the port its call named), and accepts only
 //! inside a window this end opened: whatever the kernel queued between
 //! windows is dropped unread when the next one opens, since it belongs to
 //! no dial this end is making. DESIGN §1's *"the phone opens no listening
@@ -176,7 +176,7 @@ fn reusable(v6: bool, port: u16) -> std::io::Result<Socket> {
 /// select the default route, and the documentation ranges (RFC 5737, RFC
 /// 3849) do that as well as any real host would. Loopback never appears — a
 /// box with no route has no address to publish, and says so with an empty
-/// list, and a call naming no endpoint is one the engine answers by
+/// list, and a call naming no endpoint is one the server answers by
 /// connecting toward nothing and listening alone. On cellular this is the
 /// translator-side address and not the one a peer sees (REMOTE §13.8); the
 /// call carries what this end can prove.

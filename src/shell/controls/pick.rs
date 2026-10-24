@@ -24,7 +24,7 @@ use crate::codec::RoleRow;
 use crate::seat::Snapshot;
 
 impl Shell {
-    /// The provider selector. Its list is the engine's own rows, and a row
+    /// The provider selector. Its list is the server's own rows, and a row
     /// that is blocked is greyed **by the fact it states about itself** —
     /// still tappable, because the operator may be about to sign it in and a
     /// control that vanishes teaches nothing.

@@ -43,7 +43,7 @@ fn the_list_is_newest_first() {
     assert_eq!(names, ["new", "mid", "old"]);
 }
 
-/// The sort is stable, so rows sharing a stamp keep the engine's own descent
+/// The sort is stable, so rows sharing a stamp keep the server's own descent
 /// order underneath rather than being shuffled by this end.
 #[test]
 fn rows_sharing_a_stamp_keep_the_order_they_arrived_in() {
@@ -68,10 +68,10 @@ fn the_stamp_says_the_shortest_true_thing() {
     assert_eq!(stamp(at, at + 60 * 24 * 3600), "8w");
 }
 
-/// A device whose clock is behind the engine's does not paint a negative
+/// A device whose clock is behind the server's does not paint a negative
 /// age: the two clocks disagreeing is not a fact about the conversation.
 #[test]
-fn a_clock_behind_the_engines_reads_now() {
+fn a_clock_behind_the_servers_reads_now() {
     assert_eq!(stamp(1_700_000_000, 1_699_999_000), "now");
     assert_eq!(stamp(1_700_000_000, 0), "now");
 }
@@ -87,7 +87,7 @@ fn this_devices_clock_is_after_the_epoch() {
 /// defect this replaced put a root's two dispatched children among the
 /// operator's own conversations, indistinguishable from them.
 #[test]
-fn a_subtree_moves_whole_and_keeps_the_engines_descent() {
+fn a_subtree_moves_whole_and_keeps_the_servers_descent() {
     let listed = ordered(vec![
         row("quiet", 500),
         row("root", 100),

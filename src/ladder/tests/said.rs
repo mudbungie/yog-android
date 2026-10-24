@@ -95,7 +95,7 @@ fn a_rendezvous_says_each_rung_and_the_held_stream_says_its_life() {
         [format!("{P}held stream kept for the next ask")]
     );
     // The network moves: the held stream is released and the port goes
-    // (bl-97ed), while the engine's presence stays cached (bl-c00e) — the
+    // (bl-97ed), while the server's presence stays cached (bl-c00e) — the
     // climb re-calls from a fresh port. The direct rung's unchanged outcome
     // is not said again.
     flap();
@@ -182,11 +182,11 @@ fn every_way_a_climb_stops_is_said_without_its_addresses() {
     assert_eq!(
         said(rove(vec![empty.addr.to_string()])),
         [format!(
-            "{P}presence not read — the engine has published no presence"
+            "{P}presence not read — the server has published no presence"
         )]
     );
     // A holder that serves the presence and never spends a put's token.
-    let (engine, pairing) = pairing();
+    let (signer, pairing) = pairing();
     let sealed = Presence {
         endpoints: vec![closed().parse().unwrap()],
     }
@@ -196,7 +196,7 @@ fn every_way_a_climb_stops_is_said_without_its_addresses() {
     holder.serve(
         vec![],
         Mood::Mute,
-        vec![engine.sign(pairing.presence_salt(), 1, sealed).unwrap()],
+        vec![signer.sign(pairing.presence_salt(), 1, sealed).unwrap()],
     );
     let mut router = FakeNode::bind(NodeId([1u8; 20]));
     router.serve(vec![holder.node()], Mood::Router, vec![]);
@@ -233,7 +233,7 @@ fn a_held_stream_says_why_it_was_dropped() {
             Beat::Say(b"{\"ok\":true}".to_vec()),
             "a frame that is not a ping",
         ),
-        (Beat::Say(Vec::new()), "the engine ended it"),
+        (Beat::Say(Vec::new()), "the server ended it"),
         (Beat::Raw(vec![0xff; 4]), "the stream closed or failed"),
         (Beat::Hangup, "the stream closed or failed"),
     ] {

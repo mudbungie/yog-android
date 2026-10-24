@@ -52,7 +52,7 @@ fn a_delivery_carries_the_handle_and_a_landing_of_nothing_is_said() {
     assert_eq!(ops(&requests)[5], "science");
 }
 
-/// **Which way the retention went is the engine's answer**, and the seat
+/// **Which way the retention went is the server's answer**, and the seat
 /// paints it rather than predicting a policy it has not read.
 #[test]
 fn a_retirement_says_whether_the_source_ref_went_with_the_worktree() {
@@ -87,7 +87,7 @@ fn a_retirement_says_whether_the_source_ref_went_with_the_worktree() {
     });
     assert_eq!(
         snap.error.as_deref(),
-        Some("retire: the engine answered transcript instead")
+        Some("retire: the server answered transcript instead")
     );
     drop(model);
     served.join().unwrap();
@@ -134,7 +134,7 @@ fn a_fan_stages_spreads_and_fires_every_candidate_it_materialized() {
 }
 
 /// **Every leg of the chain can fail, and the sentence names the fan.** The
-/// staging's wrong kind, the spread's, and a firing the engine refused.
+/// staging's wrong kind, the spread's, and a firing the server refused.
 #[test]
 fn every_leg_of_the_chain_names_the_fan_when_it_stops() {
     let mut scripts = focused_scripts();
@@ -155,10 +155,10 @@ fn every_leg_of_the_chain_names_the_fan_when_it_stops() {
     let (mut model, served) = model_against(scripts);
     focused(&mut model);
     for said in [
-        "fan: the engine answered transcript instead",
-        "fan: the engine answered roles instead",
+        "fan: the server answered transcript instead",
+        "fan: the server answered roles instead",
         "fan refused: no",
-        "fan: the engine answered roles instead",
+        "fan: the server answered roles instead",
     ] {
         model.fan("p".into(), "bl-1".into(), 2, "do it".into());
         // The sentence itself is the predicate: three of these are the same

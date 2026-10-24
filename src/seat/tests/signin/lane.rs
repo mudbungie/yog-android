@@ -41,7 +41,7 @@ fn the_lane_replays_first_and_appends_after() {
 }
 
 /// **A redialled lane replays, and the fold REPLACES rather than doubling.**
-/// The engine's cursor is per read, so a lane that ended at its hold hands
+/// The server's cursor is per read, so a lane that ended at its hold hands
 /// the next one the whole buffer from zero — folding that onto what stands
 /// would show every line twice.
 #[test]
@@ -51,7 +51,7 @@ fn a_relaid_lane_replays_the_buffer_without_doubling_it() {
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
         // The lane's hold expires with the whole buffer written and no
-        // outcome — the engine's own thirty seconds, arriving at once.
+        // outcome — the server's own thirty seconds, arriving at once.
         Turn::Answer(vec![frame(&[(true, "first"), (false, "second")], None)]),
         Turn::Answer(vec![ws_reply()]),
         Turn::Answer(vec![conv_reply()]),
@@ -68,7 +68,7 @@ fn a_relaid_lane_replays_the_buffer_without_doubling_it() {
     assert_eq!(tail(&snap, "acme").unwrap_or_default(), ["first", "second"]);
 }
 
-/// **A settled run takes its own lane down.** The engine's lane ends at the
+/// **A settled run takes its own lane down.** The server's lane ends at the
 /// outcome frame, so a seat that went on wanting one would redial a finished
 /// sign-in once a cadence for as long as the screen stood open.
 #[test]
@@ -111,7 +111,7 @@ fn a_settled_run_is_not_dialled_again() {
 
 /// **Leaving the screen drops the tail, and crosses no wire.** The watch is
 /// what makes the lane wanted, so `None` is the whole of closing it — a tail
-/// can be left with the engine unreachable.
+/// can be left with the server unreachable.
 #[test]
 fn leaving_the_screen_drops_the_tail() {
     let (mut model, served) = focused(vec![
@@ -185,6 +185,6 @@ fn a_lane_frame_of_the_wrong_kind_is_a_sentence_too() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("login-tail: the engine answered applied instead")
+        Some("login-tail: the server answered applied instead")
     );
 }

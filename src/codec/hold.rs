@@ -4,7 +4,7 @@
 //! away or give it back.
 //!
 //! **The answer names a conversation, never a call.** The wire carries no
-//! `tool_use` on the way out and that is the engine's design: it reads the
+//! `tool_use` on the way out and that is the server's design: it reads the
 //! held mark off the branch at fire time, so *"nothing is typed and nothing
 //! can be spent by a different call"*. This seat holds the id anyway — the
 //! queue read carries it (`codec::queue`) — and paints it nowhere and sends it
@@ -26,11 +26,11 @@
 //! `reply/advertised`'s precedent at 8 and the tool window's at 15, applied to
 //! the one gesture in this codec that authorizes an action.
 //!
-//! **The class the wide scopes stand over is the engine's**, derived from the
+//! **The class the wide scopes stand over is the server's**, derived from the
 //! sentence it wrote into the hold mark — so this seat spells a decision and
 //! never a key, exactly as it spells a conversation and never a `tool_use`.
 //! A destructive or credential-reaching call takes the bare scope only, and
-//! that refusal is the engine's too: it arrives in band, which is where every
+//! that refusal is the server's too: it arrives in band, which is where every
 //! other capability decision this seat does not own arrives.
 //!
 //! **Three verdicts this seat sends, and a fourth it can be told about.** `pass` lets this one call through,
@@ -49,7 +49,7 @@ use serde_json::{Map, Value, json};
 
 use super::fields::str_of;
 
-/// What an answer says about the parked call. A fourth word a newer engine of
+/// What an answer says about the parked call. A fourth word a newer server of
 /// this major spells arrives as `Unknown` on the receipt (REMOTE §3.2) — never
 /// on a control, which offers [`Verdict::ALL`] and nothing else.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -71,7 +71,7 @@ impl Verdict {
     /// because it is the answer most calls earn.
     pub(crate) const ALL: [Self; 3] = [Self::Pass, Self::Refuse, Self::Hold];
 
-    /// The engine's own word for this verdict — the wire token, the control's
+    /// The server's own word for this verdict — the wire token, the control's
     /// label and its `act:` reading all at once, so a control cannot say one
     /// thing and send another.
     pub(crate) fn word(&self) -> String {
@@ -106,7 +106,7 @@ pub enum Scope {
     Workspace,
     /// A scope word this build has not heard of, off a receipt (REMOTE §3.2).
     /// It is never wider than what was asked: this seat only ever sends one of
-    /// [`Scope::ALL`], so an unknown word on a receipt is the engine naming
+    /// [`Scope::ALL`], so an unknown word on a receipt is the server naming
     /// the standing in a spelling this build cannot render, and it is said as
     /// itself.
     Unknown(String),
@@ -128,7 +128,7 @@ impl Scope {
             .unwrap_or_else(|| Self::Unknown(word.to_owned()))
     }
 
-    /// The engine's own word — the wire token and the control's label at once.
+    /// The server's own word — the wire token and the control's label at once.
     pub(crate) fn word(&self) -> String {
         match self {
             Self::Call => "call".to_owned(),
@@ -195,7 +195,7 @@ pub struct Answered {
     pub tool_use: String,
     pub tool: String,
     pub verdict: Verdict,
-    /// **How far the engine took the answer** (PROTOCOL 18) — read back rather
+    /// **How far the server took the answer** (PROTOCOL 18) — read back rather
     /// than assumed from what was sent, because a receipt that echoed the ask
     /// would prove nothing about how wide the instruction actually landed.
     pub scope: Scope,

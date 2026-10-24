@@ -3,7 +3,7 @@
 //! has staged for it.
 //!
 //! **Each is its write's own op token with the written half left out**, which
-//! is the engine's grammar rather than a convention here — so the two halves
+//! is the server's grammar rather than a convention here — so the two halves
 //! of one op are an ask and an act on this side, and `codec::request` splits
 //! its tables on exactly that field.
 //!

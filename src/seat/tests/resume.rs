@@ -1,6 +1,6 @@
 //! **The paint-first cache, from the model's side** (bl-de96): a second boot
 //! paints what the first one was told, at the focus it was left at, before a
-//! byte of wire — and a pass the engine did not answer never overwrites it.
+//! byte of wire — and a pass the server did not answer never overwrites it.
 
 use super::{
     Model, REST, cache_in, conv_reply, material, nothing_set, ops, pki, serve_many, settle,
@@ -45,8 +45,8 @@ fn a_second_boot_paints_the_last_answered_pass_before_the_wire_answers() {
     assert_eq!(snap.focus.workspace.as_deref(), Some("home"));
     assert_eq!(snap.workspaces[0].workspace, "home");
     assert_eq!(snap.conversations[0].root_id, "a1");
-    // The cache is not an error state: what it paints is what the engine
-    // last said, and the banner is for what the engine says now (bl-3202).
+    // The cache is not an error state: what it paints is what the server
+    // last said, and the banner is for what the server says now (bl-3202).
     assert_eq!(snap.error, None);
 
     // A pass that failed wrote nothing: the file still reads as it did.

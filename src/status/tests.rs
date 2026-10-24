@@ -180,7 +180,7 @@ fn the_diagnostics_are_this_conversations_alone() {
     let said = diagnostics(Some(&row()), &turns, Some(&held), 160);
     let texts: Vec<(Slot, &str)> = said.iter().map(|s| (s.slot, s.text.as_str())).collect();
     // The state first, then the tokens, then the spend in the ledger's own
-    // words, then the context — the engine's own percent, unclamped — then
+    // words, then the context — the server's own percent, unclamped — then
     // the name.
     assert_eq!(
         texts,

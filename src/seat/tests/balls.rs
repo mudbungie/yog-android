@@ -11,7 +11,7 @@ use serde_json::{Value, json};
 use super::{conv_reply, nothing_set, ops, settle, tr_reply, ws_reply};
 use crate::codec::{Pane, View};
 
-/// `balls`, as the engine spells one.
+/// `balls`, as the server spells one.
 fn balls() -> Vec<u8> {
     json!({ "ok": true, "kind": "balls",
             "rows": [{ "ball_id": "bl-1", "project": "p", "state": "ready",
@@ -20,7 +20,7 @@ fn balls() -> Vec<u8> {
     .into_bytes()
 }
 
-/// `workspace-balls`, with the spend the engine rendered.
+/// `workspace-balls`, with the spend the server rendered.
 fn held() -> Vec<u8> {
     json!({ "ok": true, "kind": "workspace-balls",
             "rows": [{ "id": "bl-2", "project": "p", "state": "bound", "owner": "home",
@@ -147,7 +147,7 @@ fn an_answer_of_the_wrong_kind_names_the_view_and_keeps_what_was_there() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("board: the engine answered transcript instead")
+        Some("board: the server answered transcript instead")
     );
     assert_eq!(
         snap.pane.map(|pane| pane.view()),

@@ -2,17 +2,17 @@
 //! seat makes that is not about a place it is already looking.
 //!
 //! The request is one word (`{"op":"search","text":…}`) and the answer is a
-//! ranked list of addresses the engine already selects by: a ball, a
+//! ranked list of addresses the server already selects by: a ball, a
 //! workspace, a conversation. Nothing here is a coordinate invented for
 //! search, which is what lets a hit be fed straight back as a focus — and
 //! since upstream's bl-764a every address is a **wire name** (the §5.1 project
-//! name, the §3.1 workspace leaf, the agent id) rather than an engine-local
+//! name, the §3.1 workspace leaf, the agent id) rather than a server-local
 //! path, which is what made the answer usable off the box at all.
 //!
 //! **The answer carries its own question** (upstream bl-648a). Without the
 //! needle, "was a search asked?" and "did anything match?" would be the same
 //! value exactly when a search found nothing — the one case that must be told
-//! apart — so `needle` rides back and an empty one is the engine's own
+//! apart — so `needle` rides back and an empty one is the server's own
 //! spelling of *no search*.
 //!
 //! **`unreadable` is not an error and never a refusal.** A corner of the world
@@ -26,7 +26,7 @@ use super::fields::{arr_of, str_of, usize_of};
 /// A whole answer: the question, the ranked hits, and what could not be read.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Found {
-    /// The needle the engine searched for, as it read it. Empty means no
+    /// The needle the server searched for, as it read it. Empty means no
     /// search was made.
     pub needle: String,
     pub hits: Vec<Hit>,
@@ -58,7 +58,7 @@ pub enum Address {
     Workspace { name: String },
     /// A conversation in a workspace: the deeper focus, also taken.
     Conversation { workspace: String, agent: String },
-    /// **A fourth kind of address** a newer engine of this major searches
+    /// **A fourth kind of address** a newer server of this major searches
     /// (REMOTE §3.2's catch-all). The flat keys under an unknown token are
     /// exactly what the token would have said, so none is read: the hit still
     /// lists, with its field, its offset and its excerpt, and it is not
@@ -66,7 +66,7 @@ pub enum Address {
     Unknown(String),
 }
 
-/// Which field matched — and, by the engine's own ranking, the tier: what a
+/// Which field matched — and, by the server's own ranking, the tier: what a
 /// thing **is** beats what it is **for** beats what it **says**.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HitField {
@@ -76,16 +76,16 @@ pub enum HitField {
     Summary,
     /// The bulk: a ball body, a transcript entry's bytes.
     Text,
-    /// A fourth tier a newer engine of this major ranks by (REMOTE §3.2).
+    /// A fourth tier a newer server of this major ranks by (REMOTE §3.2).
     Unknown(String),
 }
 
 impl HitField {
-    /// Every tier, in the engine's own ranking order — what the decode
+    /// Every tier, in the server's own ranking order — what the decode
     /// searches and what a caller enumerates.
     pub(crate) const ALL: [Self; 3] = [Self::Name, Self::Summary, Self::Text];
 
-    /// The engine's own word for this tier. **One home for the three words**:
+    /// The server's own word for this tier. **One home for the three words**:
     /// the decode below finds a token by asking each variant what it is
     /// called, and the shell paints the same word beside the hit — so a row
     /// whose excerpt repeats its own subject (a name matching a name) says

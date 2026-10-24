@@ -92,7 +92,7 @@ fn opt_val_reads_absent_null_present_and_mismatch() {
 /// **The grows-only pick** (REMOTE §3.2): the table's answer for a word this
 /// build knows, the vocabulary's own catch-all carrying the word for anything
 /// else, and still a refusal for a field that is missing or is not a string —
-/// a word this build cannot spell is an engine that grew, a field that is not
+/// a word this build cannot spell is a server that grew, a field that is not
 /// there at all is a frame that is wrong.
 #[test]
 fn pick_matches_its_table_and_carries_a_stray_word() {

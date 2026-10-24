@@ -49,7 +49,7 @@
 //! different question from where it ran.
 //!
 //! **`tool` and `input` are optional on the wire and required by nothing
-//! here.** The engine reads them out of a record that can be caught mid-write,
+//! here.** The server reads them out of a record that can be caught mid-write,
 //! and it states the same tolerance every other reader of those files has;
 //! `tool_use` is the identity a follower keys on and is the one strict field.
 
@@ -64,7 +64,7 @@ pub struct Call {
     /// The provider's `tool_use` id: the call's identity, and the key both
     /// transitions and the transcript's own committed block share.
     pub tool_use: String,
-    /// What the tool is called, verbatim as the engine recorded it — carrying
+    /// What the tool is called, verbatim as the server recorded it — carrying
     /// its client for a routed call (module doc). `None` on a closing
     /// transition, and on a record with no readable name.
     pub tool: Option<String>,
@@ -73,7 +73,7 @@ pub struct Call {
     /// answers to one question.
     pub input: Option<String>,
     /// The captured exit code. Its **presence** is the whole of "this call
-    /// closed"; its value is the engine's record and not a verdict.
+    /// closed"; its value is the server's record and not a verdict.
     pub exit_code: Option<i64>,
     /// **Why the control parked this call**, in the control's own words. Its
     /// presence is the whole of "this call is waiting on the operator"; the
@@ -135,7 +135,7 @@ pub(crate) fn calls_of(o: &Map<String, Value>) -> Result<Vec<Call>, String> {
 }
 
 /// One transition, strictly on its identity and forgiving of the three fields
-/// the engine itself states as optional.
+/// the server itself states as optional.
 fn call_of(v: &Value) -> Result<Call, String> {
     let o = v
         .as_object()

@@ -33,7 +33,7 @@ fn an_envelope_with_no_op_refuses_naming_the_field() {
 /// which is a test rotting rather than a contract breaking. Every real
 /// unspelled op is already judged BY NAME in `tests/conformance/requests.rs`,
 /// so what is left for this one to say is the generic refusal, and a verb no
-/// engine will ever mint is the only subject that cannot rot.
+/// server will ever mint is the only subject that cannot rot.
 #[test]
 fn an_op_outside_this_slice_refuses_naming_itself() {
     assert_eq!(

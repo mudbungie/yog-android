@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
  *
  * No credential of any kind. A device holds no registry token and must not —
  * that is the property that makes this channel possible rather than a place to
- * park a secret, and it is the same property the engine's ghcr pull and the
+ * park a secret, and it is the same property the server's ghcr pull and the
  * workstation's sparse-index read have. GitHub answers an unauthenticated read
  * of a public repository's releases at 60 requests an hour per address, and
  * this app makes one per launch.

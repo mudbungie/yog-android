@@ -1,7 +1,7 @@
 //! **What the selected provider will take, and what it says when it will
 //! not** (REMOTE §9.13, bl-dfbb; the sentence bl-0691).
 //!
-//! The two capability booleans ride the provider row the engine listed
+//! The two capability booleans ride the provider row the server listed
 //! (`reply/providers` since PROTOCOL 6) and this seat re-derives neither: a
 //! control offered for a provider that cannot take the setting is a control
 //! that earns a refusal, and DESIGN §8's rule is that a client re-deriving
@@ -14,7 +14,7 @@
 //! reasoning effort perfectly well cannot tell *this provider has no such
 //! lane* from *this app has not asked yet* from *this app is broken*. There
 //! are exactly three reasons a knob is dark and each is a different
-//! instruction — set a provider, run an engine that lists this one, or
+//! instruction — set a provider, run a server that lists this one, or
 //! nothing at all because this provider does not have the lane — so the
 //! answer is a sentence and not a boolean, and the sentence is made here,
 //! under the coverage floor, rather than in a paint file.
@@ -69,9 +69,9 @@ impl Knob {
         }
     }
 
-    /// The provider is set and the engine listed no row for it — an engine
+    /// The provider is set and the server listed no row for it — a server
     /// too old for the read, a listing that has not answered yet, or a
-    /// provider the wall no longer serves. **Unanswered, and said as
+    /// provider the workspace no longer serves. **Unanswered, and said as
     /// unanswered**: this seat may not grant a control on a question that
     /// went unanswered (REMOTE §9.13), and it may not pretend the provider
     /// refused either.
@@ -79,14 +79,14 @@ impl Knob {
         Self {
             taken: false,
             why: Some(format!(
-                "the engine has not listed {provider}, so whether it takes {knob} is unanswered"
+                "the server has not listed {provider}, so whether it takes {knob} is unanswered"
             )),
         }
     }
 }
 
 /// **What the selected provider will take**: the two knobs, read off the row
-/// the engine listed, for the provider these controls are pointed at.
+/// the server listed, for the provider these controls are pointed at.
 pub fn tunable(rows: &[ProviderRow], provider: Option<&str>) -> (Knob, Knob) {
     let Some(provider) = provider else {
         return (Knob::unaimed(EFFORT), Knob::unaimed(PRIORITY));
@@ -172,10 +172,10 @@ mod tests {
     }
 
     /// **An unlisted provider is UNANSWERED, never a refusal** (REMOTE
-    /// §9.13): an engine that predates the read, or a listing not yet in,
+    /// §9.13): a server that predates the read, or a listing not yet in,
     /// must not be reported as the provider saying no.
     #[test]
-    fn a_provider_the_engine_did_not_list_is_unanswered() {
+    fn a_provider_the_server_did_not_list_is_unanswered() {
         for rows in [rows(), Vec::new()] {
             let (effort, priority) = tunable(&rows, Some("nobody"));
             assert!(!effort.taken && !priority.taken);
@@ -191,19 +191,19 @@ mod tests {
 
 #[cfg(test)]
 mod wire {
-    /// **The engine's own answer, byte for byte** (bl-0691, measured against a
+    /// **The server's own answer, byte for byte** (bl-0691, measured against a
     /// live yog 0.0.55 on a fixture world): the roles read for a workspace
     /// whose worker names `gpt-5.6` on `openai-chatgpt`, and the provider rows
     /// beside it. It is here rather than in a paint file because what the
     /// phone MAY NOT do is guess either from the model name.
     #[test]
-    fn the_engines_own_answer_reads_back_whole() {
+    fn the_servers_own_answer_reads_back_whole() {
         let roles = serde_json::json!({ "kind": "roles", "ok": true,
             "rows": [{ "effort": null, "model": "gpt-5.6", "priority": false,
                        "provider": "openai-chatgpt", "role": "worker" }] });
         let Ok(Ok(crate::codec::reply::Reply::Roles(rows))) = crate::codec::reply::decode(&roles)
         else {
-            unreachable!("the engine's roles answer decodes")
+            unreachable!("the server's roles answer decodes")
         };
         let worker = crate::codec::pick::worker(&rows).expect("a worker row");
         assert_eq!(worker.provider, "openai-chatgpt");
@@ -217,7 +217,7 @@ mod wire {
         let Ok(Ok(crate::codec::reply::Reply::Providers(rows))) =
             crate::codec::reply::decode(&providers)
         else {
-            unreachable!("the engine's providers answer decodes")
+            unreachable!("the server's providers answer decodes")
         };
         let (effort, priority) = super::tunable(&rows, Some("openai-chatgpt"));
         assert!(effort.taken && priority.taken, "the row takes both");

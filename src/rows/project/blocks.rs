@@ -64,7 +64,7 @@ pub(super) fn block_row(entries: &[Entry], key: String, model_id: &str, block: &
                 as_(said, Kind::Answered)
             }
         },
-        // A block kind a newer engine of this major spells (REMOTE §3.2). The
+        // A block kind a newer server of this major spells (REMOTE §3.2). The
         // word is the whole of what this build knows about it, and it is said
         // rather than dropped: a turn missing a row is a turn misread.
         Block::Unknown(word) => row(

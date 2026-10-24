@@ -113,7 +113,7 @@ pub const ALWAYS_A_BALL: &str =
 /// (DESIGN §13.14). §2 rules that the corpus and the spoken version move
 /// together — *"a protocol bump upstream is a re-vendor and a rebuild here"* —
 /// and a peer of another version is refused fail-closed at the §3 preface, so
-/// for any engine this build can talk to the vendored table IS that engine's
+/// for any server this build can talk to the vendored table IS that server's
 /// table. Asking for it would be a radio spend for an answer already compiled
 /// in. The surface exists (`crate::help`, and a control carries `act:help`);
 /// what does not exist is the gesture.
@@ -126,7 +126,7 @@ pub const ALREADY_HELD: &str =
 pub const ASKING_SIDE: &str = "§5.3's asking side — this device is invoked, it never invokes";
 
 /// **The wiring check has no surface here yet** (PROTOCOL 17, yog bl-28f4).
-/// `doctor` answers *is this box wired up* — every fact the engine already
+/// `doctor` answers *is this box wired up* — every fact the server already
 /// holds, asked at once — and the help roster classes it `control`, so every
 /// seat owes it a discoverable interactable (PARITY §5). This one does not
 /// have it: the surface is bl-a393, which deletes this row and the
@@ -157,7 +157,7 @@ pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 ///
 /// **What this seat does with it.** It holds the connection (DESIGN §14.1)
 /// and owes the real fold, which is `codec::follow::Stream::absorb` — the
-/// engine's own operation copied, so an engine frame and this seat's
+/// server's own operation copied, so a server frame and this seat's
 /// accumulation agree by contract. `Seat::answered` is the wrong door for the
 /// lane and is not on it: it decodes `stream.last()`, which for an append
 /// stream is the final delta alone; a lane parks on `Seat::hold` and folds
@@ -171,7 +171,7 @@ pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 /// **The route a minted device will dial is a choice about a box this seat
 /// cannot see** (REMOTE §8.4, PROTOCOL 14). `enroll` takes an optional
 /// `address` — the address THIS device will dial, for one that does not share
-/// the engine's own view of itself — and absent is the engine's own
+/// the server's own view of itself — and absent is the server's own
 /// `wire/address`. A phone minting the next box knows nothing about the route
 /// that box will take, so the bare form is the only honest gesture and a frame
 /// stating a route is refused by name rather than read as the mint without it.

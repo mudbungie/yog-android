@@ -65,7 +65,7 @@ impl Model {
     /// **Follow one provider's sign-in** (§13.19), or — with `None` — stop
     /// following one. The lane is opened by the next pass and its frames
     /// arrive in the snapshots after it; `None` crosses no wire at all, so a
-    /// tail can be closed with the engine unreachable.
+    /// tail can be closed with the server unreachable.
     pub fn watch_login(&self, provider: Option<String>) {
         let _ = self.cmds.send(Cmd::Watch(provider));
     }

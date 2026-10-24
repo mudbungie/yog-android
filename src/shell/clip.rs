@@ -94,7 +94,7 @@ pub(crate) fn copied(ctx: &egui::Context) {
     });
     for text in taken {
         // A refusal is the platform's sentence and there is nowhere on this
-        // glass for it: the banner is what the ENGINE said, and a clipboard
+        // glass for it: the banner is what the SERVER said, and a clipboard
         // that would not take a copy is not a fact about the world. logcat is
         // the witness, as it is for the inset probe.
         let said = crate::tools::paper::to_clipboard(&text);

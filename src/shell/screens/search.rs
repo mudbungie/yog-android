@@ -3,10 +3,10 @@
 //!
 //! **The field's depth states the query's scope.** `search` names no
 //! workspace and no conversation — it is the one read this seat makes that
-//! asks the engine *where to look* — so it lives at the top depth, where the
+//! asks the server *where to look* — so it lives at the top depth, where the
 //! whole world is already what is on the glass. A field on the conversation
 //! list would say the search was scoped to that workspace, which the wire
-//! does not offer and this app must not imply (§8: the engine states, this
+//! does not offer and this app must not imply (§8: the server states, this
 //! seat never derives).
 //!
 //! **The answer is an overlay, not a list swapped underneath one** (DESIGN
@@ -14,20 +14,20 @@
 //! the back rule unchanged — the platform's back gesture or its name line
 //! closes it — and the walk's probe gets a name for it. Leaving is local: the
 //! empty needle crosses no wire (`seat::asks::search`), so a search can be
-//! left with the engine unreachable.
+//! left with the server unreachable.
 //!
 //! **A hit is an address this seat already focuses**, which is the whole
 //! point of upstream's bl-764a: the rows carry the §3.1 workspace leaf and
-//! the agent id rather than engine-local paths, so tapping one is the same
+//! the agent id rather than server-local paths, so tapping one is the same
 //! gesture as tapping a row in a list. The answer stands while the operator
 //! is away in it — backing out of a conversation lands on the hits again
 //! rather than on a roster that has forgotten the question.
 //!
 //! **A ball hit paints and does not tap.** There is no ball surface on this
 //! device yet (bl-d587), and a row that navigates nowhere is worse than a row
-//! that plainly does not: the hit is still shown, because *the engine found
+//! that plainly does not: the hit is still shown, because *the server found
 //! it* is the answer, and hiding a third of an answer to keep the list
-//! tappable would be this app editing the engine's reply.
+//! tappable would be this app editing the server's reply.
 
 use eframe::egui;
 
@@ -157,7 +157,7 @@ impl Shell {
                     model.focus_conversation(workspace.clone(), agent.clone());
                 }
             }
-            // **An address a newer engine of this major searches** (REMOTE
+            // **An address a newer server of this major searches** (REMOTE
             // §3.2). The flat keys under an unknown token are what the token
             // would have said, so none is read and the hit is painted, not
             // tapped — the `Ball` arm's standing exactly.

@@ -243,7 +243,7 @@ fn a_wrong_kind_at_any_of_the_six_names_that_read_and_keeps_what_was_there() {
         let snap = settle(&mut model, &|s| s.error.is_some());
         assert_eq!(
             snap.error.as_deref(),
-            Some(format!("{named}: the engine answered transcript instead").as_str())
+            Some(format!("{named}: the server answered transcript instead").as_str())
         );
         assert!(
             snap.records
@@ -275,7 +275,7 @@ fn a_wrong_kind_for_one_step_names_that_read() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("step: the engine answered transcript instead")
+        Some("step: the server answered transcript instead")
     );
     assert!(
         snap.records

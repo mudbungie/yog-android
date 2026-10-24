@@ -24,7 +24,7 @@
 //!
 //! **Two emptinesses and they are different sentences** (lernie DESIGN §4.31,
 //! whose four this is the phone's two of): nobody has asked yet, and the
-//! engine answered and there is nothing. One sentence over both would say
+//! server answered and there is nothing. One sentence over both would say
 //! *there are no balls* about a question nobody put.
 
 use eframe::egui;
@@ -121,9 +121,9 @@ fn anywhere(ui: &mut egui::Ui, row: &BallRow) {
     ui.add_space(4.0);
 }
 
-/// One ball this workspace holds, with the spend **as the engine rendered it**
+/// One ball this workspace holds, with the spend **as the server rendered it**
 /// — nothing here multiplies a token count by a rate of its own, and a figure
-/// the engine did not state paints as nothing rather than as a zero. One label
+/// the server did not state paints as nothing rather than as a zero. One label
 /// rather than three widgets, because the row is a control now (bl-f36e) and a
 /// control is one rectangle.
 fn held(row: &WsBallRow, picked: bool) -> String {
@@ -149,8 +149,8 @@ fn held(row: &WsBallRow, picked: bool) -> String {
 /// colour-blind reader both lose.
 const PICKED: &str = "▸ ";
 
-/// The board: what each armed loop is doing, in the engine's own sentence,
-/// then the rows in the engine's own columns.
+/// The board: what each armed loop is doing, in the server's own sentence,
+/// then the rows in the server's own columns.
 fn painted(ui: &mut egui::Ui, board: &Board) {
     for line in &board.fleet {
         ui.weak(line);
@@ -166,7 +166,7 @@ fn painted(ui: &mut egui::Ui, board: &Board) {
     }
 }
 
-/// One board row, under the column word the engine minted for it.
+/// One board row, under the column word the server minted for it.
 fn column(ui: &mut egui::Ui, row: &BoardRow) {
     ui.label(format!("{} · {} · {}", row.column, row.id, row.project));
     if !row.title.is_empty() {

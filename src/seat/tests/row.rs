@@ -135,7 +135,7 @@ fn the_floor_pair_reads_what_stands_rather_than_what_was_asked() {
 }
 
 /// The other half of the same reading, which should never happen and is said
-/// anyway: a revoke the engine took that left no floor standing.
+/// anyway: a revoke the server took that left no floor standing.
 #[test]
 fn a_revoke_that_left_no_floor_standing_says_so() {
     let (mut model, _s) = super::model_against(vec![
@@ -156,14 +156,14 @@ fn a_revoke_that_left_no_floor_standing_says_so() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("revoke: the engine took it and says no floor stands over the conversation")
+        Some("revoke: the server took it and says no floor stands over the conversation")
     );
 }
 
-/// A refusal is the engine's own sentence, named by the op that earned it —
+/// A refusal is the server's own sentence, named by the op that earned it —
 /// the same shape `stop` has had since bl-48fa.
 #[test]
-fn a_refused_row_act_carries_the_engines_words_under_its_own_name() {
+fn a_refused_row_act_carries_the_servers_words_under_its_own_name() {
     let (mut model, _s) = super::model_against(vec![
         vec![ws_reply()],
         vec![nothing_set()],
@@ -206,15 +206,15 @@ fn a_row_act_answered_with_the_other_shape_names_what_came_back() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("flag: the engine answered outcome instead")
+        Some("flag: the server answered outcome instead")
     );
     model.row_act("a1".into(), RowAct::Retarget);
     let snap = settle(&mut model, &|s| {
-        s.error.as_deref() != Some("flag: the engine answered outcome instead")
+        s.error.as_deref() != Some("flag: the server answered outcome instead")
     });
     assert_eq!(
         snap.error.as_deref(),
-        Some("retarget: the engine answered flagged instead")
+        Some("retarget: the server answered flagged instead")
     );
 }
 

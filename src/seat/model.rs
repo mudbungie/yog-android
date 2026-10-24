@@ -41,7 +41,7 @@ impl Model {
     ///
     /// **`cache` is where the last answered pass is kept** (bl-de96), and it
     /// is read HERE, synchronously, before the first frame: the handle starts
-    /// holding what the engine last said instead of an empty snapshot, so the
+    /// holding what the server last said instead of an empty snapshot, so the
     /// app paints its world immediately and the first cadence read replaces
     /// it. The worker is seeded with the same value — both its rows, so a
     /// first pass that fails republishes them rather than blanking the

@@ -25,8 +25,8 @@
 //! wake after sleep is a return**, counted, and the ladder's first caller
 //! after one clears the rest (`Ladder::wake`): the failures the platform
 //! caused in the background are evidence about the platform, not about the
-//! engine, so the first climb back is not made to rest — and with the
-//! engine's presence cached it is a re-call, one walk and a punch.
+//! server, so the first climb back is not made to rest — and with the
+//! server's presence cached it is a re-call, one walk and a punch.
 
 use super::{Ladder, Rove, say};
 use crate::state::Watched;

@@ -38,13 +38,13 @@ mod trail;
 
 /// **The outbox's echo** (bl-66fb): the message this seat has sent, painted
 /// where the row it will become is going to be — behind the prompt's glyph,
-/// in the pending ink while the engine has not answered and the operator's
+/// in the pending ink while the server has not answered and the operator's
 /// own once it has (DESIGN §23 item 5; lernie §4.45 item 4). **No rule under
 /// it**: it is the row it will become, in its state's ink, and the transcript
 /// read that carries the words is what retires it.
 ///
 /// **The third state is in doubt** (yog REMOTE §3, bl-07b1): the reply was
-/// lost, so the engine may have taken this message and may not have. It keeps
+/// lost, so the server may have taken this message and may not have. It keeps
 /// the unanswered ink — because that is what it is — and carries the contract
 /// under it in the operator's own words, naming the read that settles it. It
 /// is a state and not a control: there is no resend here, because a resend is

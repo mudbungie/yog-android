@@ -23,7 +23,7 @@ fn provisioned(leaf: &str, foot: bool) -> PathBuf {
     std::fs::copy(files.join("ca.pem"), wire.join("ca.pem")).unwrap();
     std::fs::copy(files.join(format!("{leaf}.pem")), wire.join("client.pem")).unwrap();
     std::fs::copy(files.join(format!("{leaf}.key")), wire.join("client.key")).unwrap();
-    std::fs::write(wire.join("address"), "engine.example.com:7737").unwrap();
+    std::fs::write(wire.join("address"), "server.example.com:7737").unwrap();
     files
 }
 
@@ -125,7 +125,7 @@ fn a_lane_that_has_not_presented_yet_says_so() {
     let (title, text) = said(&files, standing);
     assert_eq!(title, "this phone is offering its tools");
     assert!(
-        text.starts_with("presenting 2 tools to the engine."),
+        text.starts_with("presenting 2 tools to the server."),
         "{text}"
     );
 }
@@ -223,7 +223,7 @@ fn the_held_lane_states_its_price_and_the_act_that_ends_it() {
 
 /// **A path is enough to become a foot.** What a process with no Activity in
 /// it starts from is this app's files directory and nothing else: the material
-/// under it names the engine, and the leaf says what this device is.
+/// under it names the server, and the leaf says what this device is.
 #[test]
 fn a_files_directory_is_all_a_foot_needs_to_be_opened() {
     let files = provisioned("hands", true);
@@ -245,7 +245,7 @@ fn a_device_that_cannot_be_a_foot_says_which_way_it_failed() {
     let half = scratch();
     let wire = half.join("wire");
     std::fs::create_dir_all(&wire).unwrap();
-    std::fs::write(wire.join("address"), "engine.example.com:7737").unwrap();
+    std::fs::write(wire.join("address"), "server.example.com:7737").unwrap();
     let why = super::footed(&half).err().unwrap_or_default();
     assert!(why.contains("client.pem"), "{why}");
 }

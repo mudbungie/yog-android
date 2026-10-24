@@ -1,5 +1,5 @@
 //! The ladder end to end: a seat over the real transport against a fake
-//! DHT on loopback UDP and a scripted engine that holds its connection —
+//! DHT on loopback UDP and a scripted server that holds its connection —
 //! every rung taken and fallen through, the backoff, the network change,
 //! and the held stream's pings and silence on a clock the test turns.
 //!
@@ -57,14 +57,14 @@ fn flap() {
     NET.fetch_add(1, Ordering::Relaxed);
 }
 
-/// The engine's rendezvous keypair, and the pairing a client holds for it.
+/// The server's rendezvous keypair, and the pairing a client holds for it.
 fn pairing() -> (Keypair, Pairing) {
-    let engine = Keypair::from_seed([5u8; 32]).unwrap();
+    let signer = Keypair::from_seed([5u8; 32]).unwrap();
     let pairing = Pairing {
-        engine: engine.public(),
+        server: signer.public(),
         salt: [6u8; 32],
     };
-    (engine, pairing)
+    (signer, pairing)
 }
 
 /// A fake commons shaped like the mainline (yog bl-f6e1): a bootstrap
@@ -87,12 +87,12 @@ fn commons_of(items: Vec<crate::dht::Mutable>) -> Commons {
     }
 }
 
-/// A fake commons holding the engine's presence at `endpoints`.
+/// A fake commons holding the server's presence at `endpoints`.
 fn commons(endpoints: Vec<SocketAddr>) -> Commons {
-    let (engine, pairing) = pairing();
+    let (signer, pairing) = pairing();
     let sealed = Presence { endpoints }.seal(&pairing.seal_key()).unwrap();
     commons_of(vec![
-        engine.sign(pairing.presence_salt(), 1, sealed).unwrap(),
+        signer.sign(pairing.presence_salt(), 1, sealed).unwrap(),
     ])
 }
 
@@ -166,7 +166,7 @@ fn seat(dir: &std::path::Path, node: &Commons, clock: Arc<FakeClock>) -> Seat {
 }
 
 /// The newest call on `node`'s commons, opened under the pairing, and its
-/// `seq` — what the engine's poll reads.
+/// `seq` — what the server's poll reads.
 fn called(node: &Commons) -> (i64, crate::rendezvous::item::Call) {
     let pairing = pairing().1;
     let udp = crate::dht::Udp::bind("127.0.0.1:0".parse().unwrap()).unwrap();
@@ -234,7 +234,7 @@ fn the_direct_rung_resolves_a_name_and_names_what_it_could_not_reach() {
 }
 
 #[test]
-fn the_mainline_shape_is_the_engines() {
+fn the_mainline_shape_is_the_servers() {
     let r = Rove::mainline(pairing().1);
     assert_eq!(r.bootstrap.len(), 4);
     assert_eq!(r.window, Duration::from_secs(35));

@@ -42,7 +42,7 @@ fn only_live_and_in_flight_rows_run_in_the_switchers_order() {
         row("odd", AgentState::Unknown("parked".into()), 0, 70),
         row("new", AgentState::InFlight, 0, 40),
     ];
-    // Newest subtree first, each in the engine's descent.
+    // Newest subtree first, each in the server's descent.
     assert_eq!(ids(&running(&rows)), ["new", "old", "old-kid"]);
     assert!(running(&[row("q", AgentState::Quiescent, 0, 1)]).is_empty());
 }

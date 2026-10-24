@@ -10,9 +10,9 @@
 //! one.
 //!
 //! **It carries no `act:` tag.** The parity gate judges the tags on this
-//! app's controls against the engine's own op roster, and this control fires
+//! app's controls against the server's own op roster, and this control fires
 //! no op: nothing crosses the wire, and the release feed is not a thing the
-//! engine has ever heard of. A tag here would name an op that does not exist
+//! server has ever heard of. A tag here would name an op that does not exist
 //! and redden the gate correctly (`crate::parity`'s second assertion), which
 //! is the gate telling the truth rather than a hole in it.
 //!

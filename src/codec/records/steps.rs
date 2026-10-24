@@ -35,14 +35,14 @@ use super::agent::object;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Steps {
     pub rows: Vec<StepRow>,
-    /// Which tail the conversation left orphaned, and — when the engine had
+    /// Which tail the conversation left orphaned, and — when the server had
     /// words for it — why.
     pub orphan: Orphan,
     pub orphan_reason: Option<String>,
 }
 
 /// The orphaned-tail classes. `None` is the ordinary conversation, and
-/// `Unknown` is REMOTE §3.2's catch-all: a class a newer engine names rides as
+/// `Unknown` is REMOTE §3.2's catch-all: a class a newer server names rides as
 /// itself, because a tail this build cannot classify is still a tail.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Orphan {
@@ -58,7 +58,7 @@ const ORPHANS: [(&str, Orphan); 3] = [
     ("tool_window", Orphan::ToolWindow),
 ];
 
-/// **The §4.4 terminal classification, in the engine's four words** (yog
+/// **The §4.4 terminal classification, in the server's four words** (yog
 /// `steps_view::wire::framing_token`). `InFlight` was PROTOCOL 18's addition:
 /// the step being written right now, which `killed` used to have to cover.
 ///
@@ -77,9 +77,9 @@ pub enum Framing {
 }
 
 impl Framing {
-    /// The engine's own token, which is also what the census row is labelled
+    /// The server's own token, which is also what the census row is labelled
     /// with: the vocabulary rule (DESIGN §13.3) says a seat spells an op and a
-    /// state in the words the engine does, and a second wording here would be
+    /// state in the words the server does, and a second wording here would be
     /// a second vocabulary for one that already has an authority.
     ///
     /// Read out of [`FRAMINGS`] rather than matched a second time, so the
@@ -108,7 +108,7 @@ const FRAMINGS: [(&str, Framing); 4] = [
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StepRow {
     pub seq: String,
-    /// The §4.4 terminal classification, in the engine's four words.
+    /// The §4.4 terminal classification, in the server's four words.
     pub framing: Framing,
     /// The §7.3 wound's class, and the adapter's own last words when the
     /// no-response class left any.
@@ -119,7 +119,7 @@ pub struct StepRow {
     /// The read-state commit the step recorded, empty where it recorded none
     /// — which is exactly what makes a step unpinnable.
     pub commit: String,
-    /// The four counters' own total, as the engine derived it.
+    /// The four counters' own total, as the server derived it.
     pub tokens: u64,
 }
 
@@ -166,7 +166,7 @@ pub(in super::super) fn steps_of(o: &Map<String, Value>) -> Result<Steps, String
     })
 }
 
-/// One census row. `wound` is the engine's token carried whole — nothing
+/// One census row. `wound` is the server's token carried whole — nothing
 /// branches on it, so a table for it would be a vocabulary with no reader —
 /// while `framing` is picked, because `crate::theme::framing` branches on
 /// exactly its four words.

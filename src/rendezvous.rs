@@ -1,9 +1,9 @@
-//! **The rendezvous material** (yog REMOTE §13.2, engine end bl-4263; the
+//! **The rendezvous material** (yog REMOTE §13.2, server end bl-4263; the
 //! phone's half of yog bl-0247): two files beside `ca.pem`, and everything
 //! both ends derive from them.
 //!
 //! **Minted out of channel, like every other fact in `material`** (REMOTE
-//! §1.4). The engine mints an ed25519 rendezvous seed and a random pairing
+//! §1.4). The server mints an ed25519 rendezvous seed and a random pairing
 //! salt; what crosses into this device's entry is the **public** half of the
 //! key and the salt, hex, exactly as `ca.pem` crosses. This module only ever
 //! reads, and the three answers it gives are `material`'s three one rung
@@ -19,9 +19,9 @@
 //! ed25519 **seed**, so the inbox is signed under a keypair derived from the
 //! salt and this device mints no keypair of its own for it. That is why the
 //! entry holds two facts and not three: a phone keypair would be a stored
-//! fact the engine never reads, and the inbox's is computed. Presence lives
-//! at `(engine public key, presence salt)`; the inbox at `(inbox public key,
-//! inbox salt)`. The labels are the engine's, byte for byte.
+//! fact the server never reads, and the inbox's is computed. Presence lives
+//! at `(server public key, presence salt)`; the inbox at `(inbox public key,
+//! inbox salt)`. The labels are the server's, byte for byte.
 
 use crate::dht::Keypair;
 use ring::hkdf::{HKDF_SHA256, Salt};
@@ -32,12 +32,12 @@ pub mod punch;
 
 pub(crate) mod call;
 
-/// The engine's rendezvous PUBLIC key, hex — the key its presence is signed
-/// under. The engine's own file of the same stem holds the seed; a client
+/// The server's rendezvous PUBLIC key, hex — the key its presence is signed
+/// under. The server's own file of the same stem holds the seed; a client
 /// holds the half it can verify with.
 pub const KEY: &str = "rendezvous.pub";
-/// The pairing salt, hex — the secret this device and the engine share,
-/// under the engine's own file name.
+/// The pairing salt, hex — the secret this device and the server share,
+/// under the server's own file name.
 pub const SALT: &str = "pairing.salt";
 
 /// **The two roving files**, in the order a screen should read them out —
@@ -47,8 +47,8 @@ pub const ROVING: [&str; 2] = [KEY, SALT];
 /// What the two files hold, decoded.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pairing {
-    /// The engine's ed25519 public key.
-    pub engine: [u8; 32],
+    /// The server's ed25519 public key.
+    pub server: [u8; 32],
     /// The pairing salt.
     pub salt: [u8; 32],
 }
@@ -93,13 +93,13 @@ impl Pairing {
 /// roving for this entry), `Err` is half of it — the same misconfiguration a
 /// half-provisioned trust store is, named the same way.
 pub fn read_dir(dir: &Path) -> Result<Option<Pairing>, String> {
-    let (engine, salt) = (hex_file(&dir.join(KEY)), hex_file(&dir.join(SALT)));
-    match (engine, salt) {
+    let (server, salt) = (hex_file(&dir.join(KEY)), hex_file(&dir.join(SALT)));
+    match (server, salt) {
         (None, None) => Ok(None),
-        (Some(engine), Some(salt)) => Ok(Some(Pairing { engine, salt })),
+        (Some(server), Some(salt)) => Ok(Some(Pairing { server, salt })),
         _ => Err(format!(
             "half-provisioned at {}: {KEY} and {SALT} are 32 bytes of hex each and \
-             land together — re-enroll this device from an engine that roves",
+             land together — re-enroll this device from a server that roves",
             dir.display()
         )),
     }

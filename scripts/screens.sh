@@ -19,12 +19,12 @@
 # accessibility client attaches — this walk's own dump killed the app on the
 # second screen (DESIGN §15.1). So the app writes the `act:<op>` tags it
 # painted to a file in its own private storage, armed by a directory this
-# script creates, and the last beat judges THAT against the engine's roster
+# script creates, and the last beat judges THAT against the server's roster
 # (yog docs/PARITY.md §5, §6's named fallback). The dump is still captured
 # beside every screenshot: the emptiness lives in the run's own evidence, and
 # the day upstream stops unwrapping (bl-a6f3) the same files say so.
 #
-# THE ENGINE IS NOT DIALLED AND DOES NOT NEED TO BE. Two seeds put the app on
+# THE SERVER IS NOT DIALLED AND DOES NOT NEED TO BE. Two seeds put the app on
 # any screen without a server anywhere:
 #   * key material minted here by `openssl` — a self-signed CA and a leaf under
 #     it. `transport::Seat::open` dials nothing, so a leaf is enough to make
@@ -32,7 +32,7 @@
 #     failure is painted, which is itself a screen worth a picture.
 #   * the paint-first cache (DESIGN §14), seeded from `corpus/` — the wire
 #     corpus vendored out of the server's own codec. That is the "recorded
-#     endpoint": the rows are the ENGINE's spelling, not a second one invented
+#     endpoint": the rows are the SERVER's spelling, not a second one invented
 #     here, and the focus stored beside them is what selects the screen. A
 #     cache this build refuses is discarded whole, which shows up as the wrong
 #     screen name and reddens the walk rather than passing quietly.

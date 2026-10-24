@@ -26,7 +26,7 @@ pub enum WsKind {
     Named,
     Foreign,
     Replay,
-    /// REMOTE §3.2's catch-all: a fourth classification a newer engine of this
+    /// REMOTE §3.2's catch-all: a fourth classification a newer server of this
     /// major spells. The workspace still lists, with its counts and its pin.
     Unknown(String),
 }

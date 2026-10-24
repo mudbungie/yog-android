@@ -7,11 +7,11 @@
 //! are all [`super`]'s, unchanged: what rose above what was last announced,
 //! recorded whether or not anything was said. Only the ASK differs — rung 1
 //! performs `Query::Workspaces` on the platform's schedule, and this holds
-//! `Query::Attention` open, so a change reaches the operator at the engine's
+//! `Query::Attention` open, so a change reaches the operator at the server's
 //! own write cadence rather than at a fifteen-minute floor.
 //!
 //! **The two asks count the same thing, and that is why one memory serves
-//! both.** A `workspaces` row's `attention` is the engine's count of agents in
+//! both.** A `workspaces` row's `attention` is the server's count of agents in
 //! that workspace whose §6 predicate fires (yog `answer::chrome::workspace_stats`),
 //! and the attention queue is every agent whose predicate fires across every
 //! workspace (`answer::queue::queue`) — one rollup and one flattening of ONE
@@ -20,16 +20,16 @@
 //! each other. That is the whole reason this is a module beside `attention`
 //! rather than a mechanism of its own.
 //!
-//! **A frame is the wake, and the first rise ends the lane.** The engine
+//! **A frame is the wake, and the first rise ends the lane.** The server
 //! writes a frame whenever this asker's answer changes (REMOTE §14.1), so
 //! reading until something rises IS the wake — no second read, and nothing
-//! derived here that the engine did not say. The lane is dropped at that
+//! derived here that the server did not say. The lane is dropped at that
 //! point rather than held through: a lane whose frames replace has nothing to
 //! reconcile on the next dial, so redialling costs one connection and buys a
 //! caller that is never holding a socket while it posts.
 //!
 //! **Every failure is silence**, exactly as rung 1's is: no material, an
-//! engine that will not answer, a frame this end cannot read. A phone in a
+//! server that will not answer, a frame this end cannot read. A phone in a
 //! pocket must never nag about network.
 
 use std::path::Path;

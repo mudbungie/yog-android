@@ -145,7 +145,7 @@ build_abi() {
     rm -rf "$work/openssl"; mkdir -p "$work/openssl"
     tar -C "$work/openssl" --strip-components=1 -xzf "$SSL_TAR"
     ( cd "$work/openssl" && ./Configure "$(ossl_of "$abi")" -D__ANDROID_API__=$API \
-        no-shared no-tests no-docs no-legacy no-engine no-comp no-dtls no-srp no-psk \
+        no-shared no-tests no-docs no-legacy no-server no-comp no-dtls no-srp no-psk \
         no-ssl3 no-weak-ssl-ciphers no-idea no-md2 no-mdc2 no-rc5 no-camellia no-aria \
         no-seed no-whirlpool no-gost no-scrypt --prefix="$prefix" >/dev/null \
       && make -j"$jobs" >/dev/null && make install_sw >/dev/null )

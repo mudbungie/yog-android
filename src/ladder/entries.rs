@@ -13,8 +13,8 @@
 //!
 //! **The punch port and the presence cache are held strongly, for the run**
 //! (bl-97ed, bl-c00e; DESIGN §21.9): the call a climb writes names the port
-//! it punches from, and a port that is kept is a port the engine's NAT has
-//! let in before; the engine's presence is the engine's fact, not this
+//! it punches from, and a port that is kept is a port the server's NAT has
+//! let in before; the server's presence is the server's fact, not this
 //! box's, and saves the next climb its walk (the re-call). The [`Port`]
 //! outlives every ladder on its entry, and a fresh ladder takes it up where
 //! the last one left it.
@@ -26,11 +26,11 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, OnceLock, Weak};
 
-/// The entry's punch port, and the engine's presence as last read.
+/// The entry's punch port, and the server's presence as last read.
 ///
 /// **The presence is a re-call's whole input** (yog bl-278f): a climb that
 /// holds it writes its call without walking for the presence first. It is
-/// kept across a network change — it says where the ENGINE is, and this box
+/// kept across a network change — it says where the SERVER is, and this box
 /// moving does not move it — and dropped by a call that expires unanswered,
 /// the one evidence that it may be stale, so the next climb reads it again.
 #[derive(Default)]
@@ -63,7 +63,7 @@ pub(crate) fn ladder(address: String, rove: Option<Rove>, clock: Arc<dyn Clock>)
     };
     let key = (
         address.clone(),
-        rove.pairing.engine,
+        rove.pairing.server,
         rove.pairing.salt,
         rove.bootstrap.clone(),
     );

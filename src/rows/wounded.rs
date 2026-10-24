@@ -1,5 +1,5 @@
 //! **The settled-failure notice as a row** (REMOTE §9.16, bl-8e3c): the
-//! engine's third virtual trailing entry, painted where the tail would have
+//! server's third virtual trailing entry, painted where the tail would have
 //! been — *this conversation is not coming back*, and the one remedy the
 //! wound names when it names one.
 //!
@@ -9,14 +9,14 @@
 //! arm — the affordance and the badge read the same word, so a step cannot
 //! offer a sign-in while its badge denies there was a refusal.
 //!
-//! **A wound of class `none` is no row.** The engine's word for *nothing is
+//! **A wound of class `none` is no row.** The server's word for *nothing is
 //! wounded* is a fact nobody recorded, and painting a badge that says so
 //! would stand in for one.
 
 use super::build::{key, row};
 use super::{Row, RowClass, Tone};
 
-/// The engine's own spelling for a wound that is not there.
+/// The server's own spelling for a wound that is not there.
 const NONE: &str = "none";
 /// The wound class that is a provider refusal — the arm with a remedy.
 const REFUSED: &str = "refused";

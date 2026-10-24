@@ -116,11 +116,11 @@ fn a_grade_this_build_has_not_heard_of_rides_as_itself() {
 fn an_enrolment_stating_a_route_refuses_naming_the_op() {
     let frame = object(
         &json!({ "op": "enroll", "workspace": "ws", "name": "phone-2",
-                 "grade": "operator", "address": "engine.invalid:7737" }),
+                 "grade": "operator", "address": "server.invalid:7737" }),
     );
     let refusal = crate::codec::enroll::decode(&frame).unwrap_err();
     assert!(refusal.starts_with("enroll: "), "{refusal}");
-    assert!(refusal.contains("engine.invalid"), "{refusal}");
+    assert!(refusal.contains("server.invalid"), "{refusal}");
 }
 
 #[test]

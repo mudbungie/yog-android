@@ -1,7 +1,7 @@
 //! **The roster, read out of the vendored corpus** — the one authority for
 //! which ops exist and which of them a seat owes a control (PARITY §2).
 //!
-//! Nothing is listed here. The rows are the engine's own help table, published
+//! Nothing is listed here. The rows are the server's own help table, published
 //! through `corpus/reply/help.json` and vendored beside every other fixture,
 //! so a verb that lands upstream arrives in this repo as a re-vendor and
 //! reddens the gate until a control or a cited exemption answers it.

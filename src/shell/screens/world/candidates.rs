@@ -19,7 +19,7 @@
 //! row IS, and every value they take is already on it (`codec::candidates`).
 //!
 //! **Two emptinesses, two sentences** (§13.9's pair, at a third site): nobody
-//! has asked yet, and the engine answered with none.
+//! has asked yet, and the server answered with none.
 
 use eframe::egui;
 
@@ -135,7 +135,7 @@ fn line(row: &Attempt, picked: bool) -> String {
     .join("\n")
 }
 
-/// One line of the engine's own words, painted only where there are any: an
+/// One line of the server's own words, painted only where there are any: an
 /// absent field is a fact and paints as nothing (`codec::balls`' rule).
 fn said(ui: &mut egui::Ui, text: &str) {
     if !text.is_empty() {

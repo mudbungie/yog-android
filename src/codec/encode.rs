@@ -52,7 +52,7 @@ fn asked(ask: &Ask) -> Value {
         }
         Ask::Clients { workspace } => json!({ "op": "clients", "workspace": workspace }),
         // **The admin reads** (DESIGN §13.17). Each is its write's own op
-        // token with the written half left out, which is the engine's grammar
+        // token with the written half left out, which is the server's grammar
         // and not a convention here.
         Ask::Config { at } => json!({ "op": "config", "target": admin::target(at) }),
         Ask::Marks { workspace } => json!({ "op": "marks", "workspace": workspace }),

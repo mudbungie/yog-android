@@ -1,5 +1,5 @@
 //! The cache both ways, and every way it refuses. The fixtures are the
-//! ENGINE's own envelopes (the shapes `seat::tests` scripts its server with),
+//! SERVER's own envelopes (the shapes `seat::tests` scripts its server with),
 //! because those are what the file holds. The options half — the selectors'
 //! offerings, the assignments, and the version stamp that discards an older
 //! build's file — is `options`.

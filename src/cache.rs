@@ -1,24 +1,24 @@
-//! **The paint-first cache** (bl-de96): the last answer the engine gave,
+//! **The paint-first cache** (bl-de96): the last answer the server gave,
 //! kept in this app's private storage so a resumed app paints what it had
 //! instead of three empty lists while the wire re-reads the world.
 //!
 //! **The wire is the only authority.** This is a cache in the strict sense —
-//! one writer (the model's worker, after a pass the engine answered), one
+//! one writer (the model's worker, after a pass the server answered), one
 //! reader (the model's boot), and the next cadence read replaces whatever it
 //! painted. Nothing here is ever consulted to decide anything; it decides
 //! only what is on the glass for the second before the first answer lands.
 //!
-//! **It stores the ENGINE's spelling, not a second one, and this is a
+//! **It stores the SERVER's spelling, not a second one, and this is a
 //! deviation from the ball's own sketch, taken deliberately.** bl-de96 asked
 //! for the decoded `Snapshot` serialized with a version stamp. Writing that
 //! means writing a reply *encoder* — and `tests/conformance/replies.rs`
 //! records why this client has none: *"a reply encoder would be a second
-//! implementation of the engine's own spelling with nothing to check it
+//! implementation of the server's own spelling with nothing to check it
 //! against"*. `Entry` alone is a tree of blocks and untyped usage; an encoder
 //! for it would drift from the decoder the first time a field moved, silently
 //! and only in the cache. So what is stored is the reply envelopes verbatim,
 //! and reading them is the ONE decoder every wire answer goes through. The
-//! risk the sketch was avoiding — a local file speaking with the engine's
+//! risk the sketch was avoiding — a local file speaking with the server's
 //! authority — is answered by the decoder being strict and by this module
 //! being fail-closed: any doubt at all discards the whole file.
 //!
@@ -44,7 +44,7 @@ use crate::seat::{Focus, Snapshot};
 const TAG: &str = "yog-seat-cache";
 const VERSION: u64 = 4;
 
-/// **What one answered pass carried, in the engine's own words.** Present
+/// **What one answered pass carried, in the server's own words.** Present
 /// exactly as deep as the focus went: a pass under no workspace asks one
 /// question and keeps one envelope.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

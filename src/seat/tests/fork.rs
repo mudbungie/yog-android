@@ -99,7 +99,7 @@ fn an_anchor_with_no_records_standing_is_dropped_and_a_failure_is_a_sentence() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("governing: the engine answered transcript instead")
+        Some("governing: the server answered transcript instead")
     );
     drop(model);
     served.join().unwrap();
@@ -135,7 +135,7 @@ fn a_fork_names_the_point_the_role_and_no_skills() {
     );
 }
 
-/// **A refusal is the engine's own words**, a wrong kind names the act, and
+/// **A refusal is the server's own words**, a wrong kind names the act, and
 /// with no conversation focused nothing crosses at all.
 #[test]
 fn a_fork_refused_says_why_and_one_with_no_conversation_crosses_nothing() {
@@ -162,7 +162,7 @@ fn a_fork_refused_says_why_and_one_with_no_conversation_crosses_nothing() {
     });
     assert_eq!(
         snap.error.as_deref(),
-        Some("fork: the engine answered transcript instead")
+        Some("fork: the server answered transcript instead")
     );
     drop(model);
     served.join().unwrap();

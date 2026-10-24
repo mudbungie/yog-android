@@ -8,7 +8,7 @@
 //! figure that is this device's.
 //!
 //! **This file dials; `scripts/invoke.sh` provides the world.** The loop out
-//! there boots an emulator and a bounded engine, mints a foot leaf, seeds the
+//! there boots an emulator and a bounded server, mints a foot leaf, seeds the
 //! device with it and judges the platform afterwards; in here is the one thing
 //! a shell cannot do — speak the wire. It is `#[ignore]`d for `tests/parity.rs`'s
 //! reason exactly: there is nothing to dial until a device has been driven,
@@ -77,12 +77,12 @@ fn asked(seat: &Seat, request: &Value) -> Result<Value, String> {
     frames
         .into_iter()
         .next_back()
-        .ok_or_else(|| format!("{request}: the engine answered no frame at all"))
+        .ok_or_else(|| format!("{request}: the server answered no frame at all"))
 }
 
 /// **Wait for the device to be a tool host**, which is the readiness this
 /// harness actually depends on: not that the app launched, but that the
-/// engine holds an advertised set under the foot's own name.
+/// server holds an advertised set under the foot's own name.
 fn advertised(seat: &Seat, client: &str, workspace: &str) -> Result<Vec<String>, String> {
     let deadline = Instant::now() + PATIENCE;
     let mut last = Value::Null;
@@ -109,7 +109,7 @@ fn advertised(seat: &Seat, client: &str, workspace: &str) -> Result<Vec<String>,
 }
 
 /// One invocation, waited out. `invoke` answers a handle at once — the
-/// engine's intake is one thread for the whole world — so the wait is the
+/// server's intake is one thread for the whole world — so the wait is the
 /// caller's, which is what `capture` is for.
 fn invoked(seat: &Seat, client: &str, tool: &str, input: &Value) -> Result<Value, String> {
     let queued = asked(
@@ -119,7 +119,7 @@ fn invoked(seat: &Seat, client: &str, tool: &str, input: &Value) -> Result<Value
     let handle = queued
         .get("invocation")
         .and_then(Value::as_str)
-        .ok_or_else(|| format!("{tool}: the engine answered no handle: {queued}"))?
+        .ok_or_else(|| format!("{tool}: the server answered no handle: {queued}"))?
         .to_owned();
     let deadline = Instant::now() + PATIENCE;
     while Instant::now() < deadline {
@@ -172,7 +172,7 @@ fn calls(nonce: &str) -> Vec<(&'static str, &'static str, Value)> {
 
 /// **The device is a tool host**, which is the first thing this loop proves
 /// and the thing everything below stands on: an advertisement crossed the
-/// wire from a device, and the engine holds it under the foot's own name.
+/// wire from a device, and the server holds it under the foot's own name.
 ///
 /// It is a beat of its own because of WHEN it has to happen. The foreground
 /// service that keeps a pocketed foot's read open is armed by the activity's
@@ -180,7 +180,7 @@ fn calls(nonce: &str) -> Vec<(&'static str, &'static str, Value)> {
 /// harness sends it to the background — and the honest signal that the app got
 /// that far is the set, not a sleep.
 #[test]
-#[ignore = "needs the emulator, the engine and the foot leaf make invoke provides"]
+#[ignore = "needs the emulator, the server and the foot leaf make invoke provides"]
 fn the_device_advertises_the_set_this_build_offers() -> Result<(), String> {
     let offered = advertised(&seat()?, &env("FOOT_CLIENT")?, &env("FOOT_WORKSPACE")?)?;
     for (_, wanted, _) in calls("") {
@@ -203,7 +203,7 @@ fn the_device_advertises_the_set_this_build_offers() -> Result<(), String> {
 /// Each capture is written out whole for `scripts/invoke-judge.sh` to judge
 /// against the device it came from.
 #[test]
-#[ignore = "needs the emulator, the engine and the foot leaf make invoke provides"]
+#[ignore = "needs the emulator, the server and the foot leaf make invoke provides"]
 fn four_invocations_reach_the_platform_and_their_captures_come_back() -> Result<(), String> {
     let seat = seat()?;
     let client = env("FOOT_CLIENT")?;

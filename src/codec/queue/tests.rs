@@ -1,4 +1,4 @@
-//! The queue row, both directions of the strictness contract: the engine's
+//! The queue row, both directions of the strictness contract: the server's
 //! full spelling reads back, the two absent sub-objects are facts, and every
 //! malformed shape refuses by name.
 
@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use super::{Held, held_at, row};
 use crate::codec::{AgentState, Scope};
 
-/// The engine's own row, as `corpus/reply/attention.json` carries one.
+/// The server's own row, as `corpus/reply/attention.json` carries one.
 fn full() -> Value {
     json!({
         "workspace": "ws", "agent": "c-1", "display": "Cobalt",

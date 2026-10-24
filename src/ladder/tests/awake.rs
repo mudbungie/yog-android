@@ -76,7 +76,7 @@ fn a_backgrounded_ladder_parks_and_drops_nothing_until_the_return() {
 
 /// The live case: the line died behind the app, and the first ask back is
 /// a re-call — exactly one call, no presence walk, from the landed port,
-/// which is the only one the fake engine accepts.
+/// which is the only one the fake server accepts.
 #[test]
 fn the_first_ask_after_a_return_is_one_re_call_from_the_landed_port() {
     let _serial = serial();

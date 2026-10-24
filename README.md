@@ -4,8 +4,8 @@
 runnable components — the **seat**, the **foot** (tool host) and the
 **server** — each gated behind an explicit bootstrap rather than auto-started
 (DESIGN §9). The default path is mTLS client enrollment: a leaf provisioned out
-of channel, and this app dialling a host engine with it. Agents run on that
-engine; seats attach and detach, and the work does not.
+of channel, and this app dialling a host server with it. Agents run on that
+server; seats attach and detach, and the work does not.
 
 **The app is named lernie** (operator ruling 2026-10-08, bl-5331): the program
 an operator runs, on a desk or on a phone, is the user interface, and that is
@@ -13,7 +13,7 @@ the seat; yog is the server it dials. The package id stays `dev.yog` — the
 release channel (DESIGN §20) made it a one-way door, and a phone keeps its
 update path only under the id it was installed with.
 
-The **server** bootstrap is offered and does not start: the engine
+The **server** bootstrap is offered and does not start: the server
 cross-compiles and links for this architecture, but Android ships no `git` and
 refuses to execute the shell shims the world seeds into app-private storage.
 DESIGN §10 is the whole chain, rung by rung.
@@ -27,7 +27,7 @@ pasted today, scanned once a decoder is adjudicated — validate it against the
 leaf's own grade, land it, and bring up the component the certificate names. A leaf with `OU=foot`
 runs the tool host; any other leaf runs the seat (REMOTE §4.2). The foot's
 wire surface is a type with three methods, so a gesture outside the foot set
-is a compile error here rather than a refusal at the engine.
+is a compile error here rather than a refusal at the server.
 
 The wire contract is the server's (yog `docs/REMOTE.md`): big-endian `u32`
 length-prefixed JSON frames, a zero-length terminator, mTLS with
@@ -91,7 +91,7 @@ make apk-release    # the release variant, signed with the permanent key
 make deploy-phone ADDR=<ip:port>   # that APK, arm64 only, onto a phone
 make screens-avd    # create the emulator the loop below boots, once
 make screens        # headless emulator: walk the screens, capture each one
-make parity         # judge a walk's dumps against the engine's control roster
+make parity         # judge a walk's dumps against the server's control roster
 make install-hooks  # seat the pre-commit / commit-msg hooks, once
 ```
 
@@ -162,20 +162,20 @@ Release, and an APK from `make apk-release` — the workflow's own recipe, run o
 the box that holds the key. Everything after it is the workflow's (DESIGN
 §20.1).
 
-**A protocol bump waits for the engine** (bl-5b19). yog mints the wire protocol
+**A protocol bump waits for the server** (bl-5b19). yog mints the wire protocol
 version and this app *vendors* a copy of the number in a repo-root `PROTOCOL`
 file — one line, compiled into the constant by `build.rs` (bl-6fec), at the one
 address a module split cannot move, which is what both gates read; the wire is
 fail-closed on a mismatch and does not negotiate (yog `docs/REMOTE.md` §3). So
 `merge-release-pr` **holds a release whose `PROTOCOL` exceeds the newest
 published yog's** — thrall took that road first, publishing 16 while the newest
-engine spoke 15, and here the landing is worse because the offer below carries
+server spoke 15, and here the landing is worse because the offer below carries
 a released APK to every device that taps it. Strictly greater, not different: an
-app *behind* the engine is the mirror-image defect and its release is the fix.
+app *behind* the server is the mirror-image defect and its release is the fix.
 Between the two gates — yog holds a bump until the consumers' mains carry it,
 each consumer holds a release until yog has published it — the ordering a bump
 requires is: **the consumers' mains first, then yog publishes, then the
-consumers publish.** A hold clears when the engine publishes, which is an event
+consumers publish.** A hold clears when the server publishes, which is an event
 this repository never sees, so `merge-release-pr` runs on a
 `workflow_dispatch` of Release-plz as well as on a push (bl-de23): that
 dispatch is the door for re-judging a held release, and without it the release
@@ -222,7 +222,7 @@ is the whole design; three things are worth knowing before running it:
   was given is older than the tracked source under `src/` and `android/` — a
   warning, never a refusal, because running the walk against a known-good
   artifact while the tree is mid-edit is a thing people do on purpose.
-- **No engine is dialled.** A leaf is minted per run and the paint-first cache
+- **No server is dialled.** A leaf is minted per run and the paint-first cache
   is seeded from the vendored wire `corpus/`, so every screen is reachable with
   no server anywhere.
 - **Structure and reachability gate; pictures never do.** The app says which
@@ -235,11 +235,11 @@ is the whole design; three things are worth knowing before running it:
 ## Invoking a tool for real: `make invoke`
 
 `make screens` walks screens and dials nothing. The second loop does the
-opposite: it boots a bounded engine (`yog fixture`), mints this device a
+opposite: it boots a bounded server (`yog fixture`), mints this device a
 **foot**-grade leaf, seeds it, and then — from a seat that dials the listener —
 fires four invocations and reads the captures back. It needs a `yog` on PATH
 (`make invoke YOG=/path/to/yog` names one outright) and it is not part of `make
-check`, for `screens`' reason doubled: an emulator *and* an engine.
+check`, for `screens`' reason doubled: an emulator *and* a server.
 
 Each of the four answers something a host test cannot produce: `shell` carries
 back a value the run minted, `device` states a battery level the platform is
@@ -265,7 +265,7 @@ the other, caught mechanically. yog's `docs/PARITY.md` is the contract; this
 repo runs its client half.
 
 Each seat is judged against **one roster**, never against the other client: the
-engine's own help table, whose rows carry a `surface` class (`control` — every
+server's own help table, whose rows carry a `surface` class (`control` — every
 seat owes this op a discoverable interactable; `machine` — spoken only by
 programs), published inside the corpus this repo already vendors. Every
 verb-firing control here carries an `act:<op>` tag, the app writes the tags it

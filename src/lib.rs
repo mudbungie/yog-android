@@ -1,8 +1,8 @@
 //! yog-android: the phone seat.
 //!
 //! An Android client of yog's remote boundary (yog `docs/REMOTE.md`): a wire
-//! client that dials the engine over mTLS and speaks `Act | Ask` in, `Reply`
-//! out. The engine owns the world; this crate paints replies and posts
+//! client that dials the server over mTLS and speaks `Act | Ask` in, `Reply`
+//! out. The server owns the world; this crate paints replies and posts
 //! gestures, and holds no durable state of its own.
 //!
 //! `docs/DESIGN.md` is this repo's architecture authority; `AGENTS.md` is the

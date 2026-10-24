@@ -9,11 +9,11 @@
 //! **Why a file and not a Rust declaration.** This number is fetched by gates
 //! that do not build this crate — yog's release gate reads it off this
 //! repository's `main` before it will publish a bump (yog `docs/REMOTE.md`
-//! §3), and this repository's own gate reads the engine's the same way — and a
+//! §3), and this repository's own gate reads the server's the same way — and a
 //! Rust path is not a stable address for a fetch. yog split
 //! `src/wire/hello.rs` into `src/wire/hello/version.rs` and left the old path
 //! re-exporting: invisible to a build, unreadable to a regex, so this
-//! repository's gate silently stopped being able to read the engine at all and
+//! repository's gate silently stopped being able to read the server at all and
 //! would have held its own release forever on the bump it was waiting for. A
 //! top-level file with no extension is the one path a module split cannot
 //! move, and every gate in all four repositories now reads it there.
@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 /// file and none of them is written a second time anywhere:
 ///
 /// * `FLOOR` — the edition the current major was cut at. Every path stamped at
-///   or below it is on every engine of this major, so nothing about it is worth
+///   or below it is on every server of this major, so nothing about it is worth
 ///   asking.
 /// * `EDITION` — the newest stamp in the vendored corpus, which is what this
 ///   build states in its own §3 preface. Computed, never stored: a corpus that

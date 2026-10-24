@@ -17,14 +17,14 @@
 //! it, so a fresh workspace's table is empty and a screen painted from it
 //! would offer nothing to sign into. This screen reads `snap.catalog`: every
 //! row carrying a sign-in flow, signed in or not, in the same row shape with
-//! the engine's own sentences on it, and derives nothing. Opening this
+//! the server's own sentences on it, and derives nothing. Opening this
 //! screen IS the `catalog` ask, exactly as opening the records screen is its
 //! five.
 //!
 //! **Tapping a row opens its tail; the button beside it starts a run.** The
 //! two are different gestures and the wire says so: `login-tail` is a held
 //! READ and `login` is the act. A row that cannot be signed in shows the
-//! engine's reason where the verb would be, and its button is dark — the
+//! server's reason where the verb would be, and its button is dark — the
 //! greying discipline the selector already keeps (§13.2), which never derives
 //! the reason and never hides the row.
 //!
@@ -69,7 +69,7 @@ impl Shell {
         }
     }
 
-    /// One row: what the engine says about it, the tap that follows its run,
+    /// One row: what the server says about it, the tap that follows its run,
     /// and the act that starts one.
     fn provider(&mut self, ui: &mut egui::Ui, row: &ProviderRow) {
         let name = row.name.clone();

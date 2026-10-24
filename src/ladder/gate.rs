@@ -2,7 +2,7 @@
 //! gate every caller on a roving entry passes before it climbs.
 //!
 //! **Why a second concurrent climb is never right.** A pairing's inbox is ONE
-//! item — the newest `seq` wins — and the engine reads it once a poll and
+//! item — the newest `seq` wins — and the server reads it once a poll and
 //! punches the call it finds. Two ladders climbing one entry at once each
 //! write their own call from their own punch port, so one is answered per
 //! poll and the other waits out its whole window for nothing; measured live
@@ -22,7 +22,7 @@
 //!   never climbs beside a line an ask will hand back (bl-c00e).
 //! - only lines out with PARKED reads ([`Lease::park`]: the lanes, the
 //!   attention fetch — `transport::Seat::hold`) — these come back only when
-//!   the engine's hold ends, so a waiter that has watched them for [`LENT`]
+//!   the server's hold ends, so a waiter that has watched them for [`LENT`]
 //!   with no dial in flight and no ask's line out dials its own, beside
 //!   them — serially still, since the gate admits one.
 //! - nothing in flight and nothing out — this caller dials.
@@ -161,7 +161,7 @@ impl Lease {
         self.returned = false;
     }
 
-    /// The line is a parked read's: it comes back only when the engine's
+    /// The line is a parked read's: it comes back only when the server's
     /// hold ends, so a waiter's [`LENT`] runs against it. A change — a
     /// waiter held without a bound behind an ask's line now has one.
     /// Called once per lease, by the one caller that opens a parked read.

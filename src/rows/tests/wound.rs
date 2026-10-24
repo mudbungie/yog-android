@@ -1,6 +1,6 @@
 //! The settled-failure notice (REMOTE §9.16): the class always, the remedy
 //! on the refusal arm, the adapter's words where it left any — and no row at
-//! all for the engine's word for *nothing is wounded*.
+//! all for the server's word for *nothing is wounded*.
 
 use super::{go, wounded};
 use crate::rows::{RowClass, Tone};

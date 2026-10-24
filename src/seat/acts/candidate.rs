@@ -43,7 +43,7 @@ use super::super::posted::{Posted, faulted};
 ///
 /// A retirement always releases the worktree, and whether the source ref went
 /// with it is this project's own declared retention acting — a policy set
-/// elsewhere, invisible on this listing, and stated by the engine rather than
+/// elsewhere, invisible on this listing, and stated by the server rather than
 /// predicted here. A delivery that landed no commit is the other: the ref did
 /// not move, and a silent success would report a delivery that did not happen.
 pub(crate) fn candidate(seat: &Seat, project: String, ball: String, act: CandidateAct) -> Posted {
@@ -61,7 +61,7 @@ pub(crate) fn candidate(seat: &Seat, project: String, ball: String, act: Candida
     }
 }
 
-/// Which way this project's retention went, in the engine's terms.
+/// Which way this project's retention went, in the server's terms.
 fn retired(discarded: bool) -> String {
     let ref_ = if discarded { "discarded" } else { "kept" };
     format!("retired: the worktree is released and its source ref is {ref_}")
@@ -109,7 +109,7 @@ pub(crate) fn spread(
 }
 
 /// One candidate fired, with the operator's own goal — `acts::started`'s
-/// second gesture, said n times. The prepared body is the engine's, rebound to
+/// second gesture, said n times. The prepared body is the server's, rebound to
 /// this candidate, and rides through whole; the goal is the operator's, said
 /// once and given to every candidate, which is exactly the variation this seat
 /// forfeits and says so.

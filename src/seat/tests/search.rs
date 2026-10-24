@@ -3,9 +3,9 @@
 //!
 //! The load-bearing assertions are about the ABSENCE of a wire crossing. A
 //! cleared needle asks nothing — the answer being dropped is this seat's own
-//! copy, and an operator with an unreachable engine must still be able to
+//! copy, and an operator with an unreachable server must still be able to
 //! leave a search — and a failed search drops nothing, because losing the
-//! hits the engine did give over one it did not is the same defect twice.
+//! hits the server did give over one it did not is the same defect twice.
 
 use serde_json::{Value, json};
 
@@ -22,7 +22,7 @@ fn hit_reply(needle: &str) -> Vec<u8> {
     .into_bytes()
 }
 
-/// The engine's own spelling of *no search*: an answer with no needle.
+/// The server's own spelling of *no search*: an answer with no needle.
 fn no_search() -> Vec<u8> {
     json!({ "ok": true, "kind": "search", "needle": "", "rows": [], "unreadable": [] })
         .to_string()
@@ -75,9 +75,9 @@ fn an_answer_with_no_hits_still_stands() {
     assert_eq!(found.unreadable, ["p: balls unlistable"]);
 }
 
-/// The clear: an empty needle drops the answer and asks the engine nothing.
+/// The clear: an empty needle drops the answer and asks the server nothing.
 /// The connection count is the assertion — a clear that crossed the wire
-/// would be a search an unreachable engine could refuse to let go of.
+/// would be a search an unreachable server could refuse to let go of.
 #[test]
 fn an_empty_needle_clears_the_answer_without_asking_anything() {
     let (mut model, served) = super::model_against(vec![
@@ -98,7 +98,7 @@ fn an_empty_needle_clears_the_answer_without_asking_anything() {
     );
 }
 
-/// The engine's own clear reads the same way: an answer with an empty needle
+/// The server's own clear reads the same way: an answer with an empty needle
 /// is no answer, and the seat holds none.
 #[test]
 fn an_answer_with_an_empty_needle_is_no_answer() {
@@ -134,7 +134,7 @@ fn a_search_answered_with_the_wrong_shape_keeps_the_standing_hits() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("search: the engine answered outcome instead")
+        Some("search: the server answered outcome instead")
     );
     assert_eq!(snap.search.unwrap().needle, "gate");
 }

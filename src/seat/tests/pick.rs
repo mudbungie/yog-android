@@ -32,7 +32,7 @@ pub(super) fn applied() -> Vec<u8> {
 }
 
 /// The whole walk: list the workspace's providers, list one provider's
-/// models, assign the worker's model — and the envelopes the engine read
+/// models, assign the worker's model — and the envelopes the server read
 /// back, because this device's side of the wire is pinned rather than
 /// assumed.
 #[test]
@@ -151,7 +151,7 @@ fn wrong_kinds_under_the_selectors_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("providers: the engine answered workspaces instead")
+        Some("providers: the server answered workspaces instead")
     );
     drop(model);
 
@@ -169,7 +169,7 @@ fn wrong_kinds_under_the_selectors_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("models: the engine answered workspaces instead")
+        Some("models: the server answered workspaces instead")
     );
     drop(model);
 
@@ -187,7 +187,7 @@ fn wrong_kinds_under_the_selectors_name_the_kind() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("model: the engine answered workspaces instead")
+        Some("model: the server answered workspaces instead")
     );
 }
 

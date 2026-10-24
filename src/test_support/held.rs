@@ -1,4 +1,4 @@
-//! **The engine that HOLDS a connection** (yog REMOTE §13.4), for the suite:
+//! **The server that HOLDS a connection** (yog REMOTE §13.4), for the suite:
 //! one accepted stream, the preface exchanged once, then a script of beats —
 //! requests answered in order, pings written into the silence, a gate the
 //! test opens when it is ready — and after the last beat the stream is held
@@ -41,7 +41,7 @@ pub fn serve_held(
 }
 
 /// [`serve_held`], answering only a stream from the port `only` holds when
-/// it is accepted — `0` for any. The engine's NAT, modelled (bl-97ed): a
+/// it is accepted — `0` for any. The server's NAT, modelled (bl-97ed): a
 /// punch lets back exactly the port the call it punched named, and a SYN
 /// from any other port is dropped at the door.
 pub fn serve_from(

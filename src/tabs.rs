@@ -66,10 +66,10 @@ impl Tabs {
     /// rule) — **once the listing knows the focus**. A conversation painted
     /// focused is in its workspace's listing by definition, so a listing that
     /// lacks it was not read under this focus: the empty one a moved focus
-    /// honestly has while the engine is unreachable (§14), or a start's claim
+    /// honestly has while the server is unreachable (§14), or a start's claim
     /// the listing has not resolved yet. Such a listing forgets nothing; the
     /// walk of bl-6f02 caught the strip emptied by exactly that, a dock tap
-    /// with the engine down. The frame that resolves a claim focuses the
+    /// with the server down. The frame that resolves a claim focuses the
     /// root, which the listing knows, and the claim's tab goes then.
     pub fn prune(&mut self, workspace: &str, known: &[String], focus: &str) {
         if !known.iter().any(|k| k == focus) {

@@ -1,9 +1,9 @@
-//! **The op table** (DESIGN §13.14): every gesture the engine speaks, what it
+//! **The op table** (DESIGN §13.14): every gesture the server speaks, what it
 //! is called, which surface owes it a control, and what it does.
 //!
 //! **It costs no wire read.** The table is `crate::help::TABLE`, vendored into
-//! this repository and compiled in — and for any engine this build can talk
-//! to it IS that engine's table, because §2 rules that the corpus and the
+//! this repository and compiled in — and for any server this build can talk
+//! to it IS that server's table, because §2 rules that the corpus and the
 //! spoken version move together and a peer of another version is refused at
 //! the §3 preface. So this screen works with nothing dialled, which is what
 //! makes it the right shape for the surface an operator opens when they do not

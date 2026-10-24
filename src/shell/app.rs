@@ -146,12 +146,12 @@ pub(crate) struct Shell {
     pub(crate) inset: InsetPx,
     inset_at: u128,
     /// **The outbox** (bl-66fb): the message this seat has sent and the
-    /// engine has not yet shown back, in the composer's own state and nowhere
-    /// near the projection — `crate::rows` is pure over what the engine
+    /// server has not yet shown back, in the composer's own state and nowhere
+    /// near the projection — `crate::rows` is pure over what the server
     /// wrote down, and this is a message it has not written down yet. The
     /// type is `crate::outbox`'s and so is every decision about it: this file
     /// is excluded from the coverage floor, and the echo's states are a
-    /// reading of the engine's answers rather than a paint fact (bl-07b1).
+    /// reading of the server's answers rather than a paint fact (bl-07b1).
     pub(crate) echo: Option<crate::outbox::Echo>,
     /// **What the composer's selectors are pointed at** (bl-0267), and the
     /// workspace that owns the pointing. This device shows what it SET, never
@@ -163,7 +163,7 @@ pub(crate) struct Shell {
     pub(crate) model: Option<String>,
     /// The assignments read at the moment an optimistic value was last set
     /// (bl-e9f9). When the seat's count moves past it, truth has overtaken
-    /// the guess and the guess goes — whether the engine took the act or
+    /// the guess and the guess goes — whether the server took the act or
     /// refused it, which is why the fallback is the read and not a memory.
     pub(crate) tuned_at: usize,
     /// **The tuning this device just set** (bl-dfbb), held only until the

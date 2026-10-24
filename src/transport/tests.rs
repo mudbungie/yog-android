@@ -50,7 +50,7 @@ fn answered_decodes_the_last_frame() {
 }
 
 #[test]
-fn a_carried_refusal_is_the_engines_sentence() {
+fn a_carried_refusal_is_the_servers_sentence() {
     let dir = pki();
     let refusal = json!({ "ok": false, "error": "no such workspace" });
     let (address, _served) =
@@ -58,7 +58,7 @@ fn a_carried_refusal_is_the_engines_sentence() {
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
     let e = seat.answered(&json!({ "op": "workspaces" })).unwrap_err();
     assert_eq!(e, Wire::Refused("no such workspace".to_owned()));
-    // The class is the fact a redialling caller acts on (bl-8641): an engine
+    // The class is the fact a redialling caller acts on (bl-8641): a server
     // that said no says it again on a fresh connection.
     assert!(!e.transport());
     assert_eq!(String::from(e), "no such workspace");
@@ -66,13 +66,13 @@ fn a_carried_refusal_is_the_engines_sentence() {
 
 /// **The decoder's two errors are two different facts about who failed**
 /// (bl-8bd0). A reply this end cannot READ is unusable — no leg and no redial
-/// mends it — while an `ok: false` is the engine's own no, which on the follow
+/// mends it — while an `ok: false` is the server's own no, which on the follow
 /// read is REMOTE §5.1's one-reader guard and IS worth another dial
 /// (`host::serve`'s matrix). They shared one class until the redial matrix
 /// needed them apart, and `answered` was throwing the distinction away one
 /// line after the decoder made it.
 #[test]
-fn a_reply_this_end_cannot_read_is_unusable_and_not_the_engine_saying_no() {
+fn a_reply_this_end_cannot_read_is_unusable_and_not_the_server_saying_no() {
     let dir = pki();
     // A kind this codec knows, without the field it is made of.
     let malformed = json!({ "ok": true, "kind": "workspaces" });
@@ -89,7 +89,7 @@ fn a_reply_this_end_cannot_read_is_unusable_and_not_the_engine_saying_no() {
 }
 
 #[test]
-fn an_empty_stream_is_an_engine_that_never_answered() {
+fn an_empty_stream_is_a_server_that_never_answered() {
     let dir = pki();
     let (address, _served) = serve_once(&dir, "ca", "server", vec![]);
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
@@ -111,7 +111,7 @@ fn a_frame_that_is_not_json_refuses_on_receive() {
 }
 
 /// **The lost reply, at the socket** (yog REMOTE §3, bl-07b1). The gesture is
-/// written whole and the engine hangs up where the answer belongs, which is
+/// written whole and the server hangs up where the answer belongs, which is
 /// the one shape that tells this end nothing about whether the act ran. It is
 /// still the channel — the tool host must dial again — but it is no longer
 /// merely a failure, and the two questions are answered by two predicates.
@@ -128,7 +128,7 @@ fn a_channel_that_dies_after_the_gesture_was_written_leaves_the_act_in_doubt() {
         "the act was on the wire when the channel died"
     );
     assert!(e.transport(), "the channel is still what failed, so redial");
-    // The engine read the gesture before it hung up: this is the window the
+    // The server read the gesture before it hung up: this is the window the
     // contract is about, not one where nothing was said.
     assert_eq!(
         served.join().unwrap(),
@@ -188,12 +188,12 @@ fn a_server_off_the_operators_ca_never_completes_the_handshake() {
     assert!(served.join().is_err());
 }
 
-/// REMOTE §3's fail-closed mismatch, across a real handshake: an engine of
+/// REMOTE §3's fail-closed mismatch, across a real handshake: a server of
 /// another protocol is refused **before a reply frame is decoded**, so the
 /// answer it went on to write is never read as this build's vocabulary. The
-/// engine had a perfectly good `transcript` waiting; the seat never sees it.
+/// server had a perfectly good `transcript` waiting; the seat never sees it.
 #[test]
-fn a_skewed_engine_is_refused_before_its_answer_is_read() {
+fn a_skewed_server_is_refused_before_its_answer_is_read() {
     let dir = pki();
     let reply = json!({ "ok": true, "kind": "transcript", "rows": [] });
     // Derived, not typed: "the version this build does not speak" is one more
@@ -220,7 +220,7 @@ fn a_skewed_engine_is_refused_before_its_answer_is_read() {
     assert!(!e.transport());
 }
 
-/// A stream that connects and is never served — a re-punch the engine's
+/// A stream that connects and is never served — a re-punch the server's
 /// listener completed outside any call's window (DESIGN §21.9) — costs the
 /// preface's bound, not a whole ask's.
 #[test]
@@ -250,7 +250,7 @@ fn the_server_name_is_read_off_the_address() {
         rustls::pki_types::ServerName::IpAddress(_)
     ));
     assert!(matches!(
-        server_name("engine.example.com:7737").unwrap(),
+        server_name("server.example.com:7737").unwrap(),
         rustls::pki_types::ServerName::DnsName(_)
     ));
     let e = server_name(":7737").unwrap_err();

@@ -90,7 +90,7 @@ pub struct Envelope {
     /// This device's private key, PEM.
     pub key: String,
     /// The rendezvous public key and the pairing salt, hex, where the
-    /// engine roves.
+    /// server roves.
     pub roving: Option<(String, String)>,
 }
 
@@ -105,7 +105,7 @@ pub struct Envelope {
 /// **It does not check the certificate, and [`read`] does.** That asymmetry is
 /// the whole difference between the two ends: a photograph has no provenance,
 /// so the grade and the name a scan states are checked against the leaf the
-/// same payload carries; an answer that arrived over mTLS from the engine that
+/// same payload carries; an answer that arrived over mTLS from the server that
 /// minted it has one, and re-deriving here would be a second authority for a
 /// fact the channel already settled.
 #[must_use]
@@ -194,7 +194,7 @@ fn agrees(envelope: &Envelope) -> Result<(), String> {
         ));
     }
     // The name is the leaf's too, and a mismatch is the same defect one field
-    // over — the engine's registry knows this device by what the CA wrote.
+    // over — the server's registry knows this device by what the CA wrote.
     let carried = crate::leaf::common_name(&der).unwrap_or_default();
     if carried != envelope.name {
         return Err(format!(

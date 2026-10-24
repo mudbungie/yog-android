@@ -155,7 +155,7 @@ fn notice(standing: &Standing) -> Notice {
         (Health::Serving, _) if !standing.advertised => (
             "this phone is offering its tools".to_owned(),
             format!(
-                "presenting {} to the engine. A connection stays open while this \
+                "presenting {} to the server. A connection stays open while this \
                  stands, and the radio wakes with it.",
                 crate::plural::counted(standing.tools.len() as u64, "tool")
             ),

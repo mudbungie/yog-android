@@ -9,7 +9,7 @@ use crate::codec::EntryKind;
 
 /// **The prose is the streaming call's, not the step's** (REMOTE §5.5,
 /// bl-ee21). The lane now stays open through the tool phase with the settled
-/// call's words still in the fold, and the engine stops carrying a tail at
+/// call's words still in the fold, and the server stops carrying a tail at
 /// exactly that moment — so a fold painted on any flight would put the
 /// committed answer on the glass a second time for as long as the commands
 /// run.
@@ -31,7 +31,7 @@ fn the_window_paints_the_call_the_record_has_not_carried_yet() {
     assert_eq!(payload.name, "window/toolu_01", "keyed by the call");
     assert!(
         matches!(&payload.kind, EntryKind::Windowed { input, .. } if input.contains("uptime")),
-        "the input the engine bounded rides through"
+        "the input the server bounded rides through"
     );
 }
 

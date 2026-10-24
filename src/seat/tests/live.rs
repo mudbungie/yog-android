@@ -6,7 +6,7 @@
 //! streaming entry, freshened (bl-e3d1) — so these read the tail where the
 //! frame reads it, which is the one place it exists. The lane's connection
 //! is scripted positionally as a fed turn: its dial is the pass's, right
-//! after the transcript read, and the test is the engine writing frames.
+//! after the transcript read, and the test is the server writing frames.
 
 use std::sync::mpsc;
 
@@ -142,7 +142,7 @@ fn the_streams_end_empties_the_fold_and_the_next_pass_reopens_the_lane() {
     model.focus_conversation("home".into(), "a1".into());
     feed.send(frame("", "the first step")).unwrap();
     settle(&mut model, &|s| tail(s).is_some());
-    // The step committed: the engine ends the stream.
+    // The step committed: the server ends the stream.
     drop(feed);
     settle(&mut model, &|s| tail(s).is_none());
     // The next pass reopens it, and the new stream's first frame is whole.
@@ -171,7 +171,7 @@ fn a_lane_frame_of_the_wrong_kind_reaches_the_banner_and_the_lane_goes_on() {
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(
         snap.error.as_deref(),
-        Some("follow: the engine answered workspaces instead")
+        Some("follow: the server answered workspaces instead")
     );
     feed.send(frame("", "recovered")).unwrap();
     let snap = settle(&mut model, &|s| tail(s).is_some());

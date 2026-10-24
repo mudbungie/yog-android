@@ -27,7 +27,7 @@
 /// consumer repositories a re-vendor and a window in which no published suite
 /// composed. So `PROTOCOL` became a **major**: it moves only on a breaking
 /// change — a field removed or re-typed, a meaning changed under a spelling
-/// still in use, a field the engine newly *requires* on a request — and 18 →
+/// still in use, a field the server newly *requires* on a request — and 18 →
 /// 19 is the last bump of the old kind and the first of the new. Every
 /// ADDITION now ships with no bump at all and is stamped an **edition** per
 /// field path in `corpus/shapes.json`; the reader is grows-only, the preface
@@ -55,9 +55,9 @@
 /// that can hold — precisely "what a spelling already in use is taken to
 /// say", and the one class of move the corpus ledger cannot see, since frame
 /// count is not a field signature. **11** (§9.17) put `failed`, `exit_label`
-/// and `standing` on `reply/ops`, so the trail reads the engine's words rather
+/// and `standing` on `reply/ops`, so the trail reads the server's words rather
 /// than classifying `exit` (`codec::trail`). **12** put `says` on every queue
-/// row — the firing rules in words, one home on the engine (`codec::queue`).
+/// row — the firing rules in words, one home on the server (`codec::queue`).
 /// **13** (§9.18) put a typed `settings` array on `reply/config`, a shape this
 /// seat refuses; it cost the integer and nothing else.
 ///
@@ -98,7 +98,7 @@
 /// and a `parity.toml` line until bl-a393 builds its surface.
 ///
 /// **18** (yog bl-58bb, bl-ab53) is two shapes under one version, and the
-/// engine's own entry says a later lane landing on 18 adds its shape there
+/// server's own entry says a later lane landing on 18 adds its shape there
 /// rather than taking 19 — because since yog bl-bca2 a raise HOLDS the release
 /// until three consumer mains vendor it, so each extra number is another window
 /// in which no published suite composes.
@@ -148,7 +148,7 @@
 /// `/prompt` it deposits. This client carries the null faithfully and writes
 /// none (`codec::start` says why, and bl-045b is the exit).
 ///
-/// **`PROTOCOL_PUBLISHED` is the engine's and is deliberately not vendored.**
+/// **`PROTOCOL_PUBLISHED` is the server's and is deliberately not vendored.**
 /// yog gained it in the same commit: the newest version it has PUBLISHED, read
 /// by ONE thing — its corpus generator's rule that a shape may not change at a
 /// version already in use, which used to be judged against the version the
@@ -182,7 +182,7 @@
 /// (`codec::admin`) — so 13 cost this client nothing but the integer, and the
 /// integer is the whole of what the handshake gates on. A seat that stayed at
 /// 8 because "nothing it reads changed" would simply stop speaking to the
-/// engine, which is what this ball was filed against. *(This paragraph named
+/// server, which is what this ball was filed against. *(This paragraph named
 /// `governing` and `steps` beside it until bl-5070; bl-146b's records screen
 /// has read both since, and the conformance table is the authority for which
 /// shapes are refused — not a list here that goes stale as surfaces land.)*

@@ -22,7 +22,7 @@
 //! for — *"a foot is the class most likely to run on a box the operator trusts
 //! least (a build machine, a phone, a box in someone else's house)"*.
 //!
-//! **This is not enforcement and does not pretend to be.** The engine enforces
+//! **This is not enforcement and does not pretend to be.** The server enforces
 //! the grade with one raise at its chokepoint, in band, naming it; nothing on
 //! this device can grant itself anything. What the narrowing buys is that a
 //! foot-graded phone cannot *accidentally* spend a gesture its own certificate
@@ -48,7 +48,7 @@ pub struct Foot {
 impl Foot {
     /// Open a foot channel over provisioned material. Nothing is dialled here
     /// — a foot is a fact about what this machine may say, not about whether
-    /// an engine happens to be up — and every gesture below is its own
+    /// a server happens to be up — and every gesture below is its own
     /// connection, exactly as a seat's is.
     pub fn open(material: &Material) -> Result<Self, String> {
         Ok(Self {
@@ -67,9 +67,9 @@ impl Foot {
     /// `client` field would let any connection overwrite any other's.
     ///
     /// **The receipt's one reading is handed back** (PROTOCOL 8, yog bl-66d4):
-    /// `wrote` — whether the engine changed the stored set or found it
+    /// `wrote` — whether the server changed the stored set or found it
     /// identical to the one presented and compared. The set is still not
-    /// echoed, and this is not an echo of it: it is a fact about the engine's
+    /// echoed, and this is not an echo of it: it is a fact about the server's
     /// *document*, and the one fact in this exchange this box cannot compute
     /// for itself.
     ///
@@ -100,7 +100,7 @@ impl Foot {
     /// it captured. Only the client it was addressed to may post one, so this
     /// too names no client.
     ///
-    /// The receipt is read rather than discarded: an engine that refused the
+    /// The receipt is read rather than discarded: a server that refused the
     /// completion — an expired handle, a slot addressed elsewhere — is
     /// something this device must stop against rather than keep answering
     /// into.
@@ -112,7 +112,7 @@ impl Foot {
     /// gap in it: an act with no reply is in doubt, and a resent `complete`
     /// would be a second answer to one invocation.
     ///
-    /// **The recovery is the engine's, and it is a read.** §5.3's invocation
+    /// **The recovery is the server's, and it is a read.** §5.3's invocation
     /// leg is at-least-once by design — a claim dropped by a taker that
     /// vanished is requeued (yog bl-e658) — so the invocation this device
     /// could not answer is offered again on the next `invocations` read, and
@@ -152,7 +152,7 @@ impl Foot {
 /// (bl-8bd0: the two used to share one class and the matrix needs them apart).
 fn wrong(reply: &Reply) -> Wire {
     Wire::Unusable(format!(
-        "the engine answered {}, not this machine's work",
+        "the server answered {}, not this machine's work",
         reply.kind()
     ))
 }

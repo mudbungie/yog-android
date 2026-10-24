@@ -7,11 +7,11 @@
 //! does not exist, the ball rung's steps — and answers a **prepared body**;
 //! `prompt` carries that body back with the goal and fires it.
 //!
-//! **The prepared body rides through this client whole.** It is the engine's
+//! **The prepared body rides through this client whole.** It is the server's
 //! own statement about a staged conversation, and every field is carried
 //! rather than re-derived: a client that recomputed one would be inventing
 //! world state it does not own, and the two would drift the first time the
-//! engine's policy moved. `binding`, `lineage` and `role` are **real nulls** —
+//! server's policy moved. `binding`, `lineage` and `role` are **real nulls** —
 //! the field is present and its absence is the value — so a reply deposits
 //! back as the gesture it came from.
 //!
@@ -36,7 +36,7 @@ use serde_json::{Map, Value, json};
 
 use super::fields::{opt, str_of};
 
-/// A staged conversation, exactly as the engine stated it.
+/// A staged conversation, exactly as the server stated it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Prepared {
     pub workspace: String,
@@ -45,12 +45,12 @@ pub struct Prepared {
     /// The §8.7 birth policy; `None` is the default lineage.
     pub lineage: Option<String>,
     pub goal: String,
-    /// The §7.3 origin token, carried as the word the engine wrote — this
+    /// The §7.3 origin token, carried as the word the server wrote — this
     /// client never branches on it, and a token it cannot spell would
     /// otherwise refuse a staging it has no quarrel with.
     pub origin: String,
     /// The role the conversation is born on (PROTOCOL 18); `None` is
-    /// litany's `worker`, spelled as the absence the engine writes.
+    /// litany's `worker`, spelled as the absence the server writes.
     pub role: Option<String>,
 }
 

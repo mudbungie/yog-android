@@ -13,7 +13,7 @@ fn provision(dir: &Path, ca: &str, leaf: &str) -> std::path::PathBuf {
     std::fs::copy(dir.join(format!("{ca}.pem")), wire.join("ca.pem")).unwrap();
     std::fs::copy(dir.join(format!("{leaf}.pem")), wire.join("client.pem")).unwrap();
     std::fs::copy(dir.join(format!("{leaf}.key")), wire.join("client.key")).unwrap();
-    std::fs::write(wire.join("address"), "engine.example.com:7737").unwrap();
+    std::fs::write(wire.join("address"), "server.example.com:7737").unwrap();
     wire
 }
 
@@ -40,7 +40,7 @@ fn the_leaf_says_which_component_this_device_is() {
     };
     assert_eq!(seat.component, Component::Seat);
     assert_eq!(seat.client, "notreal-desk");
-    assert_eq!(seat.material.address, "engine.example.com:7737");
+    assert_eq!(seat.material.address, "server.example.com:7737");
 
     let dir2 = scratch();
     mint_ca(&dir2, "ca");
@@ -61,7 +61,7 @@ fn a_half_provisioned_device_refuses_rather_than_reading_as_cold() {
     let dir = scratch();
     let wire = dir.join("wire");
     std::fs::create_dir_all(&wire).unwrap();
-    std::fs::write(wire.join("address"), "engine.example.com:7737").unwrap();
+    std::fs::write(wire.join("address"), "server.example.com:7737").unwrap();
     let e = standing(&wire).unwrap_err();
     assert!(e.contains("half-provisioned"), "{e}");
     assert!(e.contains("ca.pem"), "{e}");

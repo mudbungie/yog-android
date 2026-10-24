@@ -4,7 +4,7 @@
 //!
 //! **Two lifetimes on one row, and the pane says both** (lernie DESIGN §4.28,
 //! whose ruling transfers whole). `present` is an OBSERVATION — true at the
-//! instant the engine answered, recorded nowhere on either end — and the
+//! instant the server answered, recorded nowhere on either end — and the
 //! advertised set is a STATEMENT the machine last made, which stands whether
 //! or not it is connected. A row therefore reads *not connected* beside a full
 //! set as the ordinary thing: a tool host holds its connection only while it
@@ -53,9 +53,9 @@ impl Machines {
 /// One machine registered against the workspace.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClientRow {
-    /// The identity the engine knows it by — its certificate's common name.
+    /// The identity the server knows it by — its certificate's common name.
     pub client: String,
-    /// **An observation and not a state**: true at the instant the engine
+    /// **An observation and not a state**: true at the instant the server
     /// answered, and false for a machine that is merely busy.
     pub present: bool,
     /// What it last said it offers. It stands whether or not it is connected.
@@ -67,7 +67,7 @@ pub struct ClientRow {
     /// which is the row an operator can safely remove.
     ///
     /// Optional because the absence is the reading, and best-effort by the
-    /// engine's own construction: a stamp it could not write costs the roster
+    /// server's own construction: a stamp it could not write costs the roster
     /// a column and never refuses the gesture it was riding.
     pub last_seen: Option<i64>,
 }

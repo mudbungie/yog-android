@@ -4,12 +4,12 @@
 //! **There is no round trip here, and that is not an omission.** REMOTE §3
 //! asks a client to *"round-trip what it emits"*, and this client emits no
 //! reply — it is always the asker (§3's routing ruling), so a reply encoder
-//! would be a second implementation of the engine's own spelling with nothing
+//! would be a second implementation of the server's own spelling with nothing
 //! to check it against. What a reply fixture proves is that the decoder reads
-//! the engine's real bytes rather than the bytes this repo's own tests write.
+//! the server's real bytes rather than the bytes this repo's own tests write.
 //!
 //! `refusal` is the one shape with no `kind`, and it **reads**: the kind-less
-//! envelope is the refusal, and decoding it hands back the engine's sentence.
+//! envelope is the refusal, and decoding it hands back the server's sentence.
 
 use super::expect::Expect::{self, Reads, Refuses};
 use super::expect::{NO_DOCTOR, UNSENT};

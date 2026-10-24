@@ -68,7 +68,7 @@ fn a_ping_ahead_of_the_reply_and_one_in_the_silence_are_both_discarded() {
 
 /// Anything but a ping where no reply is due — a frame, a terminator, a
 /// header promising more than any frame may carry — drops the stream, and
-/// the engine's next read finds nobody there.
+/// the server's next read finds nobody there.
 #[test]
 fn anything_but_a_ping_in_the_silence_drops_the_stream() {
     let _serial = serial();

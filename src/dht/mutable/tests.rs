@@ -93,11 +93,11 @@ fn put_arguments_carry_the_salt_only_when_there_is_one() {
     assert_eq!(plain.put_args(b"tok").get(b"salt".as_slice()), None);
 }
 
-/// **The engine's bytes, verbatim.** `Keypair::from_seed([1; 32])` signing
+/// **The server's bytes, verbatim.** `Keypair::from_seed([1; 32])` signing
 /// `salt`/`7`/`value` on yog answers exactly this key, this signature and
 /// this target; ed25519 is deterministic, so this end must answer the same.
 #[test]
-fn an_item_signs_byte_for_byte_as_the_engine_does() {
+fn an_item_signs_byte_for_byte_as_the_server_does() {
     let kp = Keypair::from_seed([1u8; 32]).unwrap();
     let item = kp.sign(b"salt".to_vec(), 7, b"value".to_vec()).unwrap();
     assert_eq!(

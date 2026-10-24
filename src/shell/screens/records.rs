@@ -18,7 +18,7 @@
 //! says in its own label what would light it.
 //!
 //! **Two emptinesses and they are different sentences** (§13.9's pair, at a
-//! second site): nobody has asked yet, and the engine answered.
+//! second site): nobody has asked yet, and the server answered.
 
 use eframe::egui;
 

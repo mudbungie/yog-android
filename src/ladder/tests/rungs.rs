@@ -37,7 +37,7 @@ fn a_dark_address_rendezvouses_punches_and_holds_the_stream_for_the_next_ask() {
     assert_eq!(served.len(), 1, "one connection carried both asks");
     assert_eq!(served[0].len(), 2);
     // The call is on the commons, signed under the derived inbox key and
-    // sealed under the pairing — what the engine's poll reads.
+    // sealed under the pairing — what the server's poll reads.
     let pairing = pairing().1;
     let udp = crate::dht::Udp::bind("127.0.0.1:0".parse().unwrap()).unwrap();
     let mut dht = Dht::new(Box::new(udp), vec![node.addr], rove(vec![]).config).unwrap();
@@ -60,10 +60,10 @@ fn a_dark_address_rendezvouses_punches_and_holds_the_stream_for_the_next_ask() {
 }
 
 /// Rung 3 is a RE-CALL (yog bl-278f): a punch with no call behind it is
-/// one-sided — the engine's NAT holds no mapping once the served stream
+/// one-sided — the server's NAT holds no mapping once the served stream
 /// ended — so a dropped stream's next climb writes a fresh call at the
 /// cached presence, from the port the first call named, and punches. The
-/// fake engine answers only that port, as a NAT that punched toward it
+/// fake server answers only that port, as a NAT that punched toward it
 /// does, and the presence on the commons is made unreadable first, so a
 /// climb that walked for it would fail.
 #[test]
@@ -94,13 +94,13 @@ fn a_dropped_stream_re_calls_from_the_port_the_call_named_without_a_presence_wal
     drop(std::net::TcpStream::connect(&address).unwrap());
     assert!(
         until(&mut || seat.held() == 0, WAIT),
-        "the engine hung up, and the holder noticed"
+        "the server hung up, and the holder noticed"
     );
-    let (engine, pairing) = pairing();
+    let (signer, pairing) = pairing();
     let foreign = Presence { endpoints: vec![] }.seal(&[0u8; 32]).unwrap();
     let udp = crate::dht::Udp::bind("127.0.0.1:0".parse().unwrap()).unwrap();
     let mut dht = Dht::new(Box::new(udp), vec![node.addr], rove(vec![]).config).unwrap();
-    dht.put(engine.sign(pairing.presence_salt(), 2, foreign).unwrap())
+    dht.put(signer.sign(pairing.presence_salt(), 2, foreign).unwrap())
         .unwrap();
     heard.take();
     assert_eq!(
@@ -189,12 +189,12 @@ fn every_way_the_rendezvous_can_fail_is_its_own_sentence() {
     .connect()
     .err()
     .unwrap();
-    assert!(e.ends_with("the engine has published no presence"), "{e}");
+    assert!(e.ends_with("the server has published no presence"), "{e}");
 
-    let (engine, pairing) = pairing();
+    let (signer, pairing) = pairing();
     let sealed = Presence { endpoints: vec![] }.seal(&[0u8; 32]).unwrap();
     let foreign = commons_of(vec![
-        engine.sign(pairing.presence_salt(), 1, sealed).unwrap(),
+        signer.sign(pairing.presence_salt(), 1, sealed).unwrap(),
     ]);
     let e = Ladder::new(
         dark.clone(),
@@ -216,7 +216,7 @@ fn every_way_the_rendezvous_can_fail_is_its_own_sentence() {
     .err()
     .unwrap();
     assert!(
-        e.ends_with("the engine's presence names no endpoint"),
+        e.ends_with("the server's presence names no endpoint"),
         "{e}"
     );
 

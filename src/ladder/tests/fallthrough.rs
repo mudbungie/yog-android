@@ -5,10 +5,10 @@
 use super::*;
 use crate::test_support::{Beat, serve_held};
 
-/// The engine moved while this device was away (DESIGN §21.3, §21.9): the
+/// The server moved while this device was away (DESIGN §21.3, §21.9): the
 /// held stream is gone, and the re-call at the cached presence expires
 /// unanswered — which drops the presence, so the next climb reads the
-/// engine's newer one and lands there.
+/// server's newer one and lands there.
 #[test]
 fn a_re_call_that_expires_drops_the_presence_and_the_next_climb_reads_the_new_home() {
     let _serial = serial();
@@ -27,10 +27,10 @@ fn a_re_call_that_expires_drops_the_presence_and_the_next_climb_reads_the_new_ho
         seat.ask(&serde_json::json!({ "op": "a" })).unwrap()[0]["n"],
         1
     );
-    // The engine republishes at its new home, and its old one goes dark —
+    // The server republishes at its new home, and its old one goes dark —
     // its listener gone, so a SYN there is refused rather than parked.
     assert_eq!(served_old.join().unwrap().len(), 1);
-    let (engine, pairing) = pairing();
+    let (signer, pairing) = pairing();
     let moved = Presence {
         endpoints: vec![new.parse().unwrap()],
     }
@@ -38,7 +38,7 @@ fn a_re_call_that_expires_drops_the_presence_and_the_next_climb_reads_the_new_ho
     .unwrap();
     let udp = crate::dht::Udp::bind("127.0.0.1:0".parse().unwrap()).unwrap();
     let mut dht = Dht::new(Box::new(udp), vec![node.addr], rove(vec![]).config).unwrap();
-    dht.put(engine.sign(pairing.presence_salt(), 2, moved).unwrap())
+    dht.put(signer.sign(pairing.presence_salt(), 2, moved).unwrap())
         .unwrap();
     heard.take();
     assert!(seat.ask(&serde_json::json!({ "op": "x" })).is_err());

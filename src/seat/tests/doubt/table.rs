@@ -12,7 +12,7 @@ use crate::seat::tests::{Model, Turn, model_turns, settle};
 /// four gestures, each fired into a channel that hangs up where its receipt
 /// belongs: each says its own name and names the read that settles it, and
 /// none of them is sent a second time. `start` appears here as its staging
-/// leg — a `prepare` whose reply is lost mints a body in the engine that this
+/// leg — a `prepare` whose reply is lost mints a body in the server that this
 /// end can never see, which is the same doubt one step earlier.
 /// One case: the act's own name on the wire, a phrase from the read its
 /// sentence must name, and the gesture that fires it.
@@ -142,7 +142,7 @@ fn surfaces() -> Vec<Case> {
             }),
         ),
         // The mint (§13.18). A repeat is refused by the certificate the
-        // engine kept, so the sentence names the roster that lists a client
+        // server kept, so the sentence names the roster that lists a client
         // the moment its registration exists.
         Case(
             "enroll",

@@ -6,7 +6,7 @@
 # evidence is somewhere a host test cannot reach:
 #
 #   * `shell` answers a value this run minted, which is the whole route proved
-#     end to end — engine, device, tool, capture — with nothing else in it;
+#     end to end — server, device, tool, capture — with nothing else in it;
 #   * `device` answers a battery figure, and the platform is asked for the same
 #     figure independently, so the answer is THIS device's rather than a
 #     plausible sentence;

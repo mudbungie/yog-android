@@ -4,7 +4,7 @@
 //! wave through it).
 //!
 //! What the word is for: two readers already need it — the seat model and the
-//! tool host both say *"the engine answered X instead"* — and a second table
+//! tool host both say *"the server answered X instead"* — and a second table
 //! of these words anywhere would drift from the decoder's own.
 
 use super::super::Reply;
@@ -114,7 +114,7 @@ fn the_machinery_answers_name_the_kind_they_were_read_from() {
         json!({ "ok": true, "kind": "marks", "branch": "balls/tasks" }),
         json!({ "ok": true, "kind": "deleted" }),
         json!({ "ok": true, "kind": "enrolled", "grade": "foot", "name": "phone-2",
-                "address": "engine.invalid:7737", "ca": "notreal", "cert": "notreal",
+                "address": "server.invalid:7737", "ca": "notreal", "cert": "notreal",
                 "key": "notreal" }),
         json!({ "ok": true, "kind": "work-diff", "rows": [] }),
         json!({ "ok": true, "kind": "fanned", "rows": [] }),
@@ -131,13 +131,13 @@ fn the_machinery_answers_name_the_kind_they_were_read_from() {
     }
 }
 
-/// **The engine's own `enrolled` frame, byte for byte** (yog
+/// **The server's own `enrolled` frame, byte for byte** (yog
 /// `corpus/reply/enrolled.json`, edition 20, yog bl-9043): the roving pair
 /// rides under `rendezvous_pub` and `pairing_salt` and decodes into the
 /// envelope's pair; the same frame without them is an entry that does not
 /// rove, and one without the other refuses rather than landing half.
 #[test]
-fn the_engines_enrolled_frame_carries_the_rendezvous_material() {
+fn the_servers_enrolled_frame_carries_the_rendezvous_material() {
     let frame = br#"{"address":"engine.invalid:7737","ca":"-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n","cert":"-----BEGIN CERTIFICATE-----\nnotreal\n-----END CERTIFICATE-----\n","grade":"foot","key":"-----BEGIN notreal KEY-----\nnotreal\n-----END notreal KEY-----\n","kind":"enrolled","name":"builder","ok":true,"pairing_salt":"1111111111111111111111111111111111111111111111111111111111111111","rendezvous_pub":"0000000000000000000000000000000000000000000000000000000000000000"}"#;
     let mut body: serde_json::Value = serde_json::from_slice(frame).unwrap();
     let Reply::Enrolled(envelope) = super::super::decode(&body).unwrap().unwrap() else {
@@ -146,7 +146,7 @@ fn the_engines_enrolled_frame_carries_the_rendezvous_material() {
     assert_eq!(
         envelope.roving,
         Some(("0".repeat(64), "1".repeat(64))),
-        "the engine's pair, in the engine's order"
+        "the server's pair, in the server's order"
     );
     let o = body.as_object_mut().unwrap();
     o.remove("pairing_salt");
@@ -158,6 +158,6 @@ fn the_engines_enrolled_frame_carries_the_rendezvous_material() {
     };
     assert_eq!(
         envelope.roving, None,
-        "a loopback-only engine sends neither"
+        "a loopback-only server sends neither"
     );
 }

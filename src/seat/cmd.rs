@@ -39,7 +39,7 @@ pub(super) enum Cmd {
     Login(String),
     /// **Follow one provider's sign-in, or stop** (§13.19). The lane's want,
     /// and the empty case is the second: leaving the screen crosses no wire,
-    /// so a tail can be closed with the engine unreachable — `Cmd::Search`'s
+    /// so a tail can be closed with the server unreachable — `Cmd::Search`'s
     /// own shape at the other gesture that turns something off.
     Watch(Option<String>),
     /// Assign the worker role's provider and model, stated whole.
@@ -50,9 +50,9 @@ pub(super) enum Cmd {
     Priority(bool),
     /// **Search the world, or drop the answer being shown** (bl-4c2b). The
     /// empty needle is the second: it crosses no wire, so a search can be
-    /// left with the engine unreachable.
+    /// left with the server unreachable.
     Search(String),
-    /// **Read the ops trail** (§13.8) — what the engine last did. A gesture
+    /// **Read the ops trail** (§13.8) — what the server last did. A gesture
     /// read and not a standing one: nothing paints it unless the surface is
     /// open, and a phone's radio is not free.
     Ops,
@@ -129,7 +129,7 @@ pub(super) enum Cmd {
     Candidate(String, String, crate::codec::CandidateAct),
     /// **The fan** — its own command, because it is a CHAIN rather than a
     /// gesture: stage, spread, then fire each candidate. What the glass knows
-    /// is the count and the goal; the prepared body is the engine's and never
+    /// is the count and the goal; the prepared body is the server's and never
     /// crosses this channel.
     Fan {
         project: String,

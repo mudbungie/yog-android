@@ -1,7 +1,7 @@
 //! Both items through the seal, against literals: the plaintext spelling is
-//! the engine's `item.rs` corpus copied, and the sealed fixture was produced
-//! by the engine's own seal under a nonce written down — so this end opens
-//! what the engine sealed, byte for byte, and the engine opens what this end
+//! the server's `item.rs` corpus copied, and the sealed fixture was produced
+//! by the server's own seal under a nonce written down — so this end opens
+//! what the server sealed, byte for byte, and the server opens what this end
 //! seals.
 
 use super::*;
@@ -16,7 +16,7 @@ fn endpoints() -> Vec<SocketAddr> {
 }
 
 #[test]
-fn the_endpoint_list_is_the_engines_spelling() {
+fn the_endpoint_list_is_the_servers_spelling() {
     assert_eq!(
         encode(&endpoints()),
         [
@@ -31,7 +31,7 @@ fn the_endpoint_list_is_the_engines_spelling() {
 /// nonce 1 naming `127.0.0.1:7737`. Anything that drifts — the nonce's
 /// place, the tag's, the AAD, the endpoint spelling — fails this literal.
 #[test]
-fn a_sealed_fixture_opens_as_the_call_the_engine_would_read() {
+fn a_sealed_fixture_opens_as_the_call_the_server_would_read() {
     let sealed = crate::rendezvous::unhex(SEALED).unwrap();
     assert_eq!(
         Call::open(&KEY, &sealed),

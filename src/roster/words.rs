@@ -19,7 +19,7 @@ use crate::codec::ConvRow;
 pub const ATTENTION_MARK: &str = " \u{2022}";
 
 /// **What a conversation row says, one line apiece** (§13.20, bl-4d17): who
-/// and when, what it last said, and — where the engine reddened the row —
+/// and when, what it last said, and — where the server reddened the row —
 /// that its latest call failed.
 ///
 /// **Every line is folded to one line here**, and that is the whole of what

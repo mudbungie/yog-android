@@ -1,5 +1,5 @@
 //! **The sign-in, posted** (REMOTE §8.3, DESIGN §13.19): start `bz --login`
-//! for one provider row inside the focused workspace's wall, on the engine,
+//! for one provider row inside the focused workspace's directory, on the server,
 //! and hand back the run's standing it answered with.
 //!
 //! **Its receipt is the lane's first frame** — the same value at the same
@@ -8,7 +8,7 @@
 //! discarded here would blank a screen for one cadence and then fill it with
 //! the very lines it had thrown away.
 //!
-//! **A refusal is the receipt too.** An unsigned wall, a row with no login
+//! **A refusal is the receipt too.** An unsigned workspace, a row with no login
 //! flow, a workspace this seat may not reach: each crosses as the act's own
 //! `ok: false` and lands in the banner where every other refusal does. There
 //! is nothing else to paint — a run that never started has said nothing.

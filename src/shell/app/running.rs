@@ -52,7 +52,7 @@ impl Shell {
     /// name and the component its grade enrolled it as (REMOTE §2, §4.2).
     /// Painted rather than logged, because a seat showing an empty roster and
     /// a seat registered in no workspace look identical until this line says
-    /// which client the engine was answering.
+    /// which client the server was answering.
     pub(crate) fn identity(&self) -> String {
         use crate::bootstrap::Component;
         match &self.running {

@@ -144,7 +144,7 @@ fn material_that_will_not_build_a_seat_is_silence() {
 }
 
 #[test]
-fn an_engine_that_does_not_answer_is_silence() {
+fn a_server_that_does_not_answer_is_silence() {
     let keys = pki();
     // Port 1 on loopback: nothing listens, so the dial fails at the socket.
     let files = provisioned(&keys, "127.0.0.1:1");

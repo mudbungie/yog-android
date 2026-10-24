@@ -1,5 +1,5 @@
 //! **The roving pair** (DESIGN §21.1): the two optional envelope fields an
-//! engine that roves adds, split from the envelope because they are one
+//! server that roves adds, split from the envelope because they are one
 //! concern with three doors — read off a payload, written into one, landed
 //! as files — and the envelope's six are another.
 
@@ -7,13 +7,13 @@ use super::field;
 use serde_json::{Map, Value};
 
 /// **The optional pair** (DESIGN §21.1, yog REMOTE §8.4 as amended by yog
-/// bl-9043, edition 20): the engine's rendezvous public key and the pairing
-/// salt, hex, under the engine's own spellings, carried only by an engine
-/// that roves — a loopback-only engine sends neither. Both or neither — one
+/// bl-9043, edition 20): the server's rendezvous public key and the pairing
+/// salt, hex, under the server's own spellings, carried only by a server
+/// that roves — a loopback-only server sends neither. Both or neither — one
 /// without the other is refused as the half-provisioned store it would land.
 const ROVING: [&str; 2] = ["rendezvous_pub", "pairing_salt"];
 
-/// The optional pair, both or neither, carried as the engine spelled it.
+/// The optional pair, both or neither, carried as the server spelled it.
 /// **The hex is judged by [`checked`], not here** (REMOTE §3.2, corpus
 /// edition 23): this reader also reads the `enrolled` reply off the wire,
 /// where a word this build cannot spell is carried, never refused — and the

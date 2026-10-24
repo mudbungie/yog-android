@@ -93,7 +93,7 @@ fn tones_read_as_states() {
     // capability control parked is asking for the operator, which is the one
     // hue §3 names for exactly that.
     assert_eq!(tone(&Tone::Held), accent(State::Attention));
-    // **REMOTE §3.2's catch-all wears resting ink.** A hue word a newer engine
+    // **REMOTE §3.2's catch-all wears resting ink.** A hue word a newer server
     // of this major spells cannot be shown as any of the six without claiming
     // this build knows what the row is doing; rest is the one that claims
     // nothing, and it is the accent the ink scale already carries.

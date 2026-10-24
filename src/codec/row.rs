@@ -18,7 +18,7 @@
 //! **What is absent, and why it is not a dead item.** `fork` is the fourth act
 //! of this group's roster and it is not here. Its `from` is a fork point — a
 //! commit of the conversation's own history, or a `config/<name>` head — and
-//! the engine's own `fork::Attempt` says of it: *"Empty is not a value — the
+//! the server's own `fork::Attempt` says of it: *"Empty is not a value — the
 //! composer refuses to fire without one, because a fork with no ref is a
 //! different gesture."* Nothing this seat reads names one. The marks and the
 //! tip ride the `agent` read (unbuilt, bl-146b) and the lineage names ride
@@ -45,7 +45,7 @@ use super::fields::str_of;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RowAct {
     /// **Cut the conversation off mid-work and send it this text.** Stop then
-    /// message, as one op the engine composes (its two trail rows are its
+    /// message, as one op the server composes (its two trail rows are its
     /// business); the deposit is what restarts the conversation, so this
     /// leaves it running on the new text. With nothing running it is simply a
     /// send.

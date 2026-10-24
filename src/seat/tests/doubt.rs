@@ -1,6 +1,6 @@
 //! **An act whose reply was lost** (yog REMOTE §3, bl-d1f1, consumed in
 //! bl-07b1): the channel carried the gesture and died before the answer, so
-//! the engine may have run it and this end can never learn which. What is
+//! the server may have run it and this end can never learn which. What is
 //! asserted here is the whole of what the contract asks a client for — the
 //! act is written exactly once, the sentence says it may have run and names
 //! the read that settles it, and the deposit's fate is counted apart from a
@@ -40,7 +40,7 @@ pub(super) fn refresh() -> Vec<Turn> {
 /// message crosses the wire once. The counter is the load-bearing half: the
 /// composer's echo reads these moving (bl-66fb), and a lost reply counted as
 /// a refusal would put the operator's own text back in the field one tap from
-/// a second copy of a message the engine may already hold.
+/// a second copy of a message the server may already hold.
 #[test]
 fn a_deposit_whose_reply_was_lost_is_in_doubt_and_never_sent_again() {
     let mut turns = focused();
@@ -112,7 +112,7 @@ fn a_nudge_whose_reply_was_lost_names_the_row_that_settles_it() {
     );
 }
 
-/// The firing leg of the same pair: the staging came back, so the engine holds
+/// The firing leg of the same pair: the staging came back, so the server holds
 /// a prepared body, and the `prompt` that spends it is what earns the FIN.
 #[test]
 fn a_firing_whose_reply_was_lost_is_in_doubt_like_any_other_act() {
@@ -138,11 +138,11 @@ fn a_firing_whose_reply_was_lost_is_in_doubt_like_any_other_act() {
     );
 }
 
-/// **An engine that said no is not in doubt**, and painting it as such would
+/// **A server that said no is not in doubt**, and painting it as such would
 /// spend the word on the one case where the answer is known. The refusal is
 /// carried whole and the contract's sentence is nowhere near it.
 #[test]
-fn an_engine_that_refused_the_act_is_definite_and_says_only_what_it_said() {
+fn a_server_that_refused_the_act_is_definite_and_says_only_what_it_said() {
     let refusal = serde_json::json!({ "ok": false, "error": "this leaf may not assign models" })
         .to_string()
         .into_bytes();
@@ -166,7 +166,7 @@ fn an_engine_that_refused_the_act_is_definite_and_says_only_what_it_said() {
     // gesture wakes, and a refresh past the end of a script is this fixture
     // running dry rather than anything the test is about. It used to be
     // invisible because every refresh failure waited a grace out; a reply of
-    // the wrong KIND now paints at once, because the engine answered and the
+    // the wrong KIND now paints at once, because the server answered and the
     // next ask gets the same answer.
     assert!(
         said.starts_with("this leaf may not assign models"),

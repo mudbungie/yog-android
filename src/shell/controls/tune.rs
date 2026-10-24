@@ -1,11 +1,11 @@
 //! **The §9.4 tuning pair** (REMOTE §9.4, bl-dfbb): how much reasoning the
 //! worker's model calls request, and whether they ask for the provider's
-//! priority lane. Both are role config the engine switches at the next step,
+//! priority lane. Both are role config the server switches at the next step,
 //! so they take mid-conversation and neither restarts anything.
 //!
 //! **They paint always and go dark where the provider will not take them**
 //! (bl-809d, amending bl-dfbb's *shown only where*). The capability is still
-//! the engine's statement about itself, read in covered code and never
+//! the server's statement about itself, read in covered code and never
 //! derived here; only what an unavailable one LOOKS like has changed. A
 //! control that vanishes teaches nothing — the argument the greyed provider
 //! row already carries — while one that is there, readable and dark says
@@ -32,7 +32,7 @@ use crate::codec::pick::knob::Knob;
 impl Shell {
     /// **The effort selector**: the vocabulary is closed and no wire read
     /// backs it, so the options are the codec's own constant; `off` is one of
-    /// them and rides as the real null the engine reads.
+    /// them and rides as the real null the server reads.
     ///
     /// The face is the FILE's own word, which may be one the gesture
     /// vocabulary does not spell (bl-e9f9) — shown as itself, because an
