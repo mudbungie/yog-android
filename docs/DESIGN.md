@@ -7379,3 +7379,235 @@ phone's update row offers it. Each step leaves a whole app behind it:
 7. **The walk, whole, and the phone** — every beat re-captured on the
    emulator, new beats `tabbed`, `told` and `tuned`, and the signed APK
    installed on the operator's phone over adb.
+
+## 24. The chat first, the drawer for everything between chats, and the sign-in that finishes on the phone (bl-8e08)
+
+Operator ruling 2026-10-24, verbatim: *"Rebuild the lernie mobile app to
+more closely match the environment that we've rebuilt on the server. My goal
+is that at the end of this, I have a good portable interface to the same
+chats and the same tools that I have on the server. Default view is mostly
+around the chat itself. Same collapsing chat panes; new stuff comes in,
+collapses, etc, until you get just one line between user message and main
+response. The default pane that you're interacting with gets all the 'chat'
+controls, while everything between chats, workspaces, etc, those all go on a
+pull out left side menu. Auth workflows should work, and should authenticate
+the server, not just the client. Usability is key. Don't be afraid to ape
+designs from other LLM apps."*
+
+**Five readings, each checked against what stands.** *The environment
+rebuilt on the server* is the desktop seat's window — lernie DESIGN §4.42
+through §4.47, which §22 and §23 already ape part by part. *The collapsing
+chat panes* are §23 item 6's working in three stages, landed and released;
+this section changes nothing in them and the walk's last ball reads them by
+eye against the desktop's. *The chat controls* are the rule's knobs, the box,
+the `›` sheet, the ask and the dock — everything about the focused
+conversation. *Everything between chats, workspaces, etc.* is what §22 item
+7's switcher holds plus every world surface the sheet opens — the workspace
+choice, the conversation list, the queue, the board, the fleet, the clients,
+the config, the sign-in, the help, the settings, and the seat's own panel.
+*A pull-out left side menu* is a **drawer**: the one surface every phone LLM
+app opens from its top-left corner and from the left edge, over the chat,
+holding the list and the places. **Where this section contradicts §22 items
+1, 2, 7 and 11, §23 items 1, 2 and 14 and STYLE §5's *shape*, *status
+rule*, *switcher* and *tab strip*, this section wins**, and each carries a
+line at its head saying so. The two facts §22 bends around and the third
+§23 adds still hold.
+
+**One principle, the desktop's own (lernie §4.44): a workspace is not a
+choice made in the chat.** Changing it is a whole new list of conversations,
+providers and roles — the ruling's *entirely different yog backend*. The
+desktop took the workspace off the rule and put it at the bar's foot; the
+phone kept it on the rule because it had no bar. Now it has a drawer, and
+the workspace leaves the rule for the drawer's head. Everything else below
+is that one move's consequences plus the ruling's two additions, the first
+screen and the sign-in.
+
+1. **The chat is the first screen, and the drawer stands open over it while
+   nothing is focused** (`crate::overlay::standing`, `shell/screens.rs`).
+   A provisioned seat opens on the chat: the focused conversation's
+   transcript, or the start line on the focused workspace. With no workspace
+   focused there is no chat to paint under the drawer, so the drawer stands
+   open and does not close — the general path with empty inputs, not a
+   roster screen of its own: `Overlay::Switcher` and `Depth::Roster`'s
+   special standing go, and `Close::Exit` with them. The cache's focus
+   (§14) is what makes a relaunch land where the operator was, which it
+   already does.
+
+2. **The drawer** (`crate::drawer`, pure and host-tested — what it holds, in
+   what order, what a tap yields, and the gesture that opens it;
+   `shell/drawer.rs` paints it). It is a panel sliding in from the left
+   edge over the chat, **`drawer::WIDTH` wide — five sixths of the glass,
+   never more than `drawer::CAP` (360 points)** — with a scrim over what is
+   left of the chat at `drawer::SCRIM` alpha, which takes no tap but the
+   one that closes the drawer. It is laid on egui's foreground layer, so
+   nothing under it is pressed through it, and the native field steps off
+   the glass while it stands (as under any overlay, §22 item 6). Its edge
+   eases in and out over `drawer::EASE` (0.12 s, the desktop's number for
+   the bar's edge, §4.44 item 1) on the input clock, because a panel that
+   snaps is the one the ruling called jarring on the desktop.
+
+   **Four ways in, one way out, and back obeys the platform.** It opens
+   from the chat's `≡` (3), from the left-edge drag §23 item 1 already
+   reads (`drawer::opens`, unchanged), from `/conversations` (the verb
+   keeps its word and its `act:conversations` tag; the sheet is the
+   keyboard, §23 item 12), and from the rule's name (§22 item 10's door,
+   kept). It closes on a tap on the scrim, on a drag from inside it that
+   travels left past `drawer::REACH`, on the platform's back, and on every
+   navigation it performs. **The back rule changes**: back closes an open
+   drawer, sheet or overlay; back on the chat with nothing standing leaves
+   the app — the platform's own meaning, and what every drawer app does.
+   §22 item 7's *the list is the parent of a chat* was true of a list that
+   was a screen; a drawer is a side of the chat, not a parent of it, and
+   a back that opened it would be a back the operator cannot use to leave.
+
+   **What it holds, top to bottom, one scroll.**
+
+   - **The head**: the focused workspace's name with `⏶` as one door (the
+     rule's workspace knob moved whole — `Slot::Workspace`'s pick, its
+     reload marks, its `+ new workspace` last row; `act:workspaces`),
+     opening its list **downward** inside the drawer, since the head is
+     at the top; and `+` at the head's right end, the start's own door
+     (`composer::start`, `act:prepare act:prompt`), standing while a
+     workspace is focused. With nothing focused the head says `workspace ⏶`
+     and the list is open under it — the one thing there is to do.
+   - **Find**: the §13.6 search field, one `TOUCH`-tall line under the
+     head, its hint `find`; a send opens the hits overlay over the chat and
+     closes the drawer. The field is the platform `EditText` the search
+     screen already places (`NEEDLE`), placed here instead; the search
+     overlay keeps its body and loses its field.
+   - **The conversations**: §13.20's tree for the focused workspace, rows
+     as the desktop bar's open row reads them (lernie §4.44 item 1): the
+     state glyph in its ink, the name in `INK` — the focused one in the
+     brand — the asking `?` in the attention accent before it, the preview
+     beneath in `INK_WEAK` on one line, the age at the right end. A tap
+     focuses and closes the drawer (`act:transcript`); a long press opens
+     §13.5's row menu with the told sentence as its head. The `convs`
+     words, marks and ages are the switcher's, moved, not a second
+     spelling. The empty list says why, as the switcher's did.
+   - **The places**: under a hairline, every surface that is not about the
+     focused conversation, as a grid of chips three to a row (`anatomy::chip`,
+     STYLE §5's *band of chips*), each `TOUCH` tall at `SMALL`, in the
+     sheet's own words and wearing the sheet's own tags: `attention` (the
+     waiting count after it in the attention accent while it is non-zero),
+     `trail`, `balls`, `science`, `fleet`, `work`, `clients`, `config`,
+     `login`, `help`. A chip floats its overlay over the chat and closes
+     the drawer. A surface that needs a workspace is dark with nothing
+     focused and its tap says so. **The sheet keeps every row** — nothing is
+     renamed or removed by giving it a second door — because the sheet is
+     the half of *operable without a mouse* a touch screen keeps.
+   - **The foot**, fixed under the scroll: `settings` as a row (its overlay),
+     and the seat panel's lines in `INK_WEAK` — the identity, the `tools:`
+     line, the update offer in the brand (§20.4; its once-per-process check
+     starts on the drawer's first paint) — with **the mark** at the row's
+     left, its picture at the line's height in a `TOUCH`-square seat, still
+     the configuration door and still the walk's `mark` rectangle. The
+     seat panel moves here whole from the switcher's head; nothing about
+     what it says changes.
+
+3. **The chat's top line** (`shell/transcript.rs`, `shell/tabs.rs`; amends
+   §23 item 2). One `TOUCH`-tall line under the top inset: `≡` at the left
+   end in `INK` in a `TOUCH`-square seat (`theme::glyph::MENU`, a glyph
+   the glyph test must hold the body or icon face to; `act:conversations`,
+   its told sentence *opens the drawer: the conversations, the workspace
+   and every other place*), then the tab strip filling the remainder, and
+   `+` at the right end in a seat of its own, the start's door
+   (`act:prepare act:prompt`). **The strip stands from the first tab**:
+   §23 item 2 stood it from the second because a line spent on one name
+   was a line the budget refused, and now the line is spent on `≡` whatever
+   stands in it, so the focused conversation's name is where every chat
+   app puts it — the title, over the transcript. In start mode the strip's
+   place says `new conversation on <workspace>` in `INK_WEAK`. The panel
+   at the head of the transcript (`chat::panel`) stays: it carries the
+   facts the title cannot.
+
+4. **The rule without the workspace and without the mark** (`crate::status`,
+   `shell/status.rs`; amends §22 item 2 and §23 item 14). It reads
+   `<provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> | <state · age> |
+   <tokens> | <spend> | <context> — <name>` — the desktop's line (lernie
+   §4.44 item 3) byte for byte in its segments. `Slot::Workspace` leaves
+   `status::selectors` and the rule's `KEPT` set; its pick, rows and reload
+   are the drawer head's. The mark's seat at the left end goes with the
+   mark. The drop rule loses its first word: provider and model never drop
+   and share one cut; priority, then effort, drop before them; the name
+   never drops and opens the drawer. The probe's `rule-workspace` goes and
+   the walk reaches the workspace list at `drawer-workspace`. `/workspace`
+   (the knob's verb, `Does::Knob(Slot::Workspace)`) opens the drawer with
+   its list open.
+
+5. **The sign-in finishes on the phone** (`shell/screens/world/signin.rs`;
+   `crate::signin`, pure and host-tested — what a tail line carries and
+   which door it is; amends §13.19's painting). Two facts first, because
+   the ruling asks for them and both already hold. **The server is
+   authenticated, not only the client**: the channel is mTLS both ways
+   (REMOTE §4, `crate::tls`) — this seat verifies the server's leaf against
+   the operator CA the enroll envelope carried (`ca`, §11) and presents its
+   own, and a server that cannot chain to that CA gets a TLS refusal, never
+   a frame. **And a sign-in signs the server in, not the phone**: `bz
+   --login` runs on the server inside the workspace's directory and the
+   credential lands there (REMOTE §8.3, §13.19), which is why a provider
+   signed in from this phone is signed in for every seat and every agent of
+   that workspace. What did not hold is that the flow could be *finished*
+   from here: the tail painted the authorize URL and the device code as
+   weak prose, which a phone can neither follow nor select (§13.2: no
+   selection on the glass). So:
+
+   - **A line carrying a URL is a door.** `signin::doors` reads each tail
+     line for `https://` tokens; a line that holds one paints its words
+     with the URL in the brand, `TOUCH` tall, and a tap opens it in the
+     phone's browser through the one typed door the device already has
+     (`dev.yog.Open.typed("url", …)`, DESIGN §16.1 — the bridge the `open`
+     tool spends, called from the foreground, where it is never refused).
+     A long press copies the URL (`shell::clip`), the one gesture §13.2
+     gives prose. The operator finishes the flow in the phone's browser;
+     bz polls the token endpoint from the server; the row's fact turns on
+     the next cadence of the standing `catalog` read.
+   - **A device code is a copy door.** A token of the device-code shape
+     (`signin::CODE`: two runs of four letters or digits joined by `-`, the
+     shape every device flow prints) paints as `copy <code>` in the brand
+     at the line's end; a tap copies it, and the platform's own clip
+     preview says so.
+   - **Starting a run watches its tail.** `sign in` fires `login` and, in
+     the same act, `watch_login` on that row (`act:login act:login-tail`,
+     lernie §4.24's *one control fires two ops*): the URL appears under the
+     row without a second tap, which was the tap the ruling's *should work*
+     was failing on. A row's fact line says `signs in the server, for every
+     seat of <workspace>` in `INK_WEAK` beneath it while its tail is open,
+     so the operator reads what a credential landing here means before
+     they land one.
+   - **The sign-in is one tap from the drawer** (`login` among the places,
+     item 2); it was reachable only by typing `/login`.
+   - **What this does not close is upstream's**, unchanged from §13.19: a
+     browser-only row whose redirect binds to the server's loopback cannot
+     complete from a phone, and the screen paints the server's own sentence
+     for it. The claude-code preset's flow is a device flow on the
+     phone-finishable side of that line.
+
+6. **What is deliberately not ported, and the principle.** The bar's
+   linger, pin and dragged widths (lernie §4.44, §4.45) are answers to a
+   pointer, as §23 item 1 ruled; a drawer under a thumb is open or shut.
+   No bottom navigation bar: the places are not where the operator lives,
+   and a bar of five icons under the box would ride the keyboard. No
+   avatar, no account: the identity is the leaf and it stands on the foot.
+   The conversation list is still one workspace's — the seat-wide waiting
+   count is the `attention` chip's number and the switcher's head is gone
+   with the switcher.
+
+**The order it lands in, and why each lands on main.** As §22's and §23's
+did: each ball carries `--parent bl-8e08`, lands on `main`, is released, and
+the phone's update row offers it. Each step leaves a whole app behind it.
+
+1. **This section** (bl-4574), with STYLE §5 amended.
+2. **The drawer, the top line and the rule** (1–4; bl-d3fe): one ball,
+   because the workspace knob, the mark, the switcher and the seat panel
+   each leave one place for the drawer in the same act, and an app between
+   the two halves would have the workspace in two places or none.
+3. **The sign-in that finishes** (5; bl-a2ee), beside it: it touches the
+   sign-in screen, the bridge and nothing the drawer touches.
+4. **The walk, whole, and the phone** (bl-326b): every beat re-captured on
+   the emulator — `seated` is now the drawer over an empty chat,
+   `switching` the drawer over a transcript, `row-menu` inside it, new beats
+   `drawer-workspace` (the head's list open) and `signing` (a seeded tail
+   with a URL door and a code door) — every capture read against the
+   desktop's `target/snapshots` by eye (the port is judged by eye, never by
+   the design's items), `parity.toml` re-judged, and the signed APK
+   installed on the operator's phone over adb.
