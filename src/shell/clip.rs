@@ -45,10 +45,17 @@ pub(crate) fn copyable(ui: &mut egui::Ui, label: egui::Label, text: &str) -> egu
     // with it (module doc). The long press arrives as the secondary click
     // egui synthesizes from it, exactly as the row menu reads one.
     let response = ui.add(label.sense(egui::Sense::click()));
+    copies(ui, &response, text);
+    response
+}
+
+/// A long press on `response` copies `text` — the gesture alone, for a
+/// surface that is already a control of its own (a door whose tap does
+/// something else, §24 item 5) and so cannot be [`copyable`]'s label.
+pub(crate) fn copies(ui: &egui::Ui, response: &egui::Response, text: &str) {
     if response.secondary_clicked() {
         ui.ctx().copy_text(text.to_owned());
     }
-    response
 }
 
 /// The plain case: a line of prose in the ordinary ink.

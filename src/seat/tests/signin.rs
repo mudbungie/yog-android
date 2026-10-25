@@ -173,6 +173,39 @@ fn a_refused_sign_in_paints_the_reason_and_no_tail() {
     assert!(snap.login.is_none());
 }
 
+/// **A sign-in in doubt holds its tail open** (§24 item 5): the act was
+/// written and nothing answered it, so the doubt sentence names the tail as
+/// the read that settles it — and the tail is what then stands under the
+/// row, saying whether a run started. Nothing is sent again.
+#[test]
+fn a_sign_in_whose_reply_was_lost_watches_the_tail_that_settles_it() {
+    let (mut model, served) = focused(vec![
+        Turn::Hangup, // the act: read, then a FIN where the answer belongs
+        Turn::Answer(vec![ws_reply()]),
+        Turn::Answer(vec![conv_reply()]),
+        Turn::Hold(vec![frame(&[(true, "open https://auth.invalid")], None)]),
+    ]);
+    model.sign_in("acme".into());
+    let snap = settle(&mut model, &|s| s.error.is_some());
+    let said = snap.error.unwrap_or_default();
+    assert!(
+        said.starts_with("login may have run: the reply was lost ("),
+        "{said}"
+    );
+    assert!(said.contains("held open on this screen"), "{said}");
+    let snap = settle(&mut model, &|s| {
+        tail(s, "acme").is_some_and(|lines| !lines.is_empty())
+    });
+    assert_eq!(
+        tail(&snap, "acme").unwrap_or_default(),
+        ["open https://auth.invalid"]
+    );
+    drop(model);
+    let wire = ops(&served.join().unwrap());
+    assert_eq!(wire.iter().filter(|op| *op == "login").count(), 1);
+    assert!(wire.iter().any(|op| op == "login-tail"), "{wire:?}");
+}
+
 /// **An answer of the wrong kind is the wrong-kind sentence**, whichever end
 /// of the pair it arrives at — the act's receipt here, and the lane's frame
 /// in the case below it.

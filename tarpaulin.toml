@@ -210,16 +210,17 @@
 # `Files::about`/`Work::about` — all asserted by host tests. What is left here
 # is which widget shows which of them.
 #
-# `src/shell/screens/world/signin.rs` is the sign-in screen (bl-5a41), the same
-# class again: a `ScrollArea` of provider rows, two buttons apiece and the tail
-# under the one being followed, `cfg(target_os = "android")` to the last line.
-# Everything it decides is somewhere else and under the floor — WHAT a frame
-# carries and how frames fold is `codec::login`, WHICH lane stands and when it
-# stops is `seat::pass::login`, what the act's receipt MEANS and the read that
-# settles a lost one is `seat::acts::login`, and the pairing that makes one
-# provider's flow unpaintable under another's name is `Signing::about` — all
-# asserted by host tests. What is left here is which widget shows which of
-# them.
+# `src/shell/screens/world/signin.rs` is the sign-in screen (bl-5a41, bl-a2ee),
+# the same class again: a `ScrollArea` of provider rows, two buttons apiece and
+# the tail under the one being followed, its addresses and code painted as
+# doors, `cfg(target_os = "android")` to the last line. Everything it decides
+# is somewhere else and under the floor — WHAT a frame carries and how frames
+# fold is `codec::login`, WHICH of a tail line's tokens is a door and every
+# word on it is `crate::signin`, WHICH lane stands and when it stops is
+# `seat::pass::login`, what the act's receipt MEANS and the read that settles
+# a lost one is `seat::acts::login`, and the pairing that makes one provider's
+# flow unpaintable under another's name is `Signing::about` — all asserted by
+# host tests. What is left here is which widget shows which of them.
 #
 # `src/shell/update.rs` is the release channel's device half (bl-7a68), the
 # same class again: three static calls into `dev.yog.Update` and one egui

@@ -100,7 +100,8 @@
 # IS the ask and what it lists is the sign-in catalog rather than the routing
 # table (edition 24, bl-892e); `login` on each row's own button, because the
 # row IS the subject; and `login-tail` on the row itself, because tapping it is
-# what opens the run's tail. The tail is a THIRD held lane (§14.1) beside the
+# what opens the run's tail — and on the button too (bl-a2ee), because starting
+# a run watches it: one control, two ops on the wire (lernie §4.24). The tail is a THIRD held lane (§14.1) beside the
 # queue and the follow, and its stop condition is the run settling (DESIGN
 # §13.19).
 

@@ -11,6 +11,7 @@
 //! read fails leaves the rows exactly where they stood.
 
 use super::super::pass::Standing;
+use super::super::posted::Posted;
 use super::super::{Focus, asks};
 use crate::transport::Seat;
 
@@ -121,6 +122,16 @@ pub(super) fn minted(
 /// other act whose answer is a value rather than a receipt. The standing it
 /// answered with is the run's whole output so far, which is exactly what the
 /// lane's first frame would carry, so nothing waits a cadence to paint.
+///
+/// **Starting a run watches its tail, here and nowhere else** (§24 item 5;
+/// lernie §4.24's *one control fires two ops*). The watch is set at the
+/// act's receipt rather than sent beside the act as a second command: a
+/// `Watch` racing the pass would dial a lane on a pair with no run yet, and
+/// the pass's order is a script the suite asserts. Each outcome decides its
+/// own: a receipt is adopted (`started`, which watches); an act IN DOUBT
+/// watches too, because the tail is the read that settles it and the doubt
+/// sentence says so (`acts::login::SETTLES`); a refusal watches nothing — a
+/// run that never started has said nothing.
 pub(super) fn signed(
     seat: &Seat,
     focus: &Focus,
@@ -128,8 +139,10 @@ pub(super) fn signed(
     provider: String,
 ) -> Option<String> {
     let (posted, view) = super::super::acts::login(seat, focus, provider.clone());
-    if let Some(view) = view {
-        standing.signing.started(provider, view);
+    match view {
+        Some(view) => standing.signing.started(provider, view),
+        None if matches!(posted, Posted::InDoubt(_)) => standing.signing.watch(Some(provider)),
+        None => {}
     }
     posted.note()
 }

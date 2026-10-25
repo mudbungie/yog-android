@@ -196,3 +196,14 @@ use bridge::{bridge_clipboard, bridge_device, bridge_notify, bridge_open};
 pub(crate) fn to_clipboard(text: &str) -> String {
     bridge_clipboard(text)
 }
+
+/// **The typed `open`, reached from the GLASS** (§24 item 5): a sign-in's
+/// authorize URL is a door on the sign-in screen, and what it opens is the
+/// phone's browser through the same `dev.yog.Open` the `open` tool spends —
+/// one door, and the same `url` kind, never a run-any-intent payload. Called
+/// from a tap, so the app is in front and the background-launch refusal the
+/// tool can meet does not apply. Android-only for `to_clipboard`'s reason.
+#[cfg(target_os = "android")]
+pub(crate) fn to_browser(url: &str) -> String {
+    bridge_open("url", url)
+}

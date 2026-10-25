@@ -7582,6 +7582,35 @@ screen and the sign-in.
      for it. The claude-code preset's flow is a device flow on the
      phone-finishable side of that line.
 
+   **As landed (bl-a2ee).** The reading is `crate::signin`, pure and
+   host-tested against a fixture of the lines a run prints: `signin::doors`
+   reads a line into runs of prose and `https://` addresses, peeling the
+   punctuation that leans on a token so `visit https://…/device.` opens the
+   address and keeps the full stop; an `http://` address stays prose, for
+   the reason `crate::update` refuses a release offered over plaintext.
+   `signin::CODE` is a template (`AAAA-0000`) that is also the matcher —
+   **capitals** or digits, not letters, because `open-this` in prose is not
+   a code and no device flow prints one in lowercase; the code stays in the
+   sentence where it was said and earns its `copy <code>` door at the line's
+   end, and a line's first code is the door. The painter lays a line with a
+   door in it as a wrapped run of its parts, each address its own `TOUCH`-
+   tall door in the brand (tap opens through `tools::paper::to_browser`, the
+   `open` tool's own `dev.yog.Open` with the `url` kind; long press copies,
+   `shell::clip::copies`), and the walk reaches the first row at
+   `signin-row`, its button at `signin-start`, the first address door at
+   `signin-url` and the first code door at `signin-code`. **Starting a run
+   watches its tail in the WORKER, not at the painter or the model**: the
+   act's receipt already adopted the run and watched it
+   (`seat::pass::login::started`, *firing the act is also asking to watch
+   it*), and what was missing was the act IN DOUBT — the doubt sentence named
+   the tail as the read that settles it while nothing opened one — so
+   `worker::after::signed` now watches on a lost reply too, and a refusal
+   alone watches nothing (a run that never started has said nothing). A
+   `Cmd::Watch` sent beside `Cmd::Login` was refused because it races the
+   pass and would dial a lane on a pair with no run; the button carries both
+   tags because the one control does fire both ops on the wire. The
+   `login` chip among the drawer's places is bl-d3fe's.
+
 6. **What is deliberately not ported, and the principle.** The bar's
    linger, pin and dragged widths (lernie §4.44, §4.45) are answers to a
    pointer, as §23 item 1 ruled; a drawer under a thumb is open or shut.
