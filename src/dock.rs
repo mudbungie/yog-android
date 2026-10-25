@@ -7,7 +7,7 @@
 //! **The dock asks nothing of its own.** Running is the server's word on the
 //! conversation rows this seat already holds for the focused workspace —
 //! `live` or `in-flight` (`AgentState`) — so the dock is a reading of those
-//! rows, in the switcher's order (`crate::roster::ordered`).
+//! rows, in the drawer's order (`crate::roster::ordered`).
 //!
 //! Folded, it is one line: `+ N running · <the first's name>`. Unfolded, one
 //! touch-tall row per running conversation — its name, its state in its
@@ -19,7 +19,7 @@ use crate::codec::{AgentState, ConvRow};
 use crate::theme::{self, Rgb, glyph};
 
 /// **The conversations running under the focused workspace**, in the
-/// switcher's order.
+/// drawer's order.
 pub fn running(conversations: &[ConvRow]) -> Vec<ConvRow> {
     crate::roster::ordered(conversations.to_vec())
         .into_iter()

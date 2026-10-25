@@ -6374,7 +6374,7 @@ its text).
 (REMOTE §2); *conversations* for the list; no *servers* level, because this device
 is a client of one server (entries are an upstream ask, §13.4).
 
-1. *Amended by §23 item 4: the box stands directly under the transcript and the rule takes the bottom edge — the desktop's order; this item's floor is the order it replaced.* **One column → the chat is the home screen.** The transcript fills the
+1. *Amended by §23 item 4: the box stands directly under the transcript and the rule takes the bottom edge — the desktop's order; this item's floor is the order it replaced.* *Amended by §24 items 1–3: the chat is the first screen, a `TOUCH`-tall top line with `≡` and `+` stands over the transcript, and the mark is the drawer's foot's.* **One column → the chat is the home screen.** The transcript fills the
    glass; under it, in the floor's order (§13.2, bl-192c — claimed bottom-up,
    the transcript is what gives way): the prompt line, the status rule above
    it, and — only while they have something to say — the ask and the dock
@@ -6389,7 +6389,7 @@ is a client of one server (entries are an upstream ask, §13.4).
    (round-3 shot `a9-after-keyboard`); one 48-point rule is the whole of what
    replaces them.
 
-2. *Amended by §23 items 4 and 14: the rule is at the bottom edge, under the box, and it is one line of runs — each knob a door with its mark inside it, the name never dropped.* **The status rule → a 48-point band of tappable segments, above the
+2. *Amended by §23 items 4 and 14: the rule is at the bottom edge, under the box, and it is one line of runs — each knob a door with its mark inside it, the name never dropped.* *Amended by §24 item 4: the workspace knob and the mark leave the rule for the drawer.* **The status rule → a 48-point band of tappable segments, above the
    prompt.** Left to right: **the mark** (drawn small, the §13.2 mark, still
    the one way to the configuration surface and still the walk's `mark`
    rectangle), then `<state> · <elapsed> | <N waiting> | <model> | <spend>`,
@@ -6734,7 +6734,7 @@ is a client of one server (entries are an upstream ask, §13.4).
    ball act's wire word and its label (PARITY §4's one name), and the ball
    pane stood with two of them; the line's act is unchanged.
 
-7. *Amended by §23 item 1: a drag from the left edge opens it too.* **The switcher → the roster and the conversation list, fused into one
+7. *Amended by §23 item 1: a drag from the left edge opens it too.* *Superseded by §24 items 1 and 2: the switcher is gone; the drawer holds the list, the workspace and the seat panel, and back on the chat with nothing standing leaves the app.* **The switcher → the roster and the conversation list, fused into one
    overlay; the platform back walks to it.** Opened by tapping the rule's
    name, by `/conversations`, or by the back gesture from the chat. One
    heading row per workspace (name, agent count, the attention mark), the
@@ -6900,7 +6900,7 @@ is a client of one server (entries are an upstream ask, §13.4).
     (tap is the act, the read is truth, a dark effort knob says why), and
     the `act:` tags ride them there.
 
-11. **What stays the phone's, untouched.** The first-run three-bootstrap
+11. *Amended by §24 item 2: the release row is on the drawer's foot, its check starting on the drawer's first paint.* **What stays the phone's, untouched.** The first-run three-bootstrap
     surface (§9, W1), the two enrollment screens and the scan (§11–§12), the
     foot's screen (W4), the minting seat (§13.18, inside `/config`), the
     pocketed foot's service (§18), the scheduled fetch and its held lane
@@ -7029,7 +7029,7 @@ earning one.
 
 **§4.44 — the bar, the tabs, the foot.**
 
-1. **The bar → the switcher is the list, and a swipe from the left edge
+1. *Superseded by §24 item 2: the swipe opens the drawer, which is the bar under a thumb; the workspace is the drawer head's.* **The bar → the switcher is the list, and a swipe from the left edge
    opens it.** The desktop's bar is a column that opens to the pointer and
    lingers after it; a phone has no pointer to linger after and no width to
    give a column. The list it holds is §22 item 7's switcher, already one
@@ -7044,7 +7044,7 @@ earning one.
    rule's workspace dropup (§22 item 2), which is already the one place a
    workspace is chosen and stays.
 
-2. **The tabs → a strip over the transcript, standing only while two or
+2. *Amended by §24 item 3: the strip stands from the first tab, between `≡` and `+`, and says `new conversation on <workspace>` in start mode.* **The tabs → a strip over the transcript, standing only while two or
    more conversations are open** (`crate::tabs`, pure; `shell/tabs.rs`
    paints it). The desktop's reading is kept whole: *open* is a navigation
    the operator performed, so the set is per run, filled by every door that
@@ -7265,7 +7265,7 @@ earning one.
     painters fails the rule, and the walk's `told` beat is the eye that the
     sentence opens.
 
-14. **The rule is one line of runs, not a band of chips** (bl-6caf; lernie
+14. *Amended by §24 item 4: the mark and the workspace knob leave the rule for the drawer, and `rule-workspace` goes with them.* **The rule is one line of runs, not a band of chips** (bl-6caf; lernie
     §4.42 item 11, §4.44 items 3 and 5). The ruling, operator 2026-10-20,
     verbatim: *"phone still looks mostly like the old one"* — under the same
     day's *"The user interface in general in lernie has gotten much better.
@@ -7433,6 +7433,18 @@ screen and the sign-in.
    (§14) is what makes a relaunch land where the operator was, which it
    already does.
 
+   **As landed (bl-d3fe).** `Depth` is two deep — `Workspace` (no
+   conversation focused: a workspace, or nothing) and `Conversation` — and
+   `overlay::standing` holds one rule for the hits: they stand over the chat
+   at either depth while an answer does, since the find field is the
+   drawer's and a search is asked from anywhere, so `/find` drops no focus
+   any more. The drawer's standing is `drawer::stands(open, focused)`,
+   read once per pass before the chat paints and false under any overlay:
+   an overlay opened from the drawer floats over the chat it closed onto,
+   and with nothing focused the drawer stands again when the overlay
+   closes. Under it, with nothing focused, the chat paints its top line
+   alone — `≡` and the empty strip, no `+`, no rule.
+
 2. **The drawer** (`crate::drawer`, pure and host-tested — what it holds, in
    what order, what a tap yields, and the gesture that opens it;
    `shell/drawer.rs` paints it). It is a panel sliding in from the left
@@ -7504,6 +7516,41 @@ screen and the sign-in.
      seat panel moves here whole from the switcher's head; nothing about
      what it says changes.
 
+   **As landed (bl-d3fe).** Three readings of this item differ from its
+   letter, each for a fact under it. **The width is `drawer::width(glass)`**
+   — `SHARE` (five sixths) of the glass clamped to `CAP` — a function and
+   not a constant, because the glass's width is the frame's. **`+ new
+   workspace` has no row**: no act this seat sends makes a workspace (the
+   desktop's row is bl-673e's and names an op the phone's codec does not
+   spell), and a row that fires nothing is the defect the sheet's rule
+   refuses; the row arrives with the act. **The chips say `diff`, not
+   `work`**: the list above wrote the op's name where the item's own rule
+   is *the sheet's own words*, and the sheet's word for `work-diff` is
+   `diff` (§22 item 5) — the places are `verbs::places`, the sheet's rows
+   verbatim, so one spelling cannot drift from the other. Two more
+   readings decided here. The head's list is rows laid DOWNWARD inside the
+   drawer's own scroll, not a popup — `theme::row` apiece, `act:conversations`
+   on each because a tap lists that workspace's conversations, the head's
+   door carrying `act:workspaces` and the reload marks the rule's knob
+   wore (`…`/`✔` against `Snapshot::passed`); a pick folds the list and
+   holds the drawer open, since what it opens is the new list under the
+   head. The find field is the IME mirror's `NEEDLE` (an egui `TextEdit`
+   riding `shell::bridge`, not a platform view — the item's *platform
+   `EditText`* was the composer's, which the search screen never had), and
+   its send is `find` in the brand at the field's right end while it holds
+   text, the prompt line's own shape; a hit then closes the hits
+   (`Close::Unsearch`) as it focuses, because an overlay that stands over
+   every depth would otherwise stand over the tap that answered it. A row
+   says the failure clause beneath where the server reddened it, else the
+   preview — the switcher's third line kept, folded to one. The mark on the
+   foot shuts the drawer when it opens the configuration surface: a
+   navigation like every other. The probe's names: `scrim`,
+   `drawer-workspace`, `workspace-row` (the first row of the head's list),
+   `drawer-new`, `find`, `row` (the first conversation, kept for
+   `long_press_row`), each chip by its word, `drawer-settings`, `mark`,
+   `update`; `rule-workspace` and the switcher's `new` are gone, and the
+   screen is `conversations` whenever the drawer stands.
+
 3. **The chat's top line** (`shell/transcript.rs`, `shell/tabs.rs`; amends
    §23 item 2). One `TOUCH`-tall line under the top inset: `≡` at the left
    end in `INK` in a `TOUCH`-square seat (`theme::glyph::MENU`, a glyph
@@ -7520,6 +7567,17 @@ screen and the sign-in.
    at the head of the transcript (`chat::panel`) stays: it carries the
    facts the title cannot.
 
+   **As landed (bl-d3fe).** **`MENU` is `☰` (U+2630), not `≡`**: read off
+   the bundled faces' own `cmap`, U+2261 is in the monospace face alone and
+   the proportional family — body, emoji, icon — paints it as tofu, where
+   U+2630 is the icon face's; `≡` joins `glyph::TOFU` so the table cannot
+   take it back. The row's state glyphs the drawer needs — `▶`, `✔`, `■`,
+   `?` — join the table beside it (lernie `convs::glyph`'s). `tabs::FROM`
+   is 1. The probe names the two doors `menu` and `new`; the start screen
+   loses its *back for the others* sentence, since back no longer opens
+   anything there. The row's `+` is the fold glyph's spelling (`glyph::SHUT`),
+   one `+` on the glass.
+
 4. **The rule without the workspace and without the mark** (`crate::status`,
    `shell/status.rs`; amends §22 item 2 and §23 item 14). It reads
    `<provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> | <state · age> |
@@ -7533,6 +7591,18 @@ screen and the sign-in.
    the walk reaches the workspace list at `drawer-workspace`. `/workspace`
    (the knob's verb, `Does::Knob(Slot::Workspace)`) opens the drawer with
    its list open.
+
+   **As landed (bl-d3fe).** `Slot::Workspace` stays in the enum as the
+   slot the verb names and nothing else: `Chip::Workspace`, the rule's
+   `workspaces` dropup and `rule-workspace` are gone, `KEPT` is provider and
+   model. `/workspace` is a row of the sheet now, beside `/conversations`,
+   whose tag is `act:conversations` and whose doing is `Does::Drawer`; the
+   rule's name carries `act:conversations` too, since both open the drawer.
+   The lead `—` before the first knob went with the mark, so the rule has
+   the whole line: on the walk's 411 points it holds provider, model,
+   effort AND priority (§23 item 14's *priority is the first to leave* is
+   this item's), which `status::lines::tests` holds. `status/said.rs` is
+   the diagnostics' words, split from the fit at the cap.
 
 5. **The sign-in finishes on the phone** (`shell/screens/world/signin.rs`;
    `crate::signin`, pure and host-tested — what a tail line carries and

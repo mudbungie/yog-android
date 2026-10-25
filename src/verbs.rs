@@ -15,7 +15,7 @@
 
 mod table;
 
-pub use table::{Gates, Offers, rows};
+pub use table::{Gates, Offers, Place, places, rows};
 
 use crate::overlay::Overlay;
 
@@ -27,6 +27,8 @@ pub const LEAD: char = '/';
 pub enum Does {
     /// Float an overlay (§22 item 6).
     Open(Overlay),
+    /// Open the drawer (§24 item 2): `/conversations`.
+    Drawer,
     /// Search for the words (§13.6).
     Find,
     /// Stop the focused turn, or every turn under it.
@@ -43,7 +45,8 @@ pub enum Does {
     Restore,
     /// Open one of the rule's knobs (§22 item 2): the model's or effort's
     /// dropup, or flip priority — each reachable here however narrow the
-    /// rule is.
+    /// rule is. `Slot::Workspace` is the drawer head's knob (§24 item 4):
+    /// `/workspace` opens the drawer with its list open.
     Knob(crate::status::Slot),
 }
 

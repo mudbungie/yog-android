@@ -1,6 +1,6 @@
 use super::*;
 
-const ALL: [Overlay; 17] = [
+const ALL: [Overlay; 16] = [
     Overlay::Settings,
     Overlay::Queue,
     Overlay::Trail,
@@ -17,7 +17,6 @@ const ALL: [Overlay; 17] = [
     Overlay::Records,
     Overlay::Files,
     Overlay::Search,
-    Overlay::Switcher,
 ];
 
 fn under() -> Under {
@@ -34,6 +33,8 @@ fn every_overlay_has_its_own_name() {
     assert_eq!(names.len(), ALL.len());
     assert_eq!(Overlay::Queue.name(), "waiting");
     assert_eq!(Overlay::Balls(View::Here).name(), "workspace-balls");
+    // The drawer's screen name is not an overlay's: it is a side of the chat.
+    assert!(!names.contains("conversations"));
 }
 
 #[test]
@@ -54,6 +55,7 @@ fn the_subject_is_what_the_overlay_is_open_on() {
         Overlay::Queue,
         Overlay::Trail,
         Overlay::Help,
+        Overlay::Settings,
         Overlay::Balls(View::Board),
     ] {
         assert_eq!(subject(wide), "", "{wide:?}");
@@ -79,7 +81,6 @@ fn closing_leaves_except_where_something_else_is_standing() {
             Close::Leave
         };
         assert_eq!(line.close, want, "{overlay:?}");
-        assert_eq!(line.back, overlay != Overlay::Switcher, "{overlay:?}");
     }
     let minted = Overlay::Admin.line(true, &at);
     assert_eq!(
@@ -100,11 +101,6 @@ fn a_conversation_depth_stands_only_over_its_conversation() {
         standing(Some(Overlay::Files), Depth::Workspace, false),
         None
     );
-    // Over nothing focused, the switcher is what stands instead.
-    assert_eq!(
-        standing(Some(Overlay::Files), Depth::Roster, false),
-        Some(Overlay::Switcher)
-    );
     assert_eq!(
         standing(Some(Overlay::Files), Depth::Conversation, false),
         Some(Overlay::Files)
@@ -113,7 +109,7 @@ fn a_conversation_depth_stands_only_over_its_conversation() {
 
 #[test]
 fn a_world_surface_stands_at_every_depth_and_over_a_search() {
-    for depth in [Depth::Roster, Depth::Workspace, Depth::Conversation] {
+    for depth in [Depth::Workspace, Depth::Conversation] {
         assert_eq!(
             standing(Some(Overlay::Trail), depth, true),
             Some(Overlay::Trail)
@@ -121,14 +117,18 @@ fn a_world_surface_stands_at_every_depth_and_over_a_search() {
     }
 }
 
+/// The hits stand over the chat at either depth while an answer does (§24
+/// item 2: the find field is the drawer's, so a search is asked from
+/// anywhere); nothing held and no answer is the chat alone.
 #[test]
-fn the_hits_stand_over_the_roster_while_an_answer_does() {
-    assert_eq!(standing(None, Depth::Roster, true), Some(Overlay::Search));
-    assert_eq!(standing(None, Depth::Workspace, false), None);
-    assert_eq!(standing(None, Depth::Workspace, true), None);
+fn the_hits_stand_over_the_chat_while_an_answer_does() {
+    for depth in [Depth::Workspace, Depth::Conversation] {
+        assert_eq!(standing(None, depth, true), Some(Overlay::Search));
+        assert_eq!(standing(None, depth, false), None);
+    }
     // A held records screen the focus has left gives way to the hits.
     assert_eq!(
-        standing(Some(Overlay::Records), Depth::Roster, true),
+        standing(Some(Overlay::Records), Depth::Workspace, true),
         Some(Overlay::Search)
     );
     // Search is never held: holding it is nothing.
@@ -136,25 +136,6 @@ fn the_hits_stand_over_the_roster_while_an_answer_does() {
         standing(Some(Overlay::Search), Depth::Workspace, false),
         None
     );
-}
-
-#[test]
-fn nothing_focused_is_the_switchers_screen_and_closing_it_there_leaves() {
-    assert_eq!(
-        standing(None, Depth::Roster, false),
-        Some(Overlay::Switcher)
-    );
-    // Held, it stands over the chat at every depth.
-    for depth in [Depth::Workspace, Depth::Conversation] {
-        assert_eq!(
-            standing(Some(Overlay::Switcher), depth, false),
-            Some(Overlay::Switcher)
-        );
-    }
-    let roster = Overlay::Switcher.line(false, &Under::default());
-    assert_eq!((roster.name, roster.close), ("conversations", Close::Exit));
-    assert!(!roster.back);
-    assert_eq!(Overlay::Switcher.line(false, &under()).close, Close::Leave);
 }
 
 #[test]

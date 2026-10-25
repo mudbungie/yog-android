@@ -64,6 +64,12 @@ pub(crate) fn skin(pad: egui::Margin, ppp: f32) -> super::field::Skin {
     }
 }
 
+/// **The drawer's scrim** (DESIGN §24 item 2): the ground at `alpha` over
+/// what is left of the chat.
+pub(crate) fn scrim(alpha: u8) -> egui::Color32 {
+    rgba([theme::GROUND[0], theme::GROUND[1], theme::GROUND[2], alpha])
+}
+
 /// A state's accent, for ink or a rule.
 pub(crate) fn ink(state: State) -> egui::Color32 {
     rgb(theme::accent(state))

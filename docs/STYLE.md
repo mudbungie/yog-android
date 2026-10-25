@@ -136,7 +136,7 @@ is `RADIUS 10`; a speaker's rule is `RULE 3` wide.
 ## 5. Anatomy
 
 **The shape, whole** (DESIGN §22, bl-bf74 — the desktop's Hermes shape at a
-phone's width; **§24 puts a `TOUCH`-tall top line over the transcript — `≡` at its left end, the tab strip from the first tab, `+` at its right — moves the workspace and the mark off the rule into the drawer, and makes the drawer the one place every surface that is not about the focused conversation is opened from; §23 adds the tab strip over the transcript from the second open conversation, the drawer swipe, the bubbles, the told sentence on a long press and the settings overlay, and item 4 lays the floor in the desktop's order**): the chat is the home screen; the transcript fills it; from
+phone's width; **§24 puts a `TOUCH`-tall top line over the transcript — `☰` at its left end, the tab strip from the first tab, `+` at its right — moves the workspace and the mark off the rule into the drawer, and makes the drawer the one place every surface that is not about the focused conversation is opened from; §23 adds the tab strip over the transcript from the second open conversation, the drawer swipe, the bubbles, the told sentence on a long press and the settings overlay, and item 4 lays the floor in the desktop's order**): the chat is the home screen; the transcript fills it; from
 the floor, bottom-up, stand the status rule at the bottom edge, the banner
 line and the dock over it while they have something to say, the prompt line
 directly under the transcript, and the ask on the prompt line while the
@@ -219,7 +219,7 @@ half the width, their words wrapping to a second line rather than eliding,
 `RAISED` under a thumb; `1. seen` alone when nothing is parked.
 
 **The top line and the tab strip** (`tabs`; DESIGN §23 item 2, §24 item 3): one `TOUCH`-tall row over
-the transcript — `≡` in `INK` in a `TOUCH`-square seat at its left end, `+`
+the transcript — `☰` in `INK` in a `TOUCH`-square seat at its left end (U+2630, the icon face's; `≡` is tofu in the proportional family), `+`
 in the brand in one at its right, the strip between them standing from the
 first open conversation and scrolling sideways, `new conversation on
 <workspace>` in `INK_WEAK` in its place in start mode; a tab is its name at `BODY` with `S` of air either side, the

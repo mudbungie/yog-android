@@ -40,6 +40,8 @@ mod controls;
 #[cfg(target_os = "android")]
 mod dock;
 #[cfg(target_os = "android")]
+mod drawer;
+#[cfg(target_os = "android")]
 mod enroll;
 #[cfg(target_os = "android")]
 mod field;
@@ -59,8 +61,6 @@ mod settings;
 mod slash;
 #[cfg(target_os = "android")]
 mod status;
-#[cfg(target_os = "android")]
-mod switcher;
 #[cfg(target_os = "android")]
 pub(crate) mod sys;
 #[cfg(target_os = "android")]

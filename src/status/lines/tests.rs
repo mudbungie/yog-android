@@ -3,10 +3,8 @@
 
 use super::*;
 use crate::status::SHARE;
-use crate::theme::TOUCH;
 
-const ALL: [Slot; 10] = [
-    Slot::Workspace,
+const ALL: [Slot; 9] = [
     Slot::Provider,
     Slot::Model,
     Slot::Effort,
@@ -19,16 +17,17 @@ const ALL: [Slot; 10] = [
 ];
 
 /// Roughly what each segment wants at the rule's small type.
-const WANTS: [f32; 10] = [0.0, 0.0, 0.0, 80.0, 70.0, 90.0, 100.0, 50.0, 80.0, 80.0];
+const WANTS: [f32; 9] = [0.0, 0.0, 80.0, 70.0, 90.0, 100.0, 50.0, 80.0, 80.0];
 
 /// The gap a separator stands in: the item spacing either side of `|`.
 const GAP: f32 = 11.0;
 
 fn placed(wide: f32) -> Vec<Place> {
-    // Less the pass's gutters; the rule also less the mark, the lead `—`
-    // and the spacing either side of it.
+    // Less the pass's gutters. The mark and the lead `—` before the first
+    // knob went to the drawer with the workspace (§24 item 4), so the rule
+    // has the whole line.
     let under = wide - 20.0;
-    layout(&ALL, &WANTS, under - TOUCH - 20.0, under, GAP, None)
+    layout(&ALL, &WANTS, under, under, GAP, None)
 }
 
 fn on(places: &[Place], under: bool) -> Vec<Slot> {
@@ -47,25 +46,24 @@ fn on(places: &[Place], under: bool) -> Vec<Slot> {
 /// **The walk's own figures** (bl-9817, re-read for the doors of §23 item
 /// 14): a 411-point glass, the rule's spacing either side of a `|`, and the
 /// doors' wants read off the bundled faces at `SMALL` — the air inside the
-/// door, the words and ` ⏶`: a short workspace, `anthropic`, a long model
-/// id, `effort high`, and `priority on` with no mark (a flip opens no list).
+/// door, the words and ` ⏶`: `anthropic`, a long model id, `effort high`,
+/// and `priority on` with no mark (a flip opens no list). With the workspace
+/// and the mark gone to the drawer (§24 item 4), priority stands here too.
 #[test]
-fn at_411_points_effort_stands_and_a_short_selector_keeps_its_words() {
+fn at_411_points_priority_stands_and_a_short_selector_keeps_its_words() {
     use Slot::*;
-    let wants = [47.0, 77.0, 150.0, 82.3, 58.0, 90.0, 100.0, 50.0, 80.0, 80.0];
+    let wants = [77.0, 150.0, 82.3, 58.0, 90.0, 100.0, 50.0, 80.0, 80.0];
     let under = 411.0 - 20.0;
     let gap = 4.0 * 2.0 + 3.2;
-    let room = under - TOUCH - 4.0 - 11.95 - 4.0;
-    let places = layout(&ALL, &wants, room, under, gap, None);
-    assert_eq!(on(&places, false), [Workspace, Provider, Model, Effort]);
-    // The workspace is a touch target and its words; the provider keeps its
-    // words; the model takes the rest, and that is more than the share.
-    assert_eq!(places[0], Place::Rule(TOUCH));
-    assert_eq!(places[1], Place::Rule(77.0));
+    let places = layout(&ALL, &wants, under, under, gap, None);
+    assert_eq!(on(&places, false), [Provider, Model, Effort, Priority]);
+    // The provider keeps its words; the model takes the rest, and that is
+    // more than the share.
+    assert_eq!(places[0], Place::Rule(77.0));
     assert!(
-        matches!(places[2], Place::Rule(w) if w >= SHARE),
+        matches!(places[1], Place::Rule(w) if w >= SHARE),
         "{:?}",
-        places[2]
+        places[1]
     );
 }
 
@@ -80,7 +78,7 @@ fn a_wide_rule_holds_both_halves_on_one_line() {
 fn at_the_walks_width_the_diagnostics_stand_under_the_selectors() {
     use Slot::*;
     let places = placed(411.0);
-    assert_eq!(on(&places, false), [Workspace, Provider, Model, Effort]);
+    assert_eq!(on(&places, false), [Provider, Model, Effort, Priority]);
     // The spend is the first to leave the second line (bl-a7ec)…
     assert_eq!(on(&places, true), [State, Tokens, Context, Name]);
     // …and stands where the line holds all five.
@@ -108,12 +106,12 @@ fn a_narrow_second_line_lets_the_spend_the_context_then_the_tokens_go_and_keeps_
 }
 
 #[test]
-fn nothing_focused_is_the_selectors_alone() {
-    let slots = [Slot::Workspace, Slot::Provider, Slot::Model, Slot::Effort];
-    let places = layout(&slots, &[0.0, 0.0, 0.0, 80.0], 400.0, 300.0, 4.0, None);
+fn no_conversation_focused_is_the_selectors_alone() {
+    let slots = [Slot::Provider, Slot::Model, Slot::Effort];
+    let places = layout(&slots, &[0.0, 0.0, 80.0], 400.0, 300.0, 4.0, None);
     assert!(places.iter().all(|p| matches!(p, Place::Rule(_))));
     // Too narrow even for effort: it leaves, and no second line stands.
-    let places = layout(&slots, &[0.0, 0.0, 0.0, 80.0], 160.0, 300.0, 4.0, None);
-    assert_eq!(places[3], Place::Off);
+    let places = layout(&slots, &[0.0, 0.0, 80.0], 160.0, 300.0, 4.0, None);
+    assert_eq!(places[2], Place::Off);
     assert!(!places.iter().any(|p| matches!(p, Place::Under(_))));
 }

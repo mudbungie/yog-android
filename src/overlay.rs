@@ -10,9 +10,16 @@
 //! and a subtraction here.
 //!
 //! **The search hits are an overlay whose standing is the server's answer**,
-//! not a held value: the hits stand while an answer does, at the depth the
-//! search was asked from (§13.6). So `Search` is never held; [`standing`] is
-//! where that is decided, once.
+//! not a held value: the hits stand while an answer does, over the chat at
+//! whatever depth the focus is (§13.6; §24 item 2 — the find field is the
+//! drawer's, so a search is asked from anywhere). So `Search` is never held;
+//! [`standing`] is where that is decided, once.
+//!
+//! **The switcher is gone** (§24 item 1): what stood over nothing focused is
+//! the drawer now (`crate::drawer::stands`), a side of the chat and not an
+//! overlay — so there is no roster depth here and no close that leaves the
+//! app. Back with nothing standing leaves (§24 item 2), as the platform
+//! means it.
 
 use crate::codec::View;
 
@@ -48,10 +55,6 @@ pub enum Overlay {
     Files,
     /// The hits a standing search answer carries (§13.6).
     Search,
-    /// **The switcher** (§22 item 7): the workspaces and the focused one's
-    /// conversations, fused — what back from the chat opens, and what stands
-    /// whenever nothing is focused.
-    Switcher,
     /// **This device's own knobs** (§23 item 11), one row each.
     Settings,
 }
@@ -59,9 +62,8 @@ pub enum Overlay {
 /// How deep the focus is — what the overlay floats over.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Depth {
-    /// No workspace focused: the switcher stands over it.
-    Roster,
-    /// A workspace and no conversation: the chat in start mode.
+    /// No conversation focused: the chat in start mode, or — with no
+    /// workspace either — the empty chat the drawer stands over.
     Workspace,
     /// A conversation: the chat.
     Conversation,
@@ -87,14 +89,11 @@ pub enum Close {
     Forget,
     /// Drop the search answer and its question: leaving a search leaves it.
     Unsearch,
-    /// Leave the app: the switcher over nothing has nothing under it, so
-    /// closing it is what back does there (§22 item 7).
-    Exit,
 }
 
 /// The first line of the frame, in words: the overlay's name, what it is open
 /// on, the read closing it reaches (the parity tag the line carries —
-/// PARITY §2), and what closing does.
+/// PARITY §2), and what closing does. The platform's back closes every one.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Line {
     /// The screen's name — the probe's and the harness's (§15.2).
@@ -104,9 +103,6 @@ pub struct Line {
     pub subject: String,
     pub reaches: &'static str,
     pub close: Close,
-    /// Whether the platform's back closes it. Every overlay but the switcher:
-    /// back there leaves the app, because it is where every back lands.
-    pub back: bool,
 }
 
 /// What a frame's subject names, read off the focus.
@@ -135,7 +131,6 @@ impl Overlay {
             Self::Records => "records",
             Self::Files => "files",
             Self::Search => "search",
-            Self::Switcher => "conversations",
             Self::Settings => "settings",
         }
     }
@@ -160,7 +155,6 @@ impl Overlay {
             | Self::Help
             | Self::Balls(_)
             | Self::Search
-            | Self::Switcher
             | Self::Settings => "workspaces",
             Self::Records | Self::Files => "transcript",
             Self::Candidates
@@ -183,12 +177,9 @@ impl Overlay {
     /// the material rather than leaving the surface.
     pub fn line(self, minted: bool, under: &Under) -> Line {
         let subject = match self {
-            Self::Queue
-            | Self::Trail
-            | Self::Help
-            | Self::Switcher
-            | Self::Settings
-            | Self::Balls(View::Board) => String::new(),
+            Self::Queue | Self::Trail | Self::Help | Self::Settings | Self::Balls(View::Board) => {
+                String::new()
+            }
             Self::Balls(View::Everywhere) => "all workspaces".to_owned(),
             Self::Records | Self::Files => under.conversation.clone(),
             Self::Search => under.needle.clone(),
@@ -197,9 +188,6 @@ impl Overlay {
         let (name, reaches, close) = match self {
             Self::Admin if minted => (MINTED, Self::Admin.name(), Close::Forget),
             Self::Search => (self.name(), self.reaches(), Close::Unsearch),
-            Self::Switcher if under.workspace.is_empty() => {
-                (self.name(), self.reaches(), Close::Exit)
-            }
             _ => (self.name(), self.reaches(), Close::Leave),
         };
         Line {
@@ -208,7 +196,6 @@ impl Overlay {
             subject,
             reaches,
             close,
-            back: self != Self::Switcher,
         }
     }
 }
@@ -217,19 +204,12 @@ impl Overlay {
 /// a search answer is standing. A conversation's depth stands only over its
 /// conversation; anything else held stands wherever the focus is (it names no
 /// focus, so it leaves the focus alone); and with nothing held the search
-/// hits stand over the roster while an answer does, and otherwise the
-/// switcher does — nothing focused is the switcher's screen (§22 item 7).
-/// `Search` held is not a state anything sets, and reads as nothing held.
+/// hits stand while an answer does. `Search` held is not a state anything
+/// sets, and reads as nothing held.
 pub fn standing(held: Option<Overlay>, depth: Depth, searched: bool) -> Option<Overlay> {
     held.filter(|overlay| *overlay != Overlay::Search)
         .filter(|overlay| !overlay.of_conversation() || depth == Depth::Conversation)
-        .or_else(|| {
-            (depth == Depth::Roster).then_some(if searched {
-                Overlay::Search
-            } else {
-                Overlay::Switcher
-            })
-        })
+        .or_else(|| searched.then_some(Overlay::Search))
 }
 
 #[cfg(test)]

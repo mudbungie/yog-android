@@ -36,19 +36,6 @@ impl Shell {
             .map(|row| row.root_id.clone())
             .collect();
         self.tabs.prune(workspace, &known, agent);
-        // **The drawer** (§23 item 1): a drag from the left edge opens the
-        // switcher, the one gesture the desktop's bar had that the switcher
-        // lacked.
-        let (origin, now) = ui.ctx().input(|i| {
-            let down = i.pointer.any_down();
-            (
-                i.pointer.press_origin().filter(|_| down).map(|p| p.x),
-                i.pointer.latest_pos().map(|p| p.x),
-            )
-        });
-        if crate::drawer::opens(origin, now) {
-            self.open(crate::overlay::Overlay::Switcher);
-        }
         // **Which call is parked is the server's answer, never a reading
         // taken here** (§13.7): the queue read names it, and the projection
         // marks the row it already committed rather than guessing from a
@@ -87,8 +74,9 @@ impl Shell {
             // transcript, so the words typed are beside the words answered;
             // and the ask stands on the box (§22 item 8), the model's
             // question over the line its answer is typed in. **No bar** (§22
-            // item 1): the rule carries the mark and the name, and back is
-            // the platform's.
+            // item 1): the top line carries `≡` and `+` (§24 item 3), the
+            // rule the name, and back is the platform's — with nothing
+            // standing it leaves the app (§24 item 2).
             self.rule(ui, snap);
             // **The sheet takes the whole room over the box** (§22 item 5):
             // the dock and the ask step aside while the draft is a slash
@@ -107,9 +95,9 @@ impl Shell {
             }
             ui.add_space(4.0);
             ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                // **The tab strip stands over the transcript** (§23 item 2),
+                // **The top line stands over the transcript** (§24 item 3),
                 // under the top inset, never riding the keyboard.
-                self.tabs(ui, snap, workspace);
+                self.tabs(ui, snap, Some(workspace));
                 // **The verb sheet takes this room while the draft is a slash
                 // line** (§22 item 5): over the box, never over the field.
                 if self.sheet(ui, snap) {
@@ -169,7 +157,6 @@ impl Shell {
                     });
             });
         });
-        self.back_to_switcher();
         // Applied after the walk: flipping mid-iteration would re-project the
         // rows the loop is still reading.
         if let Some(key) = flipped

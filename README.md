@@ -53,7 +53,7 @@ provider, model, effort, priority — as tap targets, the conversation's state
 and figures, its name). The
 conversation list, the workspace choice and every place that is not the
 focused conversation live on a **drawer** pulled out from the left edge or
-the chat's `≡` (DESIGN §24, epic bl-8e08), and every other screen is an
+the chat's `☰` (DESIGN §24, epic bl-8e08), and every other screen is an
 overlay that a tap opens and back closes.
 Each step lands on `main` on its own and reaches a phone through the release
 channel below, so the app is whole between steps.

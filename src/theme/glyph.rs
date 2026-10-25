@@ -36,16 +36,30 @@ pub const CLOSE: &str = "×";
 /// mark stands inside its door. The desktop's glyph — the bundled icon face
 /// carries U+23F6, where the proportional face has no `▾`, `▴` or `▼`.
 pub const DROP: &str = "⏶";
+/// **The drawer's door** at the chat's top-left (DESIGN §24 item 3): the
+/// hamburger every phone app opens its drawer from. U+2630, which the bundled
+/// icon face carries; `≡` (U+2261) is in the monospace face alone and the
+/// proportional family paints it as tofu.
+pub const MENU: &str = "☰";
+/// **A conversation row's state** (DESIGN §24 item 2; lernie `convs::glyph`):
+/// working, at rest, stopped — and the asking mark that stands before the
+/// name in the attention accent.
+pub const WORKING: &str = "▶";
+pub const AT_REST: &str = "✔";
+pub const STOPPED: &str = "■";
+pub const ASKING: &str = "?";
 
 /// Every glyph the table spells, for the tests that judge them as a set.
-pub const ALL: [&str; 13] = [
-    PROMPT, LEAD, SEP, MODEL, NOTE, CALL, DONE, FAILED, OPEN, SHUT, ELIDED, CLOSE, DROP,
+pub const ALL: [&str; 18] = [
+    PROMPT, LEAD, SEP, MODEL, NOTE, CALL, DONE, FAILED, OPEN, SHUT, ELIDED, CLOSE, DROP, MENU,
+    WORKING, AT_REST, STOPPED, ASKING,
 ];
 
 /// **What this tree has measured as tofu** in the bundled proportional face
 /// (`roster::ATTENTION_MARK`'s `●`, the rails of `rows/thread.rs`, the fold
-/// mark of `theme/anatomy.rs`). No glyph in the table may be one of them.
-pub const TOFU: [&str; 4] = ["●", "└", "│", "▼"];
+/// mark of `theme/anatomy.rs`, and `≡`, read off the faces' own `cmap` for
+/// the drawer's door). No glyph in the table may be one of them.
+pub const TOFU: [&str; 5] = ["●", "└", "│", "▼", "≡"];
 
 /// **What a server sentence carries that the bundled proportional face
 /// paints as tofu, and what stands in for it** (bl-8353). Measured against

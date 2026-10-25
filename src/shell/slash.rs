@@ -126,11 +126,19 @@ impl Shell {
     fn does(&mut self, snap: &Snapshot, does: Does, words: String) {
         let act = match does {
             Does::Open(overlay) => return self.open(overlay),
+            // The drawer's two verbs (§24 items 2 and 4): `/conversations`
+            // opens it, `/workspace` opens it with the head's list open.
+            Does::Drawer => return self.drawer.open = true,
+            Does::Knob(crate::status::Slot::Workspace) => {
+                self.drawer.open = true;
+                return self.drawer.list = true;
+            }
             Does::Knob(crate::status::Slot::Priority) => return self.priority_verb(snap),
             Does::Knob(slot) => return self.rule.verb = Some(slot),
+            // The hits float over the chat wherever the focus is (§24 item
+            // 2): a search drops no focus.
             Does::Find => {
                 self.needle.clone_from(&words);
-                self.focus_workspace(None);
                 return self.ask(|model| model.search(words));
             }
             Does::Stop { children } => return self.ask(|model| model.stop_turn(children)),

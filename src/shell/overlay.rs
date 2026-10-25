@@ -7,10 +7,10 @@
 //! **A screen keeps its body and loses its bar.** The box is `SURFACE` with a
 //! `HAIRLINE` frame (STYLE §1's one exception: a stroke marks what floats),
 //! from `S` under the top inset to the floor; its first line is a
-//! `TOUCH`-tall row — the name, what it is open on in weak ink, and `close`
+//! `TOUCH`-tall row — the name, what it is open on in weak ink, and `done`
 //! at the other end — and the whole line closes it. **The platform's back
 //! closes it too**, through `shell::back`'s rule unchanged: the line is the
-//! thing with a depth to walk, so it takes a pending press.
+//! thing with a depth to walk, so it takes a pending press (§24 item 2).
 //!
 //! **What stands down under it.** Nothing else is painted while one stands:
 //! the composer is not placed, so its platform field comes off the glass
@@ -98,8 +98,7 @@ impl Shell {
 
     /// The first line: one control, the touch floor tall, and the whole of it
     /// closes. Returns whether it was asked to — by a tap or by the platform's
-    /// back, which this line takes because it is the depth to walk; except on
-    /// the switcher, where back is left to leave the app (§22 item 7).
+    /// back, which this line takes because it is the depth to walk.
     fn name_line(&mut self, ui: &mut egui::Ui, line: &Line) -> bool {
         let wide = ui.available_width();
         let (rect, hit) =
@@ -135,7 +134,7 @@ impl Shell {
             rect.bottom(),
             egui::Stroke::new(1.0, rgb(theme::HAIRLINE)),
         );
-        hit.clicked() || (line.back && std::mem::take(&mut self.back))
+        hit.clicked() || std::mem::take(&mut self.back)
     }
 
     /// **Open one** — and for the reads nobody holds standing, opening IS the
@@ -164,14 +163,13 @@ impl Shell {
             Overlay::Records => model.open_records(),
             Overlay::Files => model.open_files(None),
             // The queue is the held lane's (§14.1), the fleet reads nothing
-            // (§13.13), the op table is compiled in (§13.14), the hits are
-            // the search answer's own standing, and the switcher's two reads
-            // are the standing set's (§14).
+            // (§13.13), the op table is compiled in (§14), the hits are the
+            // search answer's own standing, and the settings are this
+            // device's own.
             Overlay::Fleet
             | Overlay::Help
             | Overlay::Queue
             | Overlay::Search
-            | Overlay::Switcher
             | Overlay::Settings => (),
         }
     }
@@ -197,7 +195,6 @@ impl Shell {
                     model.search(String::new());
                 }
             }
-            Close::Exit => super::back::leave(&self.android),
         }
     }
 

@@ -39,7 +39,7 @@ mod thread;
 mod words;
 
 pub use thread::threads;
-pub use words::{ATTENTION_MARK, lines};
+pub use words::{ATTENTION_MARK, lines, one_line};
 
 /// The list, newest subtree first, each subtree still in the server's descent.
 ///

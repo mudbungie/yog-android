@@ -191,9 +191,13 @@ pub(crate) struct Shell {
     /// belongs (`shell::back`). A frame-scoped fact, not state: it is
     /// rewritten every pass.
     pub(crate) back: bool,
-    /// The switcher's `+ new` asked for the caret: taken by the next pass
-    /// that places the field (§22 item 7).
+    /// The drawer's `+` asked for the caret: taken by the next pass that
+    /// places the field (§24 item 2).
     pub(crate) summon: bool,
+    /// **The drawer** (DESIGN §24 item 2): whether it is open, whether its
+    /// head's list is, and the two frame-scoped facts the pass sets before the
+    /// chat paints. Navigation like `overlay` above, and no more durable.
+    pub(crate) drawer: super::drawer::Drawer,
     /// The status rule's between-frames state (`shell/status.rs`).
     pub(crate) rule: super::status::Rule,
     /// **What the render-and-see probe says about this pass** (`app/probe.rs`,
@@ -254,6 +258,7 @@ impl Shell {
             tuned_at: 0,
             back: false,
             summon: false,
+            drawer: super::drawer::Drawer::default(),
             rule: super::status::Rule::default(),
             screen: None,
             at: Vec::new(),

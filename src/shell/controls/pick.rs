@@ -74,51 +74,6 @@ impl Shell {
         opened
     }
 
-    /// **The workspace selector** (§22 item 2): every workspace the cached
-    /// roster holds, and a tap focuses one — the chat in start mode there.
-    /// Its reload is a pass, sooner (`Model::refresh`).
-    pub(super) fn workspaces(
-        &mut self,
-        ui: &mut egui::Ui,
-        snap: &Snapshot,
-        seat: Seat,
-    ) -> egui::Response {
-        let mut picked = None;
-        let seat = Seat {
-            open: false,
-            ..seat
-        };
-        let opened = super::drop::drop_down(
-            ui,
-            (
-                "workspace",
-                "opens the list of workspaces; one is focused at a time",
-            ),
-            seat,
-            |ui| {
-                for row in &snap.workspaces {
-                    if crate::shell::theme::pick(ui, &row.workspace, "focuses this workspace")
-                        .clicked()
-                    {
-                        picked = Some(row.workspace.clone());
-                    }
-                }
-            },
-        );
-        act::act(ui, &opened, "workspaces");
-        if let Some(workspace) = picked
-            && snap.focus.workspace.as_deref() != Some(workspace.as_str())
-        {
-            self.focus_workspace(Some(workspace));
-        }
-        if opened.clicked()
-            && let Some(model) = self.model()
-        {
-            model.refresh();
-        }
-        opened
-    }
-
     /// The model selector: this provider's models, and the tap that assigns
     /// one. Disabled until a provider is chosen — a model without its
     /// provider is not an assignment the wire can state. It is tagged in

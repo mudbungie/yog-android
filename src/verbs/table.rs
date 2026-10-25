@@ -63,14 +63,58 @@ fn wanting(mut row: Row, wants: &'static str) -> Row {
     row
 }
 
+/// **A place the drawer offers as a chip** (DESIGN §24 item 2): one of the
+/// sheet's own rows — its word, its tags, the overlay it opens — and whether
+/// it names the focused workspace, which is what darkens it with none.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Place {
+    pub row: Row,
+    pub aimed: bool,
+}
+
+/// **The drawer's places, in its order** (§24 item 2): the two world
+/// surfaces that are not ball views, the seven that name the focused
+/// workspace, and the op table — every one the sheet's own row, so nothing is
+/// renamed by giving it a second door.
+pub fn places() -> Vec<Place> {
+    let mut out: Vec<Place> = WORLD
+        .iter()
+        .take(2)
+        .map(|(word, ops, overlay)| Place {
+            row: row(word, ops, Does::Open(*overlay), ""),
+            aimed: false,
+        })
+        .collect();
+    out.extend(AIMED.iter().map(|(word, ops, overlay)| Place {
+        row: row(word, ops, Does::Open(*overlay), ""),
+        aimed: true,
+    }));
+    out.push(Place {
+        row: row("help", &["help"], Does::Open(Overlay::Help), ""),
+        aimed: false,
+    });
+    out
+}
+
 /// **Every row the sheet offers right now.**
 pub fn rows(gates: &Gates) -> Vec<Row> {
-    let mut out = vec![row(
-        "conversations",
-        &["workspaces"],
-        Does::Open(Overlay::Switcher),
-        "every workspace and its conversations",
-    )];
+    // **The drawer's two doors come first** (§24 items 2 and 4): the drawer
+    // itself under the list's word and tag, and the workspace knob's verb,
+    // which opens it with the head's list open.
+    let mut out = vec![
+        row(
+            "conversations",
+            &["conversations"],
+            Does::Drawer,
+            "the drawer: the conversations, the workspace and every other place",
+        ),
+        row(
+            "workspace",
+            &["workspaces"],
+            Does::Knob(Slot::Workspace),
+            "the focused workspace; the drawer's list opens on it",
+        ),
+    ];
     if gates.conversation.is_some() {
         out.push(row(
             "records",

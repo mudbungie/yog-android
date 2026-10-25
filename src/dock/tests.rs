@@ -33,7 +33,7 @@ fn ids(rows: &[ConvRow]) -> Vec<&str> {
 }
 
 #[test]
-fn only_live_and_in_flight_rows_run_in_the_switchers_order() {
+fn only_live_and_in_flight_rows_run_in_the_drawers_order() {
     let rows = [
         row("old", AgentState::Live, 0, 10),
         row("old-kid", AgentState::InFlight, 1, 10),

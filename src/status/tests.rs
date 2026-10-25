@@ -2,11 +2,12 @@
 //! and its reload mark.
 
 use super::*;
+use crate::codec::{Agent, ConvRow, Entry, EntryKind};
 use crate::codec::{AgentState, Tone};
+use crate::theme;
 use serde_json::json;
 
-const ALL: [Slot; 8] = [
-    Slot::Workspace,
+const ALL: [Slot; 7] = [
     Slot::Provider,
     Slot::Model,
     Slot::Effort,
@@ -18,12 +19,13 @@ const ALL: [Slot; 8] = [
 
 /// What each segment would like at the rule's type size, roughly: the
 /// selectors' are ignored (they share), the rest are their words.
-const WANTS: [f32; 8] = [0.0, 0.0, 0.0, 80.0, 70.0, 100.0, 110.0, 80.0];
+const WANTS: [f32; 7] = [0.0, 0.0, 80.0, 70.0, 100.0, 110.0, 80.0];
 
 /// The room the segments have on a phone `wide` points across: less the
-/// pass's 10-point gutters and the mark's touch square and its gap.
+/// pass's 10-point gutters. The mark's square and the lead went to the
+/// drawer with the workspace (§24 item 4).
 fn room(wide: f32) -> f32 {
-    wide - 20.0 - TOUCH - 4.0
+    wide - 20.0
 }
 
 fn standing(wide: f32) -> Vec<Slot> {
@@ -37,18 +39,19 @@ fn standing(wide: f32) -> Vec<Slot> {
 #[test]
 fn the_rule_drops_the_diagnostics_then_priority_then_effort_and_never_the_name() {
     use Slot::*;
-    assert_eq!(standing(320.0), [Workspace, Provider, Model, Name]);
-    assert_eq!(standing(360.0), [Workspace, Provider, Model, Name]);
-    assert_eq!(standing(420.0), [Workspace, Provider, Model, Effort, Name]);
-    assert_eq!(standing(480.0), [Workspace, Provider, Model, Effort, Name]);
+    assert_eq!(standing(280.0), [Provider, Model, Name]);
+    assert_eq!(standing(320.0), [Provider, Model, Effort, Name]);
+    assert_eq!(standing(360.0), [Provider, Model, Effort, Name]);
+    assert_eq!(standing(420.0), [Provider, Model, Effort, Priority, Name]);
+    assert_eq!(standing(480.0), [Provider, Model, Effort, Priority, Name]);
     assert_eq!(
         standing(560.0),
-        [Workspace, Provider, Model, Effort, Priority, Name]
+        [Provider, Model, Effort, Priority, State, Name]
     );
     assert_eq!(standing(800.0), ALL);
-    // Narrower than the three selectors' floor, nothing else stands and the
-    // three and the name still do — they elide; they never drop.
-    assert_eq!(standing(100.0), [Workspace, Provider, Model, Name]);
+    // Narrower than the two selectors' floor, nothing else stands and the
+    // two and the name still do — they elide; they never drop.
+    assert_eq!(standing(100.0), [Provider, Model, Name]);
 }
 
 #[test]
@@ -61,13 +64,7 @@ fn a_knob_whose_list_is_open_does_not_drop() {
         .collect();
     assert_eq!(
         standing,
-        [
-            Slot::Workspace,
-            Slot::Provider,
-            Slot::Model,
-            Slot::Priority,
-            Slot::Name
-        ]
+        [Slot::Provider, Slot::Model, Slot::Priority, Slot::Name]
     );
 }
 
@@ -77,12 +74,12 @@ fn a_knob_whose_list_is_open_does_not_drop() {
 #[test]
 fn a_short_selector_keeps_its_words_and_the_long_ones_share_the_rest() {
     use Slot::*;
-    let slots = [Workspace, Provider, Model, Name];
-    let widths = fit(&slots, &[50.0, 200.0, 200.0, 60.0], 300.0, 4.0, None);
-    assert_eq!(widths, [Some(50.0), Some(89.0), Some(89.0), Some(60.0)]);
+    let slots = [Provider, Model, Name];
+    let widths = fit(&slots, &[50.0, 200.0, 60.0], 300.0, 4.0, None);
+    assert_eq!(widths, [Some(50.0), Some(182.0), Some(60.0)]);
     // Where they all fit, each is its words and the rest of the line is air.
-    let widths = fit(&slots, &[50.0, 70.0, 90.0, 60.0], 600.0, 4.0, None);
-    assert_eq!(widths, [Some(50.0), Some(70.0), Some(90.0), Some(60.0)]);
+    let widths = fit(&slots, &[50.0, 90.0, 60.0], 600.0, 4.0, None);
+    assert_eq!(widths, [Some(50.0), Some(90.0), Some(60.0)]);
 }
 
 #[test]

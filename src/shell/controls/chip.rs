@@ -18,10 +18,10 @@ use crate::shell::place::Band;
 use crate::status::Slot;
 
 /// **One knob of the rule, and what it is showing**, in the rule's order:
-/// workspace, provider, model, effort, priority (operator ruling 2026-10-12).
+/// provider, model, effort, priority (operator ruling 2026-10-12; the
+/// workspace left for the drawer's head, §24 item 4).
 pub(in crate::shell) enum Chip {
-    /// The three selectors, which never drop and elide inside their share.
-    Workspace(String),
+    /// The two selectors, which never drop and elide inside their share.
     Provider(String),
     Model(String),
     /// The §9.4 tuning pair, each with what the provider row said about it.
@@ -38,7 +38,6 @@ impl Chip {
         match self {
             Self::Effort(face, _)
             | Self::Priority(face, _, _)
-            | Self::Workspace(face)
             | Self::Provider(face)
             | Self::Model(face) => face.clone(),
         }
@@ -47,7 +46,6 @@ impl Chip {
     /// Where it stands on the rule.
     pub(in crate::shell) const fn slot(&self) -> Slot {
         match self {
-            Self::Workspace(_) => Slot::Workspace,
             Self::Provider(_) => Slot::Provider,
             Self::Model(_) => Slot::Model,
             Self::Effort(..) => Slot::Effort,
@@ -60,7 +58,7 @@ impl Chip {
     /// neither does; a dark model knob is decided where it paints.
     pub(in crate::shell) const fn drops(&self) -> bool {
         match self {
-            Self::Workspace(_) | Self::Provider(_) | Self::Model(_) => true,
+            Self::Provider(_) | Self::Model(_) => true,
             Self::Effort(_, knob) => knob.taken,
             Self::Priority(..) => false,
         }
@@ -97,7 +95,6 @@ impl Shell {
         let (effort, priority) =
             crate::codec::pick::knob::tunable(&snap.providers, provider.as_deref());
         let mut chips = vec![
-            Chip::Workspace(snap.focus.workspace.clone().unwrap_or_default()),
             Chip::Provider(provider.clone().unwrap_or_else(|| "provider".to_owned())),
             Chip::Model(crate::codec::pick::face::model(
                 self.model.clone(),
@@ -126,7 +123,6 @@ impl Shell {
         seat: Seat,
     ) -> egui::Response {
         match chip {
-            Chip::Workspace(_) => self.workspaces(ui, snap, seat),
             Chip::Provider(_) => self.providers(ui, snap, seat),
             Chip::Model(_) => self.models(ui, snap, seat),
             Chip::Effort(_, knob) => self.effort(ui, seat, &knob),

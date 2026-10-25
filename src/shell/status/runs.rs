@@ -6,7 +6,6 @@
 use eframe::egui;
 
 use super::{Segment, Shell};
-use crate::overlay::Overlay;
 use crate::seat::Snapshot;
 use crate::shell::theme::{PAD, ink, rgb};
 use crate::status::{Reload, Said, Slot};
@@ -22,19 +21,14 @@ impl Shell {
         if asked != slot {
             return (glyph::DROP, rgb(theme::INK_WEAK));
         }
-        let now = if slot == Slot::Workspace {
-            snap.passed
-        } else {
-            snap.listed
-        };
-        match crate::status::reload(at, now) {
+        match crate::status::reload(at, snap.listed) {
             Reload::Reloading => (glyph::ELIDED, ink(State::Annotation)),
             Reload::Fresh => (glyph::DONE, ink(State::Attention)),
         }
     }
 
     /// One diagnostic: its words in its ink, elided to its width. The name is
-    /// the switcher's door.
+    /// the drawer's door (§24 item 2).
     pub(super) fn said(&mut self, ui: &mut egui::Ui, said: &Said, wide: f32, tall: f32) {
         let size = egui::vec2(wide, tall);
         if said.slot != Slot::Name {
@@ -46,12 +40,12 @@ impl Shell {
             (&said.text, rgb(said.ink)),
             None,
             size,
-            "opens every workspace and its conversations",
+            "opens the drawer: the conversations, the workspace and every other place",
         );
-        crate::shell::act::act(ui, &hit, "workspaces");
+        crate::shell::act::act(ui, &hit, "conversations");
         self.note_control("rule-name", ui, hit.rect);
         if hit.clicked() {
-            self.open(Overlay::Switcher);
+            self.drawer.open = true;
         }
     }
 }

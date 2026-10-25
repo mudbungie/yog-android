@@ -77,7 +77,8 @@ fn roster() -> [RowAct; 5] {
 
 impl Shell {
     /// What a conversation row does, said at its menu's head (§23 item 10).
-    const ROW_HELP: &str = "a tap opens this conversation; these acts address it";
+    pub(in crate::shell) const ROW_HELP: &str =
+        "a tap opens this conversation; these acts address it";
 
     /// **One row's context menu.** Answers whether a menu stood over this row
     /// as the frame began — a tap that closed one is not also a navigation

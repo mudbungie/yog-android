@@ -33,7 +33,8 @@ pub(crate) const TOUCH: f32 = crate::theme::TOUCH;
 /// What a screen's back control is, if it has one. The bar stands only on
 /// the whole-window surfaces now (§22 item 1) — configuration, the foot,
 /// enrollment — and none of their back controls reaches a view a read
-/// populates; the chat's back is the platform's, and opens the switcher.
+/// populates; the chat's back is the platform's, and closes what stands or
+/// leaves the app (§24 item 2).
 pub(super) enum Back {
     /// A screen with no parent: the roster, the foot, a cold device.
     None,
@@ -77,8 +78,8 @@ impl Shell {
     }
 
     /// **The mark with its picture `side` points across**, its seat the
-    /// touch square whatever the picture: the rule draws it at the line's
-    /// height (§23 item 14), the bar at the seat's.
+    /// touch square whatever the picture: the drawer's foot draws it at the
+    /// line's height (§24 item 2), the bar at the seat's.
     pub(super) fn mark_drawn(&mut self, ui: &mut egui::Ui, side: f32) {
         let (rect, hit) = ui.allocate_exact_size(egui::vec2(TOUCH, TOUCH), egui::Sense::click());
         super::theme::told::told(

@@ -31,9 +31,10 @@ tap_control() {        # tap_control <name>
 # reads better for it.
 tap_mark() { tap_control mark; }
 
-# The platform's back, which on the chat opens the switcher (DESIGN §22 item
-# 7). A key event rather than a rectangle: back is the platform's gesture and
-# has no control of its own on the glass.
+# The platform's back, which closes what stands — the drawer, the sheet, an
+# overlay — and on the chat with nothing standing LEAVES the app (DESIGN §24
+# item 2). A key event rather than a rectangle: back is the platform's gesture
+# and has no control of its own on the glass.
 press_back() {
   settle
   "${ADB[@]}" logcat -c || true

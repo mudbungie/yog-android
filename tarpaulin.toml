@@ -111,6 +111,15 @@
 # the last line. Which rows stand, how a line is read and what a tap or a send
 # yields are `crate::verbs`, pure and under the floor.
 #
+# `src/shell/drawer.rs` and its three children (`drawer/head.rs`,
+# `drawer/list.rs`, `drawer/foot.rs`) are the drawer (bl-d3fe, DESIGN §24
+# item 2), the same class again: one foreground `Area`, a scrim, a panel of
+# rows, chips and one `TextEdit`, `cfg(target_os = "android")` to the last
+# line. Everything they decide is `crate::drawer` and `crate::verbs::places`,
+# pure and under the floor — how wide, when it stands and cannot close, which
+# gestures open and close it, what a row says and which places stand as
+# chips; what is left here is where the ink goes.
+#
 # `src/shell/overlay.rs` is the overlay frame (bl-3f9a, DESIGN §22 item 6),
 # the same class again: a `Frame` over a child `Ui`, one click-sensed row and
 # its galleys, `cfg(target_os = "android")` to the last line. Which overlay
@@ -310,6 +319,10 @@ exclude-files = [
     "src/shell/chat.rs",
     "src/shell/clip.rs",
     "src/shell/composer.rs",
+    "src/shell/drawer.rs",
+    "src/shell/drawer/foot.rs",
+    "src/shell/drawer/head.rs",
+    "src/shell/drawer/list.rs",
     "src/shell/controls.rs",
     "src/shell/controls/chip.rs",
     "src/shell/controls/drop.rs",

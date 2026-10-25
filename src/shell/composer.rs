@@ -158,11 +158,13 @@ impl Shell {
     /// glass for that frame, which is the one arrangement in which the
     /// topmost thing on the screen is the thing the operator opened. A told
     /// sentence is the same case: its box stands above the control, and a
-    /// knob's is over the field.
+    /// knob's is over the field. **The drawer is the same case** (§24 item
+    /// 2): it stands on the foreground layer over the chat, and the field
+    /// would stand over it.
     fn overlay(&mut self, ui: &mut egui::Ui, hint: &str, rect: egui::Rect) {
         let told =
             super::theme::told::standing(ui.ctx()) && self.knobs.on(crate::settings::Toggle::Help);
-        if egui::Popup::is_any_open(ui.ctx()) || told {
+        if egui::Popup::is_any_open(ui.ctx()) || told || self.drawer.standing {
             return;
         }
         let ppp = ui.ctx().pixels_per_point();

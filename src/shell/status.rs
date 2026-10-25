@@ -1,10 +1,10 @@
 //! **The status rule** (DESIGN §22 items 1, 2 and 10, bl-79bb; §23 item
-//! 14): the bottom edge of the chat — one touch-tall line of runs,
-//! `— <workspace> ⏶ | <provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> |
-//! <diagnostics> — <name>`, the mark at its left end drawn at the line's
-//! height — and the banner line over it. Which runs stand, what each says,
-//! which drop and whether a list is fresh are `crate::status`, pure and
-//! host-tested; this file paints them and performs the taps.
+//! 14; §24 item 4): the bottom edge of the chat — one touch-tall line of
+//! runs, `<provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> | <diagnostics>
+//! — <name>` — and the banner line over it. Which runs stand, what each
+//! says, which drop and whether a list is fresh are `crate::status`, pure
+//! and host-tested; this file paints them and performs the taps. The
+//! workspace knob and the mark went to the drawer (§24 item 4).
 //!
 //! **Every knob is a door** (`theme::door`): its words in `INK` and its mark
 //! in `INK_WEAK` inside one seat, bare at rest and `RAISED` while pressed,
@@ -42,9 +42,9 @@ pub(crate) struct Rule {
 }
 
 /// **The diagnostics' own line's height**, where they stand under the rule:
-/// small type with room to breathe. The name on it is still the switcher's
-/// door, a target this tall — the back gesture and `/conversations` are the
-/// touch-tall ways to the same place.
+/// small type with room to breathe. The name on it is still the drawer's
+/// door, a target this tall — `≡` and `/conversations` are the touch-tall
+/// ways to the same place.
 const LOW: f32 = TOUCH / 2.0;
 
 /// One run of the line, before it is given a width.
@@ -92,9 +92,9 @@ impl Shell {
         self.banner_line(ui, snap);
     }
 
-    /// The knobs and the diagnostics: on the rule beside the mark where one
-    /// line holds them, else the diagnostics on a small line under it
-    /// (`status::layout`, bl-96fc) — added first, the block being bottom-up.
+    /// The knobs and the diagnostics: on the rule where one line holds
+    /// them, else the diagnostics on a small line under it (`status::layout`,
+    /// bl-96fc) — added first, the block being bottom-up.
     fn segments(&mut self, ui: &mut egui::Ui, snap: &Snapshot, area: Band) {
         let row = super::controls::focused_row(snap);
         let now = crate::roster::now_unix();
@@ -109,8 +109,7 @@ impl Shell {
         let spacing = ui.spacing().item_spacing.x;
         let gap = spacing * 2.0 + super::theme::wide(ui, glyph::SEP);
         let under = ui.available_width();
-        let room = under - TOUCH - spacing * 2.0 - super::theme::wide(ui, glyph::LEAD);
-        let places = crate::status::layout(&slots, &wants, room, under, gap, held);
+        let places = crate::status::layout(&slots, &wants, under, under, gap, held);
         let mut top = Vec::new();
         let mut low = Vec::new();
         for (segment, place) in segments.into_iter().zip(places) {
@@ -127,12 +126,7 @@ impl Shell {
                 |ui| self.runs(ui, snap, low, LOW, area),
             );
         }
-        band(ui, |ui| {
-            let line = ui.text_style_height(&egui::TextStyle::Button);
-            self.mark_drawn(ui, line);
-            faint(ui, glyph::LEAD, TOUCH);
-            self.runs(ui, snap, top, TOUCH, area);
-        });
+        band(ui, |ui| self.runs(ui, snap, top, TOUCH, area));
     }
 
     /// One line's runs, `|` between neighbours and `—` before the name.
@@ -187,7 +181,6 @@ impl Shell {
         };
         let face = self.knob(ui, snap, chip, seat);
         let name = match slot {
-            Slot::Workspace => "rule-workspace",
             Slot::Provider => "rule-provider",
             Slot::Model => "rule-model",
             Slot::Effort => "rule-effort",
@@ -196,7 +189,6 @@ impl Shell {
         self.note_control(name, ui, face.rect);
         if open || face.clicked() {
             let mark = match slot {
-                Slot::Workspace => Some(snap.passed),
                 Slot::Provider | Slot::Model => Some(snap.listed),
                 _ => None,
             };

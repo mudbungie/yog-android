@@ -1,12 +1,12 @@
 //! The screens above the transcript: the bootstrap gate, the foot's standing,
-//! the chat in start mode, and the overlay standing over any of them — the
-//! switcher among them (DESIGN §22 item 7). Pure presentation over the
-//! model's snapshot — every wire crossing already happened on the model's
-//! worker thread, and a tap is a command sent, never a call waited on.
+//! the chat in start mode, the overlay standing over any of them, and the
+//! drawer over the chat (DESIGN §24). Pure presentation over the model's
+//! snapshot — every wire crossing already happened on the model's worker
+//! thread, and a tap is a command sent, never a call waited on.
 //!
-//! The transcript is the third depth and lives in `transcript.rs`: it is the
-//! only screen with its own mechanics (the projected rows, the fold overrides,
-//! the composer riding the keyboard) rather than a list of taps.
+//! The transcript is the deepest screen and lives in `transcript.rs`: it is
+//! the only screen with its own mechanics (the projected rows, the fold
+//! overrides, the composer riding the keyboard) rather than a list of taps.
 
 use eframe::egui;
 
@@ -17,11 +17,6 @@ use super::mark::Back;
 use super::theme::{self, ink};
 use crate::host::Health;
 use crate::overlay::{Depth, Overlay, Under, standing};
-/// **The attention mark**, re-exported from where it lives (`crate::roster`,
-/// bl-4d17). It moved because the conversation row's words are composed in
-/// that module and the mark sits in the middle of a row's first line; the
-/// reasoning for the glyph itself travelled with it.
-pub(super) use crate::roster::ATTENTION_MARK;
 use crate::seat::Snapshot;
 use crate::theme::State;
 
@@ -34,7 +29,7 @@ mod search;
 mod world;
 
 pub(super) use banner::banner;
-pub(super) use rows::threaded;
+pub(super) use rows::connectors;
 
 pub(in crate::shell) use world::{CAP, FLOOR};
 
@@ -68,28 +63,51 @@ impl Shell {
         // whose conversation the operator left is not an echo any more
         // (bl-66fb).
         self.settle_echo(&snap);
+        // **The drawer** (§23 item 1, §24 item 2): a drag from the left edge
+        // opens it, wherever the chat is.
+        let (origin, now) = ui.ctx().input(|i| {
+            let down = i.pointer.any_down();
+            (
+                i.pointer.press_origin().filter(|_| down).map(|p| p.x),
+                i.pointer.latest_pos().map(|p| p.x),
+            )
+        });
+        if crate::drawer::opens(origin, now) {
+            self.drawer.open = true;
+        }
         // **An overlay floats over whatever depth the focus is at** (DESIGN
         // §22 item 6): one stands at a time, the focus underneath is left
         // exactly where it was, and nothing under it paints — the composer
-        // included, so its field comes off the glass.
-        let depth = match (&snap.focus.workspace, &snap.focus.agent) {
-            (None, _) => Depth::Roster,
-            (Some(_), None) => Depth::Workspace,
-            (Some(_), Some(_)) => Depth::Conversation,
+        // included, so its field comes off the glass. **The drawer stands
+        // over the chat and under no overlay** (§24 item 2): with nothing
+        // focused it stands and cannot close, which is the general path with
+        // empty inputs rather than a roster screen of its own.
+        let depth = if snap.focus.agent.is_some() {
+            Depth::Conversation
+        } else {
+            Depth::Workspace
         };
-        if let Some(overlay) = standing(self.overlay, depth, snap.search.is_some()) {
+        let overlay = standing(self.overlay, depth, snap.search.is_some());
+        let focused = snap.focus.workspace.is_some();
+        self.drawer.standing =
+            overlay.is_none() && crate::drawer::stands(self.drawer.open, focused);
+        // The platform's back closes a drawer that may close, before the chat
+        // under it can read the press (§24 item 2); one that may not leaves
+        // the press standing, and nothing under it has a depth either, so it
+        // falls through to leaving the app.
+        self.drawer.closing = self.drawer.standing && focused && std::mem::take(&mut self.back);
+        if let Some(overlay) = overlay {
+            super::drawer::settle(ui.ctx());
             self.floating(ui, &snap, overlay);
             return;
         }
-        // **Nothing focused never reaches here**: the switcher stands over it
-        // (`crate::overlay::standing`). The two depths left are the chat —
-        // in start mode, and on a conversation — and back from either opens
-        // the switcher (§22 item 7).
+        // **The chat is the first screen** (§24 item 1): in start mode on a
+        // workspace, on a conversation, or — with nothing focused — the top
+        // line alone under the drawer.
         //
-        // **They anchor controls to the floor and paint their own bar**
+        // **They anchor controls to the floor and paint their own chrome**
         // (bl-192c): the acts and the composer claim from the floor and the
-        // chrome takes what is left above them, so the bar is painted inside
-        // that remainder rather than before it.
+        // chrome takes what is left above them.
         match (snap.focus.workspace.clone(), snap.focus.agent.clone()) {
             (Some(workspace), None) => {
                 self.note_screen("start");
@@ -99,8 +117,9 @@ impl Shell {
                 self.note_screen("transcript");
                 self.transcript(ui, &snap, &workspace, &agent);
             }
-            (None, _) => {}
+            (None, _) => self.tabs(ui, &snap, None),
         }
+        self.drawer(ui, &snap);
     }
 
     /// **The standing overlay, in its frame**: the name line from
@@ -138,8 +157,8 @@ impl Shell {
     }
 
     /// What this device offers a session, one line (REMOTE §5). It rides the
-    /// switcher's seat panel because that is the screen every back lands on,
-    /// and a tool host nobody can see is one nobody can tell has stopped.
+    /// drawer's foot (§24 item 2), the seat panel every operator opens, and a
+    /// tool host nobody can see is one nobody can tell has stopped.
     ///
     /// It takes no `self`: since bl-8bd0 the host belongs to the PROCESS and
     /// this reads `state::standing()`, so a receiver here would be a claim

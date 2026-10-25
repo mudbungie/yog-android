@@ -1,6 +1,6 @@
 //! **A count, worded** (bl-d56b): `1 agent`, `2 agents`, `0 agents`. One
 //! helper for every place the glass says how many of a thing there are, so
-//! the switcher's heading cannot say `1 agents` while another surface says it
+//! the drawer's foot cannot say `1 tools` while another surface says it
 //! right. Every noun this seat counts is a regular one (`agent`, `tool`,
 //! `step`, `lineage`, `candidate`, `char`); an irregular plural is a second
 //! argument the day one arrives, not a table now.

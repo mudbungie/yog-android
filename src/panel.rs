@@ -10,7 +10,7 @@
 //! open is viewport state and dies with the screen, like every fold.
 //!
 //! With nothing focused there is no conversation to describe; the seat's own
-//! panel stands at the switcher's head (bl-3edc) and is not repeated here.
+//! panel stands at the drawer's foot (§24 item 2) and is not repeated here.
 
 use crate::codec::{ConvRow, Entry, EntryKind};
 use crate::theme::{self, Rgb};

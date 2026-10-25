@@ -48,7 +48,6 @@ pub mod shell;
 pub mod signin;
 pub mod state;
 pub mod status;
-pub mod switcher;
 pub mod symbol;
 pub mod tabs;
 pub mod theme;

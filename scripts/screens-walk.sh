@@ -19,9 +19,10 @@ wipe_app; relaunch
 capture cold configuration
 
 
-# 2. A leaf, and this device is a seat. Nothing is focused, so the switcher
-#    stands (DESIGN §22 item 7): the seat panel at its head, every workspace a
-#    folded heading under it.
+# 2. A leaf, and this device is a seat. Nothing is focused, so the drawer
+#    stands over the empty chat and cannot close (DESIGN §24 item 1): the
+#    head says `workspace ⏶` with its list open under it, the seat panel on
+#    its foot. The screen is the drawer's, `conversations`.
 mint_material; seed_cache roster; relaunch
 capture seated conversations
 
@@ -31,9 +32,12 @@ seed_cache conversations; relaunch
 capture start start
 
 # 4m. THE STANDING ASSERTION: the configuration surface is reachable from the
-#     chat, by the one control that leads there — the mark, at the left of
-#     the status rule (DESIGN §22 item 2). Then the mark toggles back — a way
-#     in with no way out is the same defect wearing the other face.
+#     chat, by the one control that leads there — the mark, on the drawer's
+#     foot since DESIGN §24 item 2, so the drawer is opened by `≡` first. Then
+#     the mark toggles back — a way in with no way out is the same defect
+#     wearing the other face — and lands on the chat, the drawer shut behind
+#     the navigation it performed.
+tap_control menu
 tap_mark
 capture settings configuration
 tap_mark
@@ -146,12 +150,14 @@ slash log
 tap_control login
 capture signin login
 
-# 4s. THE SWITCHER (DESIGN §22 item 7, bl-3edc): back from the chat opens
-#     it, the focused workspace open under its heading with its conversations
-#     as the §13.20 tree and `+ new` under them. The seed has not changed, so
-#     this is a relaunch and not a re-seed.
+# 4s. THE DRAWER (DESIGN §24 item 2, bl-d3fe): `≡` on the chat's top line
+#     opens it over the chat — the focused workspace at its head, its
+#     conversations as the §13.20 tree, the places as chips, the seat panel
+#     on its foot. Back no longer opens it (back on the chat leaves the app);
+#     `tap_control menu` is the door. The seed has not changed, so this is a
+#     relaunch and not a re-seed.
 relaunch
-press_back
+tap_control menu
 capture switching conversations
 
 # 4e. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
@@ -164,10 +170,10 @@ capture switching conversations
 long_press_row
 capture row-menu conversations
 
-# 4t. `+ new` closes the switcher onto the chat in start mode, the caret in
-#     the field.
+# 4t. `+` on the chat's top line is the start's door (DESIGN §24 item 3): the
+#     chat in start mode, the caret in the field. (The drawer's head carries
+#     the same door as `drawer-new`.)
 relaunch
-press_back
 tap_control new
 capture started start
 

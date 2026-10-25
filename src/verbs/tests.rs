@@ -38,6 +38,7 @@ fn with_nothing_focused_only_the_world_is_offered() {
         words(&rows),
         [
             "conversations",
+            "workspace",
             "attention",
             "trail",
             "balls all",
@@ -46,6 +47,44 @@ fn with_nothing_focused_only_the_world_is_offered() {
             "find",
             "settings"
         ]
+    );
+}
+
+/// The drawer's chips are the sheet's own rows (§24 item 2): the two world
+/// surfaces, the seven aimed ones — dark with nothing focused — and help.
+#[test]
+fn the_drawers_places_are_the_sheets_rows_in_its_order() {
+    let places = places();
+    let said: Vec<(&str, bool)> = places
+        .iter()
+        .map(|place| (place.row.word, place.aimed))
+        .collect();
+    assert_eq!(
+        said,
+        [
+            ("attention", false),
+            ("trail", false),
+            ("balls", true),
+            ("science", true),
+            ("diff", true),
+            ("fleet", true),
+            ("clients", true),
+            ("config", true),
+            ("login", true),
+            ("help", false),
+        ]
+    );
+    let all = rows(&running());
+    for place in &places {
+        assert_eq!(find(&all, place.row.word), place.row, "{}", place.row.word);
+        assert!(matches!(place.row.does, Does::Open(_)));
+    }
+    let first = rows(&Gates::default());
+    assert_eq!(find(&first, "conversations").does, Does::Drawer);
+    assert_eq!(find(&first, "conversations").ops, ["conversations"]);
+    assert_eq!(
+        find(&first, "workspace").does,
+        Does::Knob(crate::status::Slot::Workspace)
     );
 }
 

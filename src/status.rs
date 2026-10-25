@@ -1,33 +1,38 @@
 //! **The status rule** (DESIGN §22 items 1, 2 and 10, bl-79bb; operator
-//! ruling 2026-10-12; §23 item 14): one touch-tall line of runs at the
-//! glass's bottom edge, under the box, that says what the focused
+//! ruling 2026-10-12; §23 item 14; §24 item 4): one touch-tall line of runs
+//! at the glass's bottom edge, under the box, that says what the focused
 //! conversation runs on and how it stands. Pure and host-tested —
 //! which segments, in which order, what each says, which drop as the width
 //! runs out, what the banner line says and whether a dropup's list is fresh;
-//! `shell/status.rs` paints them. The desktop's shape, re-ordered by the
-//! ruling (lernie `ui::status`).
+//! `shell/status.rs` paints them. The desktop's line (lernie `ui::status`,
+//! §4.44 item 3), byte for byte in its segments.
 //!
-//! **Left to right**: the mark (the shell's, outside these segments), then
-//! the four selectors — workspace, provider, model, effort — and priority
-//! where the provider's row takes it; then this conversation's diagnostics —
-//! its state and how long since it acted, tokens in and out, what it has
-//! spent and how full its context is where the server's `agent` row says —
-//! and its name, the switcher's door. **Only facts about this conversation**:
-//! the seat-wide waiting count and the servers count are not here, and an
-//! unpriced spend says nothing rather than `$0`.
+//! **Left to right**: the three selectors — provider, model, effort — and
+//! priority where the provider's row takes it; then this conversation's
+//! diagnostics — its state and how long since it acted, tokens in and out,
+//! what it has spent and how full its context is where the server's `agent`
+//! row says — and its name, the drawer's door. **Only facts about this
+//! conversation**: the seat-wide waiting count and the servers count are not
+//! here, and an unpriced spend says nothing rather than `$0`. **The
+//! workspace is not here either** (§24 item 4; lernie §4.44): changing it is
+//! a whole new list of conversations, providers and roles, not a choice made
+//! in the chat, so its knob is the drawer head's and the mark went to the
+//! drawer's foot with it.
 //!
 //! **One line where everything fits, else two** (bl-96fc, [`layout`]): the
 //! selectors on the touch-tall rule, the diagnostics on a small line under
-//! it. Workspace, provider and model never drop: they share what is left and
-//! elide inside it; priority, then effort, leave the rule before them. The
-//! name never drops either (DESIGN §23 item 14).
+//! it. Provider and model never drop: they share what is left and elide
+//! inside it; priority, then effort, leave the rule before them. The name
+//! never drops either (DESIGN §23 item 14).
 
-use crate::codec::{Agent, ConvRow, Entry, EntryKind};
-use crate::theme::{self, Rgb, State, TOUCH};
+use crate::theme::{State, TOUCH};
 
 /// Where a segment stands on the rule, which is also what it is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Slot {
+    /// **Never on the rule** (§24 item 4): the drawer head's knob, kept here
+    /// as the slot `/workspace` names (`verbs::Does::Knob`), which opens the
+    /// drawer with its list open.
     Workspace,
     Provider,
     Model,
@@ -54,7 +59,7 @@ pub const DROPS: [Slot; 6] = [
 ];
 
 /// The selectors that never drop, and elide inside their share instead.
-const KEPT: [Slot; 3] = [Slot::Workspace, Slot::Provider, Slot::Model];
+const KEPT: [Slot; 2] = [Slot::Provider, Slot::Model];
 
 /// **The narrowest a selector is let fall to before a knob leaves**: a few
 /// letters and the drop mark. Below it a selector says nothing worth reading,
@@ -69,94 +74,6 @@ pub const SHARE: f32 = 56.0;
 /// The banner's word while the wire is being re-dialled.
 pub const RECONNECTING: &str = "reconnecting…";
 
-/// **One diagnostic**: its slot, its words, its ink.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Said {
-    pub slot: Slot,
-    pub text: String,
-    pub ink: Rgb,
-}
-
-/// **The conversation's diagnostics and name**, in rule order: the state and
-/// how long since it acted, the tokens, then off the conversation's own
-/// `agent` row (`head`) the spend in the ledger's words and the context's
-/// fullness as the server's own percent — each absent where the row is not
-/// held or states none, never `$0` or `0%` — and the name. Nothing focused is
-/// nothing said.
-pub fn diagnostics(
-    row: Option<&ConvRow>,
-    transcript: &[Entry],
-    head: Option<&Agent>,
-    now_unix: i64,
-) -> Vec<Said> {
-    let Some(row) = row else {
-        return Vec::new();
-    };
-    let mut out = vec![Said {
-        slot: Slot::State,
-        text: format!(
-            "{} · {}",
-            row.state.word(),
-            crate::roster::stamp(row.last_active_unix, now_unix)
-        ),
-        ink: theme::tone(&row.tone),
-    }];
-    if let Some((input, output)) = tokens(transcript) {
-        out.push(Said {
-            slot: Slot::Tokens,
-            text: format!("{} in · {} out", count(input), count(output)),
-            ink: theme::INK_WEAK,
-        });
-    }
-    if let Some(usd) = head.map(|h| h.usd.as_str()).filter(|usd| !usd.is_empty()) {
-        out.push(Said {
-            slot: Slot::Spend,
-            text: usd.to_owned(),
-            ink: theme::INK_WEAK,
-        });
-    }
-    if let Some(percent) = head.and_then(|h| h.context.as_ref()).map(|c| c.percent) {
-        out.push(Said {
-            slot: Slot::Context,
-            text: format!("context {percent}%"),
-            ink: theme::INK_WEAK,
-        });
-    }
-    out.push(Said {
-        slot: Slot::Name,
-        text: row.display.clone(),
-        ink: theme::INK,
-    });
-    out
-}
-
-/// **The tokens the transcript's model turns committed**, in and out — the
-/// provider's own counters, summed where they are spelled. None where no
-/// turn carried either.
-pub fn tokens(transcript: &[Entry]) -> Option<(u64, u64)> {
-    let mut seen = false;
-    let mut sum = (0, 0);
-    for entry in transcript {
-        if let EntryKind::Model { usage, .. } = &entry.kind {
-            let read = |key: &str| usage.get(key).and_then(serde_json::Value::as_u64);
-            let (input, output) = (read("input_tokens"), read("output_tokens"));
-            seen |= input.is_some() || output.is_some();
-            sum.0 += input.unwrap_or(0);
-            sum.1 += output.unwrap_or(0);
-        }
-    }
-    seen.then_some(sum)
-}
-
-/// A count as few characters say it: `812`, `12.3k`, `4.1M`.
-pub fn count(n: u64) -> String {
-    match n {
-        0..1_000 => n.to_string(),
-        1_000..1_000_000 => format!("{:.1}k", n as f64 / 1e3),
-        _ => format!("{:.1}M", n as f64 / 1e6),
-    }
-}
-
 /// **Which segments stand, and how wide each is**, at `room` points with
 /// `gap` between neighbours. `wants` is each segment's own width: its words,
 /// the air inside its door and the mark it carries. A dropped segment is
@@ -165,11 +82,11 @@ pub fn count(n: u64) -> String {
 ///
 /// **The drop is the desktop's** (lernie §4.42 item 11, DESIGN §23 item
 /// 14): the diagnostics from the right, then priority, then effort; the
-/// three selectors and the name never drop. **The width is paid in two
+/// two selectors and the name never drop. **The width is paid in two
 /// passes**: every other segment that stands gets its words, and the
 /// selectors are water-filled into what is left — a short one keeps its
 /// words, and the rest share one cut, never below [`SHARE`] where the room
-/// holds three. Every segment that stands is at least the touch floor wide.
+/// holds both. Every segment that stands is at least the touch floor wide.
 pub fn fit(
     slots: &[Slot],
     wants: &[f32],
@@ -217,7 +134,7 @@ pub fn fit(
 
 /// **The two passes**, over what stands: where the floor fits, the others
 /// at their words and the selectors water-filled into the rest; where even
-/// it does not (a glass narrower than three selectors), one max-min share
+/// it does not (a glass narrower than the two selectors), one max-min share
 /// over everything, the selectors asking for all of it.
 fn paid(standing: &[(Slot, f32)], room: f32, gap: f32, fits: bool) -> Vec<f32> {
     let kept = |slot: &Slot| KEPT.contains(slot);
@@ -294,7 +211,9 @@ pub fn reload(asked_at: usize, now: usize) -> Reload {
 }
 
 mod lines;
+mod said;
 pub use lines::{Place, layout};
+pub use said::{Said, count, diagnostics, tokens};
 
 #[cfg(test)]
 mod tests;

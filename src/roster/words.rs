@@ -52,8 +52,9 @@ pub fn lines(row: &ConvRow, now_unix: i64) -> Vec<String> {
     lines
 }
 
-/// Every run of whitespace — a newline included — as one space.
-fn one_line(text: &str) -> String {
+/// Every run of whitespace — a newline included — as one space. The
+/// drawer's rows fold their line beneath with it too (DESIGN §24 item 2).
+pub fn one_line(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 

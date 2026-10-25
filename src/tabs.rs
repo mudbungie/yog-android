@@ -7,15 +7,16 @@
 //! yesterday's tabs would be claiming a navigation nobody performed today.
 //! **It is filled by the frame that paints the focused conversation and by
 //! nothing else** ([`Tabs::focused`]): every door that focuses one — the
-//! switcher, the dock, the ask, a start resolving — ends in that frame, so
+//! drawer, the dock, the ask, a start resolving — ends in that frame, so
 //! there is no second act that opens a tab and nothing to keep in step.
 //!
 //! Pure and host-tested; `shell::tabs` paints the strip.
 
-/// **How many tabs stand before the strip does** (§23 item 2): with one
-/// conversation open the strip is the name the rule already carries, 48
-/// points spent on nothing, which a phone's glass refuses.
-pub const FROM: usize = 2;
+/// **How many tabs stand before the strip does** (§24 item 3, amending §23
+/// item 2): the first. The top line is spent on `≡` whatever stands in it,
+/// so the focused conversation's name is where every chat app puts it — the
+/// title, over the transcript.
+pub const FROM: usize = 1;
 
 /// The open conversations, each under the workspace it was focused in.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
