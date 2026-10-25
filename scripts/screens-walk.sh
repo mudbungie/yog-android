@@ -150,6 +150,15 @@ slash log
 tap_control login
 capture signin login
 
+# 4g. THE SIGN-IN STARTED (DESIGN §24 item 5, bl-a2ee): `sign in` on the first
+#     row fires `login` and watches its tail in the same act. Nothing is
+#     dialled, so the act is refused at the wire and no tail stands — what
+#     this captures is the row after the tap, the fact line and the doors
+#     being host-tested rather than seen (`src/signin/tests.rs`): a tail
+#     carrying a URL exists only on a live lane, which no seed can write.
+tap_control signin-start
+capture signing login
+
 # 4s. THE DRAWER (DESIGN §24 item 2, bl-d3fe): `≡` on the chat's top line
 #     opens it over the chat — the focused workspace at its head, its
 #     conversations as the §13.20 tree, the places as chips, the seat panel
@@ -159,6 +168,14 @@ capture signin login
 relaunch
 tap_control menu
 capture switching conversations
+
+# 4w. THE WORKSPACE LIST (DESIGN §24 item 2): the drawer's head is the one
+#     place a workspace is chosen; its door opens the list downward inside
+#     the drawer. The app still says `conversations`: the list is the drawer
+#     in use, not a screen.
+tap_control drawer-workspace
+capture drawer-workspace conversations
+tap_control drawer-workspace
 
 # 4e. THE ROW MENU (DESIGN §13.5, bl-f97c). Not a sixth screen — the app says
 #     `conversations` with a menu up, exactly as it says `transcript` with the

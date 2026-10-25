@@ -57,10 +57,19 @@ impl Shell {
                 ui.allocate_ui_with_layout(
                     between,
                     egui::Layout::left_to_right(egui::Align::Center),
-                    |ui| match (workspace, &focus) {
-                        (Some(ws), None) => starting(ui, ws),
-                        (Some(ws), Some(_)) => tapped = self.strip(ui, snap, ws, focus.as_deref()),
-                        (None, _) => {}
+                    |ui| {
+                        // The whole remainder is the strip's whatever it
+                        // holds, so `+` lands at the right end: egui walks
+                        // on by what a child USED, not by what it was given
+                        // (bl-326b, read off the walk's `headed` capture).
+                        ui.set_min_size(between);
+                        match (workspace, &focus) {
+                            (Some(ws), None) => starting(ui, ws),
+                            (Some(ws), Some(_)) => {
+                                tapped = self.strip(ui, snap, ws, focus.as_deref());
+                            }
+                            (None, _) => {}
+                        }
                     },
                 );
                 let Some(ws) = workspace else { return };
@@ -108,10 +117,18 @@ impl Shell {
         }
         let mut tapped = None;
         let mut first = true;
+        // The strip is exactly the line's height and shows no bar: a bar
+        // under it made the scroller taller than the line, and the layout
+        // centred it so the tabs stood below `≡` (bl-326b).
         egui::ScrollArea::horizontal()
             .id_salt("the tab strip")
+            .max_height(theme::TOUCH)
+            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
             .show(ui, |ui| {
-                ui.horizontal(|ui| {
+                // `horizontal_centered`, not `horizontal`: the plain one
+                // sizes its band to `interact_size` and centres seats on
+                // that, which stood the tabs below `≡` (bl-326b).
+                ui.horizontal_centered(|ui| {
                     ui.spacing_mut().item_spacing.x = space::XS;
                     for agent in &strip {
                         let row = snap.conversations.iter().find(|row| &row.root_id == agent);

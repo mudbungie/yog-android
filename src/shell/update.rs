@@ -87,6 +87,11 @@ impl Shell {
 /// A `OnceLock`, which is `camera.rs`' own idiom for a JNI answer that is the
 /// same forever, and not a field on `Shell`: nothing about this is the frame's
 /// state, and the paint site is a free function's reach away from the model.
+/// Whether an offer stands — what the drawer's foot sizes its panel by.
+pub(super) fn offered() -> bool {
+    standing().is_some()
+}
+
 fn standing() -> Option<crate::update::Offer> {
     static DECIDED: std::sync::OnceLock<Option<crate::update::Offer>> = std::sync::OnceLock::new();
     if let Some(decided) = DECIDED.get() {

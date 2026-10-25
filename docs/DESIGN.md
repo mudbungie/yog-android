@@ -7710,3 +7710,23 @@ the phone's update row offers it. Each step leaves a whole app behind it.
    desktop's `target/snapshots` by eye (the port is judged by eye, never by
    the design's items), `parity.toml` re-judged, and the signed APK
    installed on the operator's phone over adb.
+
+   **As landed (bl-326b).** The walk went green on the first run and the
+   eye found two defects the structural gate cannot: the chat's top line
+   stood the strip on a second row with `+` hugging its end, and the
+   drawer's foot ran under the gesture bar with the tools line wrapped off
+   the glass. Both were one egui fact each. A child ui advances its parent
+   by what it USED, not by what it was given, so the strip's remainder now
+   claims its whole width (`set_min_size`) and `+` lands at the right end;
+   and `Ui::horizontal` sizes its band to `interact_size` and centres seats
+   on that, so the strip is `horizontal_centered` inside a scroller held
+   to the line's height with no bar. A bottom-up block places a child of
+   unknown height growing DOWN from the cursor, so the foot's panel is
+   sized before it is placed — the lines counted, every line truncating —
+   and stands on the floor. The `signing` beat captures the row after
+   `sign in` with no server to answer it: a tail carrying a URL exists only
+   on a live lane and no seed can write one, so the doors stand on
+   `src/signin/tests.rs` and on the operator's phone, not on a capture. The
+   `drawer-workspace` beat opens the head's list and closes it again. A
+   long press on a drawer row paints its sentence twice (bl-0246), and a
+   fresh `target/natives` cannot build (bl-ab0f); neither is this ball's.
