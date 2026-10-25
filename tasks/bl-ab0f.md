@@ -1,7 +1,8 @@
 +++
 title = "a fresh natives cache cannot build: OpenSSL 3.4.0's Configure refuses 'no-server' (Unsupported options), so make apk fails on any box or worktree without a populated target/natives; the main checkout's cache predates the flag"
 created = 1792905875
-updated = 1792906430
+updated = 1792906431
+claimant = "Laggard"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 tags = ["build"]
