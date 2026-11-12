@@ -54,7 +54,7 @@ fn a_pasted_envelope_lands_material_the_reader_reads_back() {
     };
     assert_eq!(enrolled.component, crate::bootstrap::Component::Seat);
     assert_eq!(enrolled.client, "notreal-desk");
-    assert_eq!(enrolled.material.address, "server.example.com:7737");
+    assert_eq!(enrolled.material.address(), "server.example.com:7737");
 }
 
 /// A foot envelope enrolls a foot, and the component that comes up is read off
@@ -245,7 +245,6 @@ fn the_hint_names_every_key_and_fixes_no_order() {
         ca: "ca".to_owned(),
         cert: "cert".to_owned(),
         key: "key".to_owned(),
-        roving: None,
     });
     let value: serde_json::Value = serde_json::from_str(&text).unwrap();
     for key in value.as_object().unwrap().keys() {
@@ -272,7 +271,6 @@ fn a_grade_word_this_build_cannot_spell_is_written_back_and_refused_on_the_way_i
         ca: "ca".to_owned(),
         cert: "cert".to_owned(),
         key: "key".to_owned(),
-        roving: None,
     });
     let value: serde_json::Value = serde_json::from_str(&text).unwrap();
     assert_eq!(value["grade"], "admin");

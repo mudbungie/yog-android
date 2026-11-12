@@ -160,7 +160,6 @@ public final class Pocket extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        App.follow(getApplicationContext());
         String dir = getFilesDir().getAbsolutePath();
         String foot = standing(dir);
         if (!foot.isEmpty()) {
@@ -215,7 +214,6 @@ public final class Pocket extends Service {
         }
         watching = null;
         listening = null;
-        App.pocketed(false);
         super.onDestroy();
     }
 
@@ -240,7 +238,6 @@ public final class Pocket extends Service {
      * and a seat, so the two can never be on screen together. */
     private void hold(String channel, String now) {
         said = now;
-        App.pocketed(true);
         Notification notification = of(channel, now);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(

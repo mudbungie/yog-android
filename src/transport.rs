@@ -17,14 +17,14 @@
 //! DNS name. Nothing to configure, nothing that can disagree with what was
 //! dialled.
 //!
-//! **Since the punched wire (DESIGN §21) the socket comes from the
-//! [`Ladder`]**, not from `TcpStream::connect` — the same four-rung climb
-//! REMOTE §13.4 gives every client — and "every ask is its own connection"
-//! holds for a dialled socket exactly as before while a PUNCHED one is held:
-//! its preface is spent once, a finished ask hands it back
-//! ([`Open::each`](open::Open::each)), and the next ask writes only its
-//! request. The server serves a held stream request after request and pings
-//! it through its silence; the ping is discarded ahead of every answer.
+//! **The address list is dialled in order** (yog REMOTE §15.3; DESIGN §21).
+//! The endpoint that worked earlier in this run is tried first
+//! ([`crate::state::worked`], RAM only), then every other in the order the
+//! file states. An endpoint is passed over when its socket will not open *or*
+//! its handshake will not verify — a private address dialled from somebody
+//! else's network may well be answered, and whatever answers there cannot
+//! present the operator's CA — and nothing has crossed in either case, so
+//! falling through repeats no gesture.
 
 mod open;
 mod wire;
@@ -33,27 +33,28 @@ pub use open::{Hangup, Open};
 pub use wire::Wire;
 
 use crate::codec::reply::{self, Reply};
-use crate::ladder::{Clock, Conn, Ladder, Lease, Rove, SystemClock};
 use crate::material::Material;
 use crate::{frame, hello};
 use rustls::pki_types::ServerName;
 use rustls::{ClientConnection, StreamOwned};
 use serde_json::Value;
-use std::net::{IpAddr, TcpStream};
+use std::net::{IpAddr, TcpStream, ToSocketAddrs};
 use std::sync::Arc;
 use std::time::Duration;
 
 /// How long a seat waits on one answer before giving up on the connection.
 const ASK_TIMEOUT: Duration = Duration::from_mins(2);
 
-/// How long a fresh socket is given to carry the server's preface — the
-/// TLS handshake and one frame, which a server that accepted the stream
-/// writes at once. Short, because a stream can connect and never be served:
-/// a server that predates yog bl-5276 completed a punch's handshake
-/// outside any call's window and left it in its accept queue unread
-/// (DESIGN §21.9), and a whole
-/// [`ASK_TIMEOUT`] there would cost a redial two minutes.
+/// How long a fresh socket is given to carry the handshake and the server's
+/// preface — one frame, which a server that accepted the stream writes at
+/// once. Short, because a stream can connect and never be served, and a whole
+/// [`ASK_TIMEOUT`] there would cost the next endpoint in the list two minutes.
 const PREFACE: Duration = Duration::from_secs(10);
+
+/// How long one resolved address is given to answer a SYN. Bounded because a
+/// network that drops the SYN would otherwise cost minutes before the next
+/// endpoint in the list is tried.
+const CONNECT: Duration = Duration::from_secs(5);
 
 /// **What a stream that carried no frame at all says.** One home, because two
 /// readers ask the same question of one shape: `Seat::answered` here, and
@@ -61,46 +62,52 @@ const PREFACE: Duration = Duration::from_secs(10);
 /// cannot go through it (bl-eec1).
 pub(crate) const NO_ANSWER: &str = "the server ended the stream without answering";
 
+/// One endpoint of the list: what is dialled, and the name the server's
+/// certificate is verified against there.
+struct Endpoint {
+    address: String,
+    name: ServerName<'static>,
+}
+
 /// A seat's end of the wire.
 pub struct Seat {
     config: Arc<rustls::ClientConfig>,
-    address: String,
-    name: ServerName<'static>,
-    ladder: Arc<Ladder>,
+    endpoints: Vec<Endpoint>,
+    /// What this material's worked endpoint is kept under: its leaf's path,
+    /// which is one per identity on this device.
+    key: String,
 }
 
 impl Seat {
     /// Build the seat from provisioned material. Nothing is dialled here: a
-    /// seat is a fact about what this device may say, not about whether an
-    /// server happens to be up. Material that roves climbs the mainline.
+    /// seat is a fact about what this device may say, not about whether a
+    /// server happens to be up.
     pub fn open(m: &Material) -> Result<Self, String> {
-        let rove = m.pairing.clone().map(Rove::mainline);
-        Self::open_with(m, rove, Arc::new(SystemClock))
-    }
-
-    /// [`open`](Self::open) with the commons and the clock named — the
-    /// suite's door, pointing the ladder at a fake DHT and a clock it turns.
-    pub fn open_with(
-        m: &Material,
-        rove: Option<Rove>,
-        clock: Arc<dyn Clock>,
-    ) -> Result<Self, String> {
+        let endpoints = m
+            .addresses
+            .iter()
+            .map(|address| {
+                Ok(Endpoint {
+                    address: address.clone(),
+                    name: server_name(address)?,
+                })
+            })
+            .collect::<Result<_, String>>()?;
         Ok(Self {
             config: crate::tls::client_config(m)?,
-            address: m.address.clone(),
-            name: server_name(&m.address)?,
-            ladder: crate::ladder::entry(m.address.clone(), rove, clock),
+            endpoints,
+            key: m.chain.display().to_string(),
         })
     }
 
-    /// How many punched streams this seat is holding for its next asks.
-    pub fn held(&self) -> usize {
-        self.ladder.held()
-    }
-
-    /// The address this seat dials.
+    /// What this seat dials: the whole list, in order.
     pub fn address(&self) -> String {
-        self.address.clone()
+        let listed: Vec<&str> = self
+            .endpoints
+            .iter()
+            .map(|at| at.address.as_str())
+            .collect();
+        listed.join(", ")
     }
 
     /// Ask once and decode the answer — the last frame of the stream, which
@@ -142,7 +149,7 @@ impl Seat {
     /// frame up to the terminator. A stream of one is the ordinary answer.
     pub fn ask(&self, request: &Value) -> Result<Vec<Value>, Wire> {
         let mut stream = Vec::new();
-        let (open, _hangup) = self.read(request, false)?;
+        let (open, _hangup) = self.read(request)?;
         open.each(&mut |frame| {
             stream.push(frame);
             true
@@ -156,98 +163,89 @@ impl Seat {
     /// whatever thread it likes and hangs up from any other, which is the
     /// whole of what a lane needs and one-shot asks do not.
     pub fn hold(&self, request: &Value) -> Result<(Open, Hangup), Wire> {
-        self.read(request, true)
+        self.read(request)
     }
 
-    /// Open a read; a `parked` one marks its punched line so the entry's
-    /// other callers know it will not come back soon (`ladder::gate`) — an
-    /// ask's line they wait for, a parked read's only for so long.
-    fn read(&self, request: &Value, parked: bool) -> Result<(Open, Hangup), Wire> {
-        let (mut tls, hangup, spent, mut lease) = self.dial(request)?;
-        if let Some(lease) = lease.as_mut().filter(|_| parked) {
-            lease.park();
-        }
-        // The server's half of the §3 preface, read on the way to the answer:
-        // a skew refuses here, before a frame of another protocol is decoded.
-        // A held stream spent its preface on its first ask and carries the
-        // edition it was told then.
-        let edition = match spent {
-            Some(edition) => edition,
-            None => hello::confirm(&mut tls).map_err(Wire::Unusable)?,
-        };
+    /// Open a read: the request written down the first endpoint that would
+    /// carry it, and the server's half of the §3 preface confirmed on the way
+    /// to the answer — a skew refuses here, before a frame of another
+    /// protocol is decoded.
+    fn read(&self, request: &Value) -> Result<(Open, Hangup), Wire> {
+        let (mut tls, hangup) = self.dial(request)?;
+        let edition = hello::confirm(&mut tls).map_err(Wire::Unusable)?;
         // The preface is in, under its own bound: the answer gets the ask's.
         let _ = tls.sock.set_read_timeout(Some(ASK_TIMEOUT));
-        let keep = lease.map(|lease| (Arc::clone(&self.ladder), lease));
-        let (open, kept) = Open::new(tls, edition, keep);
-        Ok((open, Hangup::new(hangup, kept)))
+        Ok((Open::new(tls, edition), Hangup::new(hangup)))
     }
 
-    /// The connection with the request written, and what the hang-up handle
-    /// is made from — a second descriptor on the same socket, taken here so that a clone
-    /// that cannot be had is the same sentence as a socket that would not
-    /// open: both are the channel failing before a byte of the act left. The
-    /// third answer is the edition a HELD stream already carries, `None` for
-    /// a fresh socket whose preface is still to be read; the fourth is the
-    /// lease a punched line is out on, which is what a finished ask keeps.
+    /// The list, dialled: the endpoint that worked first, then the rest in
+    /// the file's order. **Every endpoint that refused is named**, each in
+    /// its own sentence, so a list that reached nothing says why of every
+    /// line in it.
     fn dial(&self, request: &Value) -> Result<Dialled, Wire> {
-        let conn = self.ladder.connect().map_err(Wire::Transport)?;
-        let (tcp, lease) = match conn {
-            Conn::Held(held, lease) => {
-                let mut tls = held.tls;
-                let hangup = tls
-                    .sock
-                    .try_clone()
-                    .map_err(|e| Wire::Transport(format!("connect {}: {e}", self.address)))?;
-                let _ = tls.sock.set_read_timeout(Some(ASK_TIMEOUT));
-                frame::write_frame(&mut tls, request.to_string().as_bytes())
-                    .map_err(|e| Wire::Transport(format!("send: {e}")))?;
-                return Ok((tls, hangup, Some(held.edition), Some(lease)));
+        let worked = crate::state::worked(&self.key);
+        let mut order: Vec<&Endpoint> = self.endpoints.iter().collect();
+        order.sort_by_key(|at| Some(&at.address) != worked.as_ref());
+        let mut refusals = Vec::new();
+        for at in order {
+            match self.send(at, request) {
+                Ok(dialled) => {
+                    crate::state::works(&self.key, &at.address);
+                    return Ok(dialled);
+                }
+                Err(refusal) => refusals.push(refusal),
             }
-            Conn::Punched(tcp, lease) => (tcp, Some(lease)),
-            Conn::Dialled(tcp) => (tcp, None),
-        };
-        let (tcp, hangup) = tcp
-            .try_clone()
-            .map(|clone| (clone, tcp))
-            .map_err(|e| Wire::Transport(format!("connect {}: {e}", self.address)))?;
+        }
+        Err(Wire::Transport(refusals.join("; ")))
+    }
+
+    /// One endpoint: the socket, the mTLS over it verifying the name read off
+    /// that same endpoint, and this end's preface and request down it — with
+    /// what the hang-up handle is made from, a second descriptor on the same
+    /// socket, taken here so that a clone that cannot be had is the same
+    /// sentence as a socket that would not open.
+    ///
+    /// **A write that failed is not in doubt, and the framing is why**
+    /// (bl-07b1). The handshake happens inside the first write, so an error
+    /// here is the socket, the two ends failing to accept each other's
+    /// certificates, or bytes not accepted — and `frame`'s reader takes a
+    /// length header and then exactly that many bytes, never scanning, so an
+    /// incomplete frame is not decoded, never mind executed. The doubt
+    /// begins where the write ENDS, which is why every refusal here falls
+    /// through to the next endpoint.
+    fn send(&self, at: &Endpoint, request: &Value) -> Result<Dialled, String> {
+        let connect = |e| format!("connect {}: {e}", at.address);
+        let tcp = connect_bounded(&at.address).map_err(connect)?;
+        let hangup = tcp.try_clone().map_err(connect)?;
         // A timeout that failed to arm costs a slow failure, never a wrong
         // one — and Some(nonzero) cannot be refused, so an error arm here
         // would be an untestable branch.
         let _ = tcp.set_read_timeout(Some(PREFACE));
-        let conn = ClientConnection::new(Arc::clone(&self.config), self.name.clone())
-            .map_err(|e| Wire::Transport(format!("tls {}: {e}", self.address)))?;
+        let conn = ClientConnection::new(Arc::clone(&self.config), at.name.clone())
+            .map_err(|e| format!("tls {}: {e}", at.address))?;
         let mut tls = StreamOwned::new(conn, tcp);
-        // **A write that failed is not in doubt, and the framing is why**
-        // (bl-07b1). An `io::Error` out of a write is that write's bytes not
-        // being accepted, so a frame that failed mid-write is a frame the
-        // server never received whole — and `frame`'s reader takes a length
-        // header and then exactly that many bytes, never scanning, so an
-        // incomplete frame is not decoded, never mind executed. The doubt
-        // therefore begins where the write ENDS, which is why the class here
-        // is the same one a socket that would not open earns.
-        send(&mut tls, request).map_err(|e| Wire::Transport(format!("send: {e}")))?;
-        Ok((tls, hangup, None, lease))
+        hello::state(&mut tls)
+            .and_then(|()| frame::write_frame(&mut tls, request.to_string().as_bytes()))
+            .map_err(|e| format!("send {}: {e}", at.address))?;
+        Ok((tls, hangup))
     }
 }
 
-/// What [`Seat::dial`] hands up: the stream with the request on it, the
-/// hang-up handle's descriptor, the edition if the preface is already spent, and the
-/// lease a punched line is out on.
-type Dialled = (
-    StreamOwned<ClientConnection, TcpStream>,
-    TcpStream,
-    Option<u32>,
-    Option<Lease>,
-);
+/// What [`Seat::dial`] hands up: the stream with the request on it, and the
+/// hang-up handle's descriptor.
+type Dialled = (StreamOwned<ClientConnection, TcpStream>, TcpStream);
 
-/// This end's two frames, written in one breath (REMOTE §3): the version
-/// preface, then the gesture envelope. One fallible unit because they are one
-/// act to a caller — a connection that could not carry the preface could not
-/// have carried the request either, and two sentences for that would be two
-/// spellings of "the socket went away".
-fn send(w: &mut dyn std::io::Write, request: &Value) -> std::io::Result<()> {
-    hello::state(w)?;
-    frame::write_frame(w, request.to_string().as_bytes())
+/// A connect that gives each address `endpoint` resolves to at most
+/// [`CONNECT`], and answers the last refusal where none of them took it.
+fn connect_bounded(endpoint: &str) -> std::io::Result<TcpStream> {
+    let mut refusal = std::io::Error::other("resolved to no address");
+    for addr in endpoint.to_socket_addrs()? {
+        match TcpStream::connect_timeout(&addr, CONNECT) {
+            Ok(tcp) => return Ok(tcp),
+            Err(e) => refusal = e,
+        }
+    }
+    Err(refusal)
 }
 
 /// The name to verify the server certificate against, read off the address.

@@ -54,8 +54,7 @@ fn seat() -> Result<Seat, String> {
         anchors: PathBuf::from(env("WIRE_ANCHORS")?),
         chain: PathBuf::from(env("WIRE_CHAIN")?),
         key: PathBuf::from(env("WIRE_KEY")?),
-        address: env("WIRE_ADDRESS")?,
-        pairing: None,
+        addresses: yog_android::material::list(&env("WIRE_ADDRESS")?),
     })
 }
 

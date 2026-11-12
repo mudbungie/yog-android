@@ -12,19 +12,18 @@
 //!   once. Half a trust store is a misconfiguration, and one that silently
 //!   degrades is the failure mode this design exists to exclude.
 //! - **Provisioned** — `Ok(Some(Material))`: the anchors, the client leaf and
-//!   key, and the one address.
+//!   key, and the addresses it dials, in order.
 //!
 //! The directory is the caller's fact (the Android shell hands its app-files
 //! dir; a test hands a scratch dir); the file names inside it are this
 //! module's, and they are the delivery channels' write contract.
 //!
-//! **Beside the four, an optional pair** (DESIGN §21.1, yog REMOTE §13.2):
-//! the server's rendezvous public key and the pairing salt, read by
-//! [`crate::rendezvous::read_dir`] with the same three answers one rung
-//! over. Both or neither — an entry with an address and no rendezvous
-//! material is today's entry and never touches the DHT (REMOTE §13.4).
+//! **`address` is a list** (yog REMOTE §15.3; DESIGN §21): one `host:port`
+//! per line, in dial order, and a one-line file is a list of one. Two files
+//! an older server handed out for the retired rendezvous — `rendezvous.pub`
+//! and `pairing.salt` — may still lie beside the four; nothing here names
+//! them, so they are neither read nor required.
 
-use crate::rendezvous::Pairing;
 use std::path::{Path, PathBuf};
 
 /// The operator CA this seat verifies the server against.
@@ -33,7 +32,8 @@ pub const ANCHORS: &str = "ca.pem";
 pub const CHAIN: &str = "client.pem";
 /// This seat's private key.
 pub const KEY: &str = "client.key";
-/// The file naming the `host:port` this seat dials.
+/// The file naming each `host:port` this seat dials, one per line and in
+/// order (yog REMOTE §15.3).
 pub const ADDRESS: &str = "address";
 
 /// **Every file a provisioned device holds**, in the order a screen should
@@ -51,10 +51,29 @@ pub struct Material {
     pub chain: PathBuf,
     /// This seat's private key, PEM.
     pub key: PathBuf,
-    /// `host:port`, as provisioned.
-    pub address: String,
-    /// The rendezvous material, where the entry roves.
-    pub pairing: Option<Pairing>,
+    /// Each `host:port` this seat dials, in the order the file states them.
+    /// Never empty.
+    pub addresses: Vec<String>,
+}
+
+impl Material {
+    /// The whole list as one phrase, for a line that says what this device
+    /// dials.
+    pub fn address(&self) -> String {
+        self.addresses.join(", ")
+    }
+}
+
+/// **An `address` file's text as its list**: one endpoint per line, blank
+/// lines and surrounding space dropped, the order kept. The registration
+/// door's answer is read through the same call, so the file and the answer
+/// cannot disagree about what a list is.
+pub fn list(text: &str) -> Vec<String> {
+    text.lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 /// Read the seat's material out of `dir`. See the module doc for the three
@@ -80,13 +99,10 @@ pub fn read_dir(dir: &Path) -> Result<Option<Material>, String> {
     // A file that will not read yields no address, and no address is the same
     // refusal an empty one earns: one branch, because "unreadable" and
     // "empty" are one fact about what this seat can be told to dial.
-    let address = std::fs::read_to_string(dir.join(ADDRESS))
-        .unwrap_or_default()
-        .trim()
-        .to_owned();
-    if address.is_empty() {
+    let addresses = list(&std::fs::read_to_string(dir.join(ADDRESS)).unwrap_or_default());
+    if addresses.is_empty() {
         return Err(format!(
-            "{} names no address; it must hold one host:port",
+            "{} names no address; it must hold one host:port per line",
             dir.join(ADDRESS).display()
         ));
     }
@@ -94,8 +110,7 @@ pub fn read_dir(dir: &Path) -> Result<Option<Material>, String> {
         anchors: dir.join(ANCHORS),
         chain: dir.join(CHAIN),
         key: dir.join(KEY),
-        address,
-        pairing: crate::rendezvous::read_dir(dir)?,
+        addresses,
     }))
 }
 

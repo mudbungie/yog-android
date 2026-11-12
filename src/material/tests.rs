@@ -34,7 +34,7 @@ fn provisioned_reads_back() {
     }
     std::fs::write(dir.join(ADDRESS), "192.0.2.7:7737\n").unwrap();
     let m = read_dir(&dir).unwrap().unwrap();
-    assert_eq!(m.address, "192.0.2.7:7737");
+    assert_eq!(m.addresses, ["192.0.2.7:7737"]);
     assert_eq!(m.anchors, dir.join(ANCHORS));
     assert_eq!(m.chain, dir.join(CHAIN));
     assert_eq!(m.key, dir.join(KEY));
@@ -51,27 +51,32 @@ fn an_empty_address_refuses() {
     assert!(e.contains("names no address"), "{e}");
 }
 
-/// **The optional pair rides beside the four** (DESIGN §21.1): absent, the
-/// entry does not rove; present, both files read; one alone is the same
-/// half-provisioned refusal the four earn, one rung over.
+/// **The address file is a list** (yog REMOTE §15.3): one endpoint per line,
+/// in the order stated, blank lines dropped — and the two files the retired
+/// rendezvous left beside the four are neither read nor required.
 #[test]
-fn the_roving_pair_is_read_beside_the_four_and_half_of_it_refuses() {
+fn the_address_file_is_a_list_and_the_retired_pair_is_ignored() {
     let dir = scratch();
     for f in [ANCHORS, CHAIN, KEY] {
         touch(&dir, f);
     }
-    std::fs::write(dir.join(ADDRESS), "192.0.2.7:7737\n").unwrap();
-    assert_eq!(read_dir(&dir).unwrap().unwrap().pairing, None);
-    let hex = |fill: u8| format!("{}\n", crate::rendezvous::hex(&[fill; 32]));
-    std::fs::write(dir.join(crate::rendezvous::KEY), hex(1)).unwrap();
-    let e = read_dir(&dir).unwrap_err();
-    assert!(e.contains(crate::rendezvous::SALT), "{e}");
-    std::fs::write(dir.join(crate::rendezvous::SALT), hex(2)).unwrap();
+    std::fs::write(
+        dir.join(ADDRESS),
+        "engine.example:7737\n\n  192.0.2.7:7737  \n[2001:db8::7]:7737\n",
+    )
+    .unwrap();
+    touch(&dir, "rendezvous.pub");
+    let m = read_dir(&dir).unwrap().unwrap();
     assert_eq!(
-        read_dir(&dir).unwrap().unwrap().pairing,
-        Some(crate::rendezvous::Pairing {
-            server: [1u8; 32],
-            salt: [2u8; 32],
-        })
+        m.addresses,
+        [
+            "engine.example:7737",
+            "192.0.2.7:7737",
+            "[2001:db8::7]:7737"
+        ]
+    );
+    assert_eq!(
+        m.address(),
+        "engine.example:7737, 192.0.2.7:7737, [2001:db8::7]:7737"
     );
 }

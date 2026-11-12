@@ -23,86 +23,35 @@
 //! never be started again inside the process it stopped in, and the operator's
 //! own remedy (open the app) would do nothing at all.
 //!
-//! **One more resident since the punched wire (DESIGN §21), and not a second
-//! chokepoint.** [`Slot`] is the one lock type every other module may hold —
-//! a mutex behind a closure door, so the crate's lock inventory is still this
-//! file and the ladder's shared RAM (the addresses it last saw, the endpoint
-//! cache, the backoff, the held streams) is `Slot`s rather than a rule-7
-//! carve-out apiece.
-//!
-//! **And [`Watched`], the one lock a caller may wait on** (bl-58a0): the
-//! ladder's per-entry gate, where every caller on an entry waits while one
-//! dial is in flight and while the line it landed is out. The same closure
-//! door as [`Slot`], so still nothing is held across a wait.
+//! **One more resident, and not a second chokepoint** (DESIGN §21; yog
+//! REMOTE §15.3): [`worked`], the endpoint of each identity's address list
+//! that answered earlier in this run. It is here rather than on a seat
+//! because a seat is opened per pass and per lane — what worked outlives
+//! every one of them and is shared across all of them. RAM and never disk, so
+//! a phone that moved between networks starts from the list's own order on
+//! its next start.
 
-use std::sync::{Condvar, Mutex, OnceLock, PoisonError};
-use std::time::Duration;
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock, PoisonError};
 
 use crate::host::{Host, Standing};
 
-/// **The lock a module outside this file may hold.** A closure door rather
-/// than a guard, so a caller can never hold it across a wait — every use is
-/// a few lines under the lock and nothing blocks inside it.
-pub(crate) struct Slot<T>(Mutex<T>);
-
-impl<T> Slot<T> {
-    pub(crate) fn new(value: T) -> Self {
-        Self(Mutex::new(value))
-    }
-
-    /// Run `f` under the lock. A poisoned lock is taken as it stands —
-    /// a thread that died mid-update left a value, and a value is better
-    /// than a panic on every later dial.
-    pub(crate) fn with<R>(&self, f: &mut dyn FnMut(&mut T) -> R) -> R {
-        let mut held = self.0.lock().unwrap_or_else(PoisonError::into_inner);
-        f(&mut held)
-    }
+/// What worked, per identity — keyed by the leaf it is about.
+fn table() -> &'static Mutex<HashMap<String, String>> {
+    static WORKED: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+    WORKED.get_or_init(Mutex::default)
 }
 
-/// **A [`Slot`] a caller can wait on.** Every pass through [`with`](Self::with)
-/// wakes every waiter, so a waiter re-asks its question after ANY change
-/// rather than after the one it guessed would matter; and between askings the
-/// lock is released for at most a tick, so a deadline read off an injected
-/// clock is read at least that often.
-pub(crate) struct Watched<T> {
-    value: Mutex<T>,
-    changed: Condvar,
+/// The endpoint that answered for `key` earlier in this run, if one did.
+pub(crate) fn worked(key: &str) -> Option<String> {
+    let table = table().lock().unwrap_or_else(PoisonError::into_inner);
+    table.get(key).cloned()
 }
 
-impl<T> Watched<T> {
-    pub(crate) fn new(value: T) -> Self {
-        Self {
-            value: Mutex::new(value),
-            changed: Condvar::new(),
-        }
-    }
-
-    /// Run `f` under the lock and wake every waiter — who can only look once
-    /// the lock is released, so the wake may go first and they still read
-    /// what `f` left.
-    pub(crate) fn with<R>(&self, f: &mut dyn FnMut(&mut T) -> R) -> R {
-        let mut held = self.value.lock().unwrap_or_else(PoisonError::into_inner);
-        self.changed.notify_all();
-        f(&mut held)
-    }
-
-    /// Ask `f` under the lock until it answers, waiting between askings for
-    /// a change or for `tick`, whichever comes first.
-    pub(crate) fn wait<R>(&self, f: &mut dyn FnMut(&mut T) -> Option<R>, tick: Duration) -> R {
-        let mut held = self.value.lock().unwrap_or_else(PoisonError::into_inner);
-        // A `loop` that yields rather than returns (bl-b55d): rustc maps no
-        // coverage region to a bare `loop {` line, and tarpaulin counts every
-        // line of a generic body, so the bare form read uncovered forever.
-        let answer = loop {
-            let waited = match f(&mut held) {
-                Some(answer) => break answer,
-                None => self.changed.wait_timeout(held, tick),
-            };
-            (held, _) = waited.unwrap_or_else(PoisonError::into_inner);
-        };
-        drop(held);
-        answer
-    }
+/// `address` answered for `key`: it is tried first for the rest of the run.
+pub(crate) fn works(key: &str, address: &str) {
+    let mut table = table().lock().unwrap_or_else(PoisonError::into_inner);
+    table.insert(key.to_owned(), address.to_owned());
 }
 
 /// The one slot. `OnceLock` rather than a `LazyLock` initializer because the

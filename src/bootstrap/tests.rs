@@ -40,7 +40,7 @@ fn the_leaf_says_which_component_this_device_is() {
     };
     assert_eq!(seat.component, Component::Seat);
     assert_eq!(seat.client, "notreal-desk");
-    assert_eq!(seat.material.address, "server.example.com:7737");
+    assert_eq!(seat.material.address(), "server.example.com:7737");
 
     let dir2 = scratch();
     mint_ca(&dir2, "ca");

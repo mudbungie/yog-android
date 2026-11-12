@@ -51,7 +51,6 @@ pub(super) fn enrolled(o: &Map<String, Value>) -> Result<Envelope, String> {
         ca: str_of(o, "ca")?,
         cert: str_of(o, "cert")?,
         key: str_of(o, "key")?,
-        roving: crate::envelope::roving::read(o)?,
     })
 }
 

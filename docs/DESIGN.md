@@ -40,11 +40,8 @@ What follows from that, and is invariant:
   serialization. A capability this client needs and the boundary lacks is
   added to the boundary, upstream in yog — never invented here.
 - **The client is always the asker** (REMOTE §3, the routing ruling). No
-  listening socket on the phone but one: the punch port of §21.4, which
-  exists only on an entry that roves, is bound once per entry for the run
-  (§21.9), and accepts only inside a window this device opened by calling
-  its server. The seat
-  still polls.
+  listening socket on the phone at all — the punch port that was the one
+  exception is deleted with the rendezvous (§21). The seat still polls.
 - **Bootstrap rides existing trust, never the new device's own connection**
   (REMOTE §1.4, widened by bl-ae9d — §5). The app carries no enrollment,
   pairing, or account protocol reachable over its own unauthenticated
@@ -517,9 +514,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/seat/acts/fork.rs` | the attempt posted, and the read that settles a lost one: the spine the gesture was fired from | landed (bl-99fd) |
 | `src/shell/screens/records/points.rs` + `records/acts.rs` | android-only: the fork points as controls — the operable notches and the `config/<name>` heads — and the foot's two acts over the two picks | landed (bl-99fd) |
 | `src/codec/row.rs` | the row acts' three spellings and the `flagged` receipt (§13.5), plus the three readings the menu is built from — one roster, one home, shared by the codec, the seat and the paint | landed (bl-f97c) |
-| `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned) | landed (bl-48d9) |
+| `src/material.rs` | the seat's key material: three answers (off / half-provisioned named in full / provisioned), and `address` as a list in dial order (§21) | landed (bl-48d9; the list, bl-eb8e) |
 | `src/tls.rs` | rustls client config, ring named never defaulted | landed (bl-48d9) |
-| `src/transport.rs` | the Seat: one connection per ask, server name off the address | landed (bl-48d9) |
+| `src/transport.rs` | the Seat: one connection per ask, the address list dialled in order with the endpoint that worked first (§21), each server name off the endpoint dialled | landed (bl-48d9; the list, bl-eb8e) |
 | `src/transport/wire.rs` | `Wire`, the four-class failure and its two predicates: which end failed, and whether the act was written and never answered (§19.1) | landed (bl-8641, third class bl-8bd0, fourth bl-07b1, split out bl-07b1) |
 | `src/test_support.rs` + `test_support/serve.rs` | tests only: openssl-minted PKI; the one-shot and scripted multi-connection mTLS answering servers | landed (bl-48d9, split bl-5a98) |
 | `src/rows.rs` + `rows/{build,compacted,project,project/blocks}.rs` | the transcript's one-line row projection: the row vocabulary (class, tone, role, fold), the per-entry match and its labels, the preview/body split — pure, no paint | landed (bl-0ed6) |
@@ -529,7 +526,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
 | `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, the three-state health, and whether it is still a host | landed (bl-d366, split bl-8641, `alive` bl-8bd0) |
 | `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0) |
-| `src/state.rs` | the process's one live tool host (§18.1) — the crate's only lock, so a foot outlives the activity and a relaunch cannot build a second | landed (bl-8bd0) |
+| `src/state.rs` | the process's one live tool host (§18.1) and the endpoint that worked per identity this run (§21) — the crate's only locks | landed (bl-8bd0; `worked`, bl-eb8e) |
 | `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
 | `src/shell/boot.rs` (`take`) | android-only: what a host is MADE of, in the one place that makes one — reached by the activity's boot and by the service's door alike (§18.8). The DECISION beside it is `crate::pocket`, under the floor; this is glue, and the nap it hands the ladder is a line no host test takes | landed (bl-d22d, seam corrected bl-996b) |
 | `src/attention/held.rs` | the held attention lane (§17.6): one lane life — dial, hold, and the first rise the server writes — folded onto rung 1's own memory through rung 1's own rule | landed (bl-b82d) |
@@ -620,18 +617,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/settings.rs` | android-only: the settings overlay, one row per knob over its sentence, `defaults` at the foot | planned (bl-d489) |
 | `src/theme.rs` | the visual language's one home in code (`docs/STYLE.md`, bl-549b): the ground and its elevation tints, the ink scale, the six state accents and the brand, the spacing, type and touch scales — pure, host-tested, and the only place a colour is spelled | landed (bl-549b) |
 | `src/shell/theme.rs` | android-only: the one adapter from the language to egui — the tokens installed as `Visuals` at app start, and a `Color32` by a state's name at a paint site | landed (bl-549b) |
-| `src/dht.rs` + `src/dht/{bencode,krpc,mutable,lookup,frontier,flight,items,transport}.rs` | §21.2: the pure mainline DHT client — bencode, KRPC's client half (with BEP 42's observed `ip` and its per-family vote, bl-544b), BEP 44's signed mutable item (ed25519 and SHA-1 from `ring`), the iterative walk that asks the bootstrap `find_node` and never `get` and never counts it as a result (yog bl-f6e1, bl-9408), its frontier of responsive nodes with the door re-asked while dry (yog bl-d00f) — only at the addresses that answered (yog bl-f519), the sliding window of queries in the air (yog bl-d9c1), `get`/`put`, and the UDP seam; never a node | landed (bl-3d62, walk bl-066c) |
-| `src/rendezvous.rs` | §21.1: the two roving files beside the leaf, both or neither, and the four HKDF derivations under `yog rendezvous` | landed (bl-3d62) |
-| `src/rendezvous/{item,call}.rs` | §21.2: the sealed presence and call (ChaCha20-Poly1305, `nonce ‖ ciphertext ‖ tag` over the endpoint list), and the two DHT verbs a rendezvous spends — presence read, call written under the derived inbox keypair | landed (bl-3d62) |
-| `src/rendezvous/punch.rs` | §21.4: the simultaneous open from one `SO_REUSEADDR`/`SO_REUSEPORT` port (`socket2`), v6 first, first stream kept; and the addresses this box would send from | landed (bl-3d62) |
-| `src/envelope/roving.rs` | §21.1: the enrollment envelope's optional `rendezvous_pub`/`pairing_salt` pair — read, written, landed as files, both or neither | landed (bl-3d62) |
-| `src/ladder.rs` + `src/ladder/{rove,backoff,climb}.rs` | §21.3: the four-rung dial ladder, what a roving entry climbs with (pairing, bootstrap, walk, window, the address probe, the clock), the rest between failed climbs, and the two seconds-scale rungs behind it (`climb`, split at the cap) | landed (bl-3d62, split bl-2ba5) |
-| `src/ladder/awake.rs` | §21.10: whether this process may climb at all — the one predicate a roving ladder parks on (activity in front, pocket service holding, a job's run) — and the return that clears the rest | landed (bl-c21d, re-call bl-c00e) |
-| `src/ladder/network.rs` | §21.11: where this box sends from and when that changed — the platform's default-network report (fallback: the routing-table read), the reachable-address filter, the scope classes the lines say, and the generation that drops held lines, rest and punch port at once | landed (bl-792e) |
-| `src/ladder/entries.rs` | §21.3, §21.9: the process-wide table giving every seat on a roving entry its one ladder (held weakly) and its one punch port, the server's cached presence and the last call `seq` (held for the run) | landed (bl-58a0, port bl-97ed, presence bl-c00e) |
-| `src/ladder/held.rs` | §21.5: the pool of held punched streams and the reader that discards pings through their silence and hangs up after two minutes of it | landed (bl-3d62) |
-| `src/ladder/say.rs` | §21.7: every line the rungs say in logcat — built here and nowhere else, families and counts only, a repeated outcome said once — and the injected sink (`Rove::say`) the bench reads them back from | landed (bl-df05) |
-| `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle — and the hand-back of a punched stream whose answer ended clean (split from `transport.rs`, §21.5) | landed (bl-3d62) |
+| `src/transport/open.rs` | a connection with its request on it — the frames left, the edition, the hang-up handle (split from `transport.rs`) | landed (bl-3d62; the punched stream's hand-back deleted, bl-eb8e) |
 | `src/shell/theme/anatomy.rs` | android-only: the shapes STYLE.md §5 spells — the outline-free list row every navigation list paints through, the multi-ink line, and the chip, live or dark, laid to the width the row gave it | landed (bl-0691, out of `theme.rs` at the cap) |
 | `rules/no-literal-colour.yml` | the rule that keeps it one home: no paint file constructs a `Color32` or names a palette constant of its own | landed (bl-549b) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE + FOREGROUND_SERVICE_SPECIAL_USE), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App`, and the two lanes armed on resume | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9, bl-fcc5, bl-8bd0) |
@@ -5802,548 +5788,60 @@ tap — so a phone whose person is not holding it stays skewed indefinitely. The
 row is what makes that recoverable: the refusal names both versions, and the
 one act that fixes it is on the screen an operator lands on.
 
-## 21. The punched wire: the phone reaches its server from anywhere (bl-3d62)
+## 21. The address list: the phone dials its server's endpoints in order (bl-eb8e; yog REMOTE §15.3)
 
-The app half of yog bl-0247. REMOTE §12.1 holds — nothing is owed a phone
-that is not owed a laptop — so this is the same client contract thrall
-carries (thrall bl-0a8b), reimplemented here per REMOTE §13.7 ruling 2 and
-tested against the same byte fixtures, which were pinned from the server's
-own output. REMOTE §13.2–§13.4 is the authority; this section says only what
-the phone does with it.
+**This section replaced the punched wire** (bl-3d62). yog REMOTE §15 reversed
+§13 the day the cellular pair measured out as unable to punch over TCP: the
+server now listens on a public port, and the rendezvous, the hole-punch, the
+DHT client and the two files they read (`rendezvous.pub`, `pairing.salt`) are
+deleted from every component in the act that lands it (REMOTE §15.4) — not
+kept beside the new way. On this device that removed `src/dht`,
+`src/rendezvous`, `src/ladder`, the held punched streams and their pings, the
+punch port (the one listening socket this app ever had), the awake and
+network doors only a roving ladder read, and `socket2` from the manifest.
 
-### 21.1 The material: two files beside the leaf
+What is left is REMOTE §15.3's one paragraph, and all of it is here:
 
-An entry that roves holds `rendezvous.pub` (the server's ed25519 public key)
-and `pairing.salt` beside `ca.pem`, 32 bytes of hex each, **both or
-neither**. Neither is today's entry, byte for byte; one alone is the
-half-provisioned store `material::read_dir` already names, one rung over
-(`rendezvous::read_dir`). They arrive the way the leaf does: the §8.4
-enrollment envelope carries them as `rendezvous_pub` and `pairing_salt`
-(yog bl-9043, edition 20), a server that does not rove sends neither, and
-half a pair refuses before anything lands (`envelope::roving`). The QR stays
-at level M: the pair grows a mint to about 1729 bytes, past Q, inside M.
+- **`address` is a list.** The file holds one `host:port` per line, in dial
+  order; a one-line file — every device provisioned before this — is a list
+  of one. `material::list` is the one reader, and the registration answer's
+  array is read through it too (§5). A v6 literal is bracketed.
+- **A dial tries the endpoint that worked earlier in this run first, then
+  every other in the file's order** (`transport::Seat::dial`). The first is
+  the public name; an operator whose router will not hairpin states the LAN
+  address second, and a phone at home falls through to it.
+- **An endpoint is passed over when its socket will not open or its handshake
+  does not verify.** Dialling a private address from somebody else's network
+  is harmless — whatever answers there cannot present the operator's CA — and
+  nothing has crossed in either case, so falling through repeats no gesture.
+  Every write failure ahead of the request's last byte is that same class
+  (§19.1), so one arm serves all three.
+- **Each resolved address is given five seconds to connect** (`CONNECT`), and
+  the handshake and preface ten (`PREFACE`): a network that drops a SYN costs
+  the next endpoint seconds, not minutes.
+- **What worked is RAM, never disk** (`state::worked`, keyed by the leaf's
+  path): a phone that moved between networks pays one bounded miss on the
+  remembered endpoint, takes the next, and remembers that instead; a restart
+  begins from the file's order.
+- **A list that reached nothing says why of every line in it**, each
+  endpoint's refusal in its own sentence, joined in order. It is still
+  `Wire::Transport` — nothing was written — so the tool host's redial (§18.5)
+  and the seat's banner read exactly what they read.
+- **The files the rendezvous left behind are ignored.** Nothing names
+  `rendezvous.pub` or `pairing.salt`; present, they are neither read nor
+  required, so a device provisioned by an older server keeps working on its
+  one-line `address` wherever that address is still dialable.
 
-Everything else is derived, HKDF-SHA256 under the salt `yog rendezvous`, one
-label each: `presence salt`, `inbox salt`, `seal key`, `inbox key`. The
-inbox key is an ed25519 **seed**, so the call is signed under a keypair both
-ends compute and this device stores no keypair of its own.
+**What this costs a phone that is already enrolled, said plainly.** A device
+whose `address` names a host that was only ever reachable by the punch — a
+loopback or `:0` address behind the rendezvous — has nothing dialable left. It
+registers again (§5) and takes the server's stated list.
 
-### 21.2 The DHT client
-
-`src/dht` is a pure client of the mainline — outbound UDP, never a node, no
-listener, nothing offered. It is the server's module reimplemented, including
-the two defects the server's live walks found: the bootstrap routers are asked
-`find_node` and never BEP 44's `get` (yog bl-f6e1), and the bootstrap is a
-door and never a result, so a walk whose learned nodes are all silent is a
-dark commons rather than an empty read (yog bl-9408). The roster is the
-server's four routers.
-
-**The walk is the server's, rule for rule** (bl-066c, porting yog bl-d00f and
-bl-d9c1; the evidence is yog REMOTE §13.7 ruling 3's tables). It converges on
-a *frontier*, not on everything it has heard of: the K closest nodes that
-replied, are not yet asked, or are still in the air. A node silent past its
-deadline, one that answered only an error (live, a `get` refused as `204
-Unknown query type`), and one this socket cannot send to (a v6 node from a v4
-socket — the send is refused, spends no query and holds no slot) all leave it,
-so dead nodes never sit on the slots a live node past them needs. When the
-frontier runs dry before K nodes past the door have replied, the door is asked
-`find_node` again, as long as it has ever named anyone: the one router that
-answers names a single random node eight times per query, so its first seeds
-are often all silent and re-asking draws fresh ones. **A re-ask knocks only
-where the door answered** (bl-29dd, porting yog bl-f519): a bootstrap address
-silent past its first deadline leaves the door for the rest of the walk, as a
-silent node leaves the frontier. From the server's box the roster resolves to
-five addresses of which three never answer, and re-asking all five spent
-three of every five door queries on nothing — in the walks that ended dark,
-most of the cap. The walk is a **sliding
-window**, not lockstep rounds: up to α walk queries in the air, each with its
-own deadline, and the next frontier node asked the moment any answers or times
-out, so a silent node costs its own slot for one deadline and never delays an
-answer beside it; the door's queries hold no α slot. `put` spends its tokens
-in one flight, every holder at once, each with its own deadline. The defaults
-are the server's measured ones — α 8, K 8, a 1 s deadline per query, a
-64-query cap — pinned by `the_defaults_are_the_measured_window_and_deadline`.
-Measured from the server's box after both fixes: `lookup` 10/10 at a median
-~6.5 s, `put` 10/10 at ~7.5 s, `get` 9/10 at ~7.5 s. yog bl-f519 measured
-the `put` that occasionally drew no acknowledgement and found a dark walk, not
-a silent `put`: a walk that reached no token holder sent nothing and borrowed
-the silent-put message. Both halves of its fix are ported (bl-29dd) — the door
-sheds silent routers as above, and a `put` whose walk found no token holder
-fails *no DHT node near T offered a write token* and sends nothing, *no DHT
-node stored the item* kept for holders that were sent the item and none
-stored it.
-
-**What a walk costs the phone.** The cap is the bound: at most 64 queries,
-the door's re-asks counted among them, each a datagram of about a hundred bytes out and
-at most a few hundred back (eight compact nodes; a `get` reply carrying the
-item is under 1.1 KB), so a walk moves on the order of tens of kilobytes at
-worst. The bill that matters on a handset is radio time, not bytes: the
-cellular radio stays in its high-power state for as long as datagrams keep
-flowing, and a walk that keeps the frontier alive now usually runs near the
-cap — `get` walks traced at 48-64 queries, `find_node` 23-64 — for the
-medians above. One rendezvous rung (§21.3) is two walks, a `get` of the
-presence and a `put` of the call, so a dial through the commons holds the
-radio roughly fifteen seconds where the pre-port walk usually ended dark in
-about two (and then failed). The window made that time *shorter* than the
-lockstep walk at the same cap (bl-d00f lockstep: `put` 19.2 s median), and α 8
-is what does it — the same queries, sent faster. What bounds the total is the
-ladder, not the walk: a rung that fails arms the backoff (1 s doubling to
-64 s, `ladder/backoff.rs`), and a network change is what clears it early. **Nothing here
-was measured on a phone or over cellular**, so the server's defaults stand;
-a smaller cap or α is a trade for a lower success rate and wants a
-measurement from a handset before it is taken.
-
-### 21.3 The ladder
-
-Every dial climbs `ladder::Ladder`, cheapest first: **a live held stream;
-the entry's direct `address`** (5 s per resolved address); **a re-call from
-the RAM-cached presence** — one DHT walk, the call's put, and no presence
-read (§21.12); **the full rendezvous** — read presence, write the call (a
-fresh 8-byte nonce, `seq` the clock's epoch second and always rising above
-the entry's last), punch. Both punch rungs leave from the entry's one port,
-bound for the run (§21.9). What worked is RAM for the process, never disk.
-**Nothing climbs while the process sleeps** — a caller parks before rung 1
-until the activity is in front or the platform holds the process for it,
-and a climb already past the gate stops at its next rung boundary (§21.10,
-§21.12). An entry with no pairing has the old two-step: a
-plain connect, down to the same sentence.
-
-**The TLS is the same TLS whichever rung answered.** The ladder hands back a
-socket; `transport::Seat` runs the inner mTLS over it verifying the server
-name off `address`, so `address` stays required on a roving entry — it is
-the name's one home (thrall's deviation 1, for the same reason).
-
-**Redial is the feature.** A dropped channel re-enters the whole ladder on the
-caller's own naps (`host::serve`, §18.5). The two rungs that cost seconds sit
-behind one backoff — 1 s doubling to 64 s — so a phone with no network
-settles instead of walking a dark commons per dial; a connection, a served
-stream, or a network change resets it.
-
-**One ladder per entry, one dial in flight** (bl-58a0). A pairing's inbox
-is one item — newest `seq` wins — and the server punches the call it reads
-once a poll, so two ladders climbing one entry at once write two calls from
-two punch ports and only one is ever answered; measured live, where the
-roster read, the conversations read and the attention fetch each climbed
-their own and each dial burned 35 s windows for nothing. So every
-`transport::Seat` on an entry — asker, tool host, attention lane — takes the
-entry's ONE ladder from a process-wide table (`ladder::entries`, keyed by
-address, pairing and commons, held weakly so a ladder no seat holds still
-goes away with its held streams), and every caller passes the entry's gate
-(`ladder::gate`) before it climbs. One caller dials; every other waits and
-re-looks in the held pool after each change. A punched line — landed or
-taken from the pool — is out on a `Lease` until its ask hands it back or it
-is dropped; a waiter waits for it, so the second caller is served over the
-first's line, and a dropped line lets it dial. **A caller looking in the pool
-is a line out** (bl-2ba5): it counts itself out before it takes, and a look
-that found nothing takes the count back without a change (§21.8 for why). A
-line out with an **ask** is waited for without a bound of the gate's own —
-the ask is answered inside its timeout — so no caller climbs beside it
-(§21.12). A line held by a **parked read** (`transport::Seat::hold`: the
-seat's lanes, the attention fetch; `Lease::park` marks it) comes back only
-when the server's hold ends, up to thirty seconds, so a waiter that has
-watched only parked reads' lines out for **10 s**, with no dial in flight,
-dials its own — still one at a time, and **beside** the line still out: a
-fresh call from a port of its own that is forgotten after its window
-(§21.9). The wait is on the injected clock
-(`state::Watched`, the one lock a caller may wait on). An entry that does not
-rove has no gate and no table. The punch port and the endpoints its last
-call found are the entry's too, held for the run rather than weakly (§21.9).
-
-**A network change is a new network generation** (§21.11). The platform
-reports it — `ConnectivityManager`'s default-network callback, through
-`dev.yog.App` — with the default network's own addresses, and a report whose
-reachable set differs from the last is a new generation. Until the platform
-reports (the host suite, a process a job started) the routing table is read
-instead (`punch::local_ips`, a UDP "connect" that sends nothing), and a read
-that differs from the last moves the generation the same way. A new
-generation drops every held stream (dead mappings) and clears the backoff
-**at once**, on the platform's thread, for every ladder alive; and the punch
-port is the entry's only in the generation it was bound in, so the next
-dial binds afresh and its call names the new port (§21.9): the server's NAT
-held a mapping toward the address and port the last call named, and this
-box no longer sends from that address. The cached presence stays — it says
-where the server is, and this box moving does not move it (§21.12). The call's
-own addresses are read as it is written, not at the dial's start. A flap
-back to the same set is caught by the held stream's own reader instead.
-
-**The call carries the observed address** (bl-544b, porting yog bl-efae;
-yog REMOTE §13.2). The addresses this box sends from are route-local, and on
-cellular that is a carrier-private address the server cannot reach — yog
-REMOTE §13.8 measured the observed endpoint as the only one there is on that
-path. So every walk keeps what each answering node says it saw the query come
-from (BEP 42's `ip`, 6 or 18 bytes, anything else ignored), and
-`Dht::observed` votes per family over the last walk: the endpoint named most
-often, nothing on a tie, nothing after a walk that heard nobody — one node's
-claim is only a claim. The call lists the local addresses and then each
-observed address not already among them, **at the punch port**: the observed
-port is the DHT socket's UDP mapping, not the punch socket's TCP one, so only
-the address is taken and port preservation is trusted. **A carrier NAT that
-rewrites the port per mapping defeats this**, and that case stays open with
-REMOTE §13.8. The sealed call's byte format is unchanged — it was always a
-list. The foot (thrall bl-921e) made the same omission and carries the same
-defect on cellular.
-
-### 21.4 The punch
-
-`rendezvous::punch` binds one port on both families with `SO_REUSEADDR` and
-`SO_REUSEPORT`, listens there, and connects toward every server endpoint
-*from* that port, v6 first, one SYN per 2 s — the simultaneous open a NAT pair
-needs. The first stream that lands is kept. That takes `socket2`, the one new
-crate, under the operator's 2026-09-23 ruling (REMOTE §13.7 ruling 1). The
-window is **35 s**, not the server's 20: the server polls its inbox every
-15 s and punches for 20 after, so a client that stopped at 20 would miss a
-late poll entirely — thrall's figure, a default to revisit on evidence. This
-listener is the one exception to §1's no-listening-socket rule. It is bound
-once per entry for the run (§21.9) and accepts only inside a window: a
-stream the kernel queued between windows — a server that read a call late
-and punched after this end gave up — is dropped unread when the next
-window opens.
-
-### 21.5 Held streams
-
-A punched stream whose answer ended with the terminator goes back to the
-ladder (`transport::Open::each`) with its preface spent; the next ask writes
-only its request. Between asks a holder thread reads it: `{"ping":true}` is
-discarded (and discarded ahead of a reply too, where one written just before
-the request sits in the buffer), any other frame drops the stream, and **two
-minutes with no frame at all hangs up** — the server's own bound, mirrored,
-on the injected clock so the suite walks it in an instant. A dialled socket is
-still one ask, one connection, as before. A ladder that goes away takes its
-held streams with it — and since bl-58a0 it goes away only when no seat on
-its entry holds it (§21.3). **A read's hang-up handle is disarmed the moment
-its stream goes back to the pool** (`transport::Hangup`, bl-2ba5): keeping
-and hanging up are decided under one lock, so a lane dropped after its hold
-ended cannot shut down the line the pool now holds (§21.8).
-
-### 21.6 What is proved, and what is not
-
-Host tests, no device, no network: the HKDF labels, seal/unseal and the
-signed item against the server's byte fixtures; the walk against a fake DHT
-on loopback UDP with a router that answers only `find_node`; every rung taken
-and fallen through against a scripted server that holds its connection; the
-backoff; a network change; a server that moved (cache miss, then
-rendezvous); ping discard and the silence hang-up.
-
-**Not proved, and stated:** no walk against the live mainline from a phone;
-no TCP simultaneous open across a real NAT pair (REMOTE §13.8 is still open);
-no measurement of what an idle held stream costs the radio — the holder wakes
-every 250 ms to look for a taker, a default to revisit. The scheduled
-attention fetch (§17) opens a fresh seat, and so a fresh ladder, per fetch:
-it pays the direct rung and a rendezvous each time rather than sharing the
-foreground seat's cache.
-
-### 21.7 What the ladder says (bl-df05)
-
-A dial that fails silently is indistinguishable from one never made, so the
-rungs say each event in logcat — yog REMOTE §13.4's *operator's view of the
-loop*, the server's bl-355c, from the phone's end. One line apiece, every one
-built in `ladder::say` and beginning `yog.rendezvous:` (in the message, not the
-tag, for `shell::app::probe`'s reason):
-
-    yog.rendezvous: direct rung — <n> address(es) tried: v6 timed out, v4 refused
-    yog.rendezvous: direct rung — the entry's name did not resolve
-    yog.rendezvous: climb skipped — resting after the last failed climb
-    yog.rendezvous: network changed — this box now sends from 1 v6 global, 1 v4; <h> held stream(s) dropped, rest cleared
-    yog.rendezvous: parked — the app is not in the foreground; nothing climbs
-    yog.rendezvous: back in the foreground — rest cleared, re-call armed
-    yog.rendezvous: climb stopped — the app left the foreground; no call written
-    yog.rendezvous: re-call — presence cached, <k> endpoint(s) (1 v4), no presence walk
-    yog.rendezvous: rendezvous not started — no bootstrap node resolved
-    yog.rendezvous: presence read — seq <s>, <k> endpoint(s) (1 v6, 1 v4)
-    yog.rendezvous: presence not read — <the rung's own sentence, or: the DHT walk failed (reason withheld: it names the target)>
-    yog.rendezvous: call written — nonce <n>, seq <s>, <k> endpoint(s) (1 v4), <a> ack(s)
-    yog.rendezvous: call not written — the DHT put failed (reason withheld: it names the target)
-    yog.rendezvous: punch started — <k> endpoint(s) (1 v4), window <w>s
-    yog.rendezvous: punch landed — peer v4
-    yog.rendezvous: punch expired after <w>s with no stream
-    yog.rendezvous: held stream kept for the next ask
-    yog.rendezvous: held stream handed to an ask — <p> ping(s) discarded while held
-    yog.rendezvous: held stream dropped — <reason>; <p> ping(s) discarded while held
-
-A drop's reason is one of five classes: two minutes of silence, the server
-ended it, a frame that is not a ping, the stream closed or failed, or released
-(the network changed or the ladder went away). A line carries counts,
-sequence numbers, nonces and address families, each v6 counted by its scope
-(`global`, `ula`, `link-local`, `loopback` — bl-792e, §21.11) — **never an address, a key, a
-salt or a sealed byte**; a DHT failure's own text names the target walked
-toward, a derivation of the key and salt, so it is withheld. Pings are
-counted into the held stream's closing line rather than said one per 25 s.
-
-**A repeated outcome is said once.** A redial re-enters the ladder on every
-nap, so the direct rung's outcome and the rest's refusal are said only when
-they differ from that kind's last line; a climb that is climbed again says its
-lines again, which the backoff already rate-limits. The sink is injected on
-`Rove::say` — logcat at info on the device, stderr off it — and the fake-DHT
-bench reads the lines back rung by rung. An entry that does not rove has no
-rungs and says nothing: its dial is the old one, and its sentence is its
-error. **Not said:** a ping discarded ahead of a reply inside
-`transport::Open::each` — that reader holds no sink, and the holder's count
-covers the silence between asks, which is where a held stream lives.
-
-### 21.8 The re-punch beside a held line, and the forty-second close (bl-2ba5)
-
-Measured live on two dials (yog bl-65dc, wifi, build c5eac49): *punch
-landed* at +3 s, handed/kept pairs, then at +6 s *re-punch at 2 cached
-endpoint(s)* with the line still up, expiring at +41 s while the server said
-*call nonce N already punched — no punch*. Once, the held stream dropped
-*closed or failed* about 40 s after landing in the foreground, the server
-saying *served stream ended* in the same second.
-
-**The re-punch was a caller that read the entry as idle.** `Pool::take` pops
-a holder and waits for its thread to hand the stream over, which it does at
-its next read tick — up to 250 ms. The caller took its lease only after the
-take returned, so for that window the pool was empty, no line was counted out
-and no dial was in flight; the seat's asker, its lanes and the tool host hand
-the one line round several times a second, and a caller arriving in one of
-those windows was admitted to dial. The direct rung failed and the next rung
-was the re-punch. The 10 s exit could not produce it at +6 s: the dial in
-flight until +3 resets every waiter's watch. **Fix:** the lease is taken
-before the look and handed back quietly on a miss (`ladder::gate`). Neither
-direction is a change — no waiter waits for a line to leave, and a miss is
-nothing appearing.
-
-**The forty-second close was this end.** The server hangs up a held stream
-only after two minutes of silence it pings through every 25 s (`Quiet::held`)
-— it cannot close at 40 s by itself. The seat's lanes (§14.1) are follow-class
-reads the server holds for thirty seconds and then ends with the terminator;
-a punched lane's stream then goes back to the pool (`Open::each`), and the
-worker, told the lane is over, drops it — and `Lane`'s drop hangs up through
-its `Hangup`, a second descriptor on the same socket, now the pool's. The
-`shutdown` reached the holder as a closed stream and the server as an EOF in
-the same second: a lane opened a few seconds after landing, plus its
-thirty-second hold. **Fix:** the hang-up is disarmed once the stream is kept
-(§21.5).
-
-**The 10 s exit no longer re-punches.** A caller that waits past the bound on
-a parked read wants a *second* line; the server punches a call's nonce once,
-toward the port that call named, so a re-punch at the first line's endpoints
-from a fresh port could never be answered. That dial writes a fresh call.
-
-**Not done here, and stated:** a lane hung up *mid-hold* — the focus
-moving — still shuts down its punched line; the next ask then climbs to a
-fresh call. The re-punch rung's port was bl-97ed's (§21.9); the rung itself is
-retired, replaced by the re-call (§21.12).
-
-### 21.9 The punch port, bound once per entry for the run (bl-97ed)
-
-**The ruling** (operator, on bl-97ed): bind the punch port once per entry
-for the life of the process, as lernie (`Worked::punch`) and thrall do.
-Until then every climb bound a fresh port.
-
-**The reasoning, checked against yog REMOTE §13.3 and the server's
-`wire/rendezvous`.** The server punches only on a new call, from its one
-port held for its run, toward the endpoints and the port that call named,
-so its NAT then holds a mapping toward exactly (this box's address, that
-port). A port kept for the run is one the server's NAT has let in before.
-
-**Where it lives.** The entry table (`ladder::entries`) holds each roving
-entry's `Port` strongly, beside its weakly held ladder, so the port survives
-across climbs and across seats: a ladder that goes away with its last seat
-leaves the port, and the next seat's ladder climbs from it. The same value
-carries the server's cached presence (§21.12) and the entry's last call
-`seq` — a second ladder on the entry inside the same clock second must
-still write a higher one, or the commons refuses its put. Two things
-replace the port, each forced:
-
-- **A network change** (§21.3) lets it go: the mapping names an address
-  this box no longer sends from. The next climb binds afresh.
-- **A dial beside a line still out** (§21.3) binds a fresh port: the line
-  out holds the entry's port toward the server's one port, TCP carries one
-  connection per pair of ends, and the server would punch the new call
-  toward a pair already in use. **That port is the beside call's alone and
-  is never stored** (bl-c21d): measured live, storing it left the entry on
-  a port whose call had not landed.
-
-**The re-punch rung this section used to keep is retired** (yog bl-278f,
-§21.12). It punched at the cached endpoints from this port with no call
-behind it, riding a NAT mapping it assumed outlived the window. Measured on
-three wifi dials against server 0.0.74, the re-punch left from exactly the
-landed port for 35 s and nothing reached the server's kernel: the server's
-home NAT holds no mapping once the served stream has ended, and the server
-sends SYNs only inside a call's window, so a punch with no call is
-one-sided. Its guards went with it — the "armed" flag a re-punch spent and
-a served line re-armed, and the reasoning about a re-punch landing in an
-server's accept queue unread (the server serves its punch port at any time
-since yog bl-5276). The 10 s preface bound (`transport`, `PREFACE`) stays: a
-fresh socket that connects and is never served still costs that, not the
-ask's two minutes.
-
-**Proved on the fake bench** (`ladder/tests/port.rs`, whose server can
-answer only the port the call named, as a NAT that punched toward it
-would): a second seat on the entry, opened after the first went away,
-climbs from the port the first call named; a network change binds a new
-port and the next call names it; a beside call names a port of its own and
-the entry keeps the landed one. Beside them: a stream queued between
-windows is dropped (`rendezvous/punch/tests.rs`), and an unserved stream
-gives up at the preface bound (`transport/tests.rs`). Still unmeasured:
-whether a TIME_WAIT pair (punch port, server endpoint) left by this end's
-own close refuses the next call's SYNs for its minute outside loopback.
-
-### 21.10 No climb while the process sleeps, and the return (bl-c21d)
-
-**One predicate: is this process awake** (`ladder::Awake`). A roving
-ladder's caller parks on it before rung 1 — it drops nothing the ladder
-holds and starts nothing — and wakes on the change, not on a poll. Awake is
-the platform's fact, reported by the component the platform tells:
-
-- **the activity is in front** — `MainActivity`'s resume and pause, through
-  `dev.yog.App` (the fact's existing home, which `open` already asks) and
-  the native `App.foreground`. A process nobody has told otherwise is awake:
-  the host suite, and a process a job or the service started.
-- **the pocket service holds the process** — `dev.yog.Pocket` reports its
-  hold and its end through `App.pocketed`. A foreground service is above the
-  network threshold (§18.6), and the foot and the attention lane are exactly
-  the climbs a pocketed phone makes. If bl-f677 rules for a foreground
-  service that keeps the seat's line, it reports here and nothing else moves.
-- **a job is running** — the scheduled fetch (§17) takes a `Hold` for its
-  one run; the platform grants a job its network.
-
-An entry that does not rove has no ladder policy and is unchanged.
-
-**A wake after sleep is a return, and the first caller after one clears the
-rest** (`Ladder::wake`). The failures the platform caused behind the app
-are evidence about the platform, not about the server, so the first climb
-back does not rest; with the server's presence cached it is a re-call — one
-call from the entry's port, the port whose call landed (§21.9), with no
-presence walk (§21.12). Two lines say it: `parked — the app is not in the
-foreground; nothing climbs` (once per sleep) and `back in the foreground —
-rest cleared, re-call armed` (or `presence to be read`, where nothing is
-cached). A climb already past the gate when the app leaves stops at its
-next rung boundary (§21.12).
-
-**Proved on the fake bench** (`ladder/tests/awake.rs`, `port.rs`): a
-backgrounded ask parks with the held line still held and nothing said but the
-park, and is served over that line on the return; a beside call names a port
-of its own and the entry keeps the landed one; and the predicate's three
-reporters, alone and together. The return's re-call and the stop at HOME are
-§21.12's.
-
-### 21.11 The network is the platform's fact, and the call names only its link (bl-792e)
-
-Measured on cellular (bl-65dc's leg): after wifi went down the ladder said
-*network changed* 34 s and 53 s later — it learned of the change by diffing
-the routing table at its next dial — and the first call after the drop named
-the wifi addresses, the first after wifi returned the cellular ones, each a
-wasted rendezvous. Every call also named a v6 the internet network did not
-own: the UDP "connect" read the source address of whichever interface the v6
-route happened to leave by (the overlay's ULA, or the IMS network), not the
-default network's.
-
-**One source, `ladder::Network`**, on `Rove::network` (the process's own on
-the device, one per test on the bench):
-
-- **The platform reports.** `dev.yog.App.follow` registers
-  `ConnectivityManager.registerDefaultNetworkCallback` once per process, from
-  `MainActivity`'s create or `Pocket`'s start, whichever comes first.
-  `onAvailable` and `onLinkPropertiesChanged` hand the default network's
-  `LinkProperties.getLinkAddresses()` — its own link, never every
-  interface's — to the native `App.network` as one string, an address a
-  line; `onLost` hands the empty string. The door
-  (`shell/sys/doors.rs`, `Java_dev_yog_App_network`) calls
-  `Network::changed`, where everything is decided and host-tested.
-- **Only an address a peer outside could reach is kept** (`network::reachable`):
-  `fc00::/7`, `fe80::/10`, `169.254/16`, `100.64/10` (carrier-grade NAT and
-  the overlay's v4) and `192.0.0/24` (the 464XLAT translator's side) are
-  dropped whatever the source; a line that does not parse (a link-local's
-  `%zone`) is dropped too. yog bl-f612 rules what an overlay should do; a
-  ULA is unreachable from outside regardless. **A carrier's own
-  unroutable v4 on the default link (the 25.x measured) is not a reserved
-  range, and stays** — the call's observed address (§21.3) is what a peer
-  reaches on that path.
-- **A generation is a moved set.** A report or a read whose sorted,
-  de-duplicated reachable set differs from the last is a new generation; the
-  first set ever read is not a change, and a report of the same set (a DNS
-  change, a reordering) is none. Once the platform has reported it is the one
-  source, and the routing-table read is only the fallback before it.
-- **A new generation acts at once.** Every ladder alive on the network
-  (registered weakly by `ladder::entries`) hears it on the reporting thread:
-  its held streams drop, its rest clears, and the move is said then —
-  `network changed — this box now sends from …` — rather than at the next
-  dial. The entry's punch port carries the generation it was bound in, and a
-  port of another is let go at the next climb. The call reads the addresses
-  as it is written.
-- **Which v6 is said, never which address**: §21.7's family counts carry
-  each v6's scope class (`1 v6 global`, `1 v6 ula`).
-
-**Proved on the fake bench** (`ladder/tests/network.rs`): a report drops the
-held line and says the change with no ask in flight; the next call names
-only the report's reachable address (plus what the commons observed), from a
-port of the new generation, and the change is not said twice; the platform
-overrides the fallback, an unchanged or reordered report is no change, an
-empty one is; a report reaches no ladder that has gone; the scope table and
-the filter. **Not built by the gate**: the Java half (`App.java`,
-`Pocket.java`) is compiled by the APK build, not by `make check`.
-**Not yet re-verified live**: the drop should now be said within a second of
-`svc wifi disable`, and the first call after it should name the cellular
-link. **Open:** a line out with an ask (a parked read) is not cut by the
-report — it ends on its own read — and a climb whose punch window is open
-when the report lands finishes that window; with a VPN as the default
-network the report is the VPN's link, which the filter may leave empty, so
-the call then names only its observed address.
-
-### 21.12 Rung 3 is a re-call; parking stops a climb; an ask's line is waited for (bl-c00e)
-
-Measured 2026-09-29 on three wifi dials (server 0.0.74, a build carrying
-§21.10): the return's re-punch left from exactly the landed port and could
-not land — the server's home NAT holds no mapping once the served stream
-has ended (§21.9). The ruling is yog bl-278f's (yog REMOTE §13.3–§13.4, being
-amended to say it): **the rungs are held line → direct → re-call → full
-rendezvous.** Two drifts from bl-c21d rode with it.
-
-**The re-call** (`ladder::climb`). The server's presence — its endpoints,
-its punch port among them — is cached on the entry (`entries::Port`) the
-moment a walk reads it. A climb that holds it writes a fresh call at those
-endpoints without reading the presence first — one DHT walk (the put's), not
-two, about 8 s cheaper — and punches from the entry's port, which the call
-names. **A call that expires unanswered drops the cache**, the one evidence
-that the server may have moved, so the next climb reads the presence again;
-that climb is the next one, not a fall-through inside the same climb, since
-a call that expired usually means a server that did not read it, and a
-second call behind it would double the wait for the same answer. The cache
-survives a network change (it is the server's fact) and a beside dial uses
-it too, from its own port. The return's line says `re-call armed` when the
-cache holds a presence and `presence to be read` when it does not. **The
-held line with its 25 s pings is the only thing that keeps a NAT mapping
-alive** (ruling 2), so keeping it alive (bl-f677) is the real fast return;
-this rung is what a return costs when it was not kept.
-
-**Parking stops a climb in flight** (`Ladder::boundary`). Measured live, a
-climb already past the gate at HOME wrote its call in the background and
-landed there. The climb now asks `Awake` at each rung boundary — before the
-walk and before the call — and a process not awake stops it there with
-`climb stopped — the app left the foreground; no call written`. A call
-already written runs its punch window out, because the server is punching
-toward it. The presence the stopped walk read stays cached, so the return is
-a re-call.
-
-**An ask's line is waited for; only a parked read's is given up on**
-(`ladder::gate`). Measured live, a concurrent ask climbed to a beside call
-while the entry's only line was out with another ask. The gate now tells
-the two apart: `transport::Seat::hold` — the lanes, the attention fetch —
-marks its lease parked (`Lease::park`, a change a waiter re-reads), and
-`Seat::ask` does not. A waiter behind a line out with an ask waits without a
-bound of the gate's own, since the ask ends inside its timeout and a dropped
-line is a change; the 10 s exit (`LENT`) runs only when every line out is a
-parked read's, and never while a dial is in flight. So a second ask climbs
-beside nothing it will be handed.
-
-**Proved on the fake bench**, whose server accepts only the port a call
-named: a dropped line's next climb is one re-call from the landed port,
-with the commons' presence made unreadable first so a walk would have
-failed (`ladder/tests/rungs.rs`); a second seat on the entry re-calls from
-the first seat's port (`port.rs`); the return after the line died says
-`re-call armed` and writes exactly one call, no presence walk and no
-re-punch line (`awake.rs`); HOME during the presence walk writes no call,
-and the return is one re-call (`awake.rs`); a re-call that expires drops
-the cache and the next climb reads the server's new home (`fallthrough.rs`);
-a caller behind an ask's line past three times `LENT` climbs nothing and is
-served over the line, and two asks on an idle entry are one climb and one
-call with the clock run past `LENT` mid-climb (`shared.rs`); the parked
-count in the gate alone (`gate/tests.rs`). **Not yet re-verified live**: a
-return on wifi should now say `re-call armed`, write one call and land.
-**Open**: a lane is marked parked for its whole life, so an ask behind a
-lane that happens to answer at once still waits its 10 s before climbing;
-the lane's line comes back first in practice.
+**What is no longer true elsewhere in this document.** Any remark that
+survives in §17 or §18 about a punched line dying in the background describes
+the deleted wire. Per-ask connections are the whole
+transport again (§2): no stream outlives its answer, so there is nothing for
+the platform to kill between asks.
 
 ## 22. The Hermes shape on the phone (bl-bf74, under bl-92d3)
 
@@ -6904,7 +6402,7 @@ is a client of one server (entries are an upstream ask, §13.4).
     surface (§9, W1), the two enrollment screens and the scan (§11–§12), the
     foot's screen (W4), the minting seat (§13.18, inside `/config`), the
     pocketed foot's service (§18), the scheduled fetch and its held lane
-    (§17), the punched wire (§21), the lost-reply fates (§19) and the
+    (§17), the address list (§21, which replaced the punched wire), the lost-reply fates (§19) and the
     release row's behaviour (§20.4 — it moves to the seat panel, 4 and 7;
     its check now starts on the first seat paint rather than the first
     roster paint, the same once-per-process `OnceLock`).

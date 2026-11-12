@@ -175,10 +175,7 @@ fn a_server_off_the_operators_ca_never_completes_the_handshake() {
     let seat = Seat::open(&material(&dir, "ca", "client", &address)).unwrap();
     let e = seat.ask(&json!({ "op": "workspaces" })).unwrap_err();
     let said = e.sentence();
-    assert!(
-        said.contains("receive:") || said.contains("send:"),
-        "{said}"
-    );
+    assert!(said.starts_with(&format!("send {address}: ")), "{said}");
     assert!(e.transport());
     // A handshake that never completed carried no application byte either
     // (bl-07b1): the refusal happens inside the write, before a frame of it
@@ -220,9 +217,8 @@ fn a_skewed_server_is_refused_before_its_answer_is_read() {
     assert!(!e.transport());
 }
 
-/// A stream that connects and is never served — a re-punch the server's
-/// listener completed outside any call's window (DESIGN §21.9) — costs the
-/// preface's bound, not a whole ask's.
+/// A stream that connects and is never served costs the preface's bound, not
+/// a whole ask's — which is what lets the next endpoint in a list be tried.
 #[test]
 fn a_stream_nobody_serves_gives_up_at_the_preface_bound() {
     let dir = pki();
@@ -258,3 +254,5 @@ fn the_server_name_is_read_off_the_address() {
 }
 
 mod held;
+
+mod list;

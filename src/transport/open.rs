@@ -1,16 +1,12 @@
-//! **A connection with its request on it** (split from `transport.rs` when
-//! the punched wire gave a stream a life after its answer, DESIGN §21): the
-//! frames left to read, the edition the server stated, and the handle that
-//! ends the read from another thread.
+//! **A connection with its request on it**: the frames left to read, the
+//! edition the server stated, and the handle that ends the read from another
+//! thread.
 
 use super::Wire;
 use crate::frame;
-use crate::ladder::{Held, Ladder, Lease};
-use crate::state::Slot;
 use rustls::{ClientConnection, StreamOwned};
 use serde_json::Value;
 use std::net::TcpStream;
-use std::sync::Arc;
 
 /// A connection with its request written and the preface confirmed: the
 /// answer's frames are what is left on it.
@@ -22,50 +18,19 @@ pub struct Open {
     /// capability question must not depend on what else has been dialled
     /// since — see `crate::ledger`.
     edition: u32,
-    /// The ladder a PUNCHED stream goes back to when its answer ends clean
-    /// (REMOTE §13.4: held and reused), and the lease it is out on — dropped
-    /// after the stream is back, or with the stream, and either way the
-    /// entry's next caller looks (bl-58a0). `None` for a dialled socket,
-    /// which is dropped as it always was.
-    keep: Option<(Arc<Ladder>, Lease)>,
-    /// Shared with this read's [`Hangup`]: set once the stream is back with
-    /// the ladder, after which hanging up is no longer the handle's to do.
-    kept: Arc<Slot<bool>>,
 }
 
 /// **The way to end a held read from another thread.** A reader parked on
 /// the socket wakes when the socket is shut down under it, so a lane is
 /// stopped by hanging up rather than by a flag it would only read between
 /// frames — up to a hold away.
-///
-/// **A read that ended clean has no socket to hang up** (bl-2ba5). The
-/// handle is a second descriptor on the stream, and a punched stream whose
-/// answer ended goes back to the ladder's pool — so a lane dropped after its
-/// hold ended used to shut down the line the pool was holding for the next
-/// ask, and the holder and the server each read the other end close in the
-/// same second: measured live about forty seconds after a punch landed, the
-/// follow lane's thirty-second hold plus the pass that opened it. Keeping and
-/// hanging up are decided under one lock, so exactly one of them happens to
-/// a kept stream.
 pub struct Hangup {
     tcp: TcpStream,
-    kept: Arc<Slot<bool>>,
 }
 
 impl Open {
-    pub(super) fn new(
-        tls: StreamOwned<ClientConnection, TcpStream>,
-        edition: u32,
-        keep: Option<(Arc<Ladder>, Lease)>,
-    ) -> (Open, Arc<Slot<bool>>) {
-        let kept = Arc::new(Slot::new(false));
-        let open = Open {
-            tls,
-            edition,
-            keep,
-            kept: Arc::clone(&kept),
-        };
-        (open, kept)
+    pub(super) fn new(tls: StreamOwned<ClientConnection, TcpStream>, edition: u32) -> Open {
+        Open { tls, edition }
     }
 
     /// **The edition the server stated**, for whoever asks
@@ -82,13 +47,6 @@ impl Open {
     /// is dropped, which is how the server learns its answer has no reader.
     /// A socket that ends without the terminator is a lost stream (REMOTE
     /// §10: a stream that ended and a dial that failed are one case).
-    ///
-    /// **A ping is never a frame of the answer** (REMOTE §13.4): one the
-    /// server wrote into the silence just before the request landed sits in
-    /// the buffer ahead of the reply, and is dropped here. And a punched
-    /// stream whose answer ended with the terminator goes back to the ladder
-    /// for the next ask — only then, because a stream left mid-answer is not
-    /// one the next request could be written into.
     pub fn each(mut self, adopt: &mut dyn FnMut(Value) -> bool) -> Result<(), Wire> {
         loop {
             // **Lost and not `Transport`** (bl-07b1): the gesture is on the
@@ -99,22 +57,9 @@ impl Open {
             let frame = frame::read_frame(&mut self.tls)
                 .map_err(|e| Wire::Lost(format!("receive: {e}")))?;
             let Some(body) = frame else {
-                if let Some((ladder, _lease)) = self.keep.take() {
-                    // A hang-up that got here first shut the socket down; the
-                    // holder then reads it closed and drops it, as it should.
-                    self.kept.with(&mut |kept| *kept = true);
-                    ladder.keep(Held {
-                        tls: self.tls,
-                        edition: self.edition,
-                    });
-                }
                 return Ok(());
             };
-            let value = parsed(&body)?;
-            if crate::ladder::held::is_ping(&value) {
-                continue;
-            }
-            if !adopt(value) {
+            if !adopt(parsed(&body)?) {
                 return Ok(());
             }
         }
@@ -122,19 +67,14 @@ impl Open {
 }
 
 impl Hangup {
-    pub(super) fn new(tcp: TcpStream, kept: Arc<Slot<bool>>) -> Hangup {
-        Hangup { tcp, kept }
+    pub(super) fn new(tcp: TcpStream) -> Hangup {
+        Hangup { tcp }
     }
 
-    /// End the held read — unless it already ended and its stream went back
-    /// to the ladder. Idempotent, and a socket already gone is not an error:
-    /// the reader it was for has nothing left to be woken from.
+    /// End the held read. Idempotent, and a socket already gone is not an
+    /// error: the reader it was for has nothing left to be woken from.
     pub fn hang_up(&self) {
-        self.kept.with(&mut |kept| {
-            if !*kept {
-                let _ = self.tcp.shutdown(std::net::Shutdown::Both);
-            }
-        });
+        let _ = self.tcp.shutdown(std::net::Shutdown::Both);
     }
 }
 

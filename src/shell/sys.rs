@@ -35,14 +35,6 @@
 //!   requires be leaked. Both arguments are checked, both outlive every use,
 //!   and the write happens only where nobody has written — the argument is
 //!   `handed`'s own.
-//! * **`Java_dev_yog_App_foreground` and `Java_dev_yog_App_pocketed`** — the
-//!   lifecycle's two reports into `ladder::Awake` (bl-c21d, DESIGN §21.10):
-//!   the activity resumed or paused, the pocket service started or stopped
-//!   holding the process. The same direction and the same naming argument;
-//!   each is one boolean in and nothing out.
-//! * **`Java_dev_yog_App_network`** — the default network's report into
-//!   `ladder::Network` (bl-792e, DESIGN §21.11): its addresses as one string
-//!   in, nothing out, under the same naming argument.
 //! * **the `WGPU_BACKEND` fold** — `std::env::set_var` is unsafe in edition
 //!   2024 because a concurrent `getenv` is UB. Here it runs first, on the
 //!   main thread, before eframe boots and before any thread this process

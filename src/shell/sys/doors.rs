@@ -23,8 +23,6 @@ extern "system" fn Java_dev_yog_Watch_probe(
     _class: jni::objects::JClass<'_>,
     dir: jni::objects::JString<'_>,
 ) -> jni::sys::jstring {
-    // A job's run is granted its network: awake for exactly this call.
-    let _awake = crate::ladder::Awake::process().hold();
     let files: String = env.get_string(&dir).map(Into::into).unwrap_or_default();
     let said = crate::attention::sweep(std::path::Path::new(&files))
         .map(|notice| format!("{}\n{}", notice.title, notice.text))
@@ -54,48 +52,6 @@ extern "system" fn Java_dev_yog_Pocket_standing(
         .unwrap_or_default();
     env.new_string(said)
         .map_or(std::ptr::null_mut(), jni::objects::JString::into_raw)
-}
-
-/// **The activity resumed or paused** (bl-c21d; `dev.yog.App`): whether a
-/// roving ladder may climb, as far as the screen goes (`ladder::awake`).
-#[unsafe(no_mangle)]
-extern "system" fn Java_dev_yog_App_foreground(
-    _env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    front: jni::sys::jboolean,
-) {
-    crate::ladder::Awake::process().front(front != 0);
-}
-
-/// **The pocket service started or stopped holding the process** (bl-c21d;
-/// `dev.yog.App`, from `dev.yog.Pocket`): a foreground service is above the
-/// platform's network threshold (DESIGN §18.6), so the foot and the lane
-/// climb while it holds.
-#[unsafe(no_mangle)]
-extern "system" fn Java_dev_yog_App_pocketed(
-    _env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    held: jni::sys::jboolean,
-) {
-    crate::ladder::Awake::process().service(held != 0);
-}
-
-/// **The default network changed** (bl-792e; `dev.yog.App`, from
-/// `ConnectivityManager`'s default-network callback): its addresses, one per
-/// line, or nothing when there is none. The decision — what is reachable,
-/// whether the set moved, which ladders hear of it — is
-/// [`crate::ladder::Network::changed`]'s and is tested on the host.
-#[unsafe(no_mangle)]
-extern "system" fn Java_dev_yog_App_network(
-    mut env: jni::JNIEnv<'_>,
-    _class: jni::objects::JClass<'_>,
-    addresses: jni::objects::JString<'_>,
-) {
-    let addresses: String = env
-        .get_string(&addresses)
-        .map(Into::into)
-        .unwrap_or_default();
-    crate::ladder::Network::process().changed(&addresses);
 }
 
 /// **Whether there is an attention lane to hold** (DESIGN §17.6; yog REMOTE
