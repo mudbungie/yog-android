@@ -13,11 +13,9 @@
 
 echo "screens: walking" >&2
 
-# 1. Nothing provisioned: the bootstrap chooser, which is every device's first
-#    screen and the one that needs no seed at all.
-wipe_app; relaunch
-capture cold configuration
-
+# 1. THE FIRST RUN (`screens-first.sh`): the chooser a cold device opens on,
+#    and the registration door one tap behind it.
+. scripts/screens-first.sh
 
 # 2. A leaf, and this device is a seat. Nothing is focused, so the drawer
 #    stands over the empty chat and cannot close (DESIGN §24 item 1): the

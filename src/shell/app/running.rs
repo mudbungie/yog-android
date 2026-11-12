@@ -18,6 +18,7 @@ impl Shell {
     /// pushed over a cable land without relaunching the process.
     pub(crate) fn reboot(&mut self) {
         self.running = boot(&self.android);
+        self.word = crate::register::word(&crate::shell::boot::wire_dir(&self.android));
         self.chose = None;
         // A recheck is the configuration's exit: whatever the derivation now
         // says is the screen the operator asked to see.

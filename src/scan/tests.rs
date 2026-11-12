@@ -29,7 +29,6 @@
 //! ```
 
 use super::{Camera, decode, read, refusal, state};
-use crate::test_support::scratch;
 
 /// The symbol, one line per module row.
 const SYMBOL: &str = include_str!("../../tests/fixtures/enroll-v33m-symbol.txt");
@@ -105,30 +104,13 @@ fn the_fixture_is_a_version_33_symbol_of_a_full_envelope() {
     assert_eq!(PAYLOAD.trim_end().len(), 1567);
 }
 
-/// **The whole path, photons to component.** A camera frame carrying the
-/// envelope decodes to the exact bytes, and those bytes go into the paste
-/// sink unchanged — the same [`crate::envelope::read`] and
-/// [`crate::envelope::land`] the enroll button spends, with the
-/// grade-versus-certificate law doing its own work — and what comes up is the
-/// component the certificate says, not the one the envelope claims.
+/// **A camera frame carrying a symbol decodes to the exact bytes**, which is
+/// the whole of what a scan owes the registration field it fills.
 #[test]
-fn a_scanned_frame_lands_material_the_boot_derivation_reads_back() {
+fn a_scanned_frame_reads_as_the_text_the_symbol_carries() {
     let luma = framed(1280, 720, 4, (300, 20));
     let text = read(&frame(1280, 720, &luma)).expect("no symbol found");
     assert_eq!(text, PAYLOAD.trim_end());
-
-    let envelope = crate::envelope::read(&text).unwrap();
-    assert_eq!(envelope.grade, crate::leaf::Grade::Foot);
-    assert_eq!(envelope.name, "notreal-phone");
-
-    let wire = scratch().join("wire");
-    crate::envelope::land(&wire, &envelope).unwrap();
-    let crate::bootstrap::Standing::Enrolled(enrolled) = crate::bootstrap::standing(&wire).unwrap()
-    else {
-        panic!("not enrolled");
-    };
-    assert_eq!(enrolled.component, crate::bootstrap::Component::Foot);
-    assert_eq!(enrolled.client, "notreal-phone");
 }
 
 /// The emulator's own geometry, and the smallest frame worth pointing at a
@@ -191,8 +173,14 @@ fn only_a_refusal_or_a_broken_camera_closes_the_scanner() {
     assert_eq!(refusal(&Camera::Asking), None);
     assert_eq!(refusal(&Camera::Unasked), None);
     let denied = refusal(&Camera::Denied).unwrap();
-    assert!(denied.contains("paste the envelope instead"), "{denied}");
+    assert!(
+        denied.contains("paste the registration URL instead"),
+        "{denied}"
+    );
     let broken = refusal(&Camera::Broken("in use".to_owned())).unwrap();
     assert!(broken.contains("in use"), "{broken}");
-    assert!(broken.contains("paste the envelope instead"), "{broken}");
+    assert!(
+        broken.contains("paste the registration URL instead"),
+        "{broken}"
+    );
 }

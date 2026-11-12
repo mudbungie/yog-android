@@ -42,12 +42,12 @@ What follows from that, and is invariant:
 - **The client is always the asker** (REMOTE §3, the routing ruling). No
   listening socket on the phone at all — the punch port that was the one
   exception is deleted with the rendezvous (§21). The seat still polls.
-- **Bootstrap rides existing trust, never the new device's own connection**
-  (REMOTE §1.4, widened by bl-ae9d — §5). The app carries no enrollment,
-  pairing, or account protocol reachable over its own unauthenticated
-  connection, ever. What §1.4's "an act the operator performs on the boxes"
-  now includes: an already-trusted device performing that act on the
-  operator's behalf.
+- **A new device gets in by an offer, and makes its own key** (yog REMOTE
+  §15, which reversed §1.4; §5). An operator on a connected seat mints a
+  one-time registration URL; this device claims it over HTTPS with the public
+  half of a key it generated, and is refused everything on the wire until
+  the operator approves the row whose confirmation word matches. No private
+  key travels, in either direction, ever.
 
 ## 2. The wire, mirrored
 
@@ -598,17 +598,19 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/outbox.rs` | the local echo and every decision about it: has this message come back in a transcript read yet, and which of the three fates it stands in (§19.2) — pure, host-tested | landed (bl-66fb, the echo itself bl-07b1) |
 | `src/cache.rs` | the paint-first cache (§14): the last answered pass, stored as the server's own envelopes and re-decoded by the one decoder | landed (bl-de96) |
 | `src/bootstrap.rs` | which component this device is, derived from the leaf on disk | landed (bl-7714) |
-| `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — and DESIGN §5's delivery channels | landed (bl-0d3c) |
+| `src/bootstrap/offer.rs` | the three bootstraps as branded choices — Lernie / Thrall / Yog — each saying what an offer of its grade makes this device | landed (bl-0d3c; the offer's prose, bl-1701) |
 | `src/leaf.rs` | the DER walk over this device's own leaf: its client name and its REMOTE §4.2 grade | landed (bl-7714) |
 | `src/shell/boot.rs` | android-only: the bootstrap gate — read the standing, start exactly that component, start nothing otherwise | landed (bl-7714) |
-| `src/shell/enroll.rs` | android-only: the configuration surface — the three branded choices, and the screen behind each tap | landed (bl-0d3c, generalized bl-387f) |
-| `src/shell/enroll/material.rs` | android-only: the enrollment screen — the file list, the delivery channels, the pasted envelope and the re-read | landed (bl-dd7b) |
-| `src/envelope.rs` | the enroll envelope a seat mints: read, checked against the leaf's own grade and name, landed under `material`'s names | landed (bl-dd7b) |
-| `src/scan.rs` | the QR decoder: a camera luminance frame in, the envelope's text out, plus the camera bridge's four-word vocabulary — pure, host-tested | landed (bl-d815) |
+| `src/shell/enroll.rs` | android-only: the configuration surface — the three branded choices, this device's confirmation word where it has one, and the screen behind each tap | landed (bl-0d3c, generalized bl-387f; the door, bl-1701) |
+| `src/shell/enroll/door.rs` + `door/work.rs` | android-only: the registration door (§5) — the URL field, `register`, `scan QR`, the outcome with its word and its wait, the carried leaf's file list and re-read; and the worker thread behind it with the one call into `dev.yog.Register` | landed (bl-1701, in place of `enroll/material.rs`) |
+| `src/register.rs` + `src/register/{url,key,entry}.rs` | §5, pure and host-tested: the registration URL read strictly, the P-256 key made here and its PEM, the confirmation word (yog's vector pinned), the door's answer read and filed as `material`'s four files, the claim over a caller-supplied request, the word read back off the files, and the watch that reads approval as the answer changing | landed (bl-1701) |
+| `android/…/Register.java` | the one HTTPS POST, against the platform's public web roots: no redirect, a stated length out, either framing in, 64 KiB at most | landed (bl-1701) |
+| `src/envelope.rs` | what is left of the enroll envelope: the minting seat's WRITING of it (§13.18). The reader, the landing and the hint are deleted with the import (§11) | landed (bl-dd7b; import deleted bl-1701) |
+| `src/scan.rs` | the QR decoder: a camera luminance frame in, the text a symbol carries out — a registration URL now (§5, §12) — plus the camera bridge's four-word vocabulary — pure, host-tested | landed (bl-d815) |
 | `tests/fixtures/enroll-v33m-{symbol.txt,payload.json}` | one foreign-encoded symbol at REMOTE §8.4's own bar (1567 bytes, version 33, level M, 149×149) and the bytes it carries | landed (bl-d815) |
 | `src/shell/jvm.rs` | android-only: the crate's ONE JNI plumbing — attach, this app's class loader, the pending-exception discipline | landed (bl-d815, out of `tools/ui/bridge.rs`) |
 | `src/shell/camera.rs` | android-only: the five static calls into `dev.yog.Camera`, activity passed in | landed (bl-d815) |
-| `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the paste field | landed (bl-d815) |
+| `src/shell/enroll/scan.rs` | android-only: the scan screen — ask, preview, throttle, decode, and the way back to the URL field | landed (bl-d815) |
 | `android/…/{Camera,Session,Frames}.java` | the camera2 half: the permission, the device session, and the Y plane as bytes | landed (bl-d815) |
 | `src/drawer.rs` | the drawer gesture (§23 item 1): whether a drag began within the edge and travelled far enough to open the switcher — pure, host-tested; `shell::back` reads it | planned (bl-d489) |
 | `src/tabs.rs` | the open set (§23 item 2): which conversations the operator focused this run, per workspace, in the order first focused; what a focus, a close and a listing do to it — pure | planned (bl-d489) |
@@ -622,45 +624,87 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `rules/no-literal-colour.yml` | the rule that keeps it one home: no paint file constructs a `Color32` or names a palette constant of its own | landed (bl-549b) |
 | `android/` | the minimal Gradle shell: manifest (INTERNET, CAMERA, ACCESS_NETWORK_STATE, POST_NOTIFICATIONS, ACCESS_FINE/COARSE_LOCATION, RECEIVE_BOOT_COMPLETED, FOREGROUND_SERVICE + FOREGROUND_SERVICE_SPECIAL_USE), games-activity trio, the OnKeyListener backspace shim, the permission-result hook routed on four request codes, the lifecycle hand-off to `App`, and the two lanes armed on resume | landed (bl-c761, bl-d815, bl-f34f, bl-b0a9, bl-fcc5, bl-8bd0) |
 
-## 5. The trust model and new-device bootstrap (bl-ae9d)
+## 5. The trust model, and how a new device gets in: the offer (bl-ae9d; rewritten bl-1701 for yog REMOTE §15)
 
 **The device mesh is a very-high-trust execution environment**, by explicit
 operator ruling 2026-08-23. Every certificate is operator-grade within its
 registrations (REMOTE §2's own words: "v1 has one human, and every
 certificate is operator-grade"), and the consequence is stated rather than
-implied: **one trusted device can bootstrap another.** A desktop client can
-mint a new leaf and hand it to a phone; a laptop can drive tools on the
-phone; the phone can drive tools on the laptop. Workspace registration
+implied: **one trusted device can admit another.** Workspace registration
 (REMOTE §1.5) remains the only partition inside the mesh.
 
-**Three delivery channels for a new device's key material, all supported:**
+**This section used to say the new device never enrolls over its own
+connection, and listed three channels that carried a minted leaf AND ITS
+PRIVATE KEY to it** — a cable, an already-trusted device's tools, and a QR
+symbol read by the camera (§11, §12). REMOTE §15 reversed the rule it rested
+on (§1.4) on 2026-11-11: the carried envelope put a private key in a symbol
+and on a clipboard, and a copy of it was the device. The envelope's import is
+deleted from this app in the act that lands the offer, not kept beside it.
 
-1. **adb push** — the operator (or an agent the operator hands the cable to)
-   places the leaf into the app's storage over a debug bridge. Zero new
-   code; the channel is the physically attached, developer-authorized
-   bridge.
-2. **remote exec** — an already-registered client advertises tools that can
-   write files on the new device (the remote-administration goal, pointed at
-   provisioning). The trust carrying the cert is the existing authenticated
-   tool route, not anything the new device asserts.
-3. **QR** — a trusted client mints and *displays* the credential; the new
-   device scans it with its camera. The trust is the operator's own eyes and
-   hands: whoever can photograph that screen was shown it.
+**A new device registers itself, by an offer.** In the order it happens
+(REMOTE §15.1; `src/register.rs` is the whole of this end):
 
-What all three share, and the line that must never move: **the new device
-itself never enrolls over its own unauthenticated connection.** REMOTE §1.4
-stands — there is no pairing protocol in the wire, no token exchange a
-stranger on the network could initiate. Bootstrap is always an act performed
-*through existing trust* (a cable, an authenticated route, a screen), and
-the first thing the new device does with its material is an ordinary mTLS
-dial like any other client.
+1. An operator on a seat that is already connected mints an offer for a
+   workspace, a name and a grade. The server answers a **registration URL**,
+   `https://<host>/yog/register/<code>`, good once and for ten minutes. That
+   string is all that travels to the new device — by eye, by paste, or as a
+   QR symbol — and it carries no key and no certificate.
+2. **This device makes its own P-256 key pair** (`register::key`, `ring`) and
+   POSTs the public half, as PEM, in the one JSON field `public_key`. The
+   private half is written beside the leaf and goes nowhere else.
+3. The door answers the workspace, the name, the grade, the address list
+   (§21), the operator CA and the leaf it just signed. `register::entry`
+   files them as `material`'s four files, replacing what was there — one
+   device holds one leaf (§9) — each written whole under a second name and
+   renamed into place only when all four are written.
+4. **Both ends show one confirmation word**: six characters of SHA-256 over
+   this device's public key (DER `SubjectPublicKeyInfo`) followed by the
+   operator CA (DER), read five bits at a time in the alphabet
+   `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`. yog's vector is pinned in
+   `register::key::tests` — `2LFTUR` — and the word is computable again from
+   the files alone (`register::word`), so no screen has to remember it: the
+   outcome screen says it, and so does the configuration surface of any
+   device whose key this app made.
+5. This device dials the wire with its new leaf. The server refuses a
+   certificate nobody has approved, in band — and being heard at all is what
+   marks the offer **proved**. `register::Watcher` makes that dial and keeps
+   making it every three seconds.
+6. The operator approves the row whose word matches. **This end reads
+   approval as the answer changing, never as a sentence matched**: an
+   operator-grade device is answered; a foot, which may never ask the
+   question the watcher asks, is refused *differently*. Either ends the wait
+   and re-runs the boot derivation (§9).
 
-**Upstream dependency, named:** minting from a seat requires the CA holder —
-the server — to expose a mint act. REMOTE §3 rules that a capability a
-client needs is added to the boundary, never to the wire, so that is a
-boundary `Action` in yog, tracked as a yog ball. Until it lands, minting
-stays where it is today: `yog wire-certs` on the server's own box, with adb
-or remote exec carrying the result.
+**The request is HTTPS against the PUBLIC web's roots, and the platform makes
+it.** The device holds no operator CA yet — that is what it is registering to
+get — so the door is verified the way any `https` URL is. Android keeps those
+roots and its own client reads them, so the one request is `dev.yog.Register`
+(`HttpsURLConnection`: no redirect followed, a `Content-Length` sent, an
+answer read under either framing a reverse proxy may give it, 64 KiB at
+most), and **the Rust core links no root store**: `webpki-roots`, which the
+desktop seat and the foot took for this act, is not a dependency here.
+`register::claim` takes the request as a parameter, which is also what puts
+every line of it under the host suite. **Open, and named rather than papered
+over:** a deployment with no public-certificate edge states the wire port in
+its URL, and the platform's client refuses the operator CA it meets there.
+REMOTE §15.2 lets the confirmation word carry the whole of the server's
+authentication on such a deployment; this client — like the desktop seat —
+offers no way to accept that, and the remedy there is the carried leaf below.
+
+**Every status but 200 is one sentence.** The door answers a bare `404` for a
+code that is unknown, expired or already used and does not say which, so
+neither does this app: *this offer cannot be claimed … a registration URL
+works once. Ask for a new offer.* A request that reached nothing spent
+nothing and says that instead.
+
+**What a stolen URL buys** is REMOTE §15.1's own paragraph: claimed first by
+somebody else, this device's claim answers `404` and the operator sees a row
+whose word matches nothing in front of them.
+
+**The one route that still carries a leaf by hand**: `yog wire-certs
+WIRE_LEAF` on the server's own box, and a cable (REMOTE §15.4 keeps it for a
+box with no route to the door). The door's screen lists the four files and
+where they go, and *check for material* re-reads them.
 
 **What the phone durably holds** stays exactly §1's list: its key material,
 and nothing else. A lost phone costs one certificate distrust at the CA
@@ -1215,8 +1259,9 @@ rather than pinning the field at whatever height it was first handed.
 **The ruling** (operator, 2026-08-30; the NAME amended 2026-10-08, bl-5331):
 the Android app ships all three runnable components, each gated behind an
 explicit bootstrap rather than auto-started. The default bootstrap is mTLS client enrollment — the
-seat or the foot dialing a host server, material provisioned out of channel
-per REMOTE §1.4. Running the yog server locally on the phone is allowed but is
+seat or the foot dialing a host server, on material this device claims by an
+operator's offer (§5; REMOTE §15, which replaced §1.4's out-of-channel
+provisioning). Running the yog server locally on the phone is allowed but is
 the deliberate, non-default choice. The old development client is superseded:
 its landed foundations are the starting material, not discarded work.
 
@@ -1394,7 +1439,17 @@ of this evaluation, and it is deliberate: REMOTE §12's *"ship inert"* ruling
 says a server that cannot serve refuses in band, and a button that started one
 which refuses every act would be strictly worse than a sentence that says why.
 
-## 11. The enroll envelope, and why pasting it is not a pairing protocol (bl-dd7b)
+## 11. The enroll envelope, and why pasting it is not a pairing protocol (bl-dd7b) — RETIRED as a way in (bl-1701)
+
+> **This section describes a door that is closed.** yog REMOTE §15.4 retired
+> the envelope in all three takings — the QR, the pasted line, `--into` —
+> because it put a private key in a symbol and on a clipboard. This app no
+> longer reads one: `envelope::read`, `envelope::land`, `envelope::hint`, the
+> paste field and the grade-versus-certificate check that guarded them are
+> deleted, and §5 is how a device gets in. What follows is kept as the record
+> of what was built and why, and for the one half that still stands until
+> `enroll` itself gives way to `offer`: the minting seat's WRITING of an
+> envelope (§13.18).
 
 yog's `enroll` act (yog bl-f4e3) mints a client leaf on the server's own
 recipe and answers a reply carrying `{grade, name, address, ca, cert, key}`,
@@ -1502,7 +1557,16 @@ is read less than a sentence standing under one. A cold device is told
 nothing, because there is nothing to lose and a warning about an identity that
 does not exist is noise.
 
-## 12. Scanning the envelope: the decoder and the capture route (bl-d815)
+## 12. Scanning the symbol: the decoder and the capture route (bl-d815)
+
+> **What is scanned changed, and nothing else here did** (bl-1701). The
+> symbol an operator's offer shows carries a registration URL — some sixty
+> characters, a small symbol at any error level — where it used to carry an
+> envelope of about 1.6 kB. The decoder, the capture route and the rule that
+> a scan is only a producer of the string a paste produces are unchanged;
+> the string's one reader is now `register::url` (§5), and a decoded symbol
+> is claimed by the same path a pasted URL is. Read "envelope" below as "the
+> text the symbol carries".
 
 §11 built the paste field first and called a decoder "only a producer of the
 same string". This section is that producer, and the two decisions it took.
@@ -1588,11 +1652,13 @@ here is a defect.
 ### 13.1 The workflows, end to end
 
 - **W1 — first run.** Open the app cold: the configuration surface is the
-  whole screen. Three branded offers; tapping **Lernie** shows what material
-  is needed, where it goes, and the three delivery channels; a QR scan or a
-  pasted envelope lands it; *check for material* (or the landing itself)
-  re-derives, and the seat comes up on the workspace roster. No restart, no
-  choice stored.
+  whole screen. Three branded offers; tapping **Lernie** opens the
+  registration door (§5): scan the symbol an operator's offer shows, or
+  paste its URL, and *register*. The screen then shows the confirmation word,
+  large, with where to approve it, and *waiting for approval* under it; the
+  moment the server stops refusing this device the boot derivation re-runs
+  and the seat comes up. No restart, no choice stored. The word stays
+  readable afterwards on the configuration surface, off the files.
 - **W2 — daily chat.** Roster → conversations → transcript, each one tap;
   attention marks and tone ink say where to look before anything is opened.
   Speak through the composer; start a conversation through the same row on
@@ -1607,14 +1673,14 @@ here is a defect.
   second name this device does not need.
 - **W4 — a dedicated tool box.** Thrall is for a device that should offer
   ONLY tools — no chat surface, no questions about the world (REMOTE §4.2).
-  Enrollment is W1 with a foot-grade leaf under that device's own name.
+  Enrollment is W1 with a foot-grade offer under that device's own name.
 - **W5 — re-provisioning.** The mark, from any screen, opens the same
   surface W1 used; the chooser states what is running and offers the way
-  back (bl-e192). Landing new material and rechecking is the exit that
-  changes what runs — and the enrollment screen says so before it is taken:
-  the running identity and the fact that landing replaces it and destroys
-  the old key stand beside the control that acts (§11, bl-f12d), because
-  the act is one keystroke and its remedy is a trip to the server.
+  back (bl-e192). Claiming a new offer is the exit that changes what runs —
+  and the door says so before it is taken: the running identity and the
+  fact that registering replaces it and destroys the old key stand beside
+  the control that acts (§5, bl-f12d), because the act is one tap and its
+  remedy is another offer under another name.
 - **W6 — the server on this phone.** The Yog offer explains the recorded
   blockers and starts nothing (§10). It is the deliberate, non-default
   choice and reads like one.
@@ -4092,6 +4158,7 @@ The walk, and the standing assertions it exists for:
 | step | seed | asserts |
 | --- | --- | --- |
 | `cold` | nothing provisioned | the bootstrap chooser is the first screen |
+| `door` | — tap **Lernie** | the registration door (§5) is one tap behind the chooser; nothing is claimed, because a claim needs a door with a publicly trusted certificate (`screens-first.sh`) |
 | `roster` | a leaf | a leaf alone makes this device a seat, and "main" is its roster |
 | `settings` | — tap the mark | **the configuration surface is reachable from the roster** |
 | `back-to-roster` | — tap the mark | the mark toggles: a way in with no way out is the same defect wearing the other face |

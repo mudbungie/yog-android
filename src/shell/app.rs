@@ -11,14 +11,14 @@ mod pass;
 mod probe;
 mod running;
 
-pub(crate) use fields::{COMPOSER, ENVELOPE, NEEDLE};
+pub(crate) use fields::{COMPOSER, NEEDLE, REGISTER};
 pub(crate) use pass::run;
 
 use winit::platform::android::activity::AndroidApp;
 
 use super::boot::{Running, boot};
 use super::bridge::Bridge;
-use super::enroll::Scanner;
+use super::enroll::{Door, Scanner};
 use super::field::Native;
 use super::inset::InsetPx;
 
@@ -114,12 +114,13 @@ pub(crate) struct Shell {
     /// the model's and ride the snapshot — and it is emptied when the search
     /// screen is left, because leaving a search leaves it.
     pub(crate) needle: String,
-    /// The pasted enroll envelope, and the last thing reading it said. It
-    /// holds a PRIVATE KEY while it is full, so it is emptied the moment it
-    /// has been landed and on the way back out of the screen
-    /// (`forget_envelope`), and nothing logs it.
-    pub(crate) envelope: String,
-    pub(crate) envelope_said: Option<String>,
+    /// The registration door (DESIGN §5): the URL in its field, and where
+    /// the one claim stands. Reset on the way out of the screen.
+    pub(crate) door: Door,
+    /// **This device's confirmation word**, when its key is one this app made
+    /// (`crate::register::word`) — read off the files at each boot derivation
+    /// rather than per frame, and never stored anywhere but here.
+    pub(crate) word: Option<String>,
     /// The enrollment screen's camera (bl-d815). It lives beside the field it
     /// fills rather than inside it, because the camera outlives any one frame
     /// and the field does not: an open camera must be closed on the way out
@@ -214,6 +215,7 @@ pub(crate) struct Shell {
 
 impl Shell {
     fn new(android: AndroidApp) -> Self {
+        let word = crate::register::word(&crate::shell::boot::wire_dir(&android));
         let knobs_file = super::boot::settings_file(&android);
         Self {
             running: boot(&android),
@@ -239,8 +241,8 @@ impl Shell {
             verb_said: None,
             field: Native::default(),
             needle: String::new(),
-            envelope: String::new(),
-            envelope_said: None,
+            door: Door::new(),
+            word,
             knobs: crate::settings::read(&knobs_file),
             knobs_file,
             folds: std::collections::BTreeSet::new(),
@@ -266,14 +268,18 @@ impl Shell {
         }
     }
 
-    /// Drop the pasted envelope and whatever reading it said. Called on the
-    /// way out of the enrollment screen and the instant material lands: the
-    /// text is a private key, and a buffer that outlives its use is the one
-    /// place this app holds key material it was not handed a file for.
-    pub(crate) fn forget_envelope(&mut self) {
-        self.envelope = String::new();
-        self.envelope_said = None;
+    /// Leave the registration door: its field and its outcome are dropped,
+    /// which also stops the worker watching a claimed offer. **A claim
+    /// changed what is on disk**, so leaving after one re-runs the boot
+    /// derivation — the component the new leaf names comes up, held or not,
+    /// and says the server's own sentence about it.
+    pub(crate) fn forget_door(&mut self) {
+        let claimed = self.door.claimed();
+        self.door = Door::new();
         self.chose = None;
+        if claimed {
+            self.reboot();
+        }
         // An open camera is a running capture session and a background
         // thread; leaving the screen is the last moment anything here knows
         // to close them.

@@ -4,7 +4,7 @@
 //! The ruling: this app is named yog and ships all three runnable components —
 //! the seat, the foot and the server — *each gated behind an explicit
 //! bootstrap rather than auto-started*. The default path is mTLS client
-//! enrollment; running the server on the phone is allowed but is the
+//! registration; running the server on the phone is allowed but is the
 //! deliberate, non-default choice.
 //!
 //! **The component is derived, never stored, and that is the whole design.**
@@ -26,11 +26,9 @@
 //! *"making a foot into an operator is minting a new certificate, which is
 //! exactly the friction that ruling wants."*
 //!
-//! **Nothing here enrolls anything.** REMOTE §1.4 stands, and DESIGN §5
-//! restates it: the new device never enrolls over its own unauthenticated
-//! connection. What an offer describes is where material goes when it arrives
-//! through existing trust — a cable, an authenticated tool route, or a screen
-//! the operator photographed — and this module only ever *reads* the result.
+//! **Nothing here registers anything.** A device gets its material by
+//! claiming an offer (`crate::register`, DESIGN §5) or by a leaf carried to
+//! it by hand, and this module only ever *reads* the result.
 
 use std::path::Path;
 
@@ -141,7 +139,7 @@ fn first_certificate(material: &Material) -> Result<Vec<u8>, String> {
 
 mod offer;
 
-pub use offer::{Offer, channels, offers};
+pub use offer::{Offer, offers};
 
 #[cfg(test)]
 mod tests;

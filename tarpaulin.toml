@@ -50,7 +50,13 @@
 # (bl-d815), and `src/shell/camera.rs` is the camera's own half of it; the scan
 # screen (`src/shell/enroll/scan.rs`) is egui glue over both, while the decode
 # and the bridge vocabulary it spends live in `src/scan.rs`, which is pure and
-# stays UNDER the floor — an exclusion is added with its reasoning,
+# stays UNDER the floor. `src/shell/enroll/door.rs` is the registration door
+# (bl-1701, in place of `enroll/material.rs`) and `enroll/door/work.rs` its
+# worker: one field, two buttons, a thread and the one static call into
+# `dev.yog.Register`, while what a
+# registration URL is, the request's body, every refusal, the confirmation
+# word and when a wait is over are `src/register.rs` and its children, pure
+# and UNDER the floor — an exclusion is added with its reasoning,
 # never to make a number, and never wider than the reasoning covers.
 # `src/shell/controls/chip.rs` is the controls row split at bl-0691 (its
 # `stops.rs` sibling became verbs at bl-0d15), and it inherits `controls.rs`'s entry
@@ -332,7 +338,8 @@ exclude-files = [
     "src/shell/enroll.rs",
     "src/shell/field.rs",
     "src/shell/mark.rs",
-    "src/shell/enroll/material.rs",
+    "src/shell/enroll/door.rs",
+    "src/shell/enroll/door/work.rs",
     "src/shell/enroll/scan.rs",
     "src/shell/inset.rs",
     "src/shell/jvm.rs",

@@ -61,10 +61,10 @@ pub(crate) enum FieldKind {
     /// where the enter key does not read it (DESIGN §3), and the button
     /// beside the field is the gesture.
     Needle,
-    /// The enrollment screen's envelope: a long machine-written blob carried
-    /// here by paste. Autocorrect and sentence capitals would corrupt it, and
-    /// there is no action key — the button beside it is the gesture.
-    Envelope,
+    /// The registration door's URL: one machine-written line carried here by
+    /// paste. Autocorrect and sentence capitals would corrupt it, and there
+    /// is no action key — the button beside it is the gesture.
+    Url,
 }
 
 #[derive(Default)]
@@ -173,8 +173,8 @@ fn editor_info(kind: FieldKind) -> (aa::input::InputType, aa::input::TextInputAc
             T::TYPE_CLASS_TEXT | T::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
             A::None,
         ),
-        FieldKind::Envelope => (
-            T::TYPE_CLASS_TEXT | T::TYPE_TEXT_FLAG_MULTI_LINE | T::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
+        FieldKind::Url => (
+            T::TYPE_CLASS_TEXT | T::TYPE_TEXT_VARIATION_URI | T::TYPE_TEXT_FLAG_NO_SUGGESTIONS,
             A::None,
         ),
     }

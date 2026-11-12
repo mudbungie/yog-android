@@ -1,15 +1,11 @@
 //! **The QR decoder** (bl-d815): one camera luminance frame in, the text a
 //! symbol carries out — and nothing else.
 //!
-//! **This module is a PRODUCER, not a second sink.** The enroll envelope has
-//! exactly one reader ([`crate::envelope::read`]) and exactly one landing
-//! ([`crate::envelope::land`]), both proved against real minted material, and
-//! a scan produces the same string a paste produces. Nothing here validates,
-//! nothing here writes a file, and nothing here knows what an envelope is —
-//! `crate::envelope`'s module doc already ruled it: *"a decoder, when one is
-//! adjudicated (bl-d815), is only a producer of the same string."* The
-//! grade-versus-certificate law is untouched because this layer never sees a
-//! certificate.
+//! **This module is a PRODUCER, not a second sink.** What a scan reads is a
+//! registration URL (DESIGN §5), and that has exactly one reader
+//! ([`crate::register::url`]): a scan produces the same string a paste
+//! produces. Nothing here validates, nothing here writes a file, and nothing
+//! here knows what a registration URL is.
 //!
 //! **The decoder is `rxing`**, the Rust port of `ZXing`, by operator ruling —
 //! the reasoning and the two refused alternatives are recorded at the
@@ -131,11 +127,11 @@ pub fn refusal(state: &Camera) -> Option<String> {
         Camera::Granted | Camera::Asking | Camera::Unasked => None,
         Camera::Denied => Some(
             "the camera permission was refused, so there is nothing to scan with — \
-             paste the envelope instead."
+             paste the registration URL instead."
                 .to_owned(),
         ),
         Camera::Broken(why) => Some(format!(
-            "the camera is unavailable: {why} — paste the envelope instead."
+            "the camera is unavailable: {why} — paste the registration URL instead."
         )),
     }
 }

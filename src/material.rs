@@ -1,10 +1,10 @@
 //! The seat's key material, and what its absence means — the client half of
 //! the server's `wire/material.rs` (yog REMOTE §1.4, §8).
 //!
-//! **This app never mints a certificate.** Provisioning is an act performed
-//! through existing trust (DESIGN §5: adb, remote exec, QR), so this module
-//! only ever *reads*, and the three answers it can give are the whole trust
-//! bootstrap:
+//! **This module only ever reads.** The four files get here by a claimed
+//! offer (`crate::register`, DESIGN §5), which writes them, or by a leaf
+//! carried by hand — and the three answers a read can give are the whole
+//! trust bootstrap:
 //!
 //! - **Nothing provisioned** — `Ok(None)`. The wire is simply off: the seat
 //!   has nowhere to dial, and the shell says so instead of dialling.
@@ -16,7 +16,8 @@
 //!
 //! The directory is the caller's fact (the Android shell hands its app-files
 //! dir; a test hands a scratch dir); the file names inside it are this
-//! module's, and they are the delivery channels' write contract.
+//! module's, and they are what `crate::register::entry` and a carried leaf
+//! both write.
 //!
 //! **`address` is a list** (yog REMOTE §15.3; DESIGN §21): one `host:port`
 //! per line, in dial order, and a one-line file is a list of one. Two files

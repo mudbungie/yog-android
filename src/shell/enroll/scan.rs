@@ -1,18 +1,17 @@
-//! **The scan screen** (bl-d815): point the camera at the envelope a seat
-//! rendered, and hand what it reads to the paste field's own sink.
+//! **The scan screen** (bl-d815): point the camera at the symbol an offer
+//! showed, and hand what it reads to the registration field's own path.
 //!
-//! **It is a producer and nothing more.** A decode does not enroll anything —
-//! it fills the same string the operator would have typed and
-//! `super::material::land` spends it, so `crate::envelope`'s version check,
-//! its grade-versus-certificate law and every sentence it can refuse with are
-//! reached by exactly one path however the text arrived. There is no second
-//! validation here to keep in step with that one.
+//! **It is a producer and nothing more.** A decode claims nothing — it fills
+//! the same string the operator would have pasted and `super::door` spends
+//! it, so what a registration URL is and every sentence a claim can refuse
+//! with (`crate::register`) are reached by exactly one path however the text
+//! arrived. There is no second validation here to keep in step with that one.
 //!
 //! **The degraded path is always underneath.** A refused permission, a device
 //! with no back lens, a camera another app is holding: each closes this screen
-//! and writes its sentence into the enrollment screen's own refusal line, so
-//! what the operator lands on is the paste field with an explanation — never a
-//! preview that never fills.
+//! and writes its sentence into the door's own refusal line, so what the
+//! operator lands on is the URL field with an explanation — never a preview
+//! that never fills.
 //!
 //! Android-only glue, excluded from coverage: the decode ([`crate::scan`]) and
 //! the bridge vocabulary are pure and are tested.
@@ -80,7 +79,7 @@ impl Scanner {
     }
 
     /// Close the camera. Idempotent, and called on every way out: a decode, a
-    /// refusal, the cancel control, and the enrollment screen's own back.
+    /// refusal, the cancel control, and the door's own back.
     pub(crate) fn shut(&mut self) {
         if self.live {
             camera::stop();
@@ -91,16 +90,16 @@ impl Scanner {
     }
 
     /// One frame of the scan screen. `Some(text)` is a symbol read; the caller
-    /// puts it straight into the paste field and lands it.
+    /// puts it straight into the URL field and claims it.
     ///
-    /// A refusal is written into `said` — the enrollment screen's own line —
+    /// A refusal is written into `said` — the door's own line —
     /// and closes the screen, which is what makes a denied permission land the
-    /// operator back on the paste field with a sentence rather than nowhere.
+    /// operator back on the URL field with a sentence rather than nowhere.
     pub(super) fn run(&mut self, ui: &mut egui::Ui, said: &mut Option<String>) -> Option<String> {
         // A preview is a moving picture, and the shell's idle pace is 250 ms
         // (DESIGN §3's focus-gated repaint). It is asked for FIRST, before any
         // branch that can close this screen, so the frame that closes it is
-        // followed straight away by the one that paints the paste field —
+        // followed straight away by the one that paints the URL field —
         // egui keeps the shortest pending request, so asking here is enough.
         ui.ctx().request_repaint_after(Duration::from_millis(16));
         // Before anything is read, because asking is what clears the previous
@@ -139,8 +138,8 @@ impl Scanner {
             self.shut();
             return None;
         }
-        ui.heading("scan the envelope");
-        ui.weak("hold the whole symbol in the frame; it lands the moment it reads.");
+        ui.heading("scan the registration URL");
+        ui.weak("hold the whole symbol in the frame; it is claimed the moment it reads.");
         let taken = camera::frame();
         if let Some(frame) = taken.as_deref() {
             self.hold(ui.ctx(), frame);

@@ -36,6 +36,7 @@ pub mod panel;
 pub mod parity;
 pub mod plural;
 pub mod pocket;
+pub mod register;
 pub mod roster;
 pub mod rows;
 pub mod scan;

@@ -17,14 +17,12 @@ pub(crate) const COMPOSER: Field = Field {
     kind: FieldKind::Composer,
 };
 
-/// The enrollment screen's envelope field. A separate id because the two are
-/// never on screen together for the composer's reason inverted: a cold device
-/// has no conversation to speak into, and a provisioned one has nothing left
-/// to enroll — but they are different KINDS of editor (`bridge.rs`), and the
-/// IME must be told which it is focused on.
-pub(crate) const ENVELOPE: Field = Field {
-    id: "envelope",
-    kind: FieldKind::Envelope,
+/// The registration door's URL field (DESIGN §5). A separate id from the
+/// composer's because they are different KINDS of editor (`bridge.rs`), and
+/// the IME must be told which it is focused on.
+pub(crate) const REGISTER: Field = Field {
+    id: "register",
+    kind: FieldKind::Url,
 };
 
 /// **The search field** (§13.6, bl-4c2b). Its own id and its own kind: a

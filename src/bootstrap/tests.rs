@@ -1,7 +1,7 @@
 //! The standing, over real minted material — the derivation is the design, so
 //! it is proved against certificates rather than against a stored flag.
 
-use super::{Component, Offer, Standing, channels, offers, standing};
+use super::{Component, Offer, Standing, offers, standing};
 use crate::test_support::{mint_ca, mint_foot, mint_leaf, scratch};
 use std::path::Path;
 
@@ -108,12 +108,12 @@ fn the_offers_are_three_branded_bootstraps_with_enrollment_emphasised() {
         .map(|o| o.component)
         .collect();
     assert_eq!(default, vec![Component::Seat, Component::Foot]);
-    // Each enrollment names the grade of leaf that takes it, and says that
-    // this app never mints one — the §1.4 line, on the screen an operator
-    // reads rather than only in a design document.
+    // Each enrollment names the grade of leaf that takes it, and says the
+    // one thing the offer changed: the key is made here and never leaves.
     for offer in offers.iter().filter(|o| o.default) {
         assert!(offer.how.contains("OU=foot"), "{}", offer.how);
-        assert!(offer.how.contains("never mints"), "{}", offer.how);
+        assert!(offer.how.contains("offer"), "{}", offer.how);
+        assert!(offer.how.contains("key never leaves"), "{}", offer.how);
     }
     // No path in this prose. Where material lands is the shell's own fact,
     // painted from the boot standing beside `material::WANTED`; an earlier
@@ -132,18 +132,6 @@ fn the_offers_are_three_branded_bootstraps_with_enrollment_emphasised() {
     // them is a shrug (DESIGN §10).
     assert!(server[0].how.contains("git"), "{}", server[0].how);
     assert!(server[0].how.contains("API 29"), "{}", server[0].how);
-}
-
-/// DESIGN §5's three delivery channels, and the invariant under all three:
-/// the material is carried here through existing trust, never fetched by a
-/// device asserting something about itself.
-#[test]
-fn the_enrollment_screen_names_the_three_delivery_channels() {
-    let channels = channels();
-    assert_eq!(channels.len(), 3);
-    assert!(channels[0].contains("cable"), "{}", channels[0]);
-    assert!(channels[1].contains("already-trusted"), "{}", channels[1]);
-    assert!(channels[2].contains("screen"), "{}", channels[2]);
 }
 
 /// The brand lives on the component, so the chooser and the screen the device

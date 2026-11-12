@@ -98,11 +98,11 @@ impl Shell {
             return;
         }
         if self.settings {
-            // The way out drops whatever the configuration held: a pasted
-            // envelope is a private key and an open camera is a running
+            // The way out drops whatever the configuration held: a watched
+            // offer has a worker behind it and an open camera is a running
             // capture session, and this tap is the last thing that knows the
             // screen is going away.
-            self.forget_envelope();
+            self.forget_door();
             self.settings = false;
         } else {
             self.settings = true;

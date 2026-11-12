@@ -53,8 +53,11 @@ mint_material() {      # mint_material [foot]
   if [ "${1:-}" = foot ]; then subject="/OU=foot/CN=screens-foot"; fi
   openssl req -x509 -newkey rsa:2048 -nodes -days 1 -keyout "$d/ca.key" \
     -out "$d/ca.pem" -subj "/CN=screens-ca" >/dev/null 2>&1
-  openssl req -newkey rsa:2048 -nodes -keyout "$d/client.key" -out "$d/client.csr" \
-    -subj "$subject" >/dev/null 2>&1
+  # The leaf's key is P-256 in PKCS#8 — what a registered device holds, since
+  # it makes that key itself (DESIGN §5) — so the configuration surface has a
+  # confirmation word to paint, read off these files.
+  openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes \
+    -keyout "$d/client.key" -out "$d/client.csr" -subj "$subject" >/dev/null 2>&1
   openssl x509 -req -in "$d/client.csr" -CA "$d/ca.pem" -CAkey "$d/ca.key" \
     -CAcreateserial -days 1 -out "$d/client.pem" >/dev/null 2>&1
   # A closed port on the device's OWN loopback. The dial fails fast, the

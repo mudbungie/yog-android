@@ -1,27 +1,18 @@
 //! **The first-run surface**: the three bootstraps as branded, tappable
 //! choices, and the screen behind each tap (bl-0d3c, amending bl-7714).
 //!
-//! bl-7714 shipped this screen with **no button, deliberately**, reasoning
-//! from REMOTE §1.4. The reading was too strong and the operator has ruled:
-//! §1.4 forbids the app *dialling unauthenticated* —
-//!
-//! > *"there is no pairing protocol in the wire, no token exchange a stranger
-//! > on the network could initiate. Bootstrap is always an act performed
-//! > through existing trust (a cable, an authenticated route, a screen), and
-//! > the first thing the new device does with its material is an ordinary mTLS
-//! > dial like any other client."*
-//!
-//! — and it never forbade a control. An operator who opens the app is entitled
-//! to be told what each bootstrap is and taken to the screen that explains
-//! it. **The buttons choose and inform; the material still arrives out of
-//! channel**, and not one widget here opens a socket.
+//! **The two enrollment screens are the registration door** (DESIGN §5; yog
+//! REMOTE §15.1): a field for the one-time registration URL an operator's
+//! offer showed, the camera beside it, and — once the offer is claimed — the
+//! confirmation word and the wait for approval. Which grade this device takes
+//! is the offer's, so Lernie's screen and Thrall's differ in what they say and
+//! not in what they do.
 //!
 //! **Nothing on this screen is stored.** [`Shell::chose`] is which screen is
 //! open right now, no more durable than a scroll position; the component this
 //! device runs is still derived from the leaf on disk every boot
-//! ([`crate::bootstrap::standing`]). *Check for material* re-runs that
-//! derivation — a read of this app's own storage, which is what makes a cable
-//! push land without a restart.
+//! ([`crate::bootstrap::standing`]). An approval, and *check for material*,
+//! re-run that derivation — a read of this app's own storage.
 
 use eframe::egui;
 
@@ -30,14 +21,15 @@ use super::boot::Running;
 use super::mark::Back;
 use crate::bootstrap::{Component, Offer};
 
-mod material;
+mod door;
 mod scan;
 
+pub(crate) use door::Door;
 pub(crate) use scan::Scanner;
 
 /// **What this device stands at, for the screen that would change it**: where
 /// material goes, the sentence a half-provisioned store earns, and the
-/// identity a landing would replace. One parameter rather than three, because
+/// identity a registration would replace. One parameter rather than three, because
 /// they are one question — what is here now — and because a screen function
 /// that grew a fourth of them would be a signature nobody reads (bl-f12d).
 ///
@@ -59,10 +51,10 @@ pub(super) struct Landing {
 /// screen's.
 pub(super) enum Act {
     Stay,
-    /// Re-run the boot derivation. Both controls that act ask for this and
-    /// neither knows what it will find — landing an envelope and re-reading
-    /// after a cable push are the same question, asked after the material
-    /// changed.
+    /// Re-run the boot derivation: the server stopped refusing a device
+    /// that registered here, or the operator asked for a look at what a cable
+    /// carried. Neither knows what it will find — both are the same question,
+    /// asked after the material changed.
     Recheck,
 }
 
@@ -106,11 +98,23 @@ impl Shell {
                 Back::Plain
             };
             if self.bar(ui, "configuration", &out) {
-                self.forget_envelope();
+                self.forget_door();
                 self.settings = false;
                 return;
             }
-            self.chose = chooser(ui, &offers, refusal.as_ref(), &dir, &standing);
+            let word = self.word.clone();
+            let (chosen, at) = chooser(ui, &offers, refusal.as_ref(), &dir, &standing, word);
+            // Where each way in is, for the harness that has to tap one
+            // (`app/probe.rs`): named by the brand an operator reads.
+            for (component, rect) in at {
+                let name = match component {
+                    Component::Seat => "lernie",
+                    Component::Foot => "thrall",
+                    Component::Server => "yog",
+                };
+                self.note_control(name, ui, rect);
+            }
+            self.chose = chosen;
             return;
         };
         // An offer for every component exists by construction; a missing one
@@ -141,7 +145,7 @@ impl Shell {
                 self.scanner.shut();
             }
         } else if self.bar(ui, &offer.brand.clone(), &Back::Plain) {
-            self.forget_envelope();
+            self.forget_door();
             return;
         }
         // §13.1 W3, said to the one operator it is for: opening Thrall while
@@ -159,11 +163,11 @@ impl Shell {
                 ),
             );
         }
-        // What an envelope landed here would REPLACE, when there is
-        // something to lose (bl-f12d). `None` on a cold device: nothing is
-        // running, so there is no consequence to state — and the identity
-        // line is the one that already knows, so this derives from it rather
-        // than reading the leaf a second time.
+        // What a registration here would REPLACE, when there is something to
+        // lose (bl-f12d). `None` on a cold device: nothing is running, so
+        // there is no consequence to state — and the identity line is the one
+        // that already knows, so this derives from it rather than reading the
+        // leaf a second time.
         let landing = Landing {
             dir,
             refusal,
@@ -172,12 +176,11 @@ impl Shell {
                 _ => Some(self.identity()),
             },
         };
-        let scanner = &mut self.scanner;
-        let (text, said) = (&mut self.envelope, &mut self.envelope_said);
-        match opened(ui, offer, &landing, text, said, scanner) {
+        match opened(ui, offer, &landing, &mut self.door, &mut self.scanner) {
             Act::Stay => {}
             Act::Recheck => {
-                self.forget_envelope();
+                self.door = Door::new();
+                self.scanner.shut();
                 self.reboot();
             }
         }
@@ -191,8 +194,16 @@ fn chooser(
     refusal: Option<&String>,
     dir: &str,
     standing: &str,
-) -> Option<Component> {
+    word: Option<String>,
+) -> (Option<Component>, Vec<(Component, egui::Rect)>) {
     ui.weak(standing);
+    // The word of a device whose key this app made (DESIGN §5): read off the
+    // files, so it is here for the operator who is asked for it after the
+    // screen that first said it has gone.
+    if let Some(word) = word {
+        door::word(ui, &word);
+        ui.weak("an operator approves this device by the offer whose row shows this word.");
+    }
     // A half-provisioned store is not an empty one, and the two must not read
     // the same: this device HAS something, and the sentence names every file
     // that is missing at once.
@@ -204,9 +215,12 @@ fn chooser(
     ui.add_space(4.0);
     ui.weak("choose what this device becomes:");
     let mut chosen = None;
+    let mut at = Vec::new();
     egui::ScrollArea::vertical().show(ui, |ui| {
         for offer in offers.iter().filter(|o| o.default) {
-            if choice(ui, offer, true) {
+            let hit = choice(ui, offer, true);
+            at.push((offer.component, hit.rect));
+            if hit.clicked() {
                 chosen = Some(offer.component);
             }
         }
@@ -214,7 +228,9 @@ fn chooser(
         ui.weak("and one more, which is not the usual choice:");
         ui.add_space(4.0);
         for offer in offers.iter().filter(|o| !o.default) {
-            if choice(ui, offer, false) {
+            let hit = choice(ui, offer, false);
+            at.push((offer.component, hit.rect));
+            if hit.clicked() {
                 chosen = Some(offer.component);
             }
         }
@@ -224,12 +240,12 @@ fn chooser(
         // with a cable in their hand is actually here for.
         ui.weak(format!("material goes at {dir}"));
     });
-    chosen
+    (chosen, at)
 }
 
 /// One branded choice: the name on the control, the line under it. Tapping it
 /// opens a screen — it does not store the choice, and it does not dial.
-fn choice(ui: &mut egui::Ui, offer: &Offer, emphasised: bool) -> bool {
+fn choice(ui: &mut egui::Ui, offer: &Offer, emphasised: bool) -> egui::Response {
     ui.add_space(8.0);
     let size = if emphasised { 24.0 } else { 19.0 };
     let brand = egui::RichText::new(&offer.brand).size(size).strong();
@@ -238,29 +254,25 @@ fn choice(ui: &mut egui::Ui, offer: &Offer, emphasised: bool) -> bool {
         brand,
         ui.available_width(),
         "opens this way in; nothing is stored or dialled yet",
-    )
-    .clicked();
+    );
     ui.weak(&offer.tagline);
     hit
 }
 
-/// The screen a choice opened. For the two enrollments it is what material is
-/// needed and where it goes; for the server it is the recorded blockers.
+/// The screen a choice opened. For the two enrollments it is the
+/// registration door; for the server it is the recorded blockers.
 fn opened(
     ui: &mut egui::Ui,
     offer: &Offer,
     landing: &Landing,
-    text: &mut String,
-    said: &mut Option<String>,
+    door: &mut Door,
     scanner: &mut Scanner,
 ) -> Act {
     // The scan screen is the whole screen while it is up: a camera preview
     // under a heading and a back control belonging to a screen it is covering
     // reads as two screens at once.
     if scanner.live() {
-        if material::scanned(ui, &landing.dir, text, said, scanner) {
-            return Act::Recheck;
-        }
+        door::scanned(ui, &landing.dir, door, scanner);
         return Act::Stay;
     }
     let mut act = Act::Stay;
@@ -273,7 +285,9 @@ fn opened(
             ui.weak("this bootstrap starts nothing.");
             return;
         }
-        if material::screen(ui, offer, landing, text, said, scanner) {
+        crate::shell::clip::said(ui, &offer.how);
+        ui.add_space(8.0);
+        if door::screen(ui, landing, door, scanner) {
             act = Act::Recheck;
         }
     });

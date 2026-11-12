@@ -3,8 +3,8 @@
 **lernie on Android** (`dev.yog`): the app ships all three of the harness's
 runnable components — the **seat**, the **foot** (tool host) and the
 **server** — each gated behind an explicit bootstrap rather than auto-started
-(DESIGN §9). The default path is mTLS client enrollment: a leaf provisioned out
-of channel, and this app dialling a host server with it. Agents run on that
+(DESIGN §9). The default path is mTLS client registration: a leaf this device
+claims by an operator's offer, and this app dialling a host server with it. Agents run on that
 server; seats attach and detach, and the work does not.
 
 **The app is named lernie** (operator ruling 2026-10-08, bl-5331): the program
@@ -21,10 +21,12 @@ DESIGN §10 is the whole chain, rung by rung.
 **Which component runs is read off the leaf, never stored.** No material and
 nothing runs — the first screen is the three bootstraps as branded choices:
 **Lernie** the seat, **Thrall** the foot, **Yog** the server. A tap opens the
-screen that explains one; it never dials and never stores a mode. The two
-enrollment screens take the **enroll envelope** a trusted seat minted —
-pasted today, scanned once a decoder is adjudicated — validate it against the
-leaf's own grade, land it, and bring up the component the certificate names. A leaf with `OU=foot`
+screen that explains one; it stores no mode. The two enrollment screens are
+the **registration door** (DESIGN §5; yog REMOTE §15): an operator on a seat
+that is already connected mints an offer, and this device scans or is pasted
+its one-time URL, makes its own P-256 key, claims the offer over HTTPS, shows
+a six-character confirmation word, and is refused everything until the
+operator approves the row that shows the same word. No private key travels. A leaf with `OU=foot`
 runs the tool host; any other leaf runs the seat (REMOTE §4.2). The foot's
 wire surface is a type with three methods, so a gesture outside the foot set
 is a compile error here rather than a refusal at the server.

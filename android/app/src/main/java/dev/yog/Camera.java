@@ -5,8 +5,8 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 
 /**
- * The camera, for the one thing this app points it at: reading the enroll
- * envelope off a screen (bl-d815).
+ * The camera, for the one thing this app points it at: reading the
+ * registration URL off a screen (bl-d815).
  *
  * <h2>What this class is</h2>
  *

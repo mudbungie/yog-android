@@ -5,11 +5,9 @@
 //! taking it makes this device, and the long form that is the screen behind
 //! the tap.
 //!
-//! **The tap chooses nothing durable.** The operator ruling that put controls
-//! here is narrow and worth stating exactly: REMOTE §1.4 forbids the app
-//! *dialling unauthenticated*, and it never forbade a control. So a choice
-//! here opens the flow that acquires the matching material; it does not store
-//! a mode. The component that comes up is still read off the leaf on disk
+//! **The tap chooses nothing durable.** A choice here opens the registration
+//! door (DESIGN §5) under that component's own words; it does not store a
+//! mode, and which grade this device takes is the offer's, not the tap's. The component that comes up is still read off the leaf on disk
 //! ([`super::standing`]), which is why there is no field on this struct that
 //! anything writes back.
 
@@ -25,8 +23,7 @@ pub struct Offer {
     /// What taking this makes this device, in one line under the brand.
     pub tagline: String,
     /// The screen behind the tap: what material is needed, where it goes, and
-    /// how it gets there. Every act it names happens **outside this app**,
-    /// which is the point rather than a limitation.
+    /// how it gets there.
     pub how: String,
     /// Whether this is the ruling's default path. Exactly the two enrollments
     /// carry it: the server is *"allowed but … the deliberate, non-default
@@ -50,12 +47,11 @@ pub fn offers() -> Vec<Offer> {
             tagline: "the seat — operate your conversations".to_owned(),
             how: "Lernie seats you at your conversations: every workspace, \
                   every transcript, and this device's tools offered \
-                  alongside — one identity, two connections. It needs an \
-                  operator-grade leaf (a subject with no OU=foot, REMOTE \
-                  §4.2) plus the one host:port it dials. The server's own \
-                  box mints it; a cable, an already-trusted device's tools, \
-                  or a screen you photographed carries it here. This app \
-                  never mints and never enrolls itself."
+                  alongside — one identity, two connections. It takes an \
+                  operator-grade offer (a leaf with no OU=foot, REMOTE \
+                  §4.2): an operator on a seat that is already connected \
+                  mints one, and this device claims it with a key it makes \
+                  itself. The key never leaves this device."
                 .to_owned(),
             default: true,
         },
@@ -66,13 +62,13 @@ pub fn offers() -> Vec<Offer> {
             how: "Thrall makes this device a dedicated tool host: it \
                   advertises what this machine can run, waits for work \
                   addressed to it, and hands back what happened — and may \
-                  say nothing else about the world (its leaf is minted with \
+                  say nothing else about the world (its leaf is signed with \
                   OU=foot, the grade REMOTE §4.2 narrows to exactly those \
-                  three gestures). The same files as Lernie, on that \
-                  narrower leaf, under this device's own name. A Lernie \
-                  seat already offers this device's tools — take Thrall \
-                  only for a device that should offer tools and nothing \
-                  else. This app never mints and never enrolls itself."
+                  three gestures). It takes a foot-grade offer, claimed the \
+                  same way, under this device's own name. A Lernie seat \
+                  already offers this device's tools — take Thrall only for \
+                  a device that should offer tools and nothing else. The \
+                  key never leaves this device."
                 .to_owned(),
             default: true,
         },
@@ -93,18 +89,5 @@ pub fn offers() -> Vec<Offer> {
                 .to_owned(),
             default: false,
         },
-    ]
-}
-
-/// **How material gets onto a device**, one line each: DESIGN §5's three
-/// delivery channels, in the operator's own terms. They are the enrollment
-/// screen's whole content below the file list, and they are shared by both
-/// enrollment offers because the channels do not care which grade the leaf
-/// carries.
-pub fn channels() -> Vec<String> {
-    vec![
-        "a cable — adb push the files into this app's storage".to_owned(),
-        "an already-trusted device — its tools write the files here".to_owned(),
-        "a screen — the server shows the material and this device reads it".to_owned(),
     ]
 }

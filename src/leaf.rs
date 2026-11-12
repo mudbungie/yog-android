@@ -50,10 +50,8 @@
 /// **A certificate is never `Unknown`**: [`grade`] below reads an organizational
 /// unit and answers operator for anything that is not `foot`, which is what
 /// makes default-operator total. `Unknown` is reachable only from a stated
-/// word — the `enrolled` reply's `grade`, or an envelope's — and it is exactly
-/// what `crate::envelope::agrees` exists to catch, because the certificate is
-/// the authority and a word that matches no certificate is material minted
-/// wrong.
+/// word — a reply's `grade` — and is only ever said back, never acted on: the
+/// certificate is the authority.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Grade {
     /// The whole boundary, within the registrations §4 scopes.
