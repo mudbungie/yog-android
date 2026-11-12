@@ -100,25 +100,64 @@ pub(super) fn administered(
     posted.note()
 }
 
-/// **The mint, and the material it answered** (§13.18). It is here beside the
-/// other acts that write to the standing rather than in `fold`, because what
-/// it holds is not a read's answer: no read can fetch it back, the server
-/// having shredded the key as it answered.
-pub(super) fn minted(
+/// **The mint, and the read behind it** (§13.18): the URL `offer` answered is
+/// held beside the pending rows it now appears among. It is here rather than
+/// in `fold` because the URL is not a read's answer — no read gives it back.
+pub(super) fn offered(
     seat: &Seat,
     focus: &Focus,
     standing: &mut Standing,
     name: String,
     grade: crate::leaf::Grade,
 ) -> Option<String> {
-    let (posted, envelope) = super::super::acts::enroll(seat, focus, name, grade);
-    if let Some(envelope) = envelope {
-        standing.minted = Some(envelope);
+    let (posted, offered) = super::super::acts::offer(seat, focus, name.clone(), grade);
+    let said = pending(seat, focus, standing, posted.note());
+    if let (Some(offered), Some(held)) = (offered, standing.offers.as_mut()) {
+        held.minted = Some((name, offered));
     }
-    posted.note()
+    said
 }
 
-/// **The sign-in, fired and adopted** (§13.19) — `minted`'s shape at the
+/// **Approve or decline, and the read behind it** (§13.18).
+pub(super) fn settled(
+    seat: &Seat,
+    focus: &Focus,
+    standing: &mut Standing,
+    settle: crate::codec::Settle,
+    name: String,
+) -> Option<String> {
+    let said = super::super::acts::settle(seat, focus, settle, name).note();
+    pending(seat, focus, standing, said)
+}
+
+/// **Re-read the pending offers** into the surface, keeping the URL it shows
+/// where the workspace is the one it was minted for. `said` is what the act
+/// before this read had to say, which outranks the read's own refusal.
+pub(super) fn pending(
+    seat: &Seat,
+    focus: &Focus,
+    standing: &mut Standing,
+    said: Option<String>,
+) -> Option<String> {
+    match super::super::asks::offers(seat, focus) {
+        Ok((workspace, rows)) => {
+            let minted = standing
+                .offers
+                .take()
+                .filter(|held| held.about(&workspace))
+                .and_then(|held| held.minted);
+            standing.offers = Some(crate::codec::Pending {
+                workspace,
+                minted,
+                rows,
+            });
+            said
+        }
+        Err(why) => said.or(Some(why)),
+    }
+}
+
+/// **The sign-in, fired and adopted** (§13.19) — `offered`'s shape at the
 /// other act whose answer is a value rather than a receipt. The standing it
 /// answered with is the run's whole output so far, which is exactly what the
 /// lane's first frame would carry, so nothing waits a cadence to paint.

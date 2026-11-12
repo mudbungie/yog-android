@@ -161,11 +161,15 @@ pub enum Reply {
     },
     /// **What each attempt cost** (DESIGN §13.12), one row apiece.
     Science(Vec<candidates::Attempt>),
-    /// **The material a mint answered with** (REMOTE §8.4): §8.4's six
-    /// fields, as the value `crate::envelope` already spells — one shape, so
-    /// what this seat displays and what the next device reads are the same
-    /// six facts said once.
-    Enrolled(crate::envelope::Envelope),
+    /// **What `offer` answered** (REMOTE §15.1 step 1): the registration URL
+    /// and when its code stops working.
+    Offered(super::offer::Offered),
+    /// **A workspace's pending offers** (REMOTE §15.1 step 5), one row apiece.
+    Offers(Vec<super::offer::OfferRow>),
+    /// `approve`'s receipt: the client is seated.
+    Approved,
+    /// `decline`'s receipt: the offer is void.
+    Declined,
     /// **One config file's own bytes** (DESIGN §13.17). The typed `settings`
     /// beside them are not read — `codec::admin` says why — so what this
     /// carries is what the composer edits and a write sends back. The

@@ -18,7 +18,7 @@
 
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
-    ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_DESTINATION, NO_DOCTOR, NO_ROUTE,
+    ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_DESTINATION, NO_DOCTOR,
     NO_SCHEDULING, NO_SEED, NO_SKILLS, NO_TREE,
 };
 
@@ -27,6 +27,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("advertise", Reads),
     ("agent", Reads),
     ("answer", Reads),
+    ("approve", Reads),
     ("arm", Reads),
     ("assign", Reads),
     ("attention", Reads),
@@ -55,6 +56,7 @@ pub const REQUESTS: &[(&str, Expect)] = &[
             reason: NO_SCHEDULING,
         },
     ),
+    ("decline", Reads),
     ("delete-agent", Reads),
     ("delete-workspace", Reads),
     (
@@ -68,13 +70,6 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("disband", Reads),
     ("doctor", Refuses(NO_DOCTOR)),
     ("effort", Reads),
-    (
-        "enroll",
-        Partial {
-            reads: 2,
-            reason: NO_ROUTE,
-        },
-    ),
     (
         "fan",
         Partial {
@@ -113,6 +108,8 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("model", Reads),
     ("models", Reads),
     ("nudge", Reads),
+    ("offer", Reads),
+    ("offers", Reads),
     ("ops", Reads),
     ("pin", Refuses(ACT)),
     ("price", Refuses(ACT)),

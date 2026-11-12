@@ -80,49 +80,6 @@ fn an_answer_that_states_no_text_or_no_branch_refuses_naming_the_field() {
     );
 }
 
-/// **A third grade word is carried, not refused** (REMOTE §3.2). The
-/// certificate is §4.2's authority for what was minted, and
-/// `crate::envelope::agrees` is where the stated word is held against it — so
-/// this reader's job is to say what the frame said, and it round-trips the
-/// word rather than flattening it into one of the two it knows.
-#[test]
-fn a_grade_this_build_has_not_heard_of_rides_as_itself() {
-    let frame = object(
-        &json!({ "op": "enroll", "workspace": "ws", "name": "phone-2",
-                                "grade": "admin" }),
-    );
-    let act = crate::codec::enroll::decode(&frame).unwrap();
-    assert!(
-        matches!(&act, crate::codec::Act::Enroll { grade, .. }
-            if *grade == crate::leaf::Grade::Unknown("admin".to_owned())),
-        "{act:?}"
-    );
-    // And it round-trips as the word it arrived as: the catch-all says
-    // *unknown* on a GLASS, never on a wire.
-    let gesture = crate::codec::Gesture::Act(act);
-    assert_eq!(
-        crate::codec::encode(&gesture),
-        json!({ "op": "enroll", "workspace": "ws", "name": "phone-2",
-                "grade": "admin" })
-    );
-}
-
-/// **A stated route refuses by name** (REMOTE §8.4, PROTOCOL 14). The address
-/// the enrolled device will dial is a fact about a box this seat cannot see,
-/// so a frame carrying one is refused rather than read as the mint without it
-/// — the silent misread REMOTE §3's third rule forbids, and the recorded
-/// decision `tests/conformance/requests.rs` counts.
-#[test]
-fn an_enrolment_stating_a_route_refuses_naming_the_op() {
-    let frame = object(
-        &json!({ "op": "enroll", "workspace": "ws", "name": "phone-2",
-                 "grade": "operator", "address": "server.invalid:7737" }),
-    );
-    let refusal = crate::codec::enroll::decode(&frame).unwrap_err();
-    assert!(refusal.starts_with("enroll: "), "{refusal}");
-    assert!(refusal.contains("server.invalid"), "{refusal}");
-}
-
 #[test]
 fn an_op_outside_this_family_refuses_by_name() {
     let frame = object(&json!({ "op": "pin", "workspace": "ws" }));

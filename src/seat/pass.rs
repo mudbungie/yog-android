@@ -134,11 +134,9 @@ pub(super) struct Standing {
     /// own gesture, and carrying the workspace it was read for because the
     /// answer echoes none.
     pub(super) proposals: Option<crate::codec::Staged>,
-    /// **The material a mint answered with** (DESIGN §13.18), held here and
-    /// NOWHERE else — not the §14 cache, not a log line, not a file. It is a
-    /// private key for a device that does not exist yet, and the surface that
-    /// shows it has a control whose whole product is dropping it.
-    pub(super) minted: Option<crate::envelope::Envelope>,
+    /// **The offers surface** (DESIGN §13.18): the focused workspace's
+    /// pending offers and the URL this seat just minted, while it stands.
+    pub(super) offers: Option<crate::codec::Pending>,
     /// **The last needle's answer** (bl-4c2b), carried between passes for the
     /// reason the counters above are: it is a gesture's answer, not a pass's,
     /// and a pass that re-reads the world must not drop the search the
@@ -185,7 +183,7 @@ impl Standing {
             config: None,
             marks: None,
             proposals: None,
-            minted: None,
+            offers: None,
             found: None,
             last: snap.clone(),
             failed: 0,

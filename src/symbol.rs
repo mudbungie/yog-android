@@ -1,5 +1,5 @@
 //! **The QR symbol this seat draws** (REMOTE §8.4, DESIGN §13.18): the module
-//! matrix an enroll envelope encodes to, and the two rules about how big it is
+//! matrix a registration URL encodes to, and the two rules about how big it is
 //! painted.
 //!
 //! **The encoder is `rxing`'s, and that is a feature flag rather than a
@@ -64,7 +64,7 @@ impl Symbol {
 ///
 /// It refuses rather than truncating: a payload too large for the largest
 /// symbol at this level is a picture nobody could scan, and REMOTE §8.4's own
-/// rule is that the envelope fits at M.
+/// rule was that the retired envelope fit at M; a registration URL fits at any.
 pub fn encode(text: &str) -> Result<Symbol, String> {
     let hints = rxing::EncodeHints {
         ErrorCorrection: Some("M".to_owned()),
@@ -73,7 +73,7 @@ pub fn encode(text: &str) -> Result<Symbol, String> {
     };
     let matrix = rxing::qrcode::QRCodeWriter
         .encode_with_hints(text, &rxing::BarcodeFormat::QR_CODE, 0, 0, &hints)
-        .map_err(|why| format!("the envelope will not encode as a symbol: {why}"))?;
+        .map_err(|why| format!("this will not encode as a symbol: {why}"))?;
     let modules = usize::try_from(matrix.getWidth())
         .map_err(|_| "the symbol is wider than this device can address".to_owned())?;
     let mut dark = Vec::with_capacity(modules * modules);

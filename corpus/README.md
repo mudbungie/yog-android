@@ -15,7 +15,8 @@ regenerate.
     corpus/reply/<kind>.json     one file per reply `kind` (plus `refusal`)
     corpus/shapes.json           the standing record: per shape, every field
                                  path with the EDITION at which it appeared;
-                                 the major, its floor, and what is deprecated
+                                 the major, its floor, what is deprecated,
+                                 and what was retired and when
 
 Each fixture file:
 
@@ -39,6 +40,7 @@ the number the hello compares.
   "deprecated": [],
   "floor": 18,
   "protocol": 19,
+  "retired": { "request/enroll": 27 },
   "shapes": {
     "reply/ops": { "signature": { "/kind:string": 1, "/rows/[]/client:string": 16, ":object": 1 } }
   }
@@ -47,11 +49,14 @@ the number the hello compares.
 
 A signature key is a field path with its JSON type; its value is the
 **edition** at which that path first appeared. The corpus's edition is the
-newest stamp in the file, computed, never stored. `floor` is the edition at
+newest stamp in the file — a path's or a retirement's — computed, never stored. `floor` is the edition at
 which the current major was cut: every path stamped at or below it is on every
 server of this major, every later path is optional to read. `deprecated`
 lists shapes and fields (path without type) yog still writes and a reader
-should stop relying on.
+should stop relying on. `retired` lists shapes and fields a server **no longer
+speaks**, each with the edition it went at: a server stating that edition or
+later refuses the op by name, never sends the kind, never writes the key. A
+client drops its own code for a retired entry when it re-vendors.
 
 **The server states its edition, so a client can compare.** yog's `build.rs`
 reads this file and compiles the newest stamp in as `EDITION` and `floor` as
@@ -109,7 +114,10 @@ speaks, under rule 4 above.
     make corpus
 
 That rewrites every file from the boundary. A field gained is stamped the next
-edition and needs no bump. It **refuses** a field or shape that vanished, and a
+edition and needs no bump; so is a retirement — a path listed in
+`corpus::RETIRED`, which only a request op, the reply kind that op alone
+earned, or a key stamped above `floor` may be (REMOTE §3.2). It **refuses**
+any other field or shape that vanished, and a
 key that started spelling a second JSON type, unless the repo-root `PROTOCOL`
 file has been raised — a major bump — and, for a loss, the path is listed in
 `corpus::DEPRECATED` (`src/boundary/corpus.rs`).

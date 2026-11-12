@@ -69,9 +69,9 @@ pub enum Depth {
     Conversation,
 }
 
-/// The name minted material stands under (§13.18): it covers the admin
+/// The name the offers surface stands under (§13.18): it covers the admin
 /// surface, and closing it returns there.
-pub const MINTED: &str = "minted";
+pub const OFFERS: &str = "offers";
 
 /// **The word at the name line's far end** (bl-dfad): what a tap on the line
 /// does. Not `close`, because `close` is a ball act's wire word and its
@@ -84,7 +84,7 @@ pub const DONE: &str = "done";
 pub enum Close {
     /// Put the overlay down; the picks it held go with it.
     Leave,
-    /// Drop the minted material and stay on the admin surface (§13.18): the
+    /// Drop the offers surface and stay on the admin surface (§13.18): the
     /// act that surface exists to end with, and the screen it covered.
     Forget,
     /// Drop the search answer and its question: leaving a search leaves it.
@@ -172,10 +172,10 @@ impl Overlay {
         matches!(self, Self::Records | Self::Files)
     }
 
-    /// The name line. `minted` is whether minted material stands (§13.18): it
-    /// covers the admin surface under its own name, and closing it forgets
-    /// the material rather than leaving the surface.
-    pub fn line(self, minted: bool, under: &Under) -> Line {
+    /// The name line. `offers` is whether the offers surface stands (§13.18):
+    /// it covers the admin surface under its own name, and closing it drops
+    /// it rather than leaving the admin surface.
+    pub fn line(self, offers: bool, under: &Under) -> Line {
         let subject = match self {
             Self::Queue | Self::Trail | Self::Help | Self::Settings | Self::Balls(View::Board) => {
                 String::new()
@@ -186,13 +186,13 @@ impl Overlay {
             _ => under.workspace.clone(),
         };
         let (name, reaches, close) = match self {
-            Self::Admin if minted => (MINTED, Self::Admin.name(), Close::Forget),
+            Self::Admin if offers => (OFFERS, Self::Admin.name(), Close::Forget),
             Self::Search => (self.name(), self.reaches(), Close::Unsearch),
             _ => (self.name(), self.reaches(), Close::Leave),
         };
         Line {
             name,
-            title: if name == MINTED { MINTED } else { self.title() },
+            title: if name == OFFERS { OFFERS } else { self.title() },
             subject,
             reaches,
             close,

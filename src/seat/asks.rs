@@ -25,7 +25,7 @@ pub(super) use review::{files, work};
 use super::Focus;
 use super::pass::{answer, kind_err};
 use crate::codec::reply::Reply;
-use crate::codec::{Ask, Found, Machines, OpRow, Pane, Spread, View};
+use crate::codec::{Ask, Found, Machines, OfferRow, OpRow, Pane, Spread, View};
 use crate::transport::Seat;
 
 /// **How much trail a phone asks for** (DESIGN §13.8). The server's own tail
@@ -185,5 +185,18 @@ pub(super) fn clients(seat: &Seat, focus: &Focus) -> Result<Machines, String> {
     match answer(seat, &ask)? {
         (Reply::Clients(rows), _) => Ok(Machines { workspace, rows }),
         (other, _) => Err(kind_err("clients", &other)),
+    }
+}
+
+/// **The focused workspace's pending offers** (REMOTE §15.1 step 5), with the
+/// workspace they were read for — the answer echoes none.
+pub(super) fn offers(seat: &Seat, focus: &Focus) -> Result<(String, Vec<OfferRow>), String> {
+    let workspace = super::acts::focused(focus)?;
+    let ask = Ask::Offers {
+        workspace: workspace.clone(),
+    };
+    match answer(seat, &ask)? {
+        (Reply::Offers(rows), _) => Ok((workspace, rows)),
+        (other, _) => Err(kind_err("offers", &other)),
     }
 }

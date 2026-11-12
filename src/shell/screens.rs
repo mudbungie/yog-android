@@ -135,7 +135,7 @@ impl Shell {
                 .map(|found| found.needle.clone())
                 .unwrap_or_default(),
         };
-        let line = overlay.line(snap.minted.is_some(), &under);
+        let line = overlay.line(snap.offers.is_some(), &under);
         self.float(ui, &line, |shell, ui| shell.overlaid(ui, snap, overlay));
     }
 

@@ -1,0 +1,11 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "op": "offers",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 19,
+  "shape": "offers"
+}

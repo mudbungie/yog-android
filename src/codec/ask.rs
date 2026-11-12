@@ -110,6 +110,9 @@ pub enum Ask {
     /// DESIGN §13.14): the tool hosts registered against it, and what each
     /// one says it offers. Per workspace, because a registration is.
     Clients { workspace: String },
+    /// **This workspace's pending offers** (REMOTE §15.1 step 5, DESIGN
+    /// §13.18): each with its state and, once claimed, its confirmation word.
+    Offers { workspace: String },
     /// **The config lineages this workspace holds** (REMOTE §9): the named
     /// branches its policy is written on. It is asked with the records
     /// screen's five, because what it names is what `governing`'s `follows`

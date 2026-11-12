@@ -154,11 +154,11 @@ pub struct Snapshot {
     /// surface*; an empty listing is *nothing is staged*, which is an answer
     /// and not a refusal.
     pub proposals: Option<crate::codec::Staged>,
-    /// **The material this seat just minted** (REMOTE §8.4, DESIGN §13.18).
-    /// `None` is the ordinary state and the one an operator should leave the
-    /// app in: it holds a private key for a device that does not exist yet,
-    /// and forgetting it is a control.
-    pub minted: Option<crate::envelope::Envelope>,
+    /// **The offers surface** (REMOTE §15.1, DESIGN §13.18): the focused
+    /// workspace's pending offers, and the registration URL this seat just
+    /// minted. `None` is *the surface is closed*; a `Some` with no rows is
+    /// *nothing is pending*, which is an answer.
+    pub offers: Option<crate::codec::Pending>,
     /// **What the last needle found** (yog DESIGN §8.5, bl-4c2b). `None` is
     /// *no search was made* — never *nothing matched*, which is a `Some`
     /// carrying its own needle and no hits. The two are the same value to

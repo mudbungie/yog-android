@@ -168,16 +168,6 @@ pub const UNSENT: &str = "the answer to a gesture this codec does not send";
 /// The tool host's `invocations` read is follow-CLASS and is **not** this
 /// lane: its answer is one frame of rows, and §5.5's rule is about a text
 /// fold.
-/// **The route a minted device will dial is a choice about a box this seat
-/// cannot see** (REMOTE §8.4, PROTOCOL 14). `enroll` takes an optional
-/// `address` — the address THIS device will dial, for one that does not share
-/// the server's own view of itself — and absent is the server's own
-/// `wire/address`. A phone minting the next box knows nothing about the route
-/// that box will take, so the bare form is the only honest gesture and a frame
-/// stating a route is refused by name rather than read as the mint without it.
-pub const NO_ROUTE: &str =
-    "the address the next device dials is a fact about a box this seat cannot see (REMOTE §8.4)";
-
 /// DESIGN §8: *"One rung, and the other two are not omissions. The bare rung
 /// is the whole slice: a phone is not where a work directory is chosen or a
 /// ball is bound."*

@@ -1,0 +1,38 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "offers",
+      "ok": true,
+      "rows": [
+        {
+          "expires": 1700000600,
+          "grade": "operator",
+          "name": "phone-1",
+          "state": "open"
+        },
+        {
+          "expires": 1700000600,
+          "grade": "operator",
+          "name": "tablet",
+          "state": "claimed",
+          "word": "K7M2QX"
+        },
+        {
+          "expires": 1700000600,
+          "grade": "foot",
+          "name": "builder",
+          "state": "proved",
+          "word": "2LFTUR"
+        }
+      ]
+    },
+    {
+      "kind": "offers",
+      "ok": true,
+      "rows": []
+    }
+  ],
+  "protocol": 19,
+  "shape": "offers"
+}

@@ -497,9 +497,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/codec/reply/decode.rs` | how one reply body is READ, split from the vocabulary it builds | landed (bl-146b, out of `reply.rs`) |
 | `src/seat/asks/records.rs` | the records screen's reads: the five an opening asks, the one a picked row posts, and the first failure standing for all of them | landed (bl-146b) |
 | `src/shell/screens/records.rs` + `records/parts.rs` | android-only: the records screen (§13.11) — the picks, and what each of the six halves says | landed (bl-146b) |
-| `src/symbol.rs` | the QR symbol this seat draws (§13.18): the module matrix at level M, and the whole-device-pixel pitch rule — pure, and proved by a round trip through the decoder this app already links | landed (bl-2ee8) |
-| `src/codec/enroll.rs` + `src/seat/acts/enroll.rs` | the §8.4 mint: the act, the six fields it answers as the value the scanning half already spells, and the one act here whose ANSWER is the product | landed (bl-2ee8) |
-| `src/shell/screens/world/admin/minted.rs` | android-only: the material on the glass — this app's one covering surface, the symbol as one mesh, and the back control whose whole product is the forgetting | landed (bl-2ee8) |
+| `src/symbol.rs` | the QR symbol this seat draws (§13.18): a registration URL's module matrix at level M, and the whole-device-pixel pitch rule — pure, and proved by a round trip through the decoder this app already links | landed (bl-2ee8; the URL, bl-f51c) |
+| `src/codec/offer.rs` + `src/seat/acts/offer.rs` | §13.18, REMOTE §15.1: the four ops — `offer`, `offers`, `approve`, `decline` — what a pending row says and whether it may be approved, the surface's one value (`Pending`), and the acts with the re-read behind each | landed (bl-f51c, in place of `codec/enroll.rs` and `seat/acts/enroll.rs`) |
+| `src/shell/screens/world/admin/offers.rs` | android-only: the offers surface — the minted URL as text and as one mesh, the pending rows re-read while it stands, and approve (dark until proved) and decline under each | landed (bl-f51c, in place of `admin/minted.rs`) |
 | `src/codec/login.rs` | the sign-in family (§13.19): the act's spelling, the held read's, and the fold a frame is absorbed onto — lines append, and the frame carrying an `outcome` is the last | landed (bl-5a41) |
 | `src/codec/reply/kind.rs` | the word each answer is spelled with, split from the vocabulary it names | landed (bl-5a41, out of `reply.rs`) |
 | `src/seat/pass/login.rs` | the third held lane's whole state (§13.19, §14.1): which run the glass watches, the fold keyed on the LANE that fed it, and the stop condition — a run that settled | landed (bl-5a41) |
@@ -605,7 +605,6 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell/enroll/door.rs` + `door/work.rs` | android-only: the registration door (§5) — the URL field, `register`, `scan QR`, the outcome with its word and its wait, the carried leaf's file list and re-read; and the worker thread behind it with the one call into `dev.yog.Register` | landed (bl-1701, in place of `enroll/material.rs`) |
 | `src/register.rs` + `src/register/{url,key,entry}.rs` | §5, pure and host-tested: the registration URL read strictly, the P-256 key made here and its PEM, the confirmation word (yog's vector pinned), the door's answer read and filed as `material`'s four files, the claim over a caller-supplied request, the word read back off the files, and the watch that reads approval as the answer changing | landed (bl-1701) |
 | `android/…/Register.java` | the one HTTPS POST, against the platform's public web roots: no redirect, a stated length out, either framing in, 64 KiB at most | landed (bl-1701) |
-| `src/envelope.rs` | what is left of the enroll envelope: the minting seat's WRITING of it (§13.18). The reader, the landing and the hint are deleted with the import (§11) | landed (bl-dd7b; import deleted bl-1701) |
 | `src/scan.rs` | the QR decoder: a camera luminance frame in, the text a symbol carries out — a registration URL now (§5, §12) — plus the camera bridge's four-word vocabulary — pure, host-tested | landed (bl-d815) |
 | `tests/fixtures/enroll-v33m-{symbol.txt,payload.json}` | one foreign-encoded symbol at REMOTE §8.4's own bar (1567 bytes, version 33, level M, 149×149) and the bytes it carries | landed (bl-d815) |
 | `src/shell/jvm.rs` | android-only: the crate's ONE JNI plumbing — attach, this app's class loader, the pending-exception discipline | landed (bl-d815, out of `tools/ui/bridge.rs`) |
@@ -1447,9 +1446,9 @@ which refuses every act would be strictly worse than a sentence that says why.
 > longer reads one: `envelope::read`, `envelope::land`, `envelope::hint`, the
 > paste field and the grade-versus-certificate check that guarded them are
 > deleted, and §5 is how a device gets in. What follows is kept as the record
-> of what was built and why, and for the one half that still stands until
-> `enroll` itself gives way to `offer`: the minting seat's WRITING of an
-> envelope (§13.18).
+> of what was built and why. The last half of it — the minting seat's WRITING
+> of an envelope — went with `enroll` itself (bl-f51c, §13.18), and
+> `src/envelope.rs` no longer exists.
 
 yog's `enroll` act (yog bl-f4e3) mints a client leaf on the server's own
 recipe and answers a reply carrying `{grade, name, address, ca, cert, key}`,
@@ -3544,94 +3543,73 @@ screen against a dialled server with nothing staged sees the read's own
 sentence and no rows, which is why the settle band and not the listing is what
 the parity inventory rests on.
 
-### 13.18 The minting seat: the act, the symbol, and the forgetting (bl-2ee8)
+### 13.18 The offering seat: the URL, the pending rows, and the two acts that settle one (bl-f51c; yog REMOTE §15.1 steps 1 and 5)
 
-`src/symbol.rs`, `src/envelope.rs`, `src/codec/enroll.rs`,
-`src/seat/acts/enroll.rs`, `src/shell/screens/world/admin/minted.rs`. §11 said
-this device enrolls nobody; the full-seat ruling (§16.2) re-classes it, and
-this section is the amendment. An operator-grade phone seat fires REMOTE
-§8.4's mint and DISPLAYS the answering envelope as a QR the next device scans —
-one trusted device bootstrapping another, with no laptop in the loop (§5's mesh
-ruling).
+`src/codec/offer.rs`, `src/seat/acts/offer.rs`, `src/seat/worker/after.rs`
+(`offered`, `settled`, `pending`), `src/symbol.rs`,
+`src/shell/screens/world/admin/offers.rs`.
 
-**REMOTE §1.4 is untouched, and it is worth saying exactly why one more time.**
-The acting machine here is the already-trusted seat, performing the mint over
-its own authenticated channel; the NEW device performs no channel act at all
-and the material travels the last hop out of channel, by screen and eye. That
-is the same clause §11 states from the other end, and this ball puts this app
-on both ends of it.
+**This section replaced the minting seat** (bl-2ee8). That seat fired REMOTE
+§8.4's `enroll` and displayed the answering envelope — a leaf AND ITS PRIVATE
+KEY — as a QR the next device scanned; the surface that showed it had a back
+control whose whole product was forgetting the key. REMOTE §15.4 retired the
+act and the envelope together, and here they are deleted together:
+`codec/enroll.rs`, `seat/acts/enroll.rs`, `envelope.rs` and the `enrolled`
+reply are gone, and nothing on this seat ever holds another device's key.
 
-**This device is now on both sides of §8.4, and the two halves are not
-symmetric.** `crate::envelope` reads a payload a camera saw and checks the
-stated grade and name against the leaf the same payload carries, because a
-photograph has no provenance. The minting half does not, because the answer
-arrived over mTLS from the server that minted it — re-deriving would be a
-second authority for a fact the channel already settled. What the two share is
-the VALUE: one `Envelope`, so what this seat displays and what the next device
-reads are the same six fields said once, and `envelope::write` is the exact
-inverse of `envelope::read`.
+What an operator-grade phone seat does instead is REMOTE §15.1's two ends of
+the operator's job:
 
-**The encoder is a feature flip, not a dependency**, and that is measured
-rather than argued. This crate already links `rxing` to DECODE a symbol (§12);
-its `encoders` feature adds **zero crates to the committed lockfile**, so no
-license, advisory or source moved. The manifest's own note said *"no
-`encoders`: this app reads symbols and never draws one"* — the chat-first
-framing speaking — and it now carries the reversal beside it. lernie wrote its
-own encoder (§4.15) because its manifest had no QR library at all; this one
-does, and a second implementation of a fully specified algorithm would be code
-this repository maintains forever under the 100% floor for nothing.
+- **Mint an offer.** Two controls on the admin screen's foot, `offer operator`
+  and `offer foot` — two rather than a toggle, because the grade is which of
+  two devices is being let in (REMOTE §4.2) — each taking the device's name
+  from the field and dark while it is empty. The act is
+  `{"op":"offer","workspace":W,"name":N,"grade":G}`; the answer, `offered`,
+  is the registration URL and its expiry.
+- **Show it.** The **offers surface** covers the admin screen under its own
+  name (`overlay::OFFERS`): who the offer is for, the URL as text (a long
+  press copies it), the sentence saying it works once and for ten minutes,
+  and the URL as a QR — `symbol::encode` over some sixty characters, a small
+  symbol where the envelope needed version 33 — painted as one mesh at a
+  whole-device-pixel pitch, as before.
+- **List what is pending.** Under the symbol, and reachable on its own by the
+  `offers` control beside the two mints: every pending offer of the focused
+  workspace as *name · grade · state · word*. The rows are re-read every four
+  seconds while the surface stands, because a row moves `open → claimed →
+  proved` on the NEW device's clock.
+- **Approve, or decline.** Two controls under each row. **`approve` is dark
+  until the row is `proved`** (`OfferRow::approvable`) — the server refuses an
+  approval of anything else, and the control says so before the wire does.
+  `decline` is always live. The operator's whole job is to read the word off
+  the new device (§5) and approve the row that shows the same one.
 
-**Level M, because REMOTE §8.4 measures the envelope and rules it** — 1567
-bytes, against 2331 at M — and `crate::symbol`'s own suite takes that
-measurement against the encoder this seat actually uses rather than trusting
-the number.
+**One value holds the surface** — `codec::Pending`: the workspace it was read
+for, the URL minted here if one was, and the rows — on the worker's standing
+and the snapshot, never in the §14 cache. Every act re-reads the rows behind
+itself (`worker::after::pending`), which is also the read that settles a lost
+reply: none of the three acts is ever re-sent (§19), and the rows say whether
+a mint landed, an approval seated its row away, or a decline voided one. A
+refresh keeps the URL the surface is showing; a listing read for another
+workspace does not paint under this one (`Pending::about`).
 
-**The symbol is proved by the decoder this app already has.** An encoder that
-agrees with itself proves nothing (lernie's own reason for pinning its encoder
-against an independent implementation); here the independent reading is free,
-so the assertion is a ROUND TRIP — encode, render to a luminance buffer, and
-read it back through `crate::scan`, which is the same path a camera takes minus
-the camera.
+**Closing is only closing.** The name line's control and the platform's back
+drop the value (`Cmd::Forget`) and cross no wire. There is no key to forget:
+the URL carries none, and a second look at it is one `offers` away from
+nothing — the URL itself is not listed, so an operator who closed the surface
+before the device scanned mints again under the same name, which REMOTE §15.1
+says replaces the code.
 
-**The pitch is a whole number of device pixels and the symbol is one mesh**
-(lernie bl-5e0e's ruling, whose reason transfers exactly): egui feathers every
-fill by a device pixel, half of it proud of the edge, so at a fractional origin
-a module's own edge pixels come out grey and the contrast a decoder needs is
-spent on anti-aliasing. It is drawn as large as the surface allows, because its
-whole job is to be read by a camera once. The RULE is `crate::symbol::pitch` —
-pure and host-tested, `shell::place`'s seam at a second site — and the paint
-spends it.
+**Grows-only on the way in** (REMOTE §3.2): a row state this build has never
+heard of is carried as its word and enables nothing; a grade word is said
+back as the server said it.
 
-**One control per grade, not a toggle beside one.** REMOTE §4.2's two grades
-see different worlds; the grade is which of two devices is being made, not a
-setting an operator adjusts. Each control takes the device's name out of the
-admin screen's own field and says so while it is dark.
-
-**It covers the admin screen, and that is this app's one covering surface**
-(lernie §4.15's exception, for its reason): what it holds is a private key on a
-display, the whole act is *look at this now and close it*, and a surface
-legible behind it would invite the one thing the material must not have, which
-is a long life on a screen. **The key is never painted and never named** —
-what an operator needs to see is that the mint happened and for which device;
-what the camera needs is the symbol.
-
-**Leaving is forgetting, and it is a gesture.** The material lives in the
-worker's own `Standing` and NOWHERE else: not the §14 cache, not a log line,
-not a file. The back control sends `Cmd::Forget`, whose whole product is that
-the value is gone — the one command in this vocabulary that crosses no wire and
-unmakes something.
-
-**A repeat is worse than useless and the sentence says so.** A second mint
-under one name is refused by the certificate the server kept, so a resend on a
-lost reply would turn a mint whose material was lost into a refusal saying the
-name is taken. The read that settles one is the workspace's own machines
-(§13.14).
-
-**What the walk reaches.** No new step: the admin screen already walks, and
-what it now captures is two more controls on that foot, both dark, each saying
-that a device has to be named first. The covering surface needs a mint to
-exist, which needs a server, so what a walk with nothing dialled can reach is
-the controls — which is what the parity gate asks of them either way.
+**What is not built, named.** The offer has no typed verbs on this seat
+(`/offer`, `/offers`, `/approve`, `/decline` are the desktop's); the controls
+above are its whole surface. A row's expiry is carried and not painted — the
+phone states the ten minutes once rather than counting them down. And the
+walk (§15) reaches `offer` and `offers` but not `approve` or `decline`: a
+pending row is a server's answer and the walk dials none, so `parity.toml`
+cites the two.
 
 ### 13.19 Sign-in from the glass: the act, and the third held lane (bl-5a41)
 
@@ -4158,7 +4136,6 @@ The walk, and the standing assertions it exists for:
 | step | seed | asserts |
 | --- | --- | --- |
 | `cold` | nothing provisioned | the bootstrap chooser is the first screen |
-| `door` | — tap **Lernie** | the registration door (§5) is one tap behind the chooser; nothing is claimed, because a claim needs a door with a publicly trusted certificate (`screens-first.sh`) |
 | `roster` | a leaf | a leaf alone makes this device a seat, and "main" is its roster |
 | `settings` | — tap the mark | **the configuration surface is reachable from the roster** |
 | `back-to-roster` | — tap the mark | the mark toggles: a way in with no way out is the same defect wearing the other face |
@@ -4169,6 +4146,13 @@ The walk, and the standing assertions it exists for:
 | `transcript` | focus at a conversation, at rest | the chat screen paints under its focus, and the nudge is offered |
 | `running` | the same, with the stop gates on | the two stop controls paint under the server's own gates |
 | `parity` | — every dump above | **every `control`-classed op is reachable or cited** (§15.5) |
+
+**The registration door (§5) is not a beat yet** (bl-f51c). The chooser names
+its three controls for the harness (`lernie`, `thrall`, `yog`) and a tap on
+the first opens the door — captured by hand on the emulator when it landed —
+but as a walk beat the tap missed on two runs in three: the cold screen's
+insets are still settling when the probe that places the tap is read. The
+beat waits on a reach that re-reads the rectangle at the moment of the tap.
 
 **The seeds grew a state, not a screen** (bl-fe4c). `transcript` and `running`
 are the same screen; what differs is the conversation row's own gates, which

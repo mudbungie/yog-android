@@ -4,23 +4,16 @@
     {
       "grade": "operator",
       "name": "phone-1",
-      "op": "enroll",
+      "op": "offer",
       "workspace": "ws"
     },
     {
       "grade": "foot",
       "name": "phone-1",
-      "op": "enroll",
-      "workspace": "ws"
-    },
-    {
-      "address": "engine.invalid:7737",
-      "grade": "operator",
-      "name": "phone-1",
-      "op": "enroll",
+      "op": "offer",
       "workspace": "ws"
     }
   ],
   "protocol": 19,
-  "shape": "enroll"
+  "shape": "offer"
 }

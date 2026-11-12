@@ -286,13 +286,6 @@
           "verb": "clear-trail"
         },
         {
-          "detail": "Issues a leaf under the stated common name on this server's own CA, registers that client in the focused workspace, and answers the whole of what the device needs: the anchors, its certificate, its private key and the address it dials. The key is shredded here before the answer leaves, so this box keeps none of it. A name whose leaf `yog wire-certs WIRE_LEAF=` already minted is ADOPTED rather than refused: registering is not issuing, so the standing certificate is registered and handed over with nothing re-issued and nothing distrusted — which is the repair for a leaf that was minted into no workspace and so advertised into nothing. The grade then comes off that certificate, and an enrollment asking for a grade the subject does not carry is refused. A name already enrolled through this door has no key left to hand over and says so. `--at <host>:<port>` states the address THIS device will dial, for a device that does not share this server's own view of itself — an emulator reaching its host through the emulator's alias, a phone on the LAN, a box on an overlay. Unstated is the server's own `wire/address`. State one the server leaf already answers to (`WIRE_HOST` is a list), because a route the certificate omits fails verification at the device rather than here. Bare is operator grade; add `foot` for a tool host that may advertise, take its invocations and complete them and say nothing else. Refuses when this box holds no CA, and when its address names no port a device can dial. The material travels to the device out of channel — a QR on a screen, adb, a hand — never over a connection the new device opened, which it could not open anyway.",
-          "summary": "mint or adopt a device's certificate here, register it, and hand back its material",
-          "surface": "control",
-          "usage": "/enroll <common-name> [foot] [--at <host>:<port>]",
-          "verb": "enroll"
-        },
-        {
           "detail": "Answers every priced (provider, model) row with its four rates in USD per million tokens, the ceiling in USD when one is set, and the whole world's priced spend — the ledger the ceiling is compared against. The table and the ceiling are world facts: one `ui.json` on the server, shared by every seat, addressed to no workspace. An empty table means no cost is answered anywhere and no ceiling can bind; a step whose row is unpriced is counted in `unpriced_tokens` beside the money, so a partial table reads as *at least*.",
           "summary": "the price table, the spend ceiling, and what this world has spent against it",
           "surface": "control",
@@ -312,6 +305,34 @@
           "surface": "control",
           "usage": "/ceiling <usd> | /ceiling off",
           "verb": "ceiling"
+        },
+        {
+          "detail": "Mints an offer for a device that will be seated in the focused workspace under the stated common name, and answers the registration URL — the whole of what travels to the device, by eye, by paste or as a QR symbol. It carries no key and no certificate. The device makes its own key pair and claims the URL's code with the public half; the server signs a leaf for it and both ends then show one confirmation word. The code is single-use and dies ten minutes after it is minted; minting again under the same name replaces it. Bare is operator grade; add `foot` for a tool host. Refused for a name that already has a certificate, a registration or an unapproved claim, when this box holds no CA, and when its address names no host a device could dial.",
+          "summary": "offer a new device a place here: answers one URL, good once, for ten minutes",
+          "surface": "control",
+          "usage": "/offer <common-name> [foot]",
+          "verb": "offer"
+        },
+        {
+          "detail": "Lists every offer not yet approved or declined. `open` is a code nobody has claimed; `claimed` is a device that holds the leaf and has not dialled; `proved` is a device that has dialled with it, which a copy of the URL never could. A claimed or proved row carries the confirmation word — the six characters the device is showing.",
+          "summary": "the focused workspace's pending offers, each with its state and word",
+          "surface": "control",
+          "usage": "/offers",
+          "verb": "offers"
+        },
+        {
+          "detail": "Registers the offered client in the workspace it was offered, which is the moment its certificate starts to mean anything: until then every gesture it sends is refused. Refused unless the offer is proved. Read the word off the new device and approve the row that matches — that comparison is the whole of what stops an impostor who claimed the URL first.",
+          "summary": "seat a proved offer's device in the focused workspace",
+          "surface": "control",
+          "usage": "/approve <common-name>",
+          "verb": "approve"
+        },
+        {
+          "detail": "An open offer is forgotten and its name is free again. An offer somebody already claimed has issued a certificate that cannot be recalled, so declining it holds that certificate refused for good and spends the name: offer the device again under another one.",
+          "summary": "void an offer; one already claimed keeps its name spent",
+          "surface": "control",
+          "usage": "/decline <common-name>",
+          "verb": "decline"
         },
         {
           "detail": "Answers the invocation the capability boundary parked before it ran. `pass` lets it through, `refuse` declines it — the model is told the decision stands, and told not to retry it, rephrase it or reach the same outcome another way — and `hold` keeps it parked even if the policy later would have passed it. The call is read from the conversation's own hold mark, so nothing is typed and nothing can be spent by a different call. `--scope` says how far the answer stands. Left off it settles that one call, which is the safe reading and the one you get without thinking about it. `--scope conversation` settles the whole CLASS of the held call — the same tool at the same reach — for this conversation and everything below it; `--scope workspace` settles that class for every conversation here. A wider answer is how you stop being asked eleven times about one narrow tool. Answer the same scope again to change it, and `/revoke` suspends every standing answer, which is how you take one back. A destructive or credential-reaching call takes the bare form only: those are decided for the call in front of you, never for calls to come. Passing or refusing then drives the conversation on (`litany advance`), which is what actually lifts the hold: the control is asked again and now finds your answer. Nothing here stops the agent. Refuses when nothing is held there.",
@@ -412,7 +433,7 @@
           "verb": "doctor"
         },
         {
-          "detail": "One row per client registered in the seat's workspace: its name, whether it holds a live connection right now, and the tools it has advertised. Presence is read at the moment you ask and is true only then — a client that answers here may be gone a second later, which is why nothing durable records it. What each client advertises, by contrast, was written when it last presented its set and stands whether or not it is connected. **And when it last spoke**, which is the fact that tells a machine asleep right now from one that has never once connected: presence reads false for both, and on a terminal seat it reads false for everything, since every verb opens and closes its own connection. A row with no last-seen at all has never dialled — the enrolment was minted and abandoned, and it is the row an operator can safely remove. A machine is registered by an operator's own act on the server, never over the wire.",
+          "detail": "One row per client registered in the seat's workspace: its name, whether it holds a live connection right now, and the tools it has advertised. Presence is read at the moment you ask and is true only then — a client that answers here may be gone a second later, which is why nothing durable records it. What each client advertises, by contrast, was written when it last presented its set and stands whether or not it is connected. **And when it last spoke**, which is the fact that tells a machine asleep right now from one that has never once connected: presence reads false for both, and on a terminal seat it reads false for everything, since every verb opens and closes its own connection. A row with no last-seen at all has never dialled — the registration was minted and abandoned, and it is the row an operator can safely remove. A machine is registered by an operator's own act on the server, never over the wire.",
           "summary": "the machines registered in this workspace, who is connected, and what they offer",
           "surface": "control",
           "usage": "/clients",

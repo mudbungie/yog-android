@@ -6,8 +6,11 @@
         {
           "agent": "c-1-a",
           "fork": "from here",
+          "landed": "title",
           "name": "Cobalt",
           "notch": 0,
+          "procedure": "user_message",
+          "role": "titler",
           "state": "live",
           "tail": "working",
           "tokens": 9

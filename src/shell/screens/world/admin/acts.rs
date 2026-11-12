@@ -105,11 +105,12 @@ impl Shell {
         }
     }
 
-    /// **The mint, one control per grade** (REMOTE §8.4, DESIGN §13.18). Two
-    /// controls rather than a toggle beside one, because the grade is not a
-    /// setting an operator adjusts — it is which of two devices is being made,
-    /// and REMOTE §4.2 says the two see different worlds. Each takes the name
-    /// out of the field and says so while it is dark.
+    /// **The offer, one control per grade** (REMOTE §15.1, DESIGN §13.18),
+    /// and the way to the pending ones. Two controls rather than a toggle
+    /// beside one, because the grade is not a setting an operator adjusts — it
+    /// is which of two devices is being let in, and REMOTE §4.2 says the two
+    /// see different worlds. Each takes the name out of the field and says so
+    /// while it is dark.
     fn minting(&mut self, ui: &mut egui::Ui) {
         let typed = self.composer.trim().to_owned();
         let band = egui::vec2(ui.available_width(), TOUCH);
@@ -117,29 +118,38 @@ impl Shell {
             band,
             egui::Layout::left_to_right(egui::Align::Center),
             |ui| {
-                let wide = crate::shell::theme::share(ui, 2);
+                let wide = crate::shell::theme::share(ui, 3);
                 for grade in [crate::leaf::Grade::Operator, crate::leaf::Grade::Foot] {
-                    let word = crate::codec::enroll::word(&grade);
-                    let label = if typed.is_empty() {
-                        format!("enroll {word} — name the device")
-                    } else {
-                        format!("enroll {word}")
-                    };
+                    let word = crate::codec::offer::word(&grade);
                     let control = crate::shell::theme::chip(
                         ui,
-                        label.into(),
+                        format!("offer {word}").into(),
                         wide,
                         !typed.is_empty(),
                         &format!(
-                            "mints a leaf for a new {word} device under the name in the field"
+                            "mints a one-time registration URL for a new {word} device under \
+                             the name in the field — name the device first"
                         ),
                     );
-                    crate::shell::act::act(ui, &control, "enroll");
+                    crate::shell::act::act(ui, &control, "offer");
                     if control.clicked()
                         && let Some(model) = self.model()
                     {
-                        model.enroll(typed.clone(), grade);
+                        model.offer(typed.clone(), grade);
                     }
+                }
+                let control = crate::shell::theme::chip(
+                    ui,
+                    "offers".into(),
+                    wide,
+                    true,
+                    "lists this workspace's pending offers, to approve or decline",
+                );
+                crate::shell::act::act(ui, &control, "offers");
+                if control.clicked()
+                    && let Some(model) = self.model()
+                {
+                    model.offers();
                 }
             },
         );

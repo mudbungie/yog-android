@@ -1,0 +1,13 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "expires": 1700000600,
+      "kind": "offered",
+      "ok": true,
+      "url": "https://engine.invalid/yog/register/ABCD2345"
+    }
+  ],
+  "protocol": 19,
+  "shape": "offered"
+}

@@ -69,15 +69,7 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             workspace: str_of(o, "workspace")?,
         },
         "board" => Ask::Board,
-        "science" => Ask::Science {
-            workspace: str_of(o, "workspace")?,
-        },
-        "clients" => Ask::Clients {
-            workspace: str_of(o, "workspace")?,
-        },
-        "lineages" => Ask::Lineages {
-            workspace: str_of(o, "workspace")?,
-        },
+        "science" | "clients" | "offers" | "lineages" => aimed(op, str_of(o, "workspace")?),
         "proposals" => Ask::Proposals {
             workspace: str_of(o, "workspace")?,
             id: opt(o, "id", str_of)?,
@@ -160,6 +152,16 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
         _ => return Ok(None),
     };
     Ok(Some(ask))
+}
+
+/// The four reads that name a workspace and nothing else.
+fn aimed(op: &str, workspace: String) -> Ask {
+    match op {
+        "science" => Ask::Science { workspace },
+        "clients" => Ask::Clients { workspace },
+        "offers" => Ask::Offers { workspace },
+        _ => Ask::Lineages { workspace },
+    }
 }
 
 /// **`files` asked AT a commit is a different tree**, and this codec has no

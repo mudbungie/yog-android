@@ -85,9 +85,9 @@ fn closing_leaves_except_where_something_else_is_standing() {
     let minted = Overlay::Admin.line(true, &at);
     assert_eq!(
         (minted.name, minted.reaches, minted.close),
-        ("minted", "config", Close::Forget)
+        ("offers", "config", Close::Forget)
     );
-    // Minted material covers only the surface that minted it.
+    // The offers surface covers only the admin surface.
     assert_eq!(Overlay::Fleet.line(true, &at).close, Close::Leave);
 }
 
@@ -146,7 +146,7 @@ fn the_line_says_the_phones_words_not_the_op_token() {
     assert_eq!(title(Overlay::Balls(View::Here)), "balls");
     assert_eq!(title(Overlay::Balls(View::Everywhere)), "balls");
     assert_eq!(title(Overlay::Queue), "waiting");
-    assert_eq!(Overlay::Admin.line(true, &at).title, MINTED);
+    assert_eq!(Overlay::Admin.line(true, &at).title, OFFERS);
     // The screen keeps its name for the probe.
     assert_eq!(Overlay::Work.line(false, &at).name, "work-diff");
     // No title is a wire op's token with a hyphen in it, and the line's

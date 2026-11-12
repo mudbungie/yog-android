@@ -65,10 +65,10 @@ pub(super) fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         // `marks` reach here only in their WRITTEN form — the read half of
         // each op is an ask, and the ask table takes it first; `proposal` is
         // the settle beside `proposals`, which is that read.
-        // **The mint** (DESIGN §13.18): its own shape, because its subject is
-        // a device that does not exist yet and its answer is material rather
-        // than a receipt.
-        "enroll" => super::super::enroll::decode(o)?,
+        // **The offer, and the two acts that settle one** (DESIGN §13.18).
+        "offer" => super::super::offer::decode_offer(o)?,
+        "approve" => super::super::offer::decode_settle(crate::codec::Settle::Approve, o)?,
+        "decline" => super::super::offer::decode_settle(crate::codec::Settle::Decline, o)?,
         "config" | "marks" | "scan" | "delete-agent" | "delete-workspace" | "proposal" => {
             super::super::admin::act::decode(op, o)?
         }

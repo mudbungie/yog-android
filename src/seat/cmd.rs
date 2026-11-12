@@ -102,14 +102,16 @@ pub(super) enum Cmd {
         from: String,
         goal: String,
     },
-    /// **Mint the next device's material** (§13.18), and — its own command
-    /// rather than an arm of the admin act — because its answer IS the
-    /// product rather than a receipt.
-    Enroll(String, crate::leaf::Grade),
-    /// **Forget the material a mint answered with** (§13.18). The one command
-    /// in this vocabulary whose whole product is that something is gone: the
-    /// key is held in the worker's own memory and nowhere else, and closing
-    /// the surface that shows it is what drops it.
+    /// **Mint an offer for the next device** (§13.18): its own command rather
+    /// than an arm of the admin act, because its answer IS the product.
+    Offer(String, crate::leaf::Grade),
+    /// **Read the focused workspace's pending offers** (§13.18) — what opens
+    /// the offers surface, and what it re-asks while it stands.
+    Offers,
+    /// **Approve or decline one pending offer** (§13.18), by its name.
+    Settle(crate::codec::Settle, String),
+    /// **Close the offers surface** (§13.18): drop what it held. It crosses
+    /// no wire.
     Forget,
     /// **Read one config file** (§13.17). The destination is the gesture's
     /// own — two of the three name no workspace — so nothing about the focus

@@ -96,11 +96,12 @@ pub(super) fn spend(
         Cmd::Fork { from, goal } => acts::fork(seat, focus, from, goal).note(),
         Cmd::Science => fold::spread(asks::science(seat, focus), standing),
         Cmd::Clients => fold::machined(asks::clients(seat, focus), standing),
-        Cmd::Enroll(name, grade) => after::minted(seat, focus, standing, name, grade),
-        // **The forgetting is the whole act** (§13.18): the material lives in
-        // the standing and nowhere else, so dropping it there is dropping it.
+        Cmd::Offer(name, grade) => after::offered(seat, focus, standing, name, grade),
+        Cmd::Offers => after::pending(seat, focus, standing, None),
+        Cmd::Settle(settle, name) => after::settled(seat, focus, standing, settle, name),
+        // Closing is the whole act (§13.18): the surface lives in the standing.
         Cmd::Forget => {
-            standing.minted = None;
+            standing.offers = None;
             None
         }
         Cmd::Config(at) => fold::configured(asks::config(seat, at), standing),

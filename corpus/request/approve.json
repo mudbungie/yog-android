@@ -1,0 +1,12 @@
+{
+  "direction": "request",
+  "frames": [
+    {
+      "name": "phone-1",
+      "op": "approve",
+      "workspace": "ws"
+    }
+  ],
+  "protocol": 19,
+  "shape": "approve"
+}

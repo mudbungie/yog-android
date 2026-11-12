@@ -1,0 +1,11 @@
+{
+  "direction": "reply",
+  "frames": [
+    {
+      "kind": "approved",
+      "ok": true
+    }
+  ],
+  "protocol": 19,
+  "shape": "approved"
+}

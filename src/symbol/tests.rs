@@ -37,7 +37,7 @@ fn decoded(symbol: &super::Symbol) -> String {
 
 #[test]
 fn a_payload_encodes_to_a_symbol_that_reads_back_as_itself() {
-    let payload = r#"{"yog-enroll":1,"grade":"foot","name":"phone-1"}"#;
+    let payload = "https://engine.example/yog/register/ABCD2345";
     let symbol = encode(payload).unwrap();
     assert!(
         symbol.modules >= 21 && symbol.modules % 4 == 1,
@@ -47,7 +47,7 @@ fn a_payload_encodes_to_a_symbol_that_reads_back_as_itself() {
 }
 
 #[test]
-fn a_realistic_envelope_still_fits_at_level_m() {
+fn a_payload_of_a_kilobyte_and_a_half_still_fits_at_level_m() {
     // REMOTE §8.4 measures a real mint at 1567 bytes and rules "PEM as minted,
     // at level M or lower" — level M carries 2331. This is that measurement
     // taken against the encoder this seat actually uses.
@@ -57,7 +57,7 @@ fn a_realistic_envelope_still_fits_at_level_m() {
 }
 
 #[test]
-fn a_roving_envelope_still_fits_at_level_m() {
+fn a_larger_payload_still_fits_at_level_m() {
     // The roving pair (yog bl-9043) grows a mint to about 1729 bytes: past
     // level Q's capacity, still inside M's 2331, so the level stays M.
     let payload: String = (0..1729u32)
@@ -71,10 +71,7 @@ fn a_roving_envelope_still_fits_at_level_m() {
 #[test]
 fn a_payload_too_large_for_the_format_refuses_rather_than_truncating() {
     let why = encode(&"x".repeat(4000)).unwrap_err();
-    assert!(
-        why.starts_with("the envelope will not encode as a symbol"),
-        "{why}"
-    );
+    assert!(why.starts_with("this will not encode as a symbol"), "{why}");
 }
 
 #[test]

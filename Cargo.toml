@@ -1,6 +1,6 @@
 [package]
 name = "yog-android"
-version = "0.0.47"
+version = "0.0.48"
 edition = "2024"
 description = "Android seat for yog: a wire client of the remote boundary"
 license = "MIT"
@@ -56,7 +56,7 @@ rustls = { version = "0.23", default-features = false, features = ["ring", "std"
 # makes for itself and the SHA-256 its confirmation word is read from.
 ring = "0.17"
 # rxing: operator ruling 2026-08-30 (bl-d815) — the QR decoder behind **Scan
-# QR** on the enrollment screen. The ruling is a choice between three routes,
+# QR** on the registration door. The ruling is a choice between three routes,
 # and it is recorded here because the manifest is where the cost lands:
 #
 #   * ML Kit barcode scanning was REFUSED. It is not "the platform route" —
@@ -84,17 +84,14 @@ ring = "0.17"
 # no `image`/`image_formats` (the frame arrives as a luminance buffer from
 # the camera, never as a file), and no other symbology.
 #
-# `encoders` was OFF, on the note "this app reads symbols and never draws one
-# — minting is the operator seat's job, REMOTE §8.4". That was the chat-first
-# framing speaking, and the full-seat ruling (DESIGN §16.2) reverses it: an
-# operator-grade phone seat fires the §8.4 mint and DISPLAYS the answering
-# envelope as a QR the next device scans (bl-2ee8, DESIGN §13.18). It is a
-# feature flip on a crate this manifest already approves and NOT a new
-# dependency: enabling it adds zero crates to the committed lockfile —
-# measured by diffing it, not assumed — so no license, advisory or source
-# moved. The alternative was a second QR encoder inside this repository,
-# under the 100% floor, for a fully specified algorithm the linked crate
-# already implements.
+# `encoders` was OFF, on the note "this app reads symbols and never draws one".
+# The full-seat ruling (DESIGN §16.2) reversed it: an operator-grade phone
+# seat mints an offer and DISPLAYS its registration URL as a QR the next
+# device scans (bl-2ee8 for the retired envelope, bl-f51c for the URL; DESIGN
+# §13.18). It is a feature flip on a crate this manifest already approves and
+# NOT a new dependency: enabling it adds zero crates to the committed lockfile
+# — measured by diffing it, not assumed — so no license, advisory or source
+# moved.
 rxing = { version = "0.9", default-features = false, features = ["qrcode", "decoders", "encoders", "encoding_rs"] }
 
 # The shell set (operator ruling 2026-08-23, recorded on bl-c761: eframe,

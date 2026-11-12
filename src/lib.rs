@@ -18,7 +18,6 @@ pub mod codec;
 pub mod dock;
 pub mod draft;
 pub mod drawer;
-pub mod envelope;
 pub mod foot;
 pub mod frame;
 pub mod hello;

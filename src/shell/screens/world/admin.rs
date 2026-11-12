@@ -40,7 +40,7 @@
 use eframe::egui;
 
 mod acts;
-mod minted;
+mod offers;
 mod proposals;
 
 use crate::codec::Destination;
@@ -53,16 +53,14 @@ pub(in crate::shell) const SCREEN: &str = crate::overlay::Overlay::Admin.name();
 
 impl Shell {
     pub(in crate::shell) fn admin(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
-        // **The minted material covers this screen while it stands** (§13.18):
-        // the whole act is look-at-it-now-and-close-it, and a surface legible
-        // behind it would invite the one thing a private key on a display must
-        // not have, which is a long life there.
-        if let Some(envelope) = snap.minted.clone() {
-            self.minted(ui, &envelope);
+        // **The offers surface covers this screen while it stands** (§13.18),
+        // for the workspace it was read for and no other.
+        let workspace = snap.focus.workspace.clone().unwrap_or_default();
+        if let Some(pending) = snap.offers.clone().filter(|held| held.about(&workspace)) {
+            self.offers(ui, &pending);
             return;
         }
         self.note_screen(SCREEN);
-        let workspace = snap.focus.workspace.clone().unwrap_or_default();
         ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
             self.admin_acts(ui, &workspace);
             ui.add_space(4.0);

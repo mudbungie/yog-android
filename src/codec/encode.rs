@@ -8,8 +8,8 @@
 use serde_json::{Value, json};
 
 use super::{
-    Act, Ask, Gesture, admin, balls, candidates, enroll, fleet, fork, hold, pick, row, start,
-    tools, workdiff,
+    Act, Ask, Gesture, admin, balls, candidates, fleet, fork, hold, offer, pick, row, start, tools,
+    workdiff,
 };
 
 /// Encode a gesture to its deposit envelope — the request frame's whole body.
@@ -51,6 +51,7 @@ fn asked(ask: &Ask) -> Value {
             json!({ "op": "science", "workspace": workspace })
         }
         Ask::Clients { workspace } => json!({ "op": "clients", "workspace": workspace }),
+        Ask::Offers { workspace } => json!({ "op": "offers", "workspace": workspace }),
         // **The admin reads** (DESIGN §13.17). Each is its write's own op
         // token with the written half left out, which is the server's grammar
         // and not a convention here.
@@ -191,11 +192,7 @@ fn acted(act: &Act) -> Value {
             act,
         } => row::encode(workspace, agent, act),
         Act::Admin(act) => admin::act::encode(act),
-        Act::Enroll {
-            workspace,
-            name,
-            grade,
-        } => enroll::encode(workspace, name, grade.clone()),
+        Act::Offer(act) => offer::encode(act),
         Act::Fork {
             workspace,
             parent,

@@ -87,12 +87,16 @@
 # never asked for on the wire, which `tests/conformance/requests.rs` records
 # (DESIGN §13.14).
 
-# --- The minting seat is whole (bl-2ee8) ------------------------------------
-# Nothing of it is on this ledger. `enroll` is two controls on the admin
-# screen's foot — one per §4.2 grade, because the grade is which of two devices
-# is being made rather than a setting — and what the mint answers covers that
-# screen as a symbol the next device photographs, with a back control whose
-# whole product is the forgetting (DESIGN §13.18, amending §11).
+# --- The offer (bl-f51c, in place of the minting seat's `enroll`) -----------
+# `offer` is two controls on the admin screen's foot — one per §4.2 grade,
+# because the grade is which of two devices is being let in rather than a
+# setting — and `offers` is the control beside them that opens the pending
+# list. Both are reached by the walk. `approve` and `decline` are painted on a
+# pending offer's own row, and a row is a server's answer: the walk dials no
+# server and the paint-first cache does not hold offers, so neither can stand
+# in front of it (DESIGN §13.18).
+approve = "painted on a pending offer's row, which only a server's answer puts on the glass; the walk dials none (DESIGN §13.18)"
+decline = "painted on a pending offer's row, beside approve (DESIGN §13.18)"
 
 # --- Sign-in from the glass is whole (bl-5a41, bl-892e) ---------------------
 # Nothing of it is on this ledger. All three are on or at the sign-in screen,

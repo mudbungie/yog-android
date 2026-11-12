@@ -16,7 +16,7 @@ use super::super::start;
 use super::super::tools::{capture_of, invocation_of};
 use super::super::trail;
 use super::super::{
-    admin, balls, candidates, clients, conv, enroll, files, hold, lineages, records, transcript,
+    admin, balls, candidates, clients, conv, files, hold, lineages, offer, records, transcript,
     workdiff, ws,
 };
 use super::Reply;
@@ -75,7 +75,10 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
             Reply::Proposals { rows, whole }
         }
         "science" => Reply::Science(candidates::science(o)?),
-        "enrolled" => Reply::Enrolled(enroll::enrolled(o)?),
+        "offered" => Reply::Offered(offer::offered(o)?),
+        "offers" => Reply::Offers(offer::rows(o)?),
+        "approved" => Reply::Approved,
+        "declined" => Reply::Declined,
         "config" => Reply::Config(admin::config(o)?),
         "marks" => Reply::Marks(admin::marks(o)?),
         "deleted" => Reply::Deleted,

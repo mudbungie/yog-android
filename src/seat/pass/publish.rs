@@ -100,7 +100,7 @@ impl Standing {
         out.config.clone_from(&self.config);
         out.marks.clone_from(&self.marks);
         out.proposals.clone_from(&self.proposals);
-        out.minted.clone_from(&self.minted);
+        out.offers.clone_from(&self.offers);
         out.login = self.signing.painted();
     }
 
