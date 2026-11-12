@@ -1,7 +1,8 @@
 +++
 title = "offer, offers, approve and decline replace the minting seat's enroll: the URL as text and QR, pending rows with their word, approve dark until proved (yog REMOTE 15.1 steps 1 and 5, 15.4)"
 created = 1794459873
-updated = 1794459873
+updated = 1794460437
+claimant = "Sidles-phone"
 parent = "bl-233d"
 priority = 2
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
