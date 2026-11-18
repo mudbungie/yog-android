@@ -1,7 +1,8 @@
 +++
 title = "A red scheduled workflow opens one issue per streak; the next green run closes it"
 created = 1794985640
-updated = 1794985640
+updated = 1794985643
+claimant = "Knuckled-T"
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
 Scheduled workflows (advisories.yml, store-scan.yml) fail silently: a red daily run tells nobody.
