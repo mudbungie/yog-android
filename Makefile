@@ -1,4 +1,4 @@
-.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit cross-clippy line-cap leak-scan protocol-gate deny advisories mend-advisories install-hooks apk apk-release deploy-phone screens screens-avd invoke parity natives
+.PHONY: all build release test conformance coverage lint fmt fmt-check check ci clean rules-audit cross-clippy line-cap leak-scan protocol-gate deny advisories mend-advisories alarm-selftest install-hooks apk apk-release deploy-phone screens screens-avd invoke parity natives
 
 all: check
 
@@ -218,6 +218,7 @@ coverage:
 # so a structural violation fails before the minute-scale tools start.
 lint:
 	$(MAKE) line-cap
+	$(MAKE) alarm-selftest
 	$(MAKE) protocol-gate
 	$(MAKE) leak-scan
 	cargo clippy --all-targets -- -D warnings
@@ -276,6 +277,12 @@ cross-clippy:
 # its self-test. Milliseconds, so it sits at the head of `lint`.
 protocol-gate:
 	@scripts/protocol-gate.sh --self-test
+
+# The unattended runs' alarm, in the gate (bl-dbce): it drives the real
+# `scripts/alarm.sh` under a fake `gh`, both directions — a red streak opens
+# exactly one issue, and nothing is written when there is nothing to say.
+alarm-selftest:
+	@scripts/alarm-selftest.sh
 
 # The disclosure gate (yog bl-fd5a/bl-167d, adopted here from day zero): no
 # credential, routable address, home path, personal address, pasted dialogue,

@@ -78,7 +78,7 @@ shell consume. `pub(crate)` is the honest demotion and the rules skip it.
   can't be tested, it mustn't be built. Coverage exclusions are added with
   reasoning, never to make a number.
 - **The gate.** `make check` is the complete gate: `fmt-check → lint →
-  coverage`, where `lint` is `line-cap → protocol-gate → leak-scan → clippy -D
+  coverage`, where `lint` is `line-cap → alarm-selftest → protocol-gate → leak-scan → clippy -D
   warnings → cross-clippy → rules-audit → cargo deny check bans licenses sources` and coverage is
   `scripts/check-coverage.sh` (tarpaulin, 100% floor). `check` is a door onto
   `scripts/check`, which carries the three-word exit make cannot (0 pass, 75
@@ -170,6 +170,12 @@ so `make deny` judges bans, licences and sources, and
 finding it runs `make mend-advisories`, proves the lockfile move with
 `ci.yml` on a branch, fast-forwards `main` and re-judges the release. A
 gate failure on `deny` is about the tree, never about the calendar.
+
+**A red scheduled run tells the owner once per streak** (bl-dbce): every
+scheduled workflow ends in `scripts/alarm.sh red|green`, where the open issue
+titled `unattended run red: <workflow>` is the whole state — the first red run
+opens it with a mention, later red runs say nothing, the next green run closes
+it — and `make alarm-selftest` proves it under a fake `gh` in `lint`.
 
 ## What may never enter a ball body
 

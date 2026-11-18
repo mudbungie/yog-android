@@ -14,7 +14,7 @@
 # hand-run, `make ci` and the builder cannot drift.
 #
 #   0        the tree passed: fmt-check, the whole static gate (`make lint`:
-#            line-cap, protocol-gate, leak-scan, clippy -D warnings,
+#            line-cap, alarm-selftest, protocol-gate, leak-scan, clippy -D warnings,
 #            cross-clippy, rules-audit, cargo-deny) and 100% coverage.
 #   75       no verdict (scripts/check-coverage.sh's own arm; nothing else
 #            here can produce it).
