@@ -2,6 +2,7 @@
 title = "The rule gains a machine selector: providers are listed per machine without the qualification, each pick opens the next list, a list is as tall as its rows, and a start shows the conversation it founded"
 created = 1795072363
 updated = 1795072363
+claimant = "Rabid-phone"
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
 Since yog REMOTE 5.7 a workspace's providers listing carries, after the server's own rows, one row per provider per registered machine offering its model access, named row@client. The rule painted that as one flat provider list.
