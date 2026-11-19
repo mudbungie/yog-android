@@ -22,6 +22,12 @@ ignore = [
     # it is upstream egui's migration, not a choice this manifest can make.
     # Drop this entry when an eframe release moves off it.
     "RUSTSEC-2026-0192",
+    # chrono: unmaintained, not vulnerable — no CVE, and no fixed version
+    # exists ("all versions are affected"). It arrives through rxing (the QR
+    # decoder), so replacing it is upstream rxing's migration, not a choice
+    # this manifest can make. Drop this entry when cargo-deny warns
+    # `advisory-not-detected`.
+    "RUSTSEC-2026-0543",
 ]
 
 [licenses]

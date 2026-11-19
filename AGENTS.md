@@ -175,7 +175,10 @@ gate failure on `deny` is about the tree, never about the calendar.
 scheduled workflow ends in `scripts/alarm.sh red|green`, where the open issue
 titled `unattended run red: <workflow>` is the whole state — the first red run
 opens it with a mention, later red runs say nothing, the next green run closes
-it — and `make alarm-selftest` proves it under a fake `gh` in `lint`.
+it — and `make alarm-selftest` proves it under a fake `gh` in `lint`. The one
+failure that heals itself is not red (bl-aeaf): `advisories.yml` ends green, with
+nothing landed, when its fast-forward is refused because `main` moved while the
+gate ran — the next run begins from the new `main`.
 
 ## What may never enter a ball body
 
