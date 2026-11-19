@@ -141,7 +141,7 @@ pub(super) fn spend(
         // So the gesture wakes the pass and the pass is the recovery.
         Cmd::Answer(verdict, scope) => acts::answer(seat, focus, verdict, scope).note(),
         Cmd::Row(agent, act) => acts::row(seat, focus, agent, act).note(),
-        Cmd::Start(goal) => acts::started(seat, focus, goal).note(),
+        Cmd::Start(goal) => started(seat, focus, standing, goal),
         // The two aimed screens whose acts ARE invisible until re-read.
         Cmd::Ball(project, act) => after::balled(seat, focus, standing, project, act),
         Cmd::Candidate(project, ball, act) => {
@@ -180,6 +180,8 @@ pub(super) fn spend(
 fn aimed(seat: &Seat, focus: &mut Focus, standing: &mut Standing, moved: Focus) -> Option<String> {
     let was = focus.workspace.take();
     *focus = moved;
+    // The operator has gone somewhere: a start's claim on the focus is over.
+    standing.claimed = None;
     if was != focus.workspace {
         preload(seat, focus, standing);
     }
@@ -196,6 +198,14 @@ fn options(seat: &Seat, focus: &Focus, standing: &mut Standing) -> Option<String
         standing.options.learned(&workspace, None, envelope);
     }
     None
+}
+
+/// **A start is followed into focus** (§25, bl-82d7): its receipt names the
+/// conversation, and the loop focuses the row that answers to the name.
+fn started(seat: &Seat, focus: &Focus, standing: &mut Standing, goal: String) -> Option<String> {
+    let (posted, named) = acts::started(seat, focus, goal);
+    standing.claimed = named;
+    posted.note()
 }
 
 /// A tuning act and the read that overtakes its optimistic control.

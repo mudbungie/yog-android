@@ -116,8 +116,12 @@ pub(super) struct Standing {
     /// terms: written only by that screen's own gesture.
     pub(super) candidates: Option<crate::codec::Spread>,
     /// **The machines roster** (DESIGN §13.14), on the same terms: written
-    /// only by that screen's own gesture.
+    /// only by a gesture — that screen's, or the rule's selectors' (§25).
     pub(super) clients: Option<crate::codec::Machines>,
+    /// **The conversation a start founded and the list has not shown yet**
+    /// (§25, bl-82d7), by the name its receipt minted: the focus follows it
+    /// when a row answers to that name, and a focus gesture forgets it.
+    pub(super) claimed: Option<String>,
     /// **The two work-review answers** (DESIGN §13.15), on the same terms
     /// again: each is written only by its own screen's gesture, and each
     /// carries the parameter it was asked with so the paint knows which row
@@ -178,6 +182,7 @@ impl Standing {
             records: None,
             candidates: None,
             clients: None,
+            claimed: None,
             files: None,
             work: None,
             config: None,

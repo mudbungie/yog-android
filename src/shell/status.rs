@@ -1,7 +1,7 @@
 //! **The status rule** (DESIGN §22 items 1, 2 and 10, bl-79bb; §23 item
-//! 14; §24 item 4): the bottom edge of the chat — one touch-tall line of
-//! runs, `<provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> | <diagnostics>
-//! — <name>` — and the banner line over it. Which runs stand, what each
+//! 14; §24 item 4; §25): the bottom edge of the chat — one touch-tall line
+//! of runs, `<machine> ⏶ | <provider> ⏶ | <model> ⏶ | <effort> ⏶ |
+//! <priority> | <diagnostics> — <name>` — and the banner line over it. Which runs stand, what each
 //! says, which drop and whether a list is fresh are `crate::status`, pure
 //! and host-tested; this file paints them and performs the taps. The
 //! workspace knob and the mark went to the drawer (§24 item 4).
@@ -37,6 +37,9 @@ use crate::theme::{self, State, TOUCH, glyph, space};
 #[derive(Default)]
 pub(crate) struct Rule {
     asked: Option<(Slot, Option<usize>)>,
+    /// The knob a pick asked open on the NEXT frame (§25): the tap that
+    /// picked is still closing its own list on this one.
+    pub(crate) next: Option<Slot>,
     dismissed: Option<String>,
     pub(crate) verb: Option<Slot>,
 }
@@ -59,6 +62,9 @@ impl Shell {
     /// line over it.
     pub(super) fn rule(&mut self, ui: &mut egui::Ui, snap: &Snapshot) {
         self.follow(snap);
+        if let Some(slot) = self.rule.next.take() {
+            self.rule.verb = Some(slot);
+        }
         let ctx = ui.ctx().clone();
         if egui::Popup::is_any_open(&ctx) {
             if std::mem::take(&mut self.back) {
@@ -181,6 +187,7 @@ impl Shell {
         };
         let face = self.knob(ui, snap, chip, seat);
         let name = match slot {
+            Slot::Machine => "rule-machine",
             Slot::Provider => "rule-provider",
             Slot::Model => "rule-model",
             Slot::Effort => "rule-effort",
@@ -189,7 +196,7 @@ impl Shell {
         self.note_control(name, ui, face.rect);
         if open || face.clicked() {
             let mark = match slot {
-                Slot::Provider | Slot::Model => Some(snap.listed),
+                Slot::Machine | Slot::Provider | Slot::Model => Some(snap.listed),
                 _ => None,
             };
             self.rule.asked = Some((slot, mark));

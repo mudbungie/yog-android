@@ -467,6 +467,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/live.rs` + `src/rows/windowed.rs` | where the lane meets the record: the prose gated on the flight that opens it, and a window row minted only for a call no committed block names yet | landed (bl-e3d1, the window bl-ee21) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/codec/pick/face.rs` | what each control on the row SAYS: the pick, then the workspace's assignment, then the control's own name — pure, host-tested | landed (bl-809d) |
+| `src/codec/pick/machine.rs` | the machine level: a provider's name split against the workspace's roster by the server's rule, the two menus the split makes, and what the selectors are aimed at — pure, host-tested | landed (bl-5e0b, §25) |
 | `src/codec/pick/knob.rs` | what the selected provider's row will TAKE, and the sentence a dark knob answers a tap with — three reasons, three instructions, none of them derived from a model name — pure, host-tested | landed (bl-0691, out of `pick.rs`) |
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the server's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — where it sits, what it drops when the focus moves, and the one listing read it asks for | landed (bl-0267, one row bl-0691) |
@@ -7128,7 +7129,8 @@ screen and the sign-in.
    one `+` on the glass.
 
 4. **The rule without the workspace and without the mark** (`crate::status`,
-   `shell/status.rs`; amends §22 item 2 and §23 item 14). It reads
+   `shell/status.rs`; amends §22 item 2 and §23 item 14; *amended by §25:
+   a machine selector stands before the provider*). It reads
    `<provider> ⏶ | <model> ⏶ | <effort> ⏶ | <priority> | <state · age> |
    <tokens> | <spend> | <context> — <name>` — the desktop's line (lernie
    §4.44 item 3) byte for byte in its segments. `Slot::Workspace` leaves
@@ -7279,3 +7281,85 @@ the phone's update row offers it. Each step leaves a whole app behind it.
    `drawer-workspace` beat opens the head's list and closes it again. A
    long press on a drawer row paints its sentence twice (bl-0246), and a
    fresh `target/natives` cannot build (bl-ab0f); neither is this ball's.
+
+## 25. The machine level: each level is its own list (bl-5e0b)
+
+**What was wrong.** Since yog REMOTE §5.7 a workspace's `providers` listing
+carries, after the server's own rows, one row per provider per registered
+machine offering its model access, named `<row>@<client>`. The rule painted
+that as one flat provider list, so an operator with two machines scrolled a
+dozen rows where each machine has about four.
+
+**The ruling.** The seat reaches n servers and workspaces; a workspace
+reaches n machines — the server itself, and each registered machine offering
+its model access; a machine serves n providers; a provider offers n models.
+**Each level is its own list.** The word for the new level is *machine*, on
+this seat and on the desktop.
+
+1. **The rule reads** `<machine> ⏶ | <provider> ⏶ | <model> ⏶ | <effort> ⏶ |
+   <priority> | <diagnostics> — <name>` (amends §24 item 4). The machine is
+   a selector like the two beside it: it never drops and shares their cut
+   (`status::KEPT`). Its probe name is `rule-machine`.
+
+2. **The machine list** is the server itself — shown as `server` — then
+   each machine that qualifies a row of the listing, once each, in the
+   listing's order. It is derived from the providers listing, never from the
+   roster: a registered machine that offers no model access is not a place a
+   provider can be picked.
+
+3. **The provider list** is the chosen machine's rows only, each shown
+   WITHOUT its qualification, with the fact the row states about itself.
+   With no machine in force or browsed the provider selector is dark.
+
+4. **A pick opens the next list** (closes bl-c64c). Picking a machine opens
+   the provider list on it; picking a provider opens the model list; picking
+   a model is the act. The first two write nothing — they are a path, as the
+   provider pick always was (§13.2) — and the one write is the `model` op,
+   naming the provider by its whole name. The next list is asked open on the
+   frame after the pick, because the tap that picked is still closing its
+   own list.
+
+5. **The wire is untouched.** The name the assignment writes is the
+   listing's own — qualified for a machine, bare for the server. **The
+   machine is derived, never stored**: what is in force is the provider's
+   name, and its machine is a reading of that name. The one new piece of
+   state is the machine a list is browsing between the machine pick and the
+   provider pick (`Shell::machine`); it goes at the provider pick and when
+   the focus leaves the workspace. Picking the machine already in force
+   keeps its provider.
+
+6. **The split is the server's rule, against the server's roster**
+   (`codec::pick::machine::split`; yog `bz_host::far::split`). The listing
+   does not carry the client as a field, and a row's own name may carry the
+   joiner, so the listing alone cannot say where a row ends. The server
+   reads the name against the clients registered in the workspace — the
+   longest registered name that fits wins, and a row must stand before the
+   joiner. This seat does the same against the `clients` read of the same
+   workspace, asked once per workspace with the rule's other reads and again
+   when the machine list opens. **With no roster in hand every name reads as
+   the server's own, whole**: nothing is hidden, and nothing is attributed
+   to a machine on a guess. The two can disagree only while the roster in
+   hand is older than the listing, and the next opening re-reads both.
+
+7. **A list takes the height its rows need, up to the room above the rule**
+   (closes bl-64e1; `controls/drop.rs`). The list is handed the whole room
+   and the scroller inside shrinks to its rows. It used to be capped to what
+   it measured the last time it was laid out: a list first opened before its
+   rows arrived measured empty and could never measure taller than its own
+   cap again, so a provider offering fifteen models showed one.
+
+8. **A start shows the conversation it founded** (closes bl-82d7;
+   `seat::worker`). The `prompt` receipt names the conversation by the name
+   the server minted, and the name has no id until the conversation list
+   carries a row that answers to it. The worker keeps that name
+   (`Standing::claimed`), and the first pass whose list carries it moves the
+   focus to that row and is taken again under it. A focus gesture made in
+   between ends the claim — the operator went somewhere, and nothing moves
+   them back. A receipt that names nothing claims nothing. Until the row
+   appears the start page stands; no row is invented for it.
+
+**What this does not solve.** A machine is listed by the name the server
+knows it by, which is a registration's name and not a person's word for the
+box. A machine whose listing went unanswered inside the server's bound is
+absent from the list, with no sentence saying so. There is no verb for the
+machine list; `/model` still opens the model list.

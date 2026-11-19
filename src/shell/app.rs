@@ -161,6 +161,9 @@ pub(crate) struct Shell {
     /// leaves the workspace they were made in.
     pub(crate) picked_in: Option<String>,
     pub(crate) provider: Option<String>,
+    /// **The machine a list is browsing** (§25): set by a machine pick and
+    /// gone at the provider pick — in force, the machine is the provider's.
+    pub(crate) machine: Option<crate::codec::pick::machine::Machine>,
     pub(crate) model: Option<String>,
     /// The assignments read at the moment an optimistic value was last set
     /// (bl-e9f9). When the seat's count moves past it, truth has overtaken
@@ -253,6 +256,7 @@ impl Shell {
             echo: None,
             picked_in: None,
             provider: None,
+            machine: None,
             model: None,
             effort: None,
             priority: None,

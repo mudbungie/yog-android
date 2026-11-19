@@ -40,7 +40,16 @@ pub(super) fn run(
         // An undeliverable snapshot is not a stop signal: `Model::drop` sends
         // `Stop` before the receiver can go away (join precedes field drop),
         // so shutdown always arrives as a command, never as a dead channel.
-        let _ = out.send(standing.pass(seat, cache, &focus, note.take(), lanes));
+        let mut snap = standing.pass(seat, cache, &focus, note.take(), lanes);
+        // **A start shows the conversation it founded** (§25, bl-82d7): once
+        // the list carries the name the receipt minted, the focus moves to
+        // that row and the pass is taken again, under it.
+        if let Some(agent) = founded(standing.claimed.as_deref(), &snap.conversations) {
+            standing.claimed = None;
+            focus.agent = Some(agent);
+            snap = standing.pass(seat, cache, &focus, None, lanes);
+        }
+        let _ = out.send(snap);
         match wait(cmds, cadence, &mut standing, &focus, out) {
             // The two that end the loop and the two that are not commands at
             // all. Everything else is one gesture spent, and what one gesture
@@ -53,6 +62,16 @@ pub(super) fn run(
             Ok(cmd) => note = spend::spend(seat, cmd, &mut focus, &mut standing),
         }
     }
+}
+
+/// The row that answers to a start's minted name, by its id. The name is the
+/// join: a row hands back its addressable name exactly when the conversation
+/// became addressable at all.
+fn founded(claimed: Option<&str>, rows: &[crate::codec::ConvRow]) -> Option<String> {
+    let name = claimed?;
+    rows.iter()
+        .find(|row| row.name.as_deref() == Some(name))
+        .map(|row| row.root_id.clone())
 }
 
 /// **How long between passes — and what arrives inside that wait** (§14.1).

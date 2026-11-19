@@ -50,7 +50,7 @@ unregistered leaf correctly sees empty rows.
 conversations → transcript — under a standing bar, with a band of controls
 under the composer. The shape it is moving to is one chat screen: the
 transcript, a prompt line directly under it whose `›` opens a sheet of verbs,
-and a one-line status rule at the bottom edge (the knobs — workspace,
+and a one-line status rule at the bottom edge (the knobs — machine,
 provider, model, effort, priority — as tap targets, the conversation's state
 and figures, its name). The
 conversation list, the workspace choice and every place that is not the

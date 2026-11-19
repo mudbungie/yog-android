@@ -34,6 +34,8 @@ pub enum Slot {
     /// as the slot `/workspace` names (`verbs::Does::Knob`), which opens the
     /// drawer with its list open.
     Workspace,
+    /// Where the provider is served (§25): the server, or a machine of its.
+    Machine,
     Provider,
     Model,
     Effort,
@@ -59,7 +61,7 @@ pub const DROPS: [Slot; 6] = [
 ];
 
 /// The selectors that never drop, and elide inside their share instead.
-const KEPT: [Slot; 2] = [Slot::Provider, Slot::Model];
+const KEPT: [Slot; 3] = [Slot::Machine, Slot::Provider, Slot::Model];
 
 /// **The narrowest a selector is let fall to before a knob leaves**: a few
 /// letters and the drop mark. Below it a selector says nothing worth reading,

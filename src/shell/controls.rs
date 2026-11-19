@@ -1,6 +1,6 @@
 //! **The rule's knobs** (DESIGN §13.2, bl-0267; §22 items 2 and 10,
-//! bl-79bb): which workspace, provider and model the worker runs on, and how
-//! hard it is asked to think. They rode a band of chips under the composer;
+//! bl-79bb; §25): which machine, provider and model the worker runs on, and
+//! how hard it is asked to think. They rode a band of chips under the composer;
 //! by the operator's ruling of 2026-10-12 they stand on the status rule as
 //! dropups (`shell/status.rs` paints the rule), and the band is gone.
 //!
@@ -73,6 +73,7 @@ impl Shell {
     /// workspace now in front of the operator.
     fn forget_picks(&mut self) {
         self.provider = None;
+        self.machine = None;
         self.settled();
     }
 
@@ -93,10 +94,12 @@ impl Shell {
     }
 
     /// Ask for what this row shows and is gated on — the workspace's role
-    /// assignments and its provider rows, fired as the one gesture they are.
+    /// assignments and its provider rows, fired as the one gesture they are —
+    /// and the roster a provider's name is split against (§25).
     fn ask_options(&self) {
         if let Some(model) = self.model() {
             model.read_options();
+            model.list_clients();
         }
     }
 }

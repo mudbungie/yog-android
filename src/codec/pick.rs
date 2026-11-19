@@ -35,6 +35,7 @@ use super::fields::{bool_of, opt, str_of};
 
 pub mod face;
 pub mod knob;
+pub mod machine;
 
 /// One provider as the server lists it — the name it is picked by, and the
 /// two facts a surface may state about it.

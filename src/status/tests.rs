@@ -230,3 +230,18 @@ fn a_list_is_fresh_once_the_watermark_moves() {
     assert_eq!(reload(3, 3), Reload::Reloading);
     assert_eq!(reload(3, 4), Reload::Fresh);
 }
+
+/// **The machine is a selector like the two beside it** (§25): it never
+/// drops, and the three share one cut of what the others leave.
+#[test]
+fn the_machine_selector_never_drops_and_shares_the_cut() {
+    use Slot::*;
+    let slots = [Machine, Provider, Model, Effort, Name];
+    let wants = [200.0, 200.0, 200.0, 60.0, 60.0];
+    let widths = fit(&slots, &wants, 250.0, 4.0, None);
+    let [Some(machine), Some(provider), Some(model), None, Some(name)] = widths[..] else {
+        unreachable!("the three selectors and the name stand: {widths:?}")
+    };
+    assert!((machine - provider).abs() < 0.01 && (provider - model).abs() < 0.01);
+    assert!((machine * 3.0 + name + 12.0 - 250.0).abs() < 0.01);
+}

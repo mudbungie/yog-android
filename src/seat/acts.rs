@@ -88,24 +88,34 @@ const TRANSCRIPT: &str = "The transcript says whether it landed, and the echo ab
 /// and the sentence is the same read: staging mints a body in the server, so
 /// re-staging on a dead reply would leave two, and only the list can say
 /// whether anything started.
-pub(super) fn started(seat: &Seat, focus: &Focus, goal: String) -> Posted {
+///
+/// **The receipt's name is handed back beside the outcome** (DESIGN §25,
+/// bl-82d7): it is the one handle on the conversation this act founded, and
+/// the worker's loop follows it into focus once a row answers to it.
+pub(super) fn started(seat: &Seat, focus: &Focus, goal: String) -> (Posted, Option<String>) {
+    let unnamed = |posted: Posted| (posted, None);
     let Some(workspace) = focus.workspace.clone() else {
-        return Posted::Refused("start: no workspace is focused".to_owned());
+        return unnamed(Posted::Refused("start: no workspace is focused".to_owned()));
     };
     let staged = match seat.answered(&encode(&Gesture::Act(Act::Prepare { workspace }))) {
         Ok(Reply::Prepared(prepared)) => prepared,
-        Ok(other) => return Posted::Refused(kind_err("start", &other)),
-        Err(why) => return faulted(&why, "start", LIST),
+        Ok(other) => return unnamed(Posted::Refused(kind_err("start", &other))),
+        Err(why) => return unnamed(faulted(&why, "start", LIST)),
     };
-    match seat.answered(&encode(&Gesture::Act(Act::Prompt {
-        prepared: staged,
-        goal,
-    }))) {
-        Ok(Reply::Started { .. } | Reply::Outcome { ok: true, .. }) => Posted::Took,
-        Ok(Reply::Outcome { stderr, .. }) => Posted::Refused(format!("start refused: {stderr}")),
-        Ok(other) => Posted::Refused(kind_err("start", &other)),
-        Err(why) => faulted(&why, "start", LIST),
-    }
+    unnamed(
+        match seat.answered(&encode(&Gesture::Act(Act::Prompt {
+            prepared: staged,
+            goal,
+        }))) {
+            Ok(Reply::Started { conversation }) => return (Posted::Took, Some(conversation)),
+            Ok(Reply::Outcome { ok: true, .. }) => Posted::Took,
+            Ok(Reply::Outcome { stderr, .. }) => {
+                Posted::Refused(format!("start refused: {stderr}"))
+            }
+            Ok(other) => Posted::Refused(kind_err("start", &other)),
+            Err(why) => faulted(&why, "start", LIST),
+        },
+    )
 }
 
 /// The read that settles a doubted start.

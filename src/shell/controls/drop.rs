@@ -65,12 +65,13 @@ pub(super) fn drop_down(
         .width(seat.wide)
         .gap(GAP)
         .close_behavior(egui::PopupCloseBehavior::CloseOnClick);
-    // What the list took last time it was laid out. Before the first one
-    // there is no answer, and infinity is the honest one: an unmeasured list
-    // wants everything, so it is handed the room and capped to it.
-    let wanted = popup
-        .get_expected_size()
-        .map_or(f32::INFINITY, |size| size.y);
+    // **A list takes the height its rows need, up to the room** (bl-5e0b,
+    // closing bl-64e1). It is handed the whole room and the scroller inside
+    // shrinks to its rows. What it took LAST time is not asked: a list first
+    // opened before its rows arrived measured empty, was capped to that, and
+    // could never measure taller than its own cap again — fifteen models in
+    // one row. An unmeasured list wants everything, and here every list is.
+    let wanted = f32::INFINITY;
     let anchor = Band {
         top: face.rect.top(),
         bottom: face.rect.bottom(),
