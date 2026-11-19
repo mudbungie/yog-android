@@ -178,7 +178,8 @@ opens it with a mention, later red runs say nothing, the next green run closes
 it — and `make alarm-selftest` proves it under a fake `gh` in `lint`. The one
 failure that heals itself is not red (bl-aeaf): `advisories.yml` ends green, with
 nothing landed, when its fast-forward is refused because `main` moved while the
-gate ran — the next run begins from the new `main`.
+gate ran — the next run begins from the new `main`. A push refused while `main`
+did not move (bl-b428) is some other fault and stays red.
 
 ## What may never enter a ball body
 
