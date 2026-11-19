@@ -65,12 +65,14 @@ pub(super) fn drop_down(
         .width(seat.wide)
         .gap(GAP)
         .close_behavior(egui::PopupCloseBehavior::CloseOnClick);
-    // **A list takes the height its rows need, up to the room** (bl-5e0b,
-    // closing bl-64e1). It is handed the whole room and the scroller inside
-    // shrinks to its rows. What it took LAST time is not asked: a list first
-    // opened before its rows arrived measured empty, was capped to that, and
-    // could never measure taller than its own cap again — fifteen models in
-    // one row. An unmeasured list wants everything, and here every list is.
+    // **A list takes the height its rows need, up to the room** (DESIGN §25
+    // item 7; bl-5e0b, bl-64e1). It is placed as a list of unknown height —
+    // handed the whole room — and the scroller inside is told the room is
+    // its floor as well as its cap (below), so it is the smaller of its rows
+    // and the room. What the list took LAST time is asked nowhere: a list
+    // first laid out before its rows arrived took nothing, and both the cap
+    // read off that measure and the popup's own memory of it held fifteen
+    // models to one row.
     let wanted = f32::INFINITY;
     let anchor = Band {
         top: face.rect.top(),
@@ -96,8 +98,13 @@ pub(super) fn drop_down(
         .align_alternatives(&[])
         .show(|ui| {
             ui.set_min_width(ui.available_width());
+            // The popup's area hands its content the height it took last
+            // frame, and a scroller asks for no more than it is handed unless
+            // that is under its floor — so the floor is the room.
+            let room = (placed.height - chrome).max(0.0);
             egui::ScrollArea::vertical()
-                .max_height((placed.height - chrome).max(0.0))
+                .max_height(room)
+                .min_scrolled_height(room)
                 .show(ui, |ui| {
                     // A narrow popup would otherwise wrap its labels almost
                     // at once; the items widen the menu instead. `ComboBox`

@@ -7342,11 +7342,17 @@ this seat and on the desktop.
    hand is older than the listing, and the next opening re-reads both.
 
 7. **A list takes the height its rows need, up to the room above the rule**
-   (closes bl-64e1; `controls/drop.rs`). The list is handed the whole room
-   and the scroller inside shrinks to its rows. It used to be capped to what
-   it measured the last time it was laid out: a list first opened before its
-   rows arrived measured empty and could never measure taller than its own
-   cap again, so a provider offering fifteen models showed one.
+   (closes bl-64e1; `controls/drop.rs`). The list is placed as one of
+   unknown height — handed the whole room — and the scroller inside takes
+   the room as its floor and as its cap, so it stands at the smaller of its
+   rows and the room. Two things held a list to one row, and both were the
+   list's own last measure: the cap was read off what it took the last time
+   it was laid out, and the popup's area hands its content that same height,
+   which a scroller never asks past unless it is under its floor — by
+   default about one row. A list first laid out before its rows arrived
+   took nothing, so a provider offering fifteen models showed one.
+   **As landed:** bl-5e0b removed the first and the phone still showed one
+   row; bl-c5b5 removed the second.
 
 8. **A start shows the conversation it founded** (closes bl-82d7;
    `seat::worker`). The `prompt` receipt names the conversation by the name
