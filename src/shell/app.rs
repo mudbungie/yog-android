@@ -20,7 +20,7 @@ use super::boot::{Running, boot};
 use super::bridge::Bridge;
 use super::enroll::{Door, Scanner};
 use super::field::Native;
-use super::inset::InsetPx;
+use super::place::safe::Px;
 
 pub(crate) struct Shell {
     pub(super) android: AndroidApp,
@@ -144,7 +144,7 @@ pub(crate) struct Shell {
     /// The inset pads and when they were last probed — the JNI walk is
     /// throttled to 200ms for numbers that change only when the keyboard
     /// slides (bl-014e).
-    pub(crate) inset: InsetPx,
+    pub(crate) inset: Px,
     inset_at: u128,
     /// **The outbox** (bl-66fb): the message this seat has sent and the
     /// server has not yet shown back, in the composer's own state and nowhere
@@ -251,7 +251,7 @@ impl Shell {
             folds: std::collections::BTreeSet::new(),
             acted: 0,
             t0: std::time::Instant::now(),
-            inset: InsetPx::default(),
+            inset: Px::default(),
             inset_at: 0,
             echo: None,
             picked_in: None,

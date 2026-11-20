@@ -2,20 +2,19 @@
 //! glass an opened list may occupy, decided from the TAPPABLE area rather
 //! than from the display.
 //!
-//! `app::pass` spends the platform's bottom inset by shrinking the rect every
-//! screen is painted into, and since bl-9cfd that is a fact for everything a
-//! screen lays out — bl-192c then made the anchored bands claim it first, so
-//! nothing painted past it. A popup is neither: egui puts it in an `Area` of
-//! its own, positioned by `RectAlign::find_best_align` against
-//! `Context::content_rect` and constrained to the same. That rect is the
-//! viewport minus egui's **safe area**, a first-class notion this platform
-//! never fills in — `egui-winit` reads it on iOS only — so on Android it is
-//! the whole display, gesture-nav zone included, and a list opening downward
-//! from a control that sits on the floor paints where taps never reach the
-//! app (`shell/inset.rs`). Same class as the two fixes above it, one layer
-//! further out, and this is its answer: **the list opens into the room the
-//! tappable area actually has** — above the control when that is the roomier
-//! side, capped to what it finds, scrolling inside the cap.
+//! The tappable area is the platform's safe area ([`safe`]) less this
+//! interface's own [`GUTTER`] at the floor, and `app::pass` makes both a
+//! fact for everything a screen lays out — bl-192c then made the anchored
+//! bands claim the floor first, so nothing painted past it. A popup is not
+//! laid out: egui puts it in an `Area` of its own, positioned by
+//! `RectAlign::find_best_align` against `Context::content_rect` and
+//! constrained to the same. Since bl-f557 that rect IS the safe area, so
+//! egui holds a list off the system bars by itself — but not off the gutter,
+//! and not inside the band a screen was actually given, and it will happily
+//! cover its own control to fit. This is the answer to that: **the list
+//! opens into the room the tappable area actually has** — above the control
+//! when that is the roomier side, capped to what it finds, scrolling inside
+//! the cap.
 //!
 //! Pure math and host-tested, which is the point rather than a convenience.
 //! The paint stack is `cfg(target_os = "android")` and no test in this suite
@@ -27,26 +26,17 @@
 //! composition is the ratchet.
 
 pub mod row;
+pub mod safe;
 
 /// **The clearance the glass keeps below whatever it paints** — eight points,
 /// the `S` step of the spacing scale (`docs/STYLE.md` §4).
-pub const GUTTER: f32 = 8.0;
-
-/// **The floor**: how far above the bottom of the display a screen's content
-/// ends, given the platform's own bottom inset in points (the taller of the
-/// keyboard and the gesture-nav bar, `shell/inset.rs`).
 ///
-/// **The gutter is ADDED to the inset, never maxed against it** (bl-0691).
-/// It used to be `inset.max(GUTTER)`, which reads as *a device with no
-/// gesture bar still gets clearance* and is true — but on a device that has
-/// one it means the clearance is zero and the last control in the bottom-up
-/// stack is painted with its own edge on the system bar's. The two numbers
-/// answer different questions: the inset is the platform's, and the gutter is
-/// this interface's own margin, which it keeps from whatever the platform put
-/// there.
-pub fn floor(inset: f32) -> f32 {
-    inset.max(0.0) + GUTTER
-}
+/// **Kept on top of the platform's bottom inset, never instead of it**
+/// (bl-0691): the inset is the platform's and is spent as the safe area
+/// ([`safe`]); this is the margin the interface keeps from whatever the
+/// platform put there, so the last control of the bottom-up stack never has
+/// its own edge on the system bar's.
+pub const GUTTER: f32 = 8.0;
 
 /// A stretch of glass: two edges, in egui's points, top first.
 #[derive(Clone, Copy, PartialEq, Debug)]

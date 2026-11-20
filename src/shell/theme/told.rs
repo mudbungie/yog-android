@@ -87,10 +87,12 @@ pub(crate) fn paint(ctx: &egui::Context, tells: bool) {
         return;
     }
     probe(ctx, &said.words);
-    let wide = ctx.content_rect().width() - space::S * 2.0;
+    // The safe area (`place::safe`), so the sentence is never under a bar.
+    let safe = ctx.content_rect();
+    let wide = safe.width() - space::S * 2.0;
     egui::Area::new(held().with("box"))
         .order(egui::Order::Foreground)
-        .fixed_pos(egui::pos2(space::S, said.rect.top()))
+        .fixed_pos(egui::pos2(safe.left() + space::S, said.rect.top()))
         .pivot(egui::Align2::LEFT_BOTTOM)
         .interactable(false)
         .show(ctx, |ui| {

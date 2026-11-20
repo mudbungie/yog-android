@@ -91,6 +91,11 @@ impl Shell {
                 i.pointer.latest_pos().map(|p| p.x),
             )
         });
+        // The drawer's own coordinates start at the safe area's left edge.
+        let (origin, now) = (
+            origin.map(|at| at - screen.left()),
+            now.map(|at| at - screen.left()),
+        );
         closing |= crate::drawer::closes(origin, now, x);
         closing |= self.painted(&ctx, screen, x, wide, snap);
         if closing {
@@ -110,28 +115,39 @@ impl Shell {
         snap: &Snapshot,
     ) -> bool {
         let alpha = (f32::from(crate::drawer::SCRIM) * x / wide.max(1.0)) as u8;
-        let ppp = ctx.pixels_per_point();
-        let floor = super::place::floor(self.inset.bottom as f32 / ppp);
-        let top = self.inset.top as f32 / ppp;
+        // **Laid out in the safe area, painted to the edge of the glass**
+        // (bl-f557): `screen` is egui's content rect, which is the window
+        // less the platform's insets on all four sides, and everything that
+        // takes a tap stays inside it. The two grounds run on under the
+        // system bars so the drawer does not stand in a frame of the chat.
+        let glass = ctx.viewport_rect();
+        let edge_x = screen.left() + x;
         let mut closing = false;
         egui::Area::new(edge().with("panel"))
             .order(egui::Order::Foreground)
             .fixed_pos(screen.left_top())
             .movable(false)
             .show(ctx, |ui| {
-                ui.set_clip_rect(screen);
+                ui.set_clip_rect(glass);
                 let panel =
                     egui::Rect::from_min_size(screen.left_top(), egui::vec2(x, screen.height()));
-                let rest = egui::Rect::from_min_max(egui::pos2(x, screen.top()), screen.max);
+                let rest = egui::Rect::from_min_max(egui::pos2(edge_x, screen.top()), screen.max);
                 // **The scrim takes no tap but the one that closes the
                 // drawer**: a click-sensed rect over the rest of the glass.
                 let scrim = ui.allocate_rect(rest, egui::Sense::click());
                 super::theme::told::told(ui, &scrim, "closes the drawer");
-                ui.painter()
-                    .rect_filled(rest, 0, super::theme::scrim(alpha));
+                ui.painter().rect_filled(
+                    egui::Rect::from_min_max(egui::pos2(edge_x, glass.top()), glass.max),
+                    0,
+                    super::theme::scrim(alpha),
+                );
                 self.note_control("scrim", ui, rest);
                 closing |= scrim.clicked();
-                ui.painter().rect_filled(panel, 0, rgb(theme::SURFACE));
+                ui.painter().rect_filled(
+                    egui::Rect::from_min_max(glass.min, egui::pos2(edge_x, glass.bottom())),
+                    0,
+                    rgb(theme::SURFACE),
+                );
                 // **The panel's own ground takes a tap too**, so nothing
                 // between its rows is pressed through to the chat: egui hands
                 // a press to the topmost widget under it in a layer, and the
@@ -139,12 +155,15 @@ impl Shell {
                 ui.interact(panel, edge().with("ground"), egui::Sense::click());
                 ui.painter().vline(
                     panel.right(),
-                    panel.y_range(),
+                    glass.y_range(),
                     egui::Stroke::new(1.0, rgb(theme::HAIRLINE)),
                 );
                 let inner = egui::Rect::from_min_max(
-                    egui::pos2(panel.left() + space::M, panel.top() + top),
-                    egui::pos2(panel.right() - space::M, panel.bottom() - floor),
+                    egui::pos2(panel.left() + space::M, panel.top()),
+                    egui::pos2(
+                        panel.right() - space::M,
+                        panel.bottom() - super::place::GUTTER,
+                    ),
                 );
                 let builder = egui::UiBuilder::new()
                     .max_rect(inner)

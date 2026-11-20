@@ -28,9 +28,9 @@
 //!
 //! **The menu is a popup, so it obeys `shell::place`** (bl-78c2) — the same
 //! rule, at a fourth site. egui's own `Popup::context_menu` would open at the
-//! pointer and fall back against `Context::content_rect`, which on Android is
-//! the whole display, gesture-nav zone included; a menu opened from a row near
-//! the floor would paint where taps never reach the app. So it is assembled
+//! pointer and fall back against `Context::content_rect`, which is the
+//! safe area and not the band the list was handed; a menu opened from a row
+//! near the floor would cover the foot under it. So it is assembled
 //! here from `Popup::menu`'s pieces with the side and the cap `place::fit`
 //! decided, exactly as `controls/drop.rs` does — and anchored to the ROW
 //! rather than to the finger, which is what makes the two the same geometry

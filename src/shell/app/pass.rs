@@ -54,6 +54,34 @@ impl Shell {
 }
 
 impl eframe::App for Shell {
+    /// **The platform's insets become egui's safe area, here and nowhere
+    /// else** (bl-f557). egui has a first-class notion of the part of the
+    /// viewport that is safe for content and derives everything from it —
+    /// its content rect, the rect an `Area` is constrained to, where a
+    /// popup may open — but `egui-winit` fills it in on iOS only, so on this
+    /// platform it was zero and the shell subtracted what it knew by hand:
+    /// the top and the bottom, at one site. A navigation bar on a SIDE of
+    /// the glass, which is where landscape puts a three-button one, was
+    /// subtracted by nothing. Feeding the four numbers in before the pass
+    /// begins is the general path the hand-subtraction was a special case
+    /// of.
+    fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
+        self.refresh_insets(self.t0.elapsed().as_millis());
+        // The scale this pass will be laid out at, which on the first pass
+        // the context has not seen yet.
+        let ppp = raw.viewport().native_pixels_per_point.map_or_else(
+            || ctx.pixels_per_point(),
+            |native| native * ctx.zoom_factor(),
+        );
+        let edges = self.inset.points(ppp);
+        raw.safe_area_insets = Some(egui::SafeAreaInsets(egui::epaint::MarginF32 {
+            left: edges.left,
+            right: edges.right,
+            top: edges.top,
+            bottom: edges.bottom,
+        }));
+    }
+
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
         let now = self.t0.elapsed().as_millis();
@@ -68,38 +96,26 @@ impl eframe::App for Shell {
             ];
             self.bridge.run(&ctx, &self.android, &mut fields, now);
         }
-        self.refresh_insets(now);
         // The platform's back press, read once and offered to the screens:
         // whatever has a depth to walk takes it (`shell::back`).
         self.back = crate::shell::back::pressed(&ctx);
 
-        let ppp = ctx.pixels_per_point();
-        ui.add_space(self.inset.top as f32 / ppp);
-        // **The bottom inset is a hard floor, and it is spent HERE — once,
-        // for every screen** (bl-9cfd). It used to be an `add_space` at the
-        // top of the two screens that remembered it, which made the floor a
-        // discipline rather than a fact: a screen that forgot it painted into
-        // the gesture-nav bar, and even one that spent it could be overflowed
-        // from the inside (a `ScrollArea` will not go below
-        // `min_scrolled_height` no matter how little room it is given — see
-        // `chat::composer`). Shrinking the rect every screen is painted into
-        // makes the floor structural: a bottom-up layout anchors to it, a
-        // top-down scroller ends at it, and nothing downstream has to
-        // remember anything.
-        let mut inside = ui.available_rect_before_wrap();
-        // **The clearance is ADDED to the platform's inset, and the rule is
-        // `place::floor`** (bl-0691). It used to be `max`, so a device with a
-        // gesture-nav bar got the inset and nothing else — and the last
-        // control of the bottom-up stack was painted with its own edge on the
-        // system bar's, which is what an operator sees as *the band rides the
-        // navigation bar*. The inset is the platform's fact and the gutter is
-        // this interface's own margin; one is not a floor for the other.
-        inside.max.y -= crate::shell::place::floor(self.inset.bottom as f32 / ppp);
-        // A gutter on both sides. The platform insets carry only top and
-        // bottom (`inset.rs`: the status bar and the taller of keyboard and
-        // gesture-nav), so nothing else was holding content off the display's
-        // own edge — the first-run heading was painting with its first glyph
-        // half off the glass, and every full-width button ran edge to edge.
+        // **Everything is laid out in egui's content rect, which is the safe
+        // area** (`raw_input_hook` above, bl-f557) — the root `Ui` itself is
+        // the whole glass, bars and all. The platform's insets are spent
+        // there, once, on all four sides, so every edge is structural rather
+        // than a discipline — a bottom-up layout anchors to the floor, a
+        // top-down scroller ends at it, a right-anchored control stops short
+        // of a navigation bar standing on that side, and nothing downstream
+        // has to remember anything (bl-9cfd is how the floor learned it).
+        //
+        // **What is left to subtract is this interface's own margin**: the
+        // `place::GUTTER` it keeps above whatever the platform put at the
+        // floor (bl-0691 — added to the inset, never maxed against it), and
+        // a gutter on both sides, kept from the safe area's edge whether
+        // that is the display's or a system bar's.
+        let mut inside = ctx.content_rect();
+        inside.max.y -= crate::shell::place::GUTTER;
         ui.scope_builder(egui::UiBuilder::new().max_rect(inside), |ui| {
             egui::Frame::NONE
                 .inner_margin(egui::Margin::symmetric(10, 0))

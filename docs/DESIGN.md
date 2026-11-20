@@ -283,9 +283,11 @@ Four findings the shell module must carry, each learned the hard way:
    `ndk_context` context is the Application — its `getWindow()` lookup
    throws), and every failed JNI lookup must `exception_clear()` or the next
    call is a CheckJNI abort.
-3. **All insets are the shell's job**: content otherwise draws under the
-   status bar, and a flush-bottom widget sits in the gesture-nav zone where
-   taps never reach the app.
+3. **All insets are the shell's job, on all four sides**: content otherwise
+   draws under the status bar, a flush-bottom widget sits in the gesture-nav
+   zone where taps never reach the app, and in landscape a three-button
+   navigation bar is a strip down one SIDE of the window with the display
+   cutout on the other (bl-f557, §13.2).
 4. **The upstream era moved**: eframe 0.36 replaced `App::update(ctx)` with
    `App::ui(&mut Ui)`; yog sits on 0.29. The client tracks current eframe and
    does not wait for yog to catch up.
@@ -572,6 +574,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/shell.rs` + `shell/span.rs` | shell root + UTF-16 span math (the host-tested sliver) | landed (bl-c761) |
 | `src/shell/place.rs` | the second host-tested sliver: which side of a control its list opens on and how tall it may be, so an opened popup lands inside the tappable area — pure, and the only half of §13.2's geometry a test can reach | landed (bl-78c2) |
 | `src/shell/place/row.rs` | the third host-tested sliver: how one row of controls divides its width, max-min fair over what each control asked for — so the words that fit keep their width and the selectors are what elides | landed (bl-0691) |
+| `src/shell/place/safe.rs` | the fourth: the platform's four insets in device pixels, turned into the points egui takes as its safe area — the one rectangle the whole interface is laid out in, whichever edge a system bar or a cutout takes | landed (bl-f557) |
 | `src/shell/controls/drop.rs` | android-only: the drop-down that spends it — `Popup` over a button, because `ComboBox` places its list against the display | landed (bl-78c2) |
 | `src/shell/{sys,inset,bridge}.rs` + `shell/app.rs` + `app/pass.rs` | android-only glue: the confined `unsafe` + entry, the JNI inset probe, the two-way IME mirror, what the shell IS and what one frame does with it | landed (bl-c761, split bl-dd7b) |
 | `src/shell/screens.rs` | android-only: the screens by focus depth over the model's snapshot — the dispatch, the roster, the foot's standing, and the one list-row helper every navigation list paints through | landed (bl-5a98) |
@@ -1783,40 +1786,68 @@ here is a defect.
   claim is a reading somebody took, not an assertion anything re-runs, which
   is exactly how the same class reached a third site. `shell/place.rs` is the
   first committed geometry assertion in this tree.
-- **The platform's insets are the interface's edges, and they are spent
-  once.** `app::pass` pads the top inset and **shrinks the rect every screen
-  is painted into by the bottom one** (the taller of the keyboard and the
-  gesture-nav bar, §3), so the floor is structural rather than a discipline
-  each screen has to remember: a bottom-up layout anchors to it, a top-down
-  scroller ends at it, and no screen spends an inset of its own. It became a
-  fact rather than a habit the hard way (bl-9cfd) — the composer's field
-  painted under the gesture-nav bar with its send button correctly above it,
-  because a `ScrollArea` will not go below its `min_scrolled_height` however
-  little room it is given, and the 20 points it took by force inherited the
-  row's bottom alignment and landed in the nav bar. Two rules came out of it:
-  the inset is spent in one place, and a widget that cannot fit inside the
-  band it was handed is a widget deciding the layout — say the smaller
-  minimum, do not pad around it.
+- **The platform's insets are the interface's edges, on all four sides, and
+  they are spent once** (bl-f557). The shell asks the platform for ONE
+  rectangle — the union of the keyboard, the system bars and the display
+  cutout, four numbers (`shell/inset.rs`) — and hands it to egui as its
+  **safe area** before each pass begins (`app::pass`'s `raw_input_hook`;
+  `shell::place::safe` is the pixel-to-point half, pure and host-tested).
+  egui derives everything from that: its content rect, which is the rect
+  `app::pass` paints every screen into (the root `Ui` itself stays the whole
+  glass), the rect an `Area` is constrained to, where a popup may open. So every
+  edge is structural rather than a discipline each screen has to remember: a
+  bottom-up layout anchors to the floor, a top-down scroller ends at it, a
+  right-anchored control stops short of a bar standing on that side, and no
+  screen spends an inset of its own. **Nothing in the shell says *top* or
+  *bottom* about the platform**: which edge a bar takes is the orientation's
+  to say.
 
-  **The floor is the inset PLUS this interface's own gutter, and that is one
-  rule in one place** (`shell::place::floor`, bl-0691). It used to be
-  `inset.max(GUTTER)`, which reads as *a device with no gesture bar still gets
-  clearance* — true, and it also said that a device WITH one gets no clearance
-  at all, so the lowest control in the bottom-up stack was painted with its
-  own edge on the system bar's. The two numbers answer different questions:
-  the inset is the platform's, and the gutter is the margin this interface
-  keeps from whatever the platform put there. One is never a floor for the
-  other.
+  It was a hand-subtraction first, and the defect that ended it is the reason
+  for the rule. The probe kept `top` and `bottom` and `app::pass` padded one
+  and shrank the rect by the other, because `egui-winit` fills the safe area
+  in on iOS only and on this platform it was zero. That is a special case of
+  the general path, and it held exactly as long as the phone was upright: held
+  flat with three-button navigation, the bar is a strip down the right-hand
+  side, nothing subtracted it, and the composer's `send` and the tab strip's
+  `+` — each the last thing on its row — were painted under it, where a tap is
+  the platform's. A message could be sent only through a sliver.
+
+  The floor had become a fact rather than a habit the hard way before that
+  (bl-9cfd) — the composer's field painted under the gesture-nav bar with its
+  send button correctly above it, because a `ScrollArea` will not go below its
+  `min_scrolled_height` however little room it is given, and the 20 points it
+  took by force inherited the row's bottom alignment and landed in the nav
+  bar. Two rules came out of it and both stand: the inset is spent in one
+  place, and a widget that cannot fit inside the band it was handed is a
+  widget deciding the layout — say the smaller minimum, do not pad around it.
+
+  **What paints outside the safe area is ground, never a control.** The
+  drawer's panel and scrim run on under the bars so it does not stand in a
+  frame of the chat; everything in it that takes a tap is laid out inside.
+
+  **The floor is the safe area's bottom LESS this interface's own gutter, and
+  that is one constant in one place** (`shell::place::GUTTER`, bl-0691). It
+  used to be `inset.max(GUTTER)`, which reads as *a device with no gesture bar
+  still gets clearance* — true, and it also said that a device WITH one gets
+  no clearance at all, so the lowest control in the bottom-up stack was
+  painted with its own edge on the system bar's. The two numbers answer
+  different questions: the inset is the platform's, and the gutter is the
+  margin this interface keeps from whatever the platform put there. One is
+  never a floor for the other. The side gutter is the same kind of number,
+  kept from the safe area's left and right.
 - **An opened list is inside the tappable area, and that is asserted rather
   than remembered** (bl-78c2). The two rules above make the floor structural
   for everything a screen LAYS OUT. A popup is not laid out: egui gives it an
   `Area` of its own, positioned by `RectAlign::find_best_align` against
   `Context::content_rect` and constrained to the same — the viewport minus
-  egui's **safe area**, which is a first-class notion `egui-winit` fills in on
-  iOS and nowhere else. On Android it is zero, so `content_rect` is the whole
-  display, gesture-nav zone included, and the selectors sit on the floor by
-  design (the controls row is the last thing the bottom-up stack adds). A list
-  opening downward from one therefore painted where taps never reach the app.
+  egui's **safe area**. When this was written that was zero on Android, so
+  `content_rect` was the whole display, gesture-nav zone included, and the
+  selectors sit on the floor by design (the controls row is the last thing
+  the bottom-up stack adds): a list opening downward from one painted where
+  taps never reach the app. Since bl-f557 the safe area is filled in and egui
+  holds a popup off the system bars by itself — but not off the gutter, not
+  inside the band a screen was actually handed, and it will cover its own
+  control to fit, so the rule below still decides.
   The rule: **a list opens into the room the tappable area actually has** —
   below its control when it fits there, above when that side is roomier,
   capped to the room either way and scrolling inside the cap; when neither
@@ -2283,9 +2314,9 @@ focused, which is what a regression reaching for `focus.agent` would fail.
 
 **The menu is a popup, so it obeys `shell::place`** — the same rule at a fourth
 site (§13.2's last bullet). egui's own `Popup::context_menu` opens at the
-pointer and falls back against `Context::content_rect`, which on Android is the
-whole display, gesture-nav zone included; a menu opened from a row near the
-floor would paint where taps never reach the app. It is assembled instead from
+pointer and falls back against `Context::content_rect`, which is the safe area
+(§13.2, bl-f557) and not the band the list was handed; a menu opened from a
+row near the floor would cover the foot under it. It is assembled instead from
 `Popup::menu`'s pieces with the side and the cap `place::fit` decided, exactly
 as `controls/drop.rs` does, and **anchored to the ROW rather than to the
 finger** — which is what makes it the same geometry as a selector's list and

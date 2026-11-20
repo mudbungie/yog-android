@@ -65,11 +65,16 @@ impl Shell {
         self.settle_echo(&snap);
         // **The drawer** (§23 item 1, §24 item 2): a drag from the left edge
         // opens it, wherever the chat is.
+        // The edge is the safe area's (`place::safe`), not the display's.
+        let left = ui.ctx().content_rect().left();
         let (origin, now) = ui.ctx().input(|i| {
             let down = i.pointer.any_down();
             (
-                i.pointer.press_origin().filter(|_| down).map(|p| p.x),
-                i.pointer.latest_pos().map(|p| p.x),
+                i.pointer
+                    .press_origin()
+                    .filter(|_| down)
+                    .map(|p| p.x - left),
+                i.pointer.latest_pos().map(|p| p.x - left),
             )
         });
         if crate::drawer::opens(origin, now) {

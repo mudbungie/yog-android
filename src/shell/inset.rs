@@ -1,10 +1,13 @@
 //! The window insets, asked of the platform the way a Java app would
 //! (DESIGN §3 findings 2 and 3). SDK 35 is forced edge-to-edge:
 //! `windowSoftInputMode=adjustResize` is ignored, `content_rect()` never
-//! tracks the keyboard, content otherwise draws under the status bar, and a
-//! flush-bottom widget sits in the gesture-nav zone where taps never reach
-//! the app. So the shell pads all of it itself, from
-//! `decorView.getRootWindowInsets()` over JNI.
+//! tracks the keyboard, and content otherwise draws under whatever the
+//! platform put over the window — the status bar, the navigation bar on
+//! whichever edge this orientation gives it, the display cutout, the
+//! keyboard — where taps never reach the app. So the shell asks for all of
+//! it, on all four sides, from `decorView.getRootWindowInsets()` over JNI,
+//! and `app::pass` hands the answer to egui as its safe area
+//! (`place::safe`).
 //!
 //! Two traps inside these lines, both learned the hard way (bl-8d03): the
 //! Activity jobject comes from `sys::activity`, never `ndk_context`; and a
@@ -13,19 +16,12 @@
 
 use winit::platform::android::activity::AndroidApp;
 
-/// What the shell pads, in physical pixels.
-#[derive(Clone, Copy, Default, PartialEq, Eq)]
-pub(crate) struct InsetPx {
-    /// The band content must clear at the top (status bar).
-    pub(crate) top: i32,
-    /// The taller of the keyboard and the gesture-nav bar.
-    pub(crate) bottom: i32,
-}
+use super::place::safe::Px;
 
-/// One walk: ime + systemBars, a handful of JNI crossings. The caller
+/// One walk: one union of every inset type, a handful of JNI crossings. The caller
 /// throttles (app.rs, 200ms) — at frame cadence this would be hundreds of
 /// crossings a second for numbers that change only when the keyboard slides.
-pub(crate) fn probe(app: &AndroidApp) -> Result<InsetPx, String> {
+pub(crate) fn probe(app: &AndroidApp) -> Result<Px, String> {
     let vm = super::sys::vm(app)?;
     let mut env = vm.attach_current_thread().map_err(|e| e.to_string())?;
     let activity = super::sys::activity(app)?;
@@ -38,7 +34,7 @@ pub(crate) fn probe(app: &AndroidApp) -> Result<InsetPx, String> {
     walked
 }
 
-fn walk(env: &mut jni::JNIEnv, activity: &jni::objects::JObject) -> Result<InsetPx, String> {
+fn walk(env: &mut jni::JNIEnv, activity: &jni::objects::JObject) -> Result<Px, String> {
     let window = env
         .call_method(activity, "getWindow", "()Landroid/view/Window;", &[])
         .and_then(jni::objects::JValueGen::l)
@@ -58,43 +54,39 @@ fn walk(env: &mut jni::JNIEnv, activity: &jni::objects::JObject) -> Result<Inset
         .map_err(|e| e.to_string())?;
     if root.is_null() {
         // No insets attached yet (pre-layout); zero is the honest answer.
-        return Ok(InsetPx::default());
+        return Ok(Px::default());
     }
-    let ime = insets_of(env, &root, "ime")?;
-    let bars = insets_of(env, &root, "systemBars")?;
-    Ok(InsetPx {
-        top: bars.top,
-        bottom: ime.bottom.max(bars.bottom),
-    })
-}
-
-/// The `android.graphics.Insets` for one `WindowInsets.Type` mask, read as
-/// this module's own pair.
-fn insets_of(
-    env: &mut jni::JNIEnv,
-    root: &jni::objects::JObject,
-    ty: &str,
-) -> Result<InsetPx, String> {
-    let mask = env
-        .call_static_method("android/view/WindowInsets$Type", ty, "()I", &[])
-        .and_then(jni::objects::JValueGen::i)
-        .map_err(|e| e.to_string())?;
+    // **One mask, one answer** (bl-f557): the platform's own union of the
+    // keyboard, the system bars and the display cutout is the per-side
+    // maximum of the three, which is exactly the area nothing tappable may
+    // be painted in. It used to be two reads keeping only `top` and
+    // `bottom`, so a navigation bar standing on a SIDE — landscape, three
+    // buttons — was never asked about at all.
+    let mut mask = 0;
+    for ty in ["ime", "systemBars", "displayCutout"] {
+        mask |= env
+            .call_static_method("android/view/WindowInsets$Type", ty, "()I", &[])
+            .and_then(jni::objects::JValueGen::i)
+            .map_err(|e| e.to_string())?;
+    }
     let insets = env
         .call_method(
-            root,
+            &root,
             "getInsets",
             "(I)Landroid/graphics/Insets;",
             &[jni::objects::JValue::Int(mask)],
         )
         .and_then(jni::objects::JValueGen::l)
         .map_err(|e| e.to_string())?;
-    let top = env
-        .get_field(&insets, "top", "I")
-        .and_then(jni::objects::JValueGen::i)
-        .map_err(|e| e.to_string())?;
-    let bottom = env
-        .get_field(&insets, "bottom", "I")
-        .and_then(jni::objects::JValueGen::i)
-        .map_err(|e| e.to_string())?;
-    Ok(InsetPx { top, bottom })
+    let mut side = |name: &str| {
+        env.get_field(&insets, name, "I")
+            .and_then(jni::objects::JValueGen::i)
+            .map_err(|e| e.to_string())
+    };
+    Ok(Px {
+        left: side("left")?,
+        top: side("top")?,
+        right: side("right")?,
+        bottom: side("bottom")?,
+    })
 }

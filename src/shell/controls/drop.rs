@@ -4,9 +4,8 @@
 //!
 //! **Why not `ComboBox`.** Its popup is an `Area` positioned by
 //! `RectAlign::find_best_align` against `Context::content_rect` — the
-//! viewport minus egui's safe area, which `egui-winit` fills in on iOS and
-//! nowhere else, so on Android it is the whole display and the gesture-nav
-//! zone is fair game. `ComboBox` exposes neither the alignment nor a
+//! viewport minus egui's safe area, which holds it off the system bars
+//! (bl-f557) but not inside the band a screen was handed. `ComboBox` exposes neither the alignment nor a
 //! constraint rect, so there is no setter to reach for; the popup is
 //! assembled here from the same pieces it uses one layer down — `Popup::menu`
 //! over a button — given the side and the height `shell::place` decided.
