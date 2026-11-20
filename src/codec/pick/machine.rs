@@ -1,45 +1,46 @@
 //! **The machine level** (DESIGN §25, bl-5e0b; REMOTE §5.7): a workspace's
 //! providers listing read as *machine → provider*, where the wire states it
-//! as one flat list of names.
+//! as one flat list of rows.
 //!
 //! Since §5.7 the listing carries, after the server's own rows, one row per
 //! provider per registered machine offering its model access, named
-//! `<row>@<client>`. Each level is its own menu on the glass, so this module
-//! is the one place the name is taken apart — and nothing is ever put back
-//! together, because the name a pick writes is the listing's own, whole.
+//! `<row>@<client>`. Each level is its own menu on the glass.
 //!
-//! **The split is the server's rule, against the server's roster.** The
-//! listing does not carry the client as a field, and a row's own name may
-//! carry the joiner, so the name alone cannot say where the row ends. The
-//! server reads it against the clients registered in the workspace — the
-//! longest registered name that fits wins, and a row must stand in front of
-//! the joiner — and so does this seat, against the `clients` read of the same
-//! workspace. **With no roster in hand every name reads as the server's own,
-//! whole**: nothing is hidden and nothing is attributed to a machine on a
-//! guess.
+//! **The server says which machine, and this seat never reads a name**
+//! (bl-7df4; REMOTE §5.7 at edition 30). Which client a name selects is the
+//! server's reading, against its own registry, and a name may carry the
+//! joiner on either side of it — so the listing states the answer: each such
+//! row carries its `client` and its own `row` there ([`Place`]), and so does
+//! the role assignment. A row carrying neither is the server's own. This
+//! module groups by the one and shows the other; the name a pick writes is
+//! the listing's own, whole. **Against a server older than the keys every
+//! row reads as the server's own under its whole name**: nothing is hidden
+//! and nothing is attributed to a machine on a guess.
 //!
 //! **The machine is derived, never stored.** What is in force is the
-//! provider's name; its machine is this module's reading of it. The one piece
-//! of state is the machine a menu is browsing between the machine pick and
-//! the provider pick, and it is the caller's to hold and to drop.
+//! provider's row; its machine is that row's own statement. The one piece of
+//! state is the machine a menu is browsing between the machine pick and the
+//! provider pick, and it is the caller's to hold and to drop.
 
-use super::{ProviderRow, RoleRow};
-use crate::codec::Machines;
-
-/// What joins a row to the machine that serves it (REMOTE §5.7).
-const JOINER: char = '@';
+use super::{Place, ProviderRow, RoleRow};
 
 /// **Where a provider row is served**: the server's own brazen, or a
 /// registered machine's.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Machine {
-    /// The server itself — a bare row.
+    /// The server itself — a row no client is stated for.
     Server,
     /// A registered machine, by the name the server knows it by.
     Client(String),
 }
 
 impl Machine {
+    /// The machine a row's own statement names.
+    #[must_use]
+    pub fn of(on: Option<&Place>) -> Self {
+        on.map_or(Self::Server, |at| Self::Client(at.client.clone()))
+    }
+
     /// What the selector and its list call this machine.
     pub fn label(&self) -> String {
         match self {
@@ -49,37 +50,18 @@ impl Machine {
     }
 }
 
-/// **The roster a name is read against**: the clients registered in
-/// `workspace`, or nothing where the roster in hand is another workspace's or
-/// has not been read.
-pub fn roster(machines: Option<&Machines>, workspace: Option<&str>) -> Vec<String> {
-    machines
-        .filter(|machines| workspace.is_some_and(|workspace| machines.about(workspace)))
-        .map(|machines| machines.rows.iter().map(|row| row.client.clone()).collect())
-        .unwrap_or_default()
+/// What a row called `name` is shown as under its machine: its own spelling
+/// there, or the name whole for the server's own.
+fn shown(on: Option<&Place>, name: &str) -> String {
+    on.map_or(name, |at| at.row.as_str()).to_owned()
 }
 
-/// **One provider name, read as its row and its machine** — the server's own
-/// rule (yog `bz_host::far::split`): the longest registered client that
-/// fits, with a row in front of the joiner; anything else is a bare row.
-pub fn split(name: &str, clients: &[String]) -> (String, Machine) {
-    clients
-        .iter()
-        .filter_map(|client| {
-            let row = name.strip_suffix(client.as_str())?.strip_suffix(JOINER)?;
-            (!row.is_empty()).then(|| (row.to_owned(), Machine::Client(client.clone())))
-        })
-        // The longest client leaves the shortest row.
-        .min_by_key(|(row, _)| row.len())
-        .unwrap_or_else(|| (name.to_owned(), Machine::Server))
-}
-
-/// **The machine menu**: the server itself, then each machine that
-/// qualifies a row of the listing, in the listing's order.
-pub fn machines(rows: &[ProviderRow], clients: &[String]) -> Vec<Machine> {
+/// **The machine menu**: the server itself, then each machine a row of the
+/// listing is on, in the listing's order.
+pub fn machines(rows: &[ProviderRow]) -> Vec<Machine> {
     let mut found = vec![Machine::Server];
     for row in rows {
-        let (_, machine) = split(&row.name, clients);
+        let machine = Machine::of(row.on.as_ref());
         if !found.contains(&machine) {
             found.push(machine);
         }
@@ -88,18 +70,12 @@ pub fn machines(rows: &[ProviderRow], clients: &[String]) -> Vec<Machine> {
 }
 
 /// **The provider menu under one machine**: that machine's rows, each beside
-/// the name it is SHOWN by — the row without its qualification. The row
+/// the name it is SHOWN by — the row as its machine spells it. The row
 /// itself rides whole, so what a pick writes is the listing's own name.
-pub fn offered(
-    rows: &[ProviderRow],
-    clients: &[String],
-    machine: &Machine,
-) -> Vec<(String, ProviderRow)> {
+pub fn offered(rows: &[ProviderRow], machine: &Machine) -> Vec<(String, ProviderRow)> {
     rows.iter()
-        .filter_map(|row| {
-            let (shown, on) = split(&row.name, clients);
-            (on == *machine).then(|| (shown, row.clone()))
-        })
+        .filter(|row| Machine::of(row.on.as_ref()) == *machine)
+        .map(|row| (shown(row.on.as_ref(), &row.name), row.clone()))
         .collect()
 }
 
@@ -111,30 +87,36 @@ pub struct Aim {
     pub machine: Option<Machine>,
     /// The provider's name as the wire spells it, qualification included.
     pub provider: Option<String>,
+    /// The same provider as its machine spells it — what the selector says.
+    shown: Option<String>,
 }
 
 /// **The aim, from its three sources.** A machine being browsed stands alone
 /// — its provider has not been picked yet; otherwise the provider is the
 /// optimistic pick or, failing one, what the workspace is set to, and the
-/// machine is read off that name.
+/// machine is that row's own statement: the listing's for a pick, the
+/// assignment's for what is set.
 pub fn aim(
     browsing: Option<&Machine>,
     picked: Option<&str>,
     set: Option<&RoleRow>,
-    clients: &[String],
+    rows: &[ProviderRow],
 ) -> Aim {
     if let Some(machine) = browsing {
         return Aim {
             machine: Some(machine.clone()),
             provider: None,
+            shown: None,
         };
     }
-    let provider = picked
-        .map(str::to_owned)
-        .or_else(|| set.map(|row| row.provider.clone()));
+    let listed = |name: &str| rows.iter().find(|row| row.name == name);
+    let held = picked
+        .map(|name| (name, listed(name).and_then(|row| row.on.as_ref())))
+        .or_else(|| set.map(|row| (row.provider.as_str(), row.on.as_ref())));
     Aim {
-        machine: provider.as_deref().map(|name| split(name, clients).1),
-        provider,
+        machine: held.map(|(_, on)| Machine::of(on)),
+        provider: held.map(|(name, _)| name.to_owned()),
+        shown: held.map(|(name, on)| shown(on, name)),
     }
 }
 
@@ -147,11 +129,9 @@ impl Aim {
             .map_or_else(|| "machine".to_owned(), Machine::label)
     }
 
-    /// The provider selector's words: the row without its qualification.
-    pub fn provider_face(&self, clients: &[String]) -> String {
-        self.provider
-            .as_deref()
-            .map_or_else(|| "provider".to_owned(), |name| split(name, clients).0)
+    /// The provider selector's words: the row as its machine spells it.
+    pub fn provider_face(&self) -> String {
+        self.shown.clone().unwrap_or_else(|| "provider".to_owned())
     }
 }
 

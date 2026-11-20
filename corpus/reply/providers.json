@@ -18,6 +18,15 @@
           "fact": "no credential",
           "name": "openai",
           "priority": false
+        },
+        {
+          "blocked": null,
+          "client": "lab@annex",
+          "effort": true,
+          "fact": "auth oauth2 · signed in",
+          "name": "claude-sub@lab@annex",
+          "priority": false,
+          "row": "claude-sub"
         }
       ]
     }

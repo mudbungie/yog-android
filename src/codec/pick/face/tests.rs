@@ -10,6 +10,7 @@ fn set(provider: &str, model: &str, level: Option<&str>, priority: bool) -> Role
         model: model.to_owned(),
         effort: level.map(str::to_owned),
         priority,
+        on: None,
     }
 }
 

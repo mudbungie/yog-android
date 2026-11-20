@@ -18,6 +18,15 @@
           "fact": "auth oauth2 · not signed in",
           "name": "openai-chatgpt",
           "priority": false
+        },
+        {
+          "blocked": null,
+          "client": "laptop",
+          "effort": true,
+          "fact": "auth oauth2 · signed in",
+          "name": "claude-sub@laptop",
+          "priority": false,
+          "row": "claude-sub"
         }
       ]
     }

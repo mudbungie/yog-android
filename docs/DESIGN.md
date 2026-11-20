@@ -469,7 +469,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/live.rs` + `src/rows/windowed.rs` | where the lane meets the record: the prose gated on the flight that opens it, and a window row minted only for a call no committed block names yet | landed (bl-e3d1, the window bl-ee21) |
 | `src/codec/pick.rs` | the provider/model family: the two per-workspace reads and the pick that states an assignment whole | landed (bl-0267) |
 | `src/codec/pick/face.rs` | what each control on the row SAYS: the pick, then the workspace's assignment, then the control's own name — pure, host-tested | landed (bl-809d) |
-| `src/codec/pick/machine.rs` | the machine level: a provider's name split against the workspace's roster by the server's rule, the two menus the split makes, and what the selectors are aimed at — pure, host-tested | landed (bl-5e0b, §25) |
+| `src/codec/pick/machine.rs` | the machine level: each provider row's machine read off the row's own `client` and `row` keys — never off its name — the two menus that makes, and what the selectors are aimed at — pure, host-tested | landed (bl-5e0b, §25; the keys bl-7df4) |
 | `src/codec/pick/knob.rs` | what the selected provider's row will TAKE, and the sentence a dark knob answers a tap with — three reasons, three instructions, none of them derived from a model name — pure, host-tested | landed (bl-0691, out of `pick.rs`) |
 | `src/seat/options.rs` | what the selectors offer AND what the workspace is set to, held as the server's own envelopes and painted under the workspace they were read for | landed (bl-0267, bl-e9f9) |
 | `src/shell/controls.rs` | android-only: the controls row under the composer — where it sits, what it drops when the focus moves, and the one listing read it asks for | landed (bl-0267, one row bl-0691) |
@@ -3767,9 +3767,8 @@ server's does: its address and its code arrive on the same lane and are the
 same doors. **The browser sentence stands under every such row, not only a
 browser-only one**, because the listing does not state which flow a row has
 — a sentence that is sometimes unneeded, over a silence that is sometimes
-wrong. The machine is read off the name against the workspace's roster
-(§25 item 6), which the rule under the composer asks for on focus; a row
-whose machine no roster in hand names reads as the server's own.
+wrong. The machine is the row's own `client` key (§25 item 6; bl-7df4), never a
+reading of its name; a row that states none is the server's own.
 
 ### 13.20 The conversation list is a tree, and the recency order is taken over it (bl-06d3)
 
@@ -7366,7 +7365,7 @@ this seat and on the desktop.
    (`status::KEPT`). Its probe name is `rule-machine`.
 
 2. **The machine list** is the server itself — shown as `server` — then
-   each machine that qualifies a row of the listing, once each, in the
+   each machine a row of the listing is on, once each, in the
    listing's order. It is derived from the providers listing, never from the
    roster: a registered machine that offers no model access is not a place a
    provider can be picked.
@@ -7386,24 +7385,33 @@ this seat and on the desktop.
 5. **The wire is untouched.** The name the assignment writes is the
    listing's own — qualified for a machine, bare for the server. **The
    machine is derived, never stored**: what is in force is the provider's
-   name, and its machine is a reading of that name. The one new piece of
+   row, and its machine is that row's own statement (item 6). The one new piece of
    state is the machine a list is browsing between the machine pick and the
    provider pick (`Shell::machine`); it goes at the provider pick and when
    the focus leaves the workspace. Picking the machine already in force
    keeps its provider.
 
-6. **The split is the server's rule, against the server's roster**
-   (`codec::pick::machine::split`; yog `bz_host::far::split`). The listing
-   does not carry the client as a field, and a row's own name may carry the
-   joiner, so the listing alone cannot say where a row ends. The server
-   reads the name against the clients registered in the workspace — the
-   longest registered name that fits wins, and a row must stand before the
-   joiner. This seat does the same against the `clients` read of the same
-   workspace, asked once per workspace with the rule's other reads and again
-   when the machine list opens. **With no roster in hand every name reads as
-   the server's own, whole**: nothing is hidden, and nothing is attributed
-   to a machine on a guess. The two can disagree only while the roster in
-   hand is older than the listing, and the next opening re-reads both.
+6. **The machine is the server's statement, and the name is never read for
+   it** (bl-7df4; yog bl-471d, REMOTE §5.7 at edition 30). Which client a
+   name selects is the server's reading — the clients registered in the
+   workspace, the longest registered name that fits, a row standing before
+   the joiner — and a row's own name may carry the joiner, so the name alone
+   cannot say where the row ends. The server now states its reading: every
+   `providers`, `catalog` and `roles` row whose provider is on a registered
+   machine carries `client` and `row` beside the name (`codec::pick::Place`),
+   and a row carrying neither is the server's own. This seat groups by
+   `client`, shows `row`, and writes the name whole
+   (`codec::pick::machine`). It used to repeat the server's rule against the
+   `clients` read of the same workspace — a second derivation of one fact,
+   wrong whenever the roster in hand was older than the listing or not yet
+   read; that split, the roster it was read against and the `clients` read
+   the rule fired for it are deleted, and nothing replaces them. **Against a
+   server older than edition 30 every row reads as the server's own, under
+   its whole name**: nothing is hidden, and nothing is attributed to a
+   machine on a guess — and there is deliberately no fallback split. The
+   role assignment states it as well as the listing because a machine that
+   is asleep lists no rows, and what is set must still say where it runs.
+   An optimistic pick is read off the listing row it was picked from.
 
 7. **A list takes the height its rows need, up to the room above the rule**
    (closes bl-64e1; `controls/drop.rs`). The list is placed as one of

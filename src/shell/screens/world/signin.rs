@@ -54,7 +54,7 @@
 
 use eframe::egui;
 
-use crate::codec::pick::machine::{self, Machine};
+use crate::codec::pick::machine::Machine;
 use crate::codec::{LoginView, ProviderRow};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
@@ -85,10 +85,10 @@ impl Shell {
             clip::weak(ui, "nothing read yet");
         }
         let workspace = snap.focus.workspace.as_deref();
-        let clients = machine::roster(snap.clients.as_ref(), workspace);
         for row in &snap.catalog {
-            // Which box this row signs in is its name's (REMOTE §5.7).
-            let on = machine::split(&row.name, &clients).1;
+            // Which box this row signs in is the row's own statement
+            // (REMOTE §5.7, edition 30) — never a reading of its name.
+            let on = Machine::of(row.on.as_ref());
             self.provider(ui, row, &on);
             if let Some(signing) = snap.login.as_ref().filter(|held| held.about(&row.name)) {
                 if let Some(workspace) = workspace {

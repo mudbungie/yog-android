@@ -19,10 +19,10 @@
 //! plaintext for the same reason — so an `http://` token stays prose and
 //! reads as what it is.
 //!
-//! **Which box is signed in is the row's name** (REMOTE §5.7): a row on
-//! another machine runs its sign-in there, and the three sentences that say
-//! where — [`fact`], [`starts`], [`browser`] — take the machine the name was
-//! read as (`codec::pick::machine`).
+//! **Which box is signed in is the row's own statement** (REMOTE §5.7): a
+//! row on another machine runs its sign-in there, and the three sentences
+//! that say where — [`fact`], [`starts`], [`browser`] — take the machine the
+//! row states it is on (`codec::pick::machine`).
 //!
 //! Pure and host-tested: every word on the painted door is spelled here.
 

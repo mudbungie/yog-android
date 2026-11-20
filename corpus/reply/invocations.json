@@ -9,6 +9,12 @@
     {
       "kind": "invocations",
       "ok": true,
+      "rows": [],
+      "superseded": true
+    },
+    {
+      "kind": "invocations",
+      "ok": true,
       "rows": [
         {
           "input": {

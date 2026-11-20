@@ -95,13 +95,13 @@ impl Shell {
     pub(in crate::shell) fn chips(&self, snap: &Snapshot) -> Vec<Chip> {
         let set = crate::codec::pick::worker(&snap.roles);
         let set = set.as_ref();
-        let (clients, aim) = pick::aimed(self, snap);
+        let aim = pick::aimed(self, snap);
         let provider = aim.provider.clone();
         let (effort, priority) =
             crate::codec::pick::knob::tunable(&snap.providers, provider.as_deref());
         let mut chips = vec![
             Chip::Machine(aim.machine_face()),
-            Chip::Provider(aim.provider_face(&clients)),
+            Chip::Provider(aim.provider_face()),
             Chip::Model(crate::codec::pick::face::model(
                 self.model.clone(),
                 set,
@@ -141,7 +141,7 @@ impl Shell {
     /// verb works whether or not the rule had room to carry the chip.
     pub(in crate::shell) fn priority_verb(&mut self, snap: &Snapshot) {
         let set = crate::codec::pick::worker(&snap.roles);
-        let provider = pick::aimed(self, snap).1.provider;
+        let provider = pick::aimed(self, snap).provider;
         let (_, knob) = crate::codec::pick::knob::tunable(&snap.providers, provider.as_deref());
         let (on, _) = crate::codec::pick::face::priority(self.priority, set.as_ref());
         self.flip_priority(&knob, on);

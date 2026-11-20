@@ -94,12 +94,11 @@ impl Shell {
     }
 
     /// Ask for what this row shows and is gated on — the workspace's role
-    /// assignments and its provider rows, fired as the one gesture they are —
-    /// and the roster a provider's name is split against (§25).
+    /// assignments and its provider rows, fired as the one gesture they are.
+    /// Each row states its own machine (§25), so nothing else is read.
     fn ask_options(&self) {
         if let Some(model) = self.model() {
             model.read_options();
-            model.list_clients();
         }
     }
 }

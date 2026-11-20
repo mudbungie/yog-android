@@ -261,10 +261,12 @@
         "/kind:string": 24,
         "/ok:bool": 24,
         "/rows/[]/blocked:null": 24,
+        "/rows/[]/client:string": 30,
         "/rows/[]/effort:bool": 24,
         "/rows/[]/fact:string": 24,
         "/rows/[]/name:string": 24,
         "/rows/[]/priority:bool": 24,
+        "/rows/[]/row:string": 30,
         "/rows/[]:object": 24,
         "/rows:array": 24,
         ":object": 24
@@ -524,6 +526,7 @@
         "/rows/[]/tool:string": 2,
         "/rows/[]:object": 2,
         "/rows:array": 2,
+        "/superseded:bool": 29,
         ":object": 2
       }
     },
@@ -690,10 +693,12 @@
         "/ok:bool": 6,
         "/rows/[]/blocked:null": 6,
         "/rows/[]/blocked:string": 6,
+        "/rows/[]/client:string": 30,
         "/rows/[]/effort:bool": 6,
         "/rows/[]/fact:string": 6,
         "/rows/[]/name:string": 6,
         "/rows/[]/priority:bool": 6,
+        "/rows/[]/row:string": 30,
         "/rows/[]:object": 6,
         "/rows:array": 6,
         ":object": 6
@@ -749,12 +754,14 @@
       "signature": {
         "/kind:string": 6,
         "/ok:bool": 6,
+        "/rows/[]/client:string": 30,
         "/rows/[]/effort:null": 6,
         "/rows/[]/effort:string": 6,
         "/rows/[]/model:string": 6,
         "/rows/[]/priority:bool": 6,
         "/rows/[]/provider:string": 6,
         "/rows/[]/role:string": 6,
+        "/rows/[]/row:string": 30,
         "/rows/[]:object": 6,
         "/rows:array": 6,
         ":object": 6

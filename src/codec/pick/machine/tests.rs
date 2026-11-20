@@ -1,31 +1,47 @@
-//! The machine level: the split, the two menus it makes, and the aim.
+//! The machine level: the server's statement of where a row is, the two
+//! menus it makes, and the aim.
 
-use super::{Aim, Machine, aim, machines, offered, roster, split};
-use crate::codec::{ClientRow, Machines, ProviderRow, RoleRow};
+use super::{Aim, Machine, aim, machines, offered};
+use crate::codec::pick::Place;
+use crate::codec::{ProviderRow, RoleRow};
 
-fn names(names: &[&str]) -> Vec<String> {
-    names.iter().map(|name| (*name).to_owned()).collect()
+fn at(client: &str, row: &str) -> Place {
+    let (client, row) = (client.to_owned(), row.to_owned());
+    Place { client, row }
 }
 
-fn listing(rows: &[&str]) -> Vec<ProviderRow> {
-    rows.iter()
-        .map(|name| ProviderRow {
-            name: (*name).to_owned(),
-            fact: "signed in".to_owned(),
-            blocked: None,
-            effort: true,
-            priority: false,
-        })
-        .collect()
+/// A listed row: the name whole, and the server's statement beside it.
+fn listed(name: &str, on: Option<Place>) -> ProviderRow {
+    ProviderRow {
+        name: name.to_owned(),
+        fact: "signed in".to_owned(),
+        blocked: None,
+        effort: true,
+        priority: false,
+        on,
+    }
 }
 
-fn set(provider: &str) -> RoleRow {
+/// The server's own rows, two machines' rows, a server row whose own name
+/// carries the joiner, and a machine whose name does.
+fn listing() -> Vec<ProviderRow> {
+    vec![
+        listed("chat", None),
+        listed("team@corp", None),
+        listed("chat@foot", Some(at("foot", "chat"))),
+        listed("spud@foot", Some(at("foot", "spud"))),
+        listed("chat@cedar@desk", Some(at("cedar@desk", "chat"))),
+    ]
+}
+
+fn set(provider: &str, on: Option<Place>) -> RoleRow {
     RoleRow {
         role: "worker".to_owned(),
         provider: provider.to_owned(),
         model: "m".to_owned(),
         effort: None,
         priority: false,
+        on,
     }
 }
 
@@ -33,120 +49,77 @@ fn far(name: &str) -> Machine {
     Machine::Client(name.to_owned())
 }
 
-/// **The server's rule, case for case**: a registered suffix behind the
-/// joiner is a machine, the longest registered name wins, and a name with no
-/// row in front of the joiner is not a qualification.
+/// **The machine menu is the server, then each machine a row states**, once
+/// each and in the listing's order — and a name is never read for one: a
+/// joiner in a server row's name makes no machine, and a machine whose own
+/// name carries one is one machine.
 #[test]
-fn a_name_is_split_against_the_roster_and_the_longest_client_wins() {
-    let clients = names(&["foot", "cedar@foot", "desk"]);
+fn the_machine_menu_is_the_server_and_each_machine_a_row_states() {
     assert_eq!(
-        split("local@foot", &clients),
-        ("local".to_owned(), far("foot"))
+        machines(&listing()),
+        [Machine::Server, far("foot"), far("cedar@desk")]
     );
-    assert_eq!(
-        split("local@cedar@foot", &clients),
-        ("local".to_owned(), far("cedar@foot")),
-        "two registered names fit, and the longer is the machine"
-    );
-    assert_eq!(
-        split("@foot", &clients),
-        ("@foot".to_owned(), Machine::Server)
-    );
-    assert_eq!(
-        split("localfoot", &clients),
-        ("localfoot".to_owned(), Machine::Server)
-    );
+    assert_eq!(machines(&[]), [Machine::Server]);
 }
 
-/// **A joiner alone proves nothing**: a row may carry one in its own name,
-/// and a machine registered elsewhere is no machine here — so without a
-/// roster that names the suffix, the name is the server's own, whole.
+/// **A machine's providers are shown as it spells them and written whole**;
+/// the server's own are shown whole, joiner and all.
 #[test]
-fn a_suffix_no_roster_names_is_the_servers_own_row() {
-    assert_eq!(
-        split("local@foot", &[]),
-        ("local@foot".to_owned(), Machine::Server)
-    );
-    assert_eq!(
-        split("team@corp", &names(&["foot"])),
-        ("team@corp".to_owned(), Machine::Server)
-    );
-}
-
-/// The roster is the focused workspace's, or nothing.
-#[test]
-fn the_roster_is_read_only_under_its_own_workspace() {
-    let held = Machines {
-        workspace: "home".to_owned(),
-        rows: vec![ClientRow {
-            client: "foot".to_owned(),
-            present: false,
-            tools: Vec::new(),
-            last_seen: None,
-        }],
-    };
-    assert_eq!(roster(Some(&held), Some("home")), names(&["foot"]));
-    assert!(roster(Some(&held), Some("away")).is_empty());
-    assert!(roster(Some(&held), None).is_empty());
-    assert!(roster(None, Some("home")).is_empty());
-}
-
-/// **The machine menu is the server, then each machine the listing names**,
-/// once each and in the listing's order — never the whole roster.
-#[test]
-fn the_machine_menu_is_the_server_and_each_machine_the_listing_names() {
-    let clients = names(&["foot", "desk", "idle"]);
-    let rows = listing(&["chat", "local", "chat@foot", "local@foot", "chat@desk"]);
-    assert_eq!(
-        machines(&rows, &clients),
-        [Machine::Server, far("foot"), far("desk")]
-    );
-    assert_eq!(machines(&[], &clients), [Machine::Server]);
-}
-
-/// **A machine's providers are shown bare and written whole.**
-#[test]
-fn a_machines_rows_are_shown_without_the_qualification_and_ride_whole() {
-    let clients = names(&["foot"]);
-    let rows = listing(&["chat", "local", "chat@foot", "spud@foot"]);
+fn a_machines_rows_are_shown_as_it_spells_them_and_ride_whole() {
+    let rows = listing();
     let shown = |machine: &Machine| -> Vec<(String, String)> {
-        offered(&rows, &clients, machine)
+        offered(&rows, machine)
             .into_iter()
             .map(|(shown, row)| (shown, row.name))
             .collect()
     };
+    let pair = |shown: &str, name: &str| (shown.to_owned(), name.to_owned());
     assert_eq!(
         shown(&Machine::Server),
-        [
-            ("chat".to_owned(), "chat".to_owned()),
-            ("local".to_owned(), "local".to_owned())
-        ]
+        [pair("chat", "chat"), pair("team@corp", "team@corp")]
     );
     assert_eq!(
         shown(&far("foot")),
-        [
-            ("chat".to_owned(), "chat@foot".to_owned()),
-            ("spud".to_owned(), "spud@foot".to_owned())
-        ]
+        [pair("chat", "chat@foot"), pair("spud", "spud@foot")]
     );
+    assert_eq!(shown(&far("cedar@desk")), [pair("chat", "chat@cedar@desk")]);
     assert!(shown(&far("desk")).is_empty());
 }
 
-/// **The machine is derived from the provider in force**: the assignment's,
-/// or the optimistic pick's over it.
+/// **The machine is the statement of the provider in force**: the
+/// assignment's own — which stands whether or not its machine is awake to
+/// be listed — or, for an optimistic pick, the listing row it was picked off.
 #[test]
-fn the_aim_reads_the_machine_off_the_provider_in_force() {
-    let clients = names(&["foot"]);
-    let row = set("chat@foot");
-    let at = aim(None, None, Some(&row), &clients);
-    assert_eq!(at.machine, Some(far("foot")));
-    assert_eq!(at.provider.as_deref(), Some("chat@foot"));
-    assert_eq!(at.machine_face(), "foot");
-    assert_eq!(at.provider_face(&clients), "chat");
-    let at = aim(None, Some("local"), Some(&row), &clients);
-    assert_eq!(at.machine, Some(Machine::Server));
-    assert_eq!(at.machine_face(), "server");
-    assert_eq!(at.provider_face(&clients), "local");
+fn the_aim_reads_the_machine_off_the_row_in_force() {
+    let rows = listing();
+    let row = set("local@nap", Some(at("nap", "local")));
+    let aimed = aim(None, None, Some(&row), &rows);
+    assert_eq!(aimed.machine, Some(far("nap")));
+    assert_eq!(aimed.provider.as_deref(), Some("local@nap"));
+    assert_eq!(aimed.machine_face(), "nap");
+    assert_eq!(aimed.provider_face(), "local");
+    let aimed = aim(None, Some("spud@foot"), Some(&row), &rows);
+    assert_eq!(aimed.machine, Some(far("foot")));
+    assert_eq!(aimed.provider.as_deref(), Some("spud@foot"));
+    assert_eq!(aimed.provider_face(), "spud");
+    let aimed = aim(None, Some("team@corp"), Some(&row), &rows);
+    assert_eq!(aimed.machine, Some(Machine::Server));
+    assert_eq!(aimed.machine_face(), "server");
+    assert_eq!(aimed.provider_face(), "team@corp");
+}
+
+/// **A row that states no machine is the server's own, whole** — which is
+/// every row of a server older than the statement, and a pick the listing
+/// no longer holds.
+#[test]
+fn a_row_stating_no_machine_is_the_servers_own_under_its_whole_name() {
+    let row = set("chat@foot", None);
+    let aimed = aim(None, None, Some(&row), &[]);
+    assert_eq!(aimed.machine, Some(Machine::Server));
+    assert_eq!(aimed.provider_face(), "chat@foot");
+    let aimed = aim(None, Some("gone@foot"), None, &listing());
+    assert_eq!(aimed.machine, Some(Machine::Server));
+    assert_eq!(aimed.provider_face(), "gone@foot");
 }
 
 /// **A machine being browsed stands alone**: its provider has not been
@@ -154,24 +127,24 @@ fn the_aim_reads_the_machine_off_the_provider_in_force() {
 /// machine's row.
 #[test]
 fn a_browsed_machine_has_no_provider_until_one_is_picked() {
-    let clients = names(&["foot"]);
-    let row = set("chat");
-    let at = aim(Some(&far("foot")), Some("chat"), Some(&row), &clients);
+    let row = set("chat", None);
+    let aimed = aim(Some(&far("foot")), Some("chat"), Some(&row), &listing());
     assert_eq!(
-        at,
+        aimed,
         Aim {
             machine: Some(far("foot")),
-            provider: None
+            provider: None,
+            shown: None,
         }
     );
-    assert_eq!(at.provider_face(&clients), "provider");
+    assert_eq!(aimed.provider_face(), "provider");
 }
 
 /// Nothing set and nothing browsed is each control's own name, never a
 /// value.
 #[test]
 fn nothing_set_is_each_controls_own_name() {
-    let at = aim(None, None, None, &[]);
-    assert_eq!(at.machine_face(), "machine");
-    assert_eq!(at.provider_face(&[]), "provider");
+    let aimed = aim(None, None, None, &[]);
+    assert_eq!(aimed.machine_face(), "machine");
+    assert_eq!(aimed.provider_face(), "provider");
 }

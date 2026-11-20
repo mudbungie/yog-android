@@ -9,7 +9,7 @@
 //! the provider whole. The first two write nothing: they are a path.
 //!
 //! **Each selector's own node carries its tags** (PARITY §4). Opening a list
-//! is the read that fills it (`providers`, `clients`, `models`) and choosing
+//! is the read that fills it (`providers`, `models`) and choosing
 //! a model is the act (`model`), and they are one control to a thumb. The
 //! tags ride the control rather than the items because the items exist only
 //! while the popup is open: a node that appears for one gesture is not a
@@ -42,7 +42,7 @@ impl Shell {
         seat: Seat,
     ) -> egui::Response {
         let open = seat.open;
-        let (clients, aim) = aimed(self, snap);
+        let aim = aimed(self, snap);
         let mut picked = None;
         let opened = super::drop::drop_down(
             ui,
@@ -52,7 +52,7 @@ impl Shell {
             ),
             seat,
             |ui| {
-                for machine in machine::machines(&snap.providers, &clients) {
+                for machine in machine::machines(&snap.providers) {
                     let label = machine.label();
                     if crate::shell::theme::pick(ui, label, "lists this machine's providers")
                         .clicked()
@@ -72,15 +72,14 @@ impl Shell {
             }
             self.open_next(ui, Slot::Provider);
         }
-        act::acts(ui, &opened, &["providers", "clients"]);
-        // The reads are asked for by the tap that opened the list, not by
+        act::act(ui, &opened, "providers");
+        // The read is asked for by the tap that opened the list, not by
         // the frame: a read per frame while a popup is open would be a
         // gesture per frame. What was already known paints meanwhile (§14).
         if (open || opened.clicked())
             && let Some(model) = self.model()
         {
             model.list_providers();
-            model.list_clients();
         }
         opened
     }
@@ -96,7 +95,7 @@ impl Shell {
         seat: Seat,
     ) -> egui::Response {
         let open = seat.open;
-        let (clients, aim) = aimed(self, snap);
+        let aim = aimed(self, snap);
         let Some(on) = aim.machine.clone() else {
             let control = dark(ui, &seat, "the provider: dark until a machine is chosen");
             act::act(ui, &control, "providers");
@@ -111,7 +110,7 @@ impl Shell {
             ),
             seat,
             |ui| {
-                for (shown, row) in machine::offered(&snap.providers, &clients, &on) {
+                for (shown, row) in machine::offered(&snap.providers, &on) {
                     let label = format!("{shown} · {}", row.fact);
                     let label = if row.blocked.is_some() {
                         egui::RichText::new(label).color(ui.visuals().weak_text_color())
@@ -156,7 +155,7 @@ impl Shell {
         seat: Seat,
     ) -> egui::Response {
         let open = seat.open;
-        let Some(provider) = aimed(self, snap).1.provider else {
+        let Some(provider) = aimed(self, snap).provider else {
             let control = dark(ui, &seat, "the model: dark until the worker has a provider");
             act::acts(ui, &control, &["models", "model"]);
             return control;
@@ -218,17 +217,15 @@ fn dark(ui: &mut egui::Ui, seat: &Seat, help: &str) -> egui::Response {
     )
 }
 
-/// **What these controls are pointed at**, and the roster the names are
-/// read against: the machine being browsed, else the optimistic provider,
-/// else what the workspace is actually set to (bl-e9f9; §25).
-pub(super) fn aimed(shell: &Shell, snap: &Snapshot) -> (Vec<String>, Aim) {
-    let clients = machine::roster(snap.clients.as_ref(), snap.focus.workspace.as_deref());
+/// **What these controls are pointed at**: the machine being browsed, else
+/// the optimistic provider, else what the workspace is actually set to
+/// (bl-e9f9; §25).
+pub(super) fn aimed(shell: &Shell, snap: &Snapshot) -> Aim {
     let set = crate::codec::pick::worker(&snap.roles);
-    let aim = machine::aim(
+    machine::aim(
         shell.machine.as_ref(),
         shell.provider.as_deref(),
         set.as_ref(),
-        &clients,
-    );
-    (clients, aim)
+        &snap.providers,
+    )
 }

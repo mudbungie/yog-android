@@ -20,11 +20,13 @@
           "role": "compactor"
         },
         {
+          "client": "laptop",
           "effort": "extreme",
           "model": "gpt-5.4",
           "priority": false,
-          "provider": "codex",
-          "role": "critic"
+          "provider": "codex@laptop",
+          "role": "critic",
+          "row": "codex"
         }
       ]
     }

@@ -37,6 +37,27 @@ pub mod face;
 pub mod knob;
 pub mod machine;
 
+/// **The machine a provider's name selects, and the row as that machine
+/// spells it** (REMOTE §5.7, edition 30; bl-7df4): the server's own reading
+/// of `<row>@<client>`, stated as two keys on every row that names a
+/// provider. The seat groups by the one, shows the other, and sends the name
+/// back whole — it holds no rule for taking a name apart.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Place {
+    /// The registered machine the row is on.
+    pub client: String,
+    /// The row's name there: the whole name less its qualification.
+    pub row: String,
+}
+
+/// The two keys off a row. They ride together, and a row stating neither —
+/// or only one — is the server's own, which is also every row of a server
+/// older than the keys.
+fn place(o: &Map<String, Value>) -> Result<Option<Place>, String> {
+    let (client, row) = (opt(o, "client", str_of)?, opt(o, "row", str_of)?);
+    Ok(client.zip(row).map(|(client, row)| Place { client, row }))
+}
+
 /// One provider as the server lists it — the name it is picked by, and the
 /// two facts a surface may state about it.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -56,6 +77,8 @@ pub struct ProviderRow {
     pub effort: bool,
     /// Whether it can be asked for its priority lane.
     pub priority: bool,
+    /// The machine it is on, or none for the server's own.
+    pub on: Option<Place>,
 }
 
 /// **A reasoning level**, in the three words the wire, the config and the
@@ -126,6 +149,10 @@ pub struct RoleRow {
     pub effort: Option<String>,
     /// Plain, because `false` is what an omitted line means upstream.
     pub priority: bool,
+    /// The machine its provider is on, or none for the server's own —
+    /// stated here too, because a machine that is asleep lists no rows and
+    /// the assignment still says where it runs.
+    pub on: Option<Place>,
 }
 
 /// One assignment row.
@@ -137,6 +164,7 @@ pub(crate) fn role(v: &Value) -> Result<RoleRow, String> {
         model: str_of(o, "model")?,
         effort: opt(o, "effort", str_of)?,
         priority: bool_of(o, "priority")?,
+        on: place(o)?,
     })
 }
 
@@ -163,6 +191,7 @@ pub(crate) fn row(v: &Value) -> Result<ProviderRow, String> {
         blocked: opt(o, "blocked", str_of)?,
         effort: bool_of(o, "effort")?,
         priority: bool_of(o, "priority")?,
+        on: place(o)?,
     })
 }
 
