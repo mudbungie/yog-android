@@ -211,6 +211,7 @@ mod candidates;
 mod clients;
 mod deposit;
 mod doubt;
+mod far;
 mod fleet;
 mod fork;
 mod grace;

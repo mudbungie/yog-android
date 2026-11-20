@@ -153,10 +153,10 @@
           "verb": "invoke"
         },
         {
-          "detail": "The tool host's half of the routing leg. The capture is `{\"stdout\": …, \"stderr\": …, \"exit_code\": …}` — litany's own tool contract, one for one. Only the machine the invocation was addressed to may answer it; a handle addressed to anyone else reads as absent, which is the same sentence a handle nobody minted earns. A caller inside the world has no certificate and therefore no invocations, and is refused.",
+          "detail": "The tool host's half of the routing leg. The capture is `{\"stdout\": …, \"stderr\": …, \"exit_code\": …}` — litany's own tool contract, one for one. With `--partial` the document is `{\"stdout\": …, \"stderr\": …}`, appended to what has arrived, and the run is not over; it is refused once nobody has asked for the capture in thirty seconds, and that refusal is the instruction to stop. Only the machine the invocation was addressed to may answer it; a handle addressed to anyone else reads as absent, which is the same sentence a handle nobody minted earns. A caller inside the world has no certificate and therefore no invocations, and is refused.",
           "summary": "answer one routed invocation with what running it captured",
           "surface": "machine",
-          "usage": "/complete <invocation> <json capture>",
+          "usage": "/complete <invocation> [--partial] <json>",
           "verb": "complete"
         },
         {
@@ -538,10 +538,10 @@
           "verb": "search"
         },
         {
-          "detail": "The asking side's poll, and the other half of `/invoke`. It never waits: `capture` is absent while the machine is still running the tool, present once it has answered — and the answer is read exactly once, so the second ask reads as absent. How long to keep asking is yours to decide, and that deadline is what makes an offline machine a refusal you can see rather than a wait with no end. A handle you did not invoke reads as absent too.",
+          "detail": "The asking side's poll, and the other half of `/invoke`. It never waits: `capture` is absent while the machine is still running the tool, present once it has answered — and the answer is read exactly once, so the second ask reads as absent. How long to keep asking is yours to decide, and that deadline is what makes an offline machine a refusal you can see rather than a wait with no end. A handle you did not invoke reads as absent too. With the two counts — how many bytes of each stream you already hold — the text from there on is answered as it arrives, under `partial` while the run is live. Keep asking: a machine that streams is told to stop once nobody has asked in thirty seconds.",
           "summary": "what one routed invocation captured, if the far machine has answered yet",
           "surface": "machine",
-          "usage": "/capture <invocation>",
+          "usage": "/capture <invocation> [<stdout bytes> <stderr bytes>]",
           "verb": "capture"
         },
         {

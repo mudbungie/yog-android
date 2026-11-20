@@ -19,7 +19,7 @@
 use super::expect::Expect::{self, Partial, Reads, Refuses};
 use super::expect::{
     ACT, ALREADY_HELD, ALWAYS_A_BALL, ASKING_SIDE, BARE_RUNG, NO_DESTINATION, NO_DOCTOR,
-    NO_SCHEDULING, NO_SEED, NO_SKILLS, NO_TREE,
+    NO_SCHEDULING, NO_SEED, NO_SKILLS, NO_TREE, POSTS_ONCE,
 };
 
 pub const REQUESTS: &[(&str, Expect)] = &[
@@ -40,7 +40,13 @@ pub const REQUESTS: &[(&str, Expect)] = &[
     ("clear-trail", Reads),
     ("clients", Reads),
     ("close", Reads),
-    ("complete", Reads),
+    (
+        "complete",
+        Partial {
+            reads: 1,
+            reason: POSTS_ONCE,
+        },
+    ),
     (
         "config",
         Partial {

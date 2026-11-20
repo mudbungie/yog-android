@@ -69,6 +69,17 @@ pub const ACT: &str = "a world act outside the chat-loop slice (DESIGN §2)";
 pub const NO_SKILLS: &str =
     "a pinned skill is a choice off a config no read here lists (DESIGN §13.16)";
 
+/// **This device's tool host posts a capture once, whole** (yog REMOTE §5.7,
+/// edition 28). Since that edition `complete` may carry `partial` instead of
+/// `capture` — text appended to a run that is not over — and REMOTE says of
+/// the other spelling: *"A foot that posts once, with `capture`, is today's
+/// foot unchanged."* That is this foot (DESIGN §6). So the frame carrying
+/// `capture` reads and round-trips, and the frame carrying `partial` is
+/// refused by name: read as a completion with nothing in it, it would end a
+/// run that is still going.
+pub const POSTS_ONCE: &str =
+    "this tool host posts its capture once, whole, and never a partial (DESIGN §6)";
+
 /// **The ball pane spells the envelope and not the scheduling inside it**
 /// (DESIGN §13.9, bl-f36e). `create` and `update` may carry `fields`: an
 /// ordered array of priority, tag, parent and needs applications, each of

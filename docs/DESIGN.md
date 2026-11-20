@@ -724,6 +724,18 @@ own connection beside the seat model's, on the same material and therefore
 the same certificate common name, which §5's refcounted presence map already
 expects of one client.
 
+**The capture is posted once, whole** (bl-3085; REMOTE §5.7, corpus edition
+28). Since that edition a `complete` may carry `partial` — text appended to a
+run that is not over — and a foot that posts once, with `capture`, is by
+REMOTE's own sentence *"today's foot unchanged"*. This host is that foot: its
+tools are short acts on the device, not a model call somebody is reading as
+it arrives. The codec therefore does not spell `partial`, and the conformance
+replay records it as a decision (`tests/conformance/expect.rs`,
+`POSTS_ONCE`): the `capture` frame round-trips and the `partial` frame is
+refused by name. What it costs is REMOTE's own bound for a foot that does
+not stream — a run is held to the box's fixed limit rather than living for
+as long as its asker listens.
+
 **The surface is a type, not a convention (bl-2040).** REMOTE §4.2 minted the
 foot grade after this loop landed, and states it as a closed set: *"the
 tool-host gestures and **nothing else**: `advertise`, `invocations` and
@@ -3738,6 +3750,26 @@ the channel; this screen paints the server's own sentence and offers no verb
 that could not finish. A device-capable row completes from here in full — the
 URL and the user code paint, the human finishes in any browser, and bz polls
 the token endpoint from the server.
+
+**A row on another machine signs in that machine** (bl-3085; REMOTE §5.7).
+The catalog carries `<row>@<client>` rows after the server's own, and
+`login` and `login-tail` name such a row whole, so the run is the far
+machine's and the credential is minted and kept there. The list here is flat
+— it is not the rule's three menus (§25) — so each row is named whole, which
+is what tells the server's `chat` from a machine's. Three sentences follow
+the name (`crate::signin`, read through `codec::pick::machine`): the
+button's help says which box the run starts on; the line under an open tail
+says `signs in <machine>, for the model calls <workspace> routes to it`
+instead of the server's sentence; and under it a second line says a sign-in
+that opens a web page opens its browser on that machine and is finished
+there. A device flow on another machine completes from this phone as the
+server's does: its address and its code arrive on the same lane and are the
+same doors. **The browser sentence stands under every such row, not only a
+browser-only one**, because the listing does not state which flow a row has
+— a sentence that is sometimes unneeded, over a silence that is sometimes
+wrong. The machine is read off the name against the workspace's roster
+(§25 item 6), which the rule under the composer asks for on focus; a row
+whose machine no roster in hand names reads as the server's own.
 
 ### 13.20 The conversation list is a tree, and the recency order is taken over it (bl-06d3)
 
@@ -7225,7 +7257,8 @@ screen and the sign-in.
      was failing on. A row's fact line says `signs in the server, for every
      seat of <workspace>` in `INK_WEAK` beneath it while its tail is open,
      so the operator reads what a credential landing here means before
-     they land one.
+     they land one. *(A row on another machine names that machine instead,
+     and says where its browser opens — §13.19, bl-3085.)*
    - **The sign-in is one tap from the drawer** (`login` among the places,
      item 2); it was reachable only by typing `/login`.
    - **What this does not close is upstream's**, unchanged from §13.19: a
@@ -7394,6 +7427,15 @@ this seat and on the desktop.
    between ends the claim — the operator went somewhere, and nothing moves
    them back. A receipt that names nothing claims nothing. Until the row
    appears the start page stands; no row is invented for it.
+
+9. **Everything that names a provider sends the listing's own name**
+   (bl-3085; `seat::tests::far`). `models`, `model`, `login` and
+   `login-tail` carry `<row>@<client>` whole, and what comes back — a
+   model list, a sign-in's tail — is kept under that name, apart from the
+   server's row of the same bare name. The sign-in screen is the one
+   surface that paints the name whole (§13.19): its list is flat. The
+   ball's first wording, *painted whole* in the picker, is superseded by
+   item 3.
 
 **What this does not solve.** A machine is listed by the name the server
 knows it by, which is a registration's name and not a person's word for the

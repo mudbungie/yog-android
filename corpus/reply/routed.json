@@ -7,6 +7,15 @@
       "ok": true
     },
     {
+      "invocation": "inv-1",
+      "kind": "routed",
+      "ok": true,
+      "partial": {
+        "stderr": "",
+        "stdout": "hel"
+      }
+    },
+    {
       "capture": {
         "exit_code": 3,
         "stderr": "warned\n",

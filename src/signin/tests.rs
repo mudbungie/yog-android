@@ -4,7 +4,9 @@
 //! fixture is invented in the reserved documentation space — no transcript is
 //! quoted and no real host is named.
 
-use super::{CODE, COPIES, OPENS, Part, Read, copy_word, doors, fact, is_code};
+use super::{
+    CODE, COPIES, Machine, OPENS, Part, Read, browser, copy_word, doors, fact, is_code, starts,
+};
 
 fn prose(words: &str) -> Part {
     Part::Prose(words.to_owned())
@@ -159,7 +161,34 @@ fn the_template_is_the_shape_and_prose_is_not() {
 #[test]
 fn the_words_on_the_doors_and_under_the_row() {
     assert_eq!(copy_word("ABCD-1234"), "copy ABCD-1234");
-    assert_eq!(fact("home"), "signs in the server, for every seat of home");
+    assert_eq!(
+        fact("home", &Machine::Server),
+        "signs in the server, for every seat of home"
+    );
     assert!(OPENS.contains("browser") && OPENS.contains("long press"));
     assert!(COPIES.starts_with("copies"));
+}
+
+/// **A row on another machine says so, three times** (REMOTE §5.7): whose
+/// credential lands, which box the run starts on, and where a browser flow
+/// opens — the last said only for a machine, never for the server's own row.
+#[test]
+fn a_row_on_another_machine_names_that_machine() {
+    let foot = Machine::Client("foot".to_owned());
+    assert_eq!(
+        fact("home", &foot),
+        "signs in foot, for the model calls home routes to it"
+    );
+    assert_eq!(
+        starts(&foot),
+        "starts this provider's sign-in on foot, and follows what it says"
+    );
+    assert_eq!(
+        starts(&Machine::Server),
+        "starts this provider's sign-in on the server, and follows what it says"
+    );
+    let said = browser(&foot).unwrap_or_default();
+    assert!(said.contains("opens its browser on foot"), "{said}");
+    assert!(said.contains("a code is finished here"), "{said}");
+    assert_eq!(browser(&Machine::Server), None);
 }

@@ -2,6 +2,14 @@
   "direction": "request",
   "frames": [
     {
+      "invocation": "inv-1",
+      "op": "complete",
+      "partial": {
+        "stderr": "",
+        "stdout": "hel"
+      }
+    },
+    {
       "capture": {
         "exit_code": 3,
         "stderr": "warned\n",

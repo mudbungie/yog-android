@@ -38,7 +38,10 @@
 //! (`tools::paper::to_browser`, the `open` tool's own `dev.yog.Open`) and
 //! whose long press copies it; a device code earns a `copy <code>` door at the
 //! line's end. What a credential landing means is said under the row while
-//! its tail is open: it signs in the SERVER, for every seat of the workspace.
+//! its tail is open: it signs in the SERVER, for every seat of the workspace
+//! — or, for a row on another machine (REMOTE §5.7), that machine, with the
+//! sentence saying a browser flow opens there. The row is named whole here:
+//! this list is flat, so the qualification is what tells two rows apart.
 //!
 //! **There is one tail, under the row it belongs to.** The worker holds which
 //! provider is watched (`seat::pass::login`) and the snapshot carries it back
@@ -51,6 +54,7 @@
 
 use eframe::egui;
 
+use crate::codec::pick::machine::{self, Machine};
 use crate::codec::{LoginView, ProviderRow};
 use crate::seat::Snapshot;
 use crate::shell::app::Shell;
@@ -80,11 +84,18 @@ impl Shell {
         if snap.catalog.is_empty() {
             clip::weak(ui, "nothing read yet");
         }
+        let workspace = snap.focus.workspace.as_deref();
+        let clients = machine::roster(snap.clients.as_ref(), workspace);
         for row in &snap.catalog {
-            self.provider(ui, row);
+            // Which box this row signs in is its name's (REMOTE §5.7).
+            let on = machine::split(&row.name, &clients).1;
+            self.provider(ui, row, &on);
             if let Some(signing) = snap.login.as_ref().filter(|held| held.about(&row.name)) {
-                if let Some(workspace) = &snap.focus.workspace {
-                    clip::weak(ui, signin::fact(workspace));
+                if let Some(workspace) = workspace {
+                    clip::weak(ui, signin::fact(workspace, &on));
+                }
+                if let Some(elsewhere) = signin::browser(&on) {
+                    clip::weak(ui, elsewhere);
                 }
                 self.tail(ui, &signing.view);
             }
@@ -94,7 +105,7 @@ impl Shell {
 
     /// One row: what the server says about it, the tap that follows its run,
     /// and the act that starts one.
-    fn provider(&mut self, ui: &mut egui::Ui, row: &ProviderRow) {
+    fn provider(&mut self, ui: &mut egui::Ui, row: &ProviderRow, on: &Machine) {
         let name = row.name.clone();
         ui.allocate_ui_with_layout(
             egui::vec2(ui.available_width(), TOUCH),
@@ -105,7 +116,7 @@ impl Shell {
                     row.blocked.is_none(),
                     "sign in",
                     0.0,
-                    "starts this provider's sign-in on the server, and follows what it says",
+                    &signin::starts(on),
                 );
                 // One control, two ops (lernie §4.24): the act, and the lane
                 // the act's receipt makes wanted.

@@ -4,6 +4,14 @@
     {
       "invocation": "inv-1",
       "op": "capture"
+    },
+    {
+      "invocation": "inv-1",
+      "op": "capture",
+      "since": {
+        "stderr": 0,
+        "stdout": 512
+      }
     }
   ],
   "protocol": 19,

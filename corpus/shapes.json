@@ -769,6 +769,9 @@
         "/invocation:string": 1,
         "/kind:string": 1,
         "/ok:bool": 1,
+        "/partial/stderr:string": 28,
+        "/partial/stdout:string": 28,
+        "/partial:object": 28,
         ":object": 1
       }
     },
@@ -1138,6 +1141,9 @@
       "signature": {
         "/invocation:string": 1,
         "/op:string": 1,
+        "/since/stderr:number": 28,
+        "/since/stdout:number": 28,
+        "/since:object": 28,
         ":object": 1
       }
     },
@@ -1193,6 +1199,9 @@
         "/capture:object": 1,
         "/invocation:string": 1,
         "/op:string": 1,
+        "/partial/stderr:string": 28,
+        "/partial/stdout:string": 28,
+        "/partial:object": 28,
         ":object": 1
       }
     },
