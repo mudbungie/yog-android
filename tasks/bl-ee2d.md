@@ -1,7 +1,8 @@
 +++
 title = "A sign-in waiting for a code is finished on the phone: the lane's authorize key is a door, and the pasted code goes back as login's code (edition 31)"
 created = 1795235463
-updated = 1795235463
+updated = 1795235464
+claimant = "Rabid-phone"
 root_commit = "b8421205e882caeadc666ccff26464e4e0f60dda"
 +++
 yog bl-0127 (REMOTE §8.3, edition 31) lets any seat finish a provider sign-in whose credential lives on another box. This seat's half:
