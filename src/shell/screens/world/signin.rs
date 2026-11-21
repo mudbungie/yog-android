@@ -39,9 +39,10 @@
 //! whose long press copies it; a device code earns a `copy <code>` door at the
 //! line's end. What a credential landing means is said under the row while
 //! its tail is open: it signs in the SERVER, for every seat of the workspace
-//! — or, for a row on another machine (REMOTE §5.7), that machine, with the
-//! sentence saying a browser flow opens there. The row is named whole here:
-//! this list is flat, so the qualification is what tells two rows apart.
+//! — or, for a row on another machine (REMOTE §5.7), that machine. The row
+//! is named whole here: this list is flat, so the qualification is what
+//! tells two rows apart. A run that stops waiting for a code is finished
+//! here too, whichever box it is on (`finish.rs`).
 //!
 //! **There is one tail, under the row it belongs to.** The worker holds which
 //! provider is watched (`seat::pass::login`) and the snapshot carries it back
@@ -50,7 +51,7 @@
 //!
 //! The walk reaches the first row at `signin-row`, its button at
 //! `signin-start`, the first address door at `signin-url` and the first code
-//! door at `signin-code` (`app::probe`).
+//! door at `signin-code` (`app::probe`); `finish.rs` names its own three.
 
 use eframe::egui;
 
@@ -63,6 +64,8 @@ use crate::shell::theme::rgb;
 use crate::shell::{clip, theme};
 use crate::signin::{self, Part};
 use crate::theme::space;
+
+mod finish;
 
 /// The screen's name, the harness's tap target (§15.2), and the act an
 /// operator comes here for.
@@ -94,10 +97,10 @@ impl Shell {
                 if let Some(workspace) = workspace {
                     clip::weak(ui, signin::fact(workspace, &on));
                 }
-                if let Some(elsewhere) = signin::browser(&on) {
-                    clip::weak(ui, elsewhere);
-                }
                 self.tail(ui, &signing.view);
+                if let Some(url) = signing.view.awaits() {
+                    self.finish(ui, &row.name, &url);
+                }
             }
             ui.add_space(space::XS);
         }
@@ -194,7 +197,7 @@ impl Shell {
                         let weak = egui::RichText::new(words).color(rgb(crate::theme::INK_WEAK));
                         ui.add(egui::Label::new(weak).wrap());
                     }
-                    Part::Url(url) => self.opens(ui, url),
+                    Part::Url(url) => self.opens(ui, url, url, "signin-url", signin::OPENS),
                 }
             }
             if let Some(code) = &read.code {
@@ -203,19 +206,16 @@ impl Shell {
         });
     }
 
-    /// **An address is a door** (§24 item 5): its words in the brand, `TOUCH`
-    /// tall, never wider than the glass. A tap opens it in the phone's
-    /// browser; a long press copies it, the one gesture §13.2 gives prose.
-    fn opens(&mut self, ui: &mut egui::Ui, url: &str) {
-        let wide = theme::wants(ui, url, None).min(ui.max_rect().width());
-        let seat = theme::door(
-            ui,
-            (url, rgb(crate::theme::BRAND)),
-            None,
-            egui::vec2(wide, TOUCH),
-            signin::OPENS,
-        );
-        self.note_control("signin-url", ui, seat.rect);
+    /// **An address is a door** (§24 item 5): `words` in the brand, `TOUCH`
+    /// tall, never wider than the glass — the address itself for one a line
+    /// carried, the door's own words for the page a waiting run states. A
+    /// tap opens it in the phone's browser; a long press copies it, the one
+    /// gesture §13.2 gives prose.
+    fn opens(&mut self, ui: &mut egui::Ui, words: &str, url: &str, name: &'static str, help: &str) {
+        let wide = theme::wants(ui, words, None).min(ui.max_rect().width());
+        let ink = rgb(crate::theme::BRAND);
+        let seat = theme::door(ui, (words, ink), None, egui::vec2(wide, TOUCH), help);
+        self.note_control(name, ui, seat.rect);
         if seat.clicked() {
             // A refusal is the platform's sentence and there is nowhere on
             // this glass for it (`clip::copied`'s reasoning): logcat is the

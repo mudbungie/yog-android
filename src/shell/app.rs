@@ -11,7 +11,7 @@ mod pass;
 mod probe;
 mod running;
 
-pub(crate) use fields::{COMPOSER, NEEDLE, REGISTER};
+pub(crate) use fields::{COMPOSER, NEEDLE, PASTED, REGISTER};
 pub(crate) use pass::run;
 
 use winit::platform::android::activity::AndroidApp;
@@ -99,6 +99,8 @@ pub(crate) struct Shell {
     /// navigation for its reason exactly.
     pub(crate) step: Option<String>,
     pub(crate) composer: String,
+    /// What a sign-in page handed over, until it is sent (§13.19).
+    pub(crate) pasted: String,
     /// **What the verb sheet said when a line could not fire** (§22 item 5):
     /// a verb missing its words, or a line naming no verb. Stands on the
     /// rule's banner line until a fire replaces it, a tap puts it down, or
@@ -241,6 +243,7 @@ impl Shell {
             android,
             bridge: Bridge::default(),
             composer: String::new(),
+            pasted: String::new(),
             verb_said: None,
             field: Native::default(),
             needle: String::new(),

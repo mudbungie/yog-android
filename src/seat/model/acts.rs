@@ -35,7 +35,16 @@ impl Model {
     /// that may already be going, so a repeat on a lost reply would end a
     /// browser flow the operator is halfway through (`seat::acts::login`).
     pub fn sign_in(&self, provider: String) {
-        let _ = self.cmds.send(Cmd::Login(provider));
+        let _ = self.cmds.send(Cmd::Login(provider, None));
+    }
+
+    /// **Hand back the code a waiting sign-in asked for** (REMOTE §8.3,
+    /// edition 31): `login` again for the same pair, carrying what the
+    /// operator copied in the browser, verbatim — the server does not read
+    /// it and neither does this seat. The run's own tail says what came of
+    /// it. Never re-sent: a code is spent once.
+    pub fn hand_code(&self, provider: String, code: String) {
+        let _ = self.cmds.send(Cmd::Login(provider, Some(code)));
     }
 
     /// **Set the worker's reasoning level** (REMOTE §9.4, bl-dfbb) — how

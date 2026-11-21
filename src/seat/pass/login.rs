@@ -59,6 +59,17 @@ impl SignIn {
         self.view = view;
     }
 
+    /// **A code's receipt, adopted** — and only its standing fact. The lane
+    /// this fold already follows carries every line the finish prints and the
+    /// exit after them, at its own cursor, so taking the receipt's lines too
+    /// would print whatever landed in between twice. What the receipt alone
+    /// says first is that the run stopped waiting: the paste door goes at
+    /// once, not a frame later, and a code cannot be handed over twice.
+    pub(in crate::seat) fn handed(&mut self, provider: String, view: LoginView) {
+        self.watch(Some(provider));
+        self.view.authorize = view.authorize;
+    }
+
     /// **One lane frame, folded** — replaced when the lane is new to this
     /// fold, appended when it is the one already being followed.
     pub(in crate::seat) fn framed(&mut self, id: u64, view: LoginView) {

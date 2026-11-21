@@ -11,7 +11,7 @@ use std::time::Duration;
 use eframe::egui;
 use winit::platform::android::activity::AndroidApp;
 
-use super::{COMPOSER, NEEDLE, REGISTER, Shell};
+use super::{COMPOSER, NEEDLE, PASTED, REGISTER, Shell};
 
 /// Boot eframe over the Activity. `sys::android_main` is the only caller;
 /// everything before this call is sys.rs's.
@@ -93,6 +93,7 @@ impl eframe::App for Shell {
                 (COMPOSER, &mut self.composer),
                 (NEEDLE, &mut self.needle),
                 (REGISTER, &mut self.door.url),
+                (PASTED, &mut self.pasted),
             ];
             self.bridge.run(&ctx, &self.android, &mut fields, now);
         }

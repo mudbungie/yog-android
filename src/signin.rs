@@ -1,11 +1,11 @@
 //! **What a sign-in's tail line carries, and which door it is** (DESIGN §24
-//! item 5, amending §13.19's painting). `bz --login` runs on the SERVER and
-//! streams its human-facing flow back as lines (REMOTE §8.3): *open this
-//! address*, *enter this code*, a failure's reason. A desktop can follow the
-//! address and select the code; a phone can do neither (§13.2: no selection
-//! on the glass), so each line is read here for the two things a thumb needs
-//! made into doors, and `shell/screens/world/signin.rs` paints what this
-//! file decides.
+//! item 5, amending §13.19's painting). `bz --login` runs on the box that
+//! holds the row and streams its human-facing flow back as lines (REMOTE
+//! §8.3): *open this address*, *enter this code*, a failure's reason. A
+//! desktop can follow the address and select the code; a phone can do
+//! neither (§13.2: no selection on the glass), so each line is read here for
+//! the two things a thumb needs made into doors, and
+//! `shell/screens/world/signin.rs` paints what this file decides.
 //!
 //! **Two doors, one reading.** A `https://` token is a door that opens the
 //! phone's browser — the operator finishes the flow there, bz polls the token
@@ -14,15 +14,24 @@
 //! door at the line's end, because the browser page asks for it and a code
 //! that can only be read must be typed. A line with neither stays weak prose.
 //!
+//! **A third door, and it is not read out of a line** (REMOTE §8.3, edition
+//! 31; bl-ee2d). A row with no device flow stops with an address to sign in
+//! at and waits for what that page hands back. The run states the address as
+//! its own key, so [`page`] judges it rather than finding it, and [`pasted`]
+//! is what goes back: the operator's paste, whole. Which of a code or an
+//! address the page gives is the row's business and the run's own lines say
+//! it — nothing here names a vendor or a shape.
+//!
 //! **Only `https://`.** A sign-in that hands out a plaintext address is not
 //! one this seat will open — `crate::update` refuses a release offered over
 //! plaintext for the same reason — so an `http://` token stays prose and
 //! reads as what it is.
 //!
 //! **Which box is signed in is the row's own statement** (REMOTE §5.7): a
-//! row on another machine runs its sign-in there, and the three sentences
-//! that say where — [`fact`], [`starts`], [`browser`] — take the machine the
-//! row states it is on (`codec::pick::machine`).
+//! row on another machine runs its sign-in there, and the two sentences
+//! that say where — [`fact`], [`starts`] — take the machine the row states
+//! it is on (`codec::pick::machine`). Where the BROWSER is has no sentence:
+//! it is always this phone's, whichever box is being signed in.
 //!
 //! Pure and host-tested: every word on the painted door is spelled here.
 
@@ -47,6 +56,17 @@ pub const OPENS: &str = "opens this address in the phone's browser; a long press
 
 /// The help a code door tells.
 pub const COPIES: &str = "copies this code, to paste where the browser asks for it";
+
+/// The words on the door that opens a waiting sign-in's page, and its help.
+pub const PAGE: &str = "open the sign-in page";
+pub const PAGE_OPENS: &str = "opens the page this sign-in is waiting at in the phone's browser; \
+     sign in there, then come back and paste what it gave you. A long press copies the address";
+
+/// The paste field's hint, the words on its send, and the send's help.
+pub const PASTE: &str = "paste what the sign-in page gave you";
+pub const SEND: &str = "send";
+pub const SENDS: &str = "hands what you pasted back to the box being signed in, exactly as \
+     pasted; the lines above say what comes of it";
 
 /// Punctuation that leans on a token without being part of it: the full stop
 /// after an address at a sentence's end, the bracket around one.
@@ -156,23 +176,23 @@ pub fn starts(on: &Machine) -> String {
     )
 }
 
-/// **Where a browser flow lands, for a row on another machine** (REMOTE
-/// §5.7: *a browser-only row opens its browser on the far machine, which is
-/// the one box where that redirect can land*). Said under every such row's
-/// tail and not only a browser-only one's, because the listing does not
-/// state which flow a row has: a sentence that is sometimes unneeded, over a
-/// silence that is sometimes wrong. A device flow is untouched by it — its
-/// address and code are doors on this glass. The server's own row has no
-/// such sentence: §13.19's reading stands for it.
+/// **The address a waiting sign-in's door opens**, or none: the run's own
+/// `authorize` under the one rule every address here is held to (module doc,
+/// *Only `https://`*). One refused is still on the glass as the line the run
+/// printed it on, where it reads as the prose it is.
 #[must_use]
-pub fn browser(on: &Machine) -> Option<String> {
-    match on {
-        Machine::Server => None,
-        Machine::Client(name) => Some(format!(
-            "a sign-in that opens a web page opens its browser on {name}, and is finished \
-             there; one that gives an address and a code is finished here"
-        )),
-    }
+pub fn page(authorize: &str) -> Option<String> {
+    (authorize.len() > SCHEME.len() && authorize.starts_with(SCHEME)).then(|| authorize.to_owned())
+}
+
+/// **What goes back as the code**: the paste with the whitespace around it
+/// dropped, and nothing else touched — a `#`, a `?` and an `&` are part of
+/// what some pages hand over, and the box that checks it is the one that
+/// reads it. Nothing pasted is nothing to send.
+#[must_use]
+pub fn pasted(text: &str) -> Option<String> {
+    let text = text.trim();
+    (!text.is_empty()).then(|| text.to_owned())
 }
 
 /// Add one word to the prose being gathered, a space before it where there

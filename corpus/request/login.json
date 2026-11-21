@@ -5,6 +5,12 @@
       "op": "login",
       "provider": "acme",
       "workspace": "ws"
+    },
+    {
+      "code": "pasted-code#state",
+      "op": "login",
+      "provider": "acme",
+      "workspace": "ws"
     }
   ],
   "protocol": 19,

@@ -213,7 +213,19 @@ fn acted(act: &Act) -> Value {
         Act::Login {
             workspace,
             provider,
-        } => json!({ "op": "login", "workspace": workspace, "provider": provider }),
+            code,
+        } => {
+            // Absent is *start the sign-in*: the key is written only when a
+            // code is being handed back (REMOTE §8.3, edition 31).
+            let mut map = serde_json::Map::new();
+            map.insert("op".to_owned(), json!("login"));
+            map.insert("workspace".to_owned(), json!(workspace));
+            map.insert("provider".to_owned(), json!(provider));
+            if let Some(code) = code {
+                map.insert("code".to_owned(), json!(code));
+            }
+            Value::Object(map)
+        }
         Act::PickModel {
             workspace,
             role,

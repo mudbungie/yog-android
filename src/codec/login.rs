@@ -1,6 +1,6 @@
 //! **The sign-in family** (REMOTE §8.3, bl-61bf and bl-c285): the act that
-//! starts `bz --login` for one provider row, and the held read of what that
-//! run says.
+//! starts `bz --login` for one provider row — or, carrying a `code`, finishes
+//! the one waiting for it — and the held read of what that run says.
 //!
 //! **The run is the server's, and that is the whole point of the pair.** A
 //! sign-in performed at this seat would land the credential in this phone's
@@ -9,13 +9,19 @@
 //! agents that need it run. **Nothing credential-shaped crosses this wire**
 //! and this codec could not carry one if it did: what a frame holds is bz's
 //! human-facing stream — the authorize URL, a device code, a failure's reason
-//! and its remedy — and the token moves from the provider to the server's box
-//! over the provider's own channel.
+//! and its remedy — and the token moves from the provider to the box that
+//! holds the row over the provider's own channel. The `code` a human copied
+//! at that URL crosses back and is not a credential either: it is single-use
+//! and redeems only beside a verifier that never leaves that box (§8.3).
 //!
 //! **A frame is an append, and the settled exit is the last one.** The server
 //! hands each read the lines it has not sent yet, so [`LoginView::absorb`] is
 //! `codec::follow`'s fold one subject along: lines accrete in order, and
-//! `outcome` and `fallback` arrive with the frame that ends the run. A read
+//! `outcome` and `fallback` arrive with the frame that ends the run.
+//! **`authorize` is the one key that is not an append** (edition 31): it is a
+//! standing fact — the run is waiting for a code, and this is the address to
+//! open — so the newest frame's word REPLACES what stood, present or absent,
+//! and a server too old to say it never does. A read
 //! starts holding nothing, so a lane that re-asks replays the whole buffer
 //! and there is nothing to reconcile — REMOTE §8.3's *"a dropped lane, a
 //! re-attached seat and a settled run are one case"*.
@@ -52,6 +58,10 @@ pub struct LoginView {
     /// while the workspace is in hand, and a second spelling of it at this
     /// end would drift from what that server actually accepts.
     pub fallback: Option<String>,
+    /// **The address to open, while the run waits for a code** (§8.3, edition
+    /// 31). Never beside an `outcome`. Its presence is also the whole of the
+    /// skew rule: only a server that can take a `code` ever writes it.
+    pub authorize: Option<String>,
 }
 
 impl LoginView {
@@ -63,6 +73,14 @@ impl LoginView {
         self.lines.extend(later.lines);
         self.outcome = later.outcome.or(self.outcome);
         self.fallback = later.fallback.or_else(|| self.fallback.take());
+        self.authorize = later.authorize;
+    }
+
+    /// **The address a code is wanted from**: stated, and the run not ended.
+    /// The one question the paste door asks, so a settled run can never show
+    /// one whatever its last frame carried.
+    pub fn awaits(&self) -> Option<String> {
+        self.authorize.clone().filter(|_| !self.settled())
     }
 
     /// Whether the run has ENDED — the lane's own stop condition, asked of
@@ -83,6 +101,7 @@ pub(crate) fn view(o: &Map<String, Value>) -> Result<LoginView, String> {
             .collect::<Result<Vec<_>, _>>()?,
         outcome: opt(o, "outcome", i64_of)?,
         fallback: opt(o, "fallback", str_of)?,
+        authorize: opt(o, "authorize", str_of)?,
     })
 }
 

@@ -205,6 +205,7 @@ impl Shell {
         if let Some(model) = self.model() {
             model.watch_login(None);
         }
+        self.pasted.clear();
         self.armed = false;
         self.ball = None;
         self.candidate = None;

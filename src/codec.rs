@@ -268,7 +268,14 @@ pub enum Act {
     /// the rest of it is watched. Firing it again on a row already signing in
     /// cancels that run and starts a fresh one — the restart IS the cancel,
     /// so there is no second gesture here for it.
-    Login { workspace: String, provider: String },
+    ///
+    /// **With a `code` it finishes the run instead** (edition 31): what the
+    /// human copied at the address a waiting run stated. Absent is the start.
+    Login {
+        workspace: String,
+        provider: String,
+        code: Option<String>,
+    },
     /// **Assign a role's model** (bl-0267): one workspace, one role, and the
     /// provider/model pair stated whole. The seat spends `worker`; the field
     /// carries whatever the frame said so another role round-trips rather

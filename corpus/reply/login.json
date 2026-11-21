@@ -11,26 +11,37 @@
       "lines": [
         {
           "err": true,
-          "text": "open https://provider.invalid/auth"
-        },
-        {
-          "err": false,
-          "text": "{\"ready\":true}"
+          "text": "open https://provider.invalid/device and enter CODE-1234"
         }
       ],
       "ok": true
     },
     {
-      "fallback": "yog exec --ws /ws bz --login --provider acme --browser",
+      "authorize": "https://provider.invalid/authorize?state=s",
+      "kind": "login",
+      "lines": [
+        {
+          "err": false,
+          "text": "https://provider.invalid/authorize?state=s"
+        },
+        {
+          "err": true,
+          "text": "open the URL above in any browser and sign in"
+        }
+      ],
+      "ok": true
+    },
+    {
+      "fallback": "yog exec --ws /ws bz --login --provider acme",
       "kind": "login",
       "lines": [
         {
           "err": true,
-          "text": "this provider has no device endpoint; use `--browser`"
+          "text": "login failed: no code was pasted"
         }
       ],
       "ok": true,
-      "outcome": 78
+      "outcome": 77
     }
   ],
   "protocol": 19,

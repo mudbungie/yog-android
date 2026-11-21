@@ -503,11 +503,12 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/symbol.rs` | the QR symbol this seat draws (§13.18): a registration URL's module matrix at level M, and the whole-device-pixel pitch rule — pure, and proved by a round trip through the decoder this app already links | landed (bl-2ee8; the URL, bl-f51c) |
 | `src/codec/offer.rs` + `src/seat/acts/offer.rs` | §13.18, REMOTE §15.1: the four ops — `offer`, `offers`, `approve`, `decline` — what a pending row says and whether it may be approved, the surface's one value (`Pending`), and the acts with the re-read behind each | landed (bl-f51c, in place of `codec/enroll.rs` and `seat/acts/enroll.rs`) |
 | `src/shell/screens/world/admin/offers.rs` | android-only: the offers surface — the minted URL as text and as one mesh, the pending rows re-read while it stands, and approve (dark until proved) and decline under each | landed (bl-f51c, in place of `admin/minted.rs`) |
-| `src/codec/login.rs` | the sign-in family (§13.19): the act's spelling, the held read's, and the fold a frame is absorbed onto — lines append, and the frame carrying an `outcome` is the last | landed (bl-5a41) |
+| `src/codec/login.rs` | the sign-in family (§13.19): the act's spelling, the held read's, and the fold a frame is absorbed onto — lines append, `authorize` is replaced by every frame, and the frame carrying an `outcome` is the last | landed (bl-5a41; `authorize` bl-ee2d) |
 | `src/codec/reply/kind.rs` | the word each answer is spelled with, split from the vocabulary it names | landed (bl-5a41, out of `reply.rs`) |
 | `src/seat/pass/login.rs` | the third held lane's whole state (§13.19, §14.1): which run the glass watches, the fold keyed on the LANE that fed it, and the stop condition — a run that settled | landed (bl-5a41) |
 | `src/seat/acts/login.rs` | the sign-in posted, and the second act in this crate whose ANSWER is a value: the receipt IS the tail's first frame | landed (bl-5a41) |
 | `src/shell/screens/world/signin.rs` | android-only: the sign-in screen (§13.19) — the provider rows, the act on each, and the held tail under the one being followed | landed (bl-5a41) |
+| `src/shell/screens/world/signin/finish.rs` | android-only: under the tail of a run waiting for a code (§13.19), the door that opens its address in the phone's browser and the paste field whose send is `login` with `code` | landed (bl-ee2d) |
 | `src/codec/admin.rs` + `admin/act.rs` | the admin family (§13.17): the three config destinations this seat spells and the refusal the other two earn, the two halves of `marks`, and the five acts whose address is inside the choice | landed (bl-f645) |
 | `src/seat/asks/admin.rs` + `src/seat/acts/admin.rs` | the two reads, each carrying the subject it was asked about because neither answer echoes one; and the five acts in the three receipt shapes they earn | landed (bl-f645) |
 | `src/shell/screens/world/admin.rs` + `admin/acts.rs` | android-only: the admin screen (§13.17) — the destinations as controls, the editor a read seeds once, and the unmaking on a band of its own | landed (bl-f645) |
@@ -3742,32 +3743,102 @@ its whole human-facing flow to stderr, the authorize URL included, so the two
 streams paint the same and neither is coloured. It is upstream's own defect
 (their bl-b4e5, defect 3) arriving here as a rule.
 
-**What this does not solve, and it is upstream's shape.** A browser-only
-provider row cannot be completed from a phone at all: the redirect binds to
-the SERVER's loopback, and reaching it wants a port-forward from a terminal
-this device has not got. §8.3 states the remedy and refuses to build it into
-the channel; this screen paints the server's own sentence and offers no verb
-that could not finish. A device-capable row completes from here in full — the
-URL and the user code paint, the human finishes in any browser, and bz polls
-the token endpoint from the server.
+**Every row is finished from this phone** (bl-ee2d; REMOTE §8.3 at edition
+31, yog bl-0127). This paragraph used to say a browser-only row could not be
+completed from a phone at all, because its redirect bound to the server's
+loopback. The server no longer fires that flow. Two things can come back from
+a start, and the glass finishes either:
+
+- **A device-capable row** streams an address and a user code and its run
+  stays up polling. Unchanged: both are doors (§24 item 5), the human finishes
+  in the phone's browser, and the run settles by itself.
+- **A row with no device endpoint** prints its authorize address and stops,
+  with nothing stored and **no `outcome`**: the run is waiting for a code. The
+  lane states the address as the `authorize` key on every frame while it
+  waits, so the seat acts on a fact and never finds a URL in prose.
+
+**What the screen does while a run waits** (`signin/finish.rs`; the words
+are `crate::signin`'s). Under the tail of a fold that states `authorize` and
+no `outcome` (`LoginView::awaits`):
+
+1. `open the sign-in page` — a door in the brand whose tap hands the address
+   to the phone's browser through the same typed door every address here
+   uses (`tools::paper::to_browser`), and whose long press copies it. Held to
+   the one address rule: `https://` or it is not a door (`signin::page`).
+2. A paste field (`PASTED`, the registration door's field kind: one
+   machine-written line, uncorrected) and `send`, dark until something is
+   pasted.
+3. `send` is `login` again for the same workspace and row with `code`: the
+   paste with the whitespace around it dropped and nothing else touched
+   (`signin::pasted`) — some pages hand over `code#state` and some a whole
+   address, and the box that checks it is the one that reads it. **Which of
+   those a row's page gives is said by the run's own lines**; this seat names
+   no vendor and no shape.
+
+**The code's receipt is not a new run's** (`seat::pass::login::handed`). The
+finish is the same run's second command line, so the lane already held goes
+on being followed — its cursor carries every line the finish prints and the
+exit after them. The receipt is the whole standing, and adopting its lines
+would print whatever landed in between twice; what is taken from it is the
+one standing fact, that the run stopped waiting, so the paste door leaves the
+glass at once and a code cannot be handed over twice. `outcome` 0 then reads
+`signed in`; anything else is the run's reason as the last line and the
+fallback beside it, as it always was.
+
+**`authorize` is replaced, never accreted** (`LoginView::absorb`): the newest
+frame's word is the truth, present or absent. It is the one key of the fold
+that is not an append.
+
+**Leaving for the browser loses nothing, and no state was added to make that
+so.** Which run is watched is the worker's and outlives a trip to another
+app; a waiting run is quiet, so its lane ends at the server's hold with no
+exit, which is not a failure — the fold is unsettled, the lane is still
+wanted, the next pass redials it, and the replay states the address again. A
+process the platform killed meanwhile has forgotten which row was open;
+opening the screen and tapping the row is the same `login-tail`, and the
+same replay.
+What was pasted and not yet sent stands in the shell until it is sent or the
+screen is left.
+
+**A code nothing is waiting for is refused in the server's words**, in the
+banner — never started, already settled, or a server that restarted and
+forgot the run. The sentence names the restart, and the row's own `sign in`
+is that restart: there is no second verb, and the tail is not edited on the
+strength of a refusal — the lane says what stands. A code in doubt (the reply
+lost) is never re-sent: it is spent once, and the tail says whether it was
+taken (`acts::login::SPENT`).
+
+**The edition gate is the key itself.** Only a server at edition 31 or later
+writes `authorize` (§8.3: an older one *never wrote `authorize`, so no seat
+that honours the table sends it* a `code`). Painting the paste door exactly
+when the fold states one is therefore the gate, with no edition carried to
+the screen: against an older server the lane stops on bz's own instruction,
+with no exit and no field. `crate::ledger::spells` would answer the same
+question from a number the snapshot does not carry, and would be a second
+statement of what the frame already said.
+
+**What this does not solve.** There is no paste *button*: this app can write
+the platform clipboard and cannot read it, so the paste is the keyboard's
+own. A loopback-redirect row's last step is copying an address out of the
+browser's address bar from a page that did not load — legible, and awkward
+on a phone; that is the row's shape upstream.
 
 **A row on another machine signs in that machine** (bl-3085; REMOTE §5.7).
 The catalog carries `<row>@<client>` rows after the server's own, and
 `login` and `login-tail` name such a row whole, so the run is the far
 machine's and the credential is minted and kept there. The list here is flat
 — it is not the rule's three menus (§25) — so each row is named whole, which
-is what tells the server's `chat` from a machine's. Three sentences follow
+is what tells the server's `chat` from a machine's. Two sentences follow
 the name (`crate::signin`, read through `codec::pick::machine`): the
-button's help says which box the run starts on; the line under an open tail
-says `signs in <machine>, for the model calls <workspace> routes to it`
-instead of the server's sentence; and under it a second line says a sign-in
-that opens a web page opens its browser on that machine and is finished
-there. A device flow on another machine completes from this phone as the
-server's does: its address and its code arrive on the same lane and are the
-same doors. **The browser sentence stands under every such row, not only a
-browser-only one**, because the listing does not state which flow a row has
-— a sentence that is sometimes unneeded, over a silence that is sometimes
-wrong. The machine is the row's own `client` key (§25 item 6; bl-7df4), never a
+button's help says which box the run starts on, and the line under an open
+tail says `signs in <machine>, for the model calls <workspace> routes to it`
+instead of the server's sentence. Either flow on another machine completes
+from this phone exactly as the server's does: the address, the device code
+and the wait for a pasted code arrive on the same lane and are the same
+doors. *(A third sentence stood here until bl-ee2d — that a sign-in opening a
+web page opened its browser on the far machine and was finished at that box.
+It stopped being true at edition 31 and is deleted, with `signin::browser`.)*
+The machine is the row's own `client` key (§25 item 6; bl-7df4), never a
 reading of its name; a row that states none is the server's own.
 
 ### 13.20 The conversation list is a tree, and the recency order is taken over it (bl-06d3)
@@ -7256,15 +7327,15 @@ screen and the sign-in.
      was failing on. A row's fact line says `signs in the server, for every
      seat of <workspace>` in `INK_WEAK` beneath it while its tail is open,
      so the operator reads what a credential landing here means before
-     they land one. *(A row on another machine names that machine instead,
-     and says where its browser opens — §13.19, bl-3085.)*
+     they land one. *(A row on another machine names that machine instead
+     — §13.19, bl-3085.)*
    - **The sign-in is one tap from the drawer** (`login` among the places,
      item 2); it was reachable only by typing `/login`.
-   - **What this does not close is upstream's**, unchanged from §13.19: a
-     browser-only row whose redirect binds to the server's loopback cannot
-     complete from a phone, and the screen paints the server's own sentence
-     for it. The claude-code preset's flow is a device flow on the
-     phone-finishable side of that line.
+   - **A row with no device flow is finished here too** (bl-ee2d; §13.19
+     holds it whole): its run stops waiting for a code, and under its tail
+     stand `open the sign-in page` and a paste field whose `send` hands the
+     code back. *(This bullet used to say such a row could not complete from
+     a phone. It can.)*
 
    **As landed (bl-a2ee).** The reading is `crate::signin`, pure and
    host-tested against a fixture of the lines a run prints: `signin::doors`

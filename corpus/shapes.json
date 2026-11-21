@@ -547,6 +547,7 @@
     },
     "reply/login": {
       "signature": {
+        "/authorize:string": 31,
         "/fallback:string": 8,
         "/kind:string": 8,
         "/lines/[]/err:bool": 8,
@@ -1443,6 +1444,7 @@
     },
     "request/login": {
       "signature": {
+        "/code:string": 31,
         "/op:string": 8,
         "/provider:string": 8,
         "/workspace:string": 8,

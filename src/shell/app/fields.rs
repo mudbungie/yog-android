@@ -25,6 +25,16 @@ pub(crate) const REGISTER: Field = Field {
     kind: FieldKind::Url,
 };
 
+/// **The sign-in's paste field** (§13.19, bl-ee2d): what a sign-in page
+/// handed over, carried here by paste. The registration door's KIND for the
+/// door's reason — one machine-written line, which a correction or a
+/// sentence capital would spoil — and its own id, because the two fields
+/// are different text.
+pub(crate) const PASTED: Field = Field {
+    id: "pasted",
+    kind: FieldKind::Url,
+};
+
 /// **The search field** (§13.6, bl-4c2b). Its own id and its own kind: a
 /// needle is one line and must not be autocorrected — a corrected needle
 /// searches for a word the operator did not type — while the composer is

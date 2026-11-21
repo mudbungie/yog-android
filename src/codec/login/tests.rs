@@ -35,13 +35,13 @@ fn a_run_reads_its_lines_its_exit_and_its_fallback() {
     );
     assert!(!flowing.settled());
     let ended = body(&json!({ "kind": "login", "ok": true, "outcome": 78,
-        "fallback": "yog exec --ws /ws bz --login --provider acme --browser",
-        "lines": [{ "err": true, "text": "this provider has no device endpoint" }] }))
+        "fallback": "yog exec --ws /ws bz --login --provider acme",
+        "lines": [{ "err": true, "text": "login failed: no code was pasted" }] }))
     .unwrap();
     assert_eq!(ended.outcome, Some(78));
     assert_eq!(
         ended.fallback.as_deref(),
-        Some("yog exec --ws /ws bz --login --provider acme --browser")
+        Some("yog exec --ws /ws bz --login --provider acme")
     );
     assert!(ended.settled());
 }
@@ -90,7 +90,7 @@ fn frames_fold_in_order_and_the_exit_is_kept() {
     fold.absorb(LoginView {
         lines: Vec::new(),
         outcome: Some(0),
-        fallback: None,
+        ..LoginView::default()
     });
     assert!(fold.settled());
     // A later frame that says nothing about the exit leaves the one that
@@ -110,4 +110,39 @@ fn frames_fold_in_order_and_the_exit_is_kept() {
         ..LoginView::default()
     });
     assert_eq!(held.fallback.as_deref(), Some("this way instead"));
+}
+
+/// **`authorize` is a standing fact, replaced by every frame** (REMOTE §8.3,
+/// edition 31): the newest frame's word is the truth, present or absent, and
+/// a run that has ended is never one a code is wanted for.
+#[test]
+fn the_address_a_code_is_wanted_from_is_the_newest_frames_word() {
+    let waiting = body(&json!({ "kind": "login", "ok": true,
+        "authorize": "https://provider.invalid/authorize?state=s",
+        "lines": [{ "err": false, "text": "https://provider.invalid/authorize?state=s" }] }))
+    .unwrap();
+    let url = Some("https://provider.invalid/authorize?state=s".to_owned());
+    assert_eq!(waiting.awaits(), url);
+    let mut fold = waiting.clone();
+    fold.absorb(LoginView {
+        authorize: Some("https://provider.invalid/authorize?state=t".to_owned()),
+        ..LoginView::default()
+    });
+    assert_eq!(
+        fold.awaits().as_deref(),
+        Some("https://provider.invalid/authorize?state=t")
+    );
+    // The frame after the code was handed back states none: it is gone.
+    fold.absorb(LoginView {
+        lines: vec![said(true, "exchanging")],
+        ..LoginView::default()
+    });
+    assert_eq!(fold.awaits(), None);
+    assert_eq!(fold.lines.len(), 2);
+    // Stated beside an exit it is still not a wait.
+    let ended = LoginView {
+        outcome: Some(0),
+        ..waiting
+    };
+    assert_eq!(ended.awaits(), None);
 }

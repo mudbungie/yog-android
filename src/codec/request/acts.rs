@@ -100,6 +100,7 @@ pub(super) fn act(op: &str, o: &Map<String, Value>) -> Result<Act, String> {
         "login" => Act::Login {
             workspace: str_of(o, "workspace")?,
             provider: str_of(o, "provider")?,
+            code: super::super::fields::opt(o, "code", str_of)?,
         },
         "model" => Act::PickModel {
             workspace: str_of(o, "workspace")?,

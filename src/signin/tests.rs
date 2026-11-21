@@ -5,7 +5,8 @@
 //! quoted and no real host is named.
 
 use super::{
-    CODE, COPIES, Machine, OPENS, Part, Read, browser, copy_word, doors, fact, is_code, starts,
+    CODE, COPIES, Machine, OPENS, PAGE, PAGE_OPENS, PASTE, Part, Read, SEND, SENDS, copy_word,
+    doors, fact, is_code, page, pasted, starts,
 };
 
 fn prose(words: &str) -> Part {
@@ -169,9 +170,8 @@ fn the_words_on_the_doors_and_under_the_row() {
     assert!(COPIES.starts_with("copies"));
 }
 
-/// **A row on another machine says so, three times** (REMOTE §5.7): whose
-/// credential lands, which box the run starts on, and where a browser flow
-/// opens — the last said only for a machine, never for the server's own row.
+/// **A row on another machine says so, twice** (REMOTE §5.7): whose
+/// credential lands, and which box the run starts on.
 #[test]
 fn a_row_on_another_machine_names_that_machine() {
     let foot = Machine::Client("foot".to_owned());
@@ -187,8 +187,25 @@ fn a_row_on_another_machine_names_that_machine() {
         starts(&Machine::Server),
         "starts this provider's sign-in on the server, and follows what it says"
     );
-    let said = browser(&foot).unwrap_or_default();
-    assert!(said.contains("opens its browser on foot"), "{said}");
-    assert!(said.contains("a code is finished here"), "{said}");
-    assert_eq!(browser(&Machine::Server), None);
+}
+
+/// **A waiting sign-in's address is a door under the one address rule**, and
+/// what goes back is the paste whole: only the whitespace around it is
+/// dropped, because a page may hand over `code#state` or a whole address.
+#[test]
+fn the_page_is_opened_over_tls_and_the_paste_goes_back_whole() {
+    let url = "https://provider.invalid/authorize?state=s&challenge=c";
+    assert_eq!(page(url).as_deref(), Some(url));
+    assert_eq!(page("http://provider.invalid/authorize"), None);
+    assert_eq!(page("https://"), None);
+    assert_eq!(pasted("  abc#def \n").as_deref(), Some("abc#def"));
+    let address = "http://localhost/callback?code=a b&state=s#f";
+    assert_eq!(
+        pasted(&format!("\t{address}\r\n")).as_deref(),
+        Some(address)
+    );
+    assert_eq!(pasted(" \n\t"), None);
+    assert!(PAGE_OPENS.contains("browser") && PAGE_OPENS.contains("long press"));
+    assert!(PASTE.starts_with("paste") && SENDS.contains("exactly as"));
+    assert_eq!((PAGE, SEND), ("open the sign-in page", "send"));
 }

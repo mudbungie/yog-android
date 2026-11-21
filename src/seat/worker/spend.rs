@@ -66,7 +66,7 @@ pub(super) fn spend(
         // frame, so it is adopted rather than reported (`after::signed`); the
         // watch crosses no wire at all — it is what makes the lane wanted, and
         // the next pass is what dials it.
-        Cmd::Login(provider) => after::signed(seat, focus, standing, provider),
+        Cmd::Login(provider, code) => after::signed(seat, focus, standing, provider, code),
         Cmd::Watch(provider) => {
             standing.signing.watch(provider);
             None

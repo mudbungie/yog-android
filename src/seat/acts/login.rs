@@ -1,6 +1,7 @@
 //! **The sign-in, posted** (REMOTE §8.3, DESIGN §13.19): start `bz --login`
-//! for one provider row inside the focused workspace's directory, on the server,
-//! and hand back the run's standing it answered with.
+//! for one provider row inside the focused workspace's directory, on the box
+//! that holds the row — or hand back the code a waiting run asked for — and
+//! hand back the run's standing it answered with.
 //!
 //! **Its receipt is the lane's first frame** — the same value at the same
 //! moment (yog's own `boundary::login`) — so the answer is adopted rather
@@ -17,7 +18,14 @@
 //! row already signing in TERMINATES that run and starts a fresh one
 //! upstream, so a resend on a lost reply would kill a browser flow the
 //! operator may be halfway through. The read that settles a doubted one is
-//! this act's own lane: the tail says whether a run is going.
+//! this act's own lane: the tail says whether a run is going. **A code is
+//! never sent twice either**, for its own reason: it is spent once, and the
+//! tail says whether it was taken.
+//!
+//! **A code nothing was waiting for is refused in the server's words**, which
+//! name the restart (§8.3: *a code is taken only by a run that stands with an
+//! `authorize`*). It lands in the banner like every refusal, and the plain
+//! `sign in` beside the row is the act it names.
 
 use crate::codec::reply::Reply;
 use crate::codec::{Act, Gesture, LoginView, encode};
@@ -33,19 +41,31 @@ const SETTLES: &str = "The sign-in's own tail says whether a run started — it 
      this screen. Nothing was sent again: firing it a second time terminates the run that may \
      already be going, which would end a browser flow midway.";
 
-/// Post one sign-in at the focused workspace, and hand back what it answered.
-pub(crate) fn login(seat: &Seat, focus: &Focus, provider: String) -> (Posted, Option<LoginView>) {
+/// **The same read, for a code in doubt.**
+const SPENT: &str = "The sign-in's own tail says whether the code was taken — it is held open \
+     on this screen. Nothing was sent again: a code is spent once.";
+
+/// Post one sign-in at the focused workspace — the start, or with a `code`
+/// the finish — and hand back what it answered.
+pub(crate) fn login(
+    seat: &Seat,
+    focus: &Focus,
+    provider: String,
+    code: Option<String>,
+) -> (Posted, Option<LoginView>) {
     let workspace = match super::focused(focus) {
         Ok(workspace) => workspace,
         Err(why) => return (Posted::Refused(format!("login: {why}")), None),
     };
+    let settles = if code.is_some() { SPENT } else { SETTLES };
     let gesture = Gesture::Act(Act::Login {
         workspace,
         provider,
+        code,
     });
     match seat.answered(&encode(&gesture)) {
         Ok(Reply::Login(view)) => (Posted::Took, Some(view)),
         Ok(other) => (Posted::Refused(kind_err("login", &other)), None),
-        Err(why) => (faulted(&why, "login", SETTLES), None),
+        Err(why) => (faulted(&why, "login", settles), None),
     }
 }

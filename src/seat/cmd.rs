@@ -35,8 +35,9 @@ pub(super) enum Cmd {
     Refresh,
     /// **Sign one provider in** (§13.19) — the act, fired at the focused
     /// workspace. Its answer is the run's standing rather than a receipt, so
-    /// it seeds the tail as well as starting the run.
-    Login(String),
+    /// it seeds the tail as well as starting the run. With a code it hands
+    /// back what the human copied instead, and the same tail is followed.
+    Login(String, Option<String>),
     /// **Follow one provider's sign-in, or stop** (§13.19). The lane's want,
     /// and the empty case is the second: leaving the screen crosses no wire,
     /// so a tail can be closed with the server unreachable — `Cmd::Search`'s

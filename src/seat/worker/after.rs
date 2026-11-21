@@ -171,14 +171,22 @@ pub(super) fn pending(
 /// watches too, because the tail is the read that settles it and the doubt
 /// sentence says so (`acts::login::SETTLES`); a refusal watches nothing — a
 /// run that never started has said nothing.
+///
+/// **A code's receipt is not a new run's** (REMOTE §8.3, edition 31): the
+/// finish is the same run's second command line, so the lane already held
+/// goes on being followed and only the receipt's standing fact is taken
+/// (`pass::login::handed`).
 pub(super) fn signed(
     seat: &Seat,
     focus: &Focus,
     standing: &mut Standing,
     provider: String,
+    code: Option<String>,
 ) -> Option<String> {
-    let (posted, view) = super::super::acts::login(seat, focus, provider.clone());
+    let finishing = code.is_some();
+    let (posted, view) = super::super::acts::login(seat, focus, provider.clone(), code);
     match view {
+        Some(view) if finishing => standing.signing.handed(provider, view),
         Some(view) => standing.signing.started(provider, view),
         None if matches!(posted, Posted::InDoubt(_)) => standing.signing.watch(Some(provider)),
         None => {}

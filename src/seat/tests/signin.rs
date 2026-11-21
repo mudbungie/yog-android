@@ -241,4 +241,5 @@ fn a_sign_in_with_no_workspace_focused_never_leaves_this_device() {
     assert_eq!(ops(&served.join().unwrap()), ["workspaces"]);
 }
 
+mod code;
 mod lane;
