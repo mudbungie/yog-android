@@ -529,7 +529,7 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools/bridged.rs` | the two-line answer protocol every Java bridge speaks, and the one parser that reads it — pure | landed (bl-f34f, out of `tools/ui.rs`) |
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
 | `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, the three-state health, and whether it is still a host | landed (bl-d366, split bl-8641, `alive` bl-8bd0) |
-| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0) |
+| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never; and a read answered `superseded` ends the host with no dial (bl-83d3) | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0, superseded bl-83d3) |
 | `src/state.rs` | the process's one live tool host (§18.1) and the endpoint that worked per identity this run (§21) — the crate's only locks | landed (bl-8bd0; `worked`, bl-eb8e) |
 | `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
 | `src/shell/boot.rs` (`take`) | android-only: what a host is MADE of, in the one place that makes one — reached by the activity's boot and by the service's door alike (§18.8). The DECISION beside it is `crate::pocket`, under the floor; this is glue, and the nap it hands the ladder is a line no host test takes | landed (bl-d22d, seam corrected bl-996b) |
@@ -5436,6 +5436,34 @@ a formality. **Adopted:**
 - **An advertise-refusal still ends the channel** (bl-2d78's settlement): that
   one means another connection holds this device's read with a different set in
   force. Two refusals, two answers, never collapsed into one retry.
+- **A read answered `superseded` ends the host, and it does not dial again**
+  (bl-83d3, thrall's bl-1f02; REMOTE §5.1, edition 29). Since yog bl-96e0 an
+  accepted advertisement is a new activation of its certificate: it ends
+  whatever `invocations` read that certificate holds, and the ended read is
+  answered with the ordinary reply, no rows, and `superseded: true`. So a
+  redial after a drop takes this device's own queue back at once — every
+  channel opens with the advertisement — and the predecessor floor above is
+  met only on a server older than edition 29. When the process the ended read
+  was parked for is dead, nobody reads the answer. A host that does read it is
+  one still **alive** while something else bearing its certificate advertised,
+  and the one thing it must not do is what every other ending on the read
+  does: its next dial would open with an advertisement, which would end the
+  read that replaced it, and two processes would take one queue from each
+  other in turn. It used to do exactly that — the key was ignored, so the host
+  read an empty hold, asked again, was refused, waited one hold's width,
+  advertised and took the queue back. Now `Foot::invocations` hands the key
+  back as its third answer (`None`), `Stop::Superseded` carries it, and the
+  host publishes `Health::Stopped(host::SUPERSEDED)` — a sentence naming a
+  newer activation and both readings of it, drawn from the answer's own key
+  and never from prose. It is no leg's refusal: the read was answered.
+
+  **What that costs, named.** A stopped host frees the process's slot (§18.1),
+  so the next thing that makes a host — the activity being created, or the
+  pocket service starting — is a new activation and takes the queue back. Two
+  devices bearing one certificate therefore still alternate, but at the pace
+  of an operator opening an app, each stop saying why on the glass and in the
+  shade, rather than every thirty-two seconds in silence. One certificate on
+  two devices was never a supported state; it is now a loud one.
 - **A channel that SERVED returns the ladder to its floor** — replacing this
   client's weaker "a channel that was accepted". The two differ exactly where it
   matters: a rival holding this device's read accepts every advertisement while

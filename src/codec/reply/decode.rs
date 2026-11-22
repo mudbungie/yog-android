@@ -49,6 +49,7 @@ pub fn decode(v: &Value) -> Result<Result<Reply, String>, String> {
         "started" => Reply::Started {
             conversation: str_of(o, "conversation")?,
         },
+        "invocations" if o.get("superseded") == Some(&Value::Bool(true)) => Reply::Superseded,
         "invocations" => Reply::Invocations(rows(o, invocation_of)?),
         "providers" => Reply::Providers(rows(o, pick::row)?),
         "catalog" => Reply::Catalog(rows(o, pick::row)?),

@@ -126,6 +126,9 @@ fn the_routing_legs_replies_read_back() {
         panic!("wrong reply");
     };
     assert_eq!(rows[0].id, "i1");
+    // The third answer wears the same kind (REMOTE §5.1, edition 29).
+    let ended = json!({ "ok": true, "kind": "invocations", "rows": [], "superseded": true });
+    assert_eq!(decode(&ended).unwrap().unwrap(), Reply::Superseded);
     // A capture is ABSENT while the far machine still runs it — a reader must
     // not have to tell "not finished" from "finished saying nothing".
     let waiting = json!({ "ok": true, "kind": "routed", "invocation": "i1" });

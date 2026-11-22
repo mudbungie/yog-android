@@ -89,9 +89,16 @@ impl Foot {
     /// inverts (§3), so this device waits here rather than listening on a
     /// socket it would have to open. An empty answer is ordinary: a hold that
     /// ended quietly.
-    pub fn invocations(&self) -> Result<Vec<Invocation>, Wire> {
+    ///
+    /// **`None` is the third answer** (REMOTE §5.1, edition 29): the read was
+    /// answered `superseded` — a newer activation of this device's
+    /// certificate advertised and the queue is its now. It is not a failure,
+    /// because the read was answered, and what it means for the host is
+    /// [`crate::host`]'s to say.
+    pub fn invocations(&self) -> Result<Option<Vec<Invocation>>, Wire> {
         match self.said(&Gesture::Ask(Ask::Invocations))? {
-            Reply::Invocations(rows) => Ok(rows),
+            Reply::Invocations(rows) => Ok(Some(rows)),
+            Reply::Superseded => Ok(None),
             other => Err(wrong(&other)),
         }
     }

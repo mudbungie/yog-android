@@ -79,6 +79,20 @@ pub const RESTORED: &str = "this device's advertised set was replaced while a to
     and has been put back. Either another connection is bearing this device's identity, or the \
     server lost the set it was holding.";
 
+/// **What this device says when it has been superseded** (REMOTE §5.1, edition
+/// 29): the server ended this host's read because a newer activation of its
+/// certificate advertised. It is not a gesture that failed — the read was
+/// answered — and it is the one answer that says *stop*: the next dial would
+/// open with an advertisement, which would end the read that replaced this
+/// one, and two processes would take one queue from each other in turn. It
+/// names both readings, for [`RESTORED`]'s reason: this device cannot tell
+/// them apart.
+pub const SUPERSEDED: &str = "a newer activation of this device's certificate advertised to this \
+    server and took this machine's queue, so this host has stopped and will not dial again — \
+    dialling would take the queue back from whatever replaced it. If lernie was just restarted \
+    on this device, the new host is the one serving and nothing is wrong. If it was not, \
+    something else is presenting this certificate: stop it before starting this one again";
+
 /// What a host runs an invocation with: the tool's name and the model's own
 /// arguments in, a capture out. Owned and `Send` because it crosses onto the
 /// worker thread and outlives the frame that built it.

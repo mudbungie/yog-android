@@ -20,7 +20,7 @@ impl Reply {
             Self::Conversations(_) => "conversations",
             Self::Transcript(_) => "transcript",
             Self::Advertised { .. } => "advertised",
-            Self::Invocations(_) => "invocations",
+            Self::Invocations(_) | Self::Superseded => "invocations",
             Self::Routed { .. } => "routed",
             Self::Prepared(_) => "prepared",
             Self::Started { .. } => "started",

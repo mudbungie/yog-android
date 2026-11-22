@@ -68,8 +68,21 @@ fn advertising_answers_whether_the_server_wrote() {
 #[test]
 fn waiting_asks_for_this_machines_work_and_names_no_workspace() {
     let (foot, served) = dialled(json!({ "ok": true, "kind": "invocations", "rows": [] }));
-    assert_eq!(foot.invocations(), Ok(vec![]));
+    assert_eq!(foot.invocations(), Ok(Some(vec![])));
     assert_eq!(sent(served), json!({ "op": "invocations" }));
+}
+
+/// **The third answer** (REMOTE §5.1, edition 29): the same reply with no rows
+/// and `superseded: true` is not an empty hold, and a key that is absent or
+/// false is not this one — a server older than 29 never writes it.
+#[test]
+fn a_superseded_read_is_told_apart_from_an_empty_hold() {
+    let (foot, _served) = dialled(json!({ "ok": true, "kind": "invocations",
+                                          "rows": [], "superseded": true }));
+    assert_eq!(foot.invocations(), Ok(None));
+    let (foot, _served) = dialled(json!({ "ok": true, "kind": "invocations",
+                                          "rows": [], "superseded": false }));
+    assert_eq!(foot.invocations(), Ok(Some(vec![])));
 }
 
 #[test]
@@ -77,7 +90,7 @@ fn work_comes_back_with_the_models_own_arguments_verbatim() {
     let rows = json!([{ "invocation": "inv-1", "tool": "echo",
                         "input": { "say": "hi", "times": 2 } }]);
     let (foot, _served) = dialled(json!({ "ok": true, "kind": "invocations", "rows": rows }));
-    let work = foot.invocations().unwrap();
+    let work = foot.invocations().unwrap().unwrap();
     assert_eq!(work.len(), 1);
     assert_eq!(work[0].id, "inv-1");
     assert_eq!(work[0].input, json!({ "say": "hi", "times": 2 }));

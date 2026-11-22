@@ -56,7 +56,9 @@ const FIRST: Duration = Duration::from_secs(1);
 const LONGEST: Duration = Duration::from_secs(64);
 
 /// **How long a vanished predecessor of THIS device can still hold its claim**
-/// (REMOTE §5.1, adopted from thrall's redial in bl-8bd0). A read parked when
+/// (REMOTE §5.1, adopted from thrall's redial in bl-8bd0) — on a server older
+/// than edition 29; a newer one ends the predecessor's read at this host's own
+/// advertisement, so the refusal this waits out is never met. A read parked when
 /// its connection died does not leave until the server tries to answer it, so
 /// a redial inside that window is refused naming this very device — the stale
 /// predecessor, not a rival. REMOTE states the bound as a contract rather than
@@ -77,6 +79,11 @@ enum Stop {
     /// The frame stopped reading — nobody is left to publish to, so there is
     /// nothing a new channel could be for.
     Gone,
+    /// **The read was answered `superseded`** (REMOTE §5.1, edition 29,
+    /// bl-83d3): a newer activation of this device's certificate advertised
+    /// and took the queue. No gesture failed, so it carries no class and
+    /// meets no leg — it is drawn from the answer's own key, never from prose.
+    Superseded,
     /// A gesture did not land.
     Wire {
         /// Which class failed ([`crate::transport::Wire`]).
@@ -106,6 +113,11 @@ enum Stop {
 /// is what made a phone's first network flap permanent — the server still held
 /// the dead connection's parked read, refused the redial naming this very
 /// device, and the foot stopped for good three seconds after a wifi handover.
+///
+/// **A fourth row is no failure at all** (bl-83d3, thrall's bl-1f02): a read
+/// answered `superseded` ends the host with [`super::SUPERSEDED`] and no dial,
+/// because a dial opens with an advertisement and that would take the queue
+/// back from the activation that replaced this one.
 pub(super) fn serve(
     foot: &Foot,
     tools: Vec<Tool>,
@@ -126,6 +138,11 @@ pub(super) fn serve(
     loop {
         let (broke, floor, served) = match hold(foot, tools.clone(), run, out, &mut standing) {
             Stop::Gone => return,
+            Stop::Superseded => {
+                standing.health = Health::Stopped(super::SUPERSEDED.to_owned());
+                let _ = out.send(standing);
+                return;
+            }
             Stop::Wire { why, served, .. } if why.transport() => (why.sentence(), FIRST, served),
             Stop::Wire {
                 why: why @ Wire::Refused(_),
@@ -193,7 +210,8 @@ fn hold(
     }
     loop {
         let work = match foot.invocations() {
-            Ok(work) => work,
+            Ok(Some(work)) => work,
+            Ok(None) => return Stop::Superseded,
             Err(why) => {
                 return Stop::Wire {
                     why,

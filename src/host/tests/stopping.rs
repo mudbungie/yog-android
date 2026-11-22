@@ -6,7 +6,7 @@
 //! is what ends it. The class boundary these all sit on the far side of is
 //! `crate::transport::Wire`'s, and the redial half of it is `redial.rs`.
 
-use super::super::Host;
+use super::super::{Host, SUPERSEDED};
 use super::{
     advertised, host_against, ops, pki, routed, settle, slow_dispatch, stopped, table, unslept,
     work,
@@ -133,4 +133,46 @@ fn a_refused_reassertion_stops_the_host_rather_than_serving_on() {
     // The invocation it had already answered still counted: the hand-off
     // completed, and what failed was the sentence after it.
     assert_eq!(standing.served, 1);
+}
+
+/// **A host told it was superseded stops, and does not take the queue back**
+/// (REMOTE §5.1, edition 29, bl-83d3). The server ended this read because a
+/// newer activation of this device's certificate advertised. Dialling again
+/// would open with an advertisement of this host's own, which would end the
+/// read that replaced it — so the host is over, with the sentence that says
+/// so, at the first read or after any number answered. The script ends where
+/// the host must: a redial would be hung up on and publish `reconnecting`,
+/// which is not the standing this settles on.
+#[test]
+fn a_superseded_read_stops_the_host_and_it_does_not_dial_again() {
+    let superseded = || {
+        json!({ "ok": true, "kind": "invocations", "rows": [], "superseded": true })
+            .to_string()
+            .into_bytes()
+    };
+    for script in [
+        vec![vec![advertised()], vec![superseded()]],
+        vec![
+            vec![advertised()],
+            vec![work(json!([]))],
+            vec![superseded()],
+        ],
+    ] {
+        let asked = script.len();
+        let (mut host, served) = host_against(script);
+        let standing = settle(&mut host, &|s| stopped(s).is_some());
+        assert_eq!(stopped(&standing).as_deref(), Some(SUPERSEDED));
+        assert!(SUPERSEDED.contains("newer activation"));
+        assert!(SUPERSEDED.contains("will not dial again"));
+        assert_eq!(standing.served, 0);
+        assert_eq!(
+            served.join().unwrap().len(),
+            asked,
+            "and it asked nothing more"
+        );
+        assert!(
+            !host.alive(),
+            "a superseded host is over, so the slot can take a new one"
+        );
+    }
 }

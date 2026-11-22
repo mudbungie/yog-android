@@ -43,6 +43,7 @@ fn every_answer_names_its_own_kind() {
             }]),
             "invocations",
         ),
+        (Reply::Superseded, "invocations"),
         (
             Reply::Routed {
                 invocation: "i".into(),

@@ -66,6 +66,13 @@ pub enum Reply {
     Advertised { wrote: bool },
     /// The follow-class read's rows — this machine's work.
     Invocations(Vec<Invocation>),
+    /// **This read was ended by a newer activation of this device's
+    /// certificate** (REMOTE §5.1, edition 29): the `invocations` answer
+    /// carrying `superseded: true`. An answer of its own here, though it wears
+    /// the read's kind on the wire, because what a host does next is the
+    /// opposite of what it does with an empty hold. The key rides only when
+    /// true, so a server older than 29 is read as it always was.
+    Superseded,
     /// **A conversation that is now running** (§8.1) — what firing a staged
     /// conversation earns, carrying the name the server gave it. This is the
     /// answer to `prompt` and the last frame of the two-gesture start, so a
