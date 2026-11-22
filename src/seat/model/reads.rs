@@ -19,7 +19,10 @@ impl Model {
     /// Focus a workspace (its conversation list joins the standing set), or
     /// `None` to back out to the workspace roster.
     pub fn focus_workspace(&self, workspace: Option<String>) {
-        let _ = self.cmds.send(Cmd::Workspace(workspace));
+        self.aim(crate::seat::Focus {
+            workspace,
+            agent: None,
+        });
     }
 
     /// Re-read the standing set now rather than at the cadence.
@@ -29,7 +32,10 @@ impl Model {
 
     /// Focus one conversation: its transcript joins the standing set.
     pub fn focus_conversation(&self, workspace: String, agent: String) {
-        let _ = self.cmds.send(Cmd::Conversation(workspace, agent));
+        self.aim(crate::seat::Focus {
+            workspace: Some(workspace),
+            agent: Some(agent),
+        });
     }
 
     /// **Ask for the focused workspace's providers** (bl-0267). The answer

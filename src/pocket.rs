@@ -27,7 +27,7 @@
 //! **The price is stated in the two places the operator reads it**: the
 //! notification channel's description, in system settings, where a standing
 //! cost belongs (§17.3's precedent), and the notification's own text, which is
-//! the surface a pocketed phone actually shows. Neither is decorative — §14.2
+//! the surface a pocketed phone actually shows. Neither is decorative — REMOTE §14.2
 //! prices this rung as a permanent notification and radio wakes, and a
 //! capability that hides its price is the decoy shape this corpus refuses.
 

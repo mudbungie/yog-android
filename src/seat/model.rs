@@ -3,6 +3,11 @@
 //! next snapshot up the other, and every command wakes the worker
 //! immediately — so the cadence bounds staleness, never responsiveness.
 //!
+//! **Two channels down, since bl-2cad**: what the frame ASKS goes to the
+//! worker, and what it SAYS goes to the poster (`seat::poster`), a second
+//! thread with its own connections — so a send leaves at once, whatever read
+//! the worker is inside. A focus gesture goes down both.
+//!
 //! **The handles themselves are two files beside this one** (bl-5a56), on the
 //! grammar's own seam: `model/reads.rs` is what the frame ASKS for and
 //! `model/acts.rs` is what it SAYS — the split `codec::encode`,
@@ -17,22 +22,27 @@
 //! the acts it posts are `seat::acts`.
 
 use std::path::PathBuf;
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 use std::time::Duration;
 
 use super::Snapshot;
 use super::cmd::Cmd;
+use super::poster::Post;
 use crate::transport::Seat;
 
 mod acts;
 mod reads;
 
-/// The frame's handle. Dropping it stops the worker and joins it.
+/// The frame's handle. Dropping it stops both threads and joins them.
 pub struct Model {
     cmds: mpsc::Sender<Cmd>,
+    /// **The poster's channel** (bl-2cad): every act goes down this one, and
+    /// every focus gesture goes down both.
+    posts: mpsc::Sender<Post>,
     snaps: mpsc::Receiver<Snapshot>,
     last: Snapshot,
     worker: Option<std::thread::JoinHandle<()>>,
+    poster: Option<std::thread::JoinHandle<()>>,
 }
 
 impl Model {
@@ -61,20 +71,51 @@ impl Model {
         });
         let last = kept.clone().map(|(_, snap, _, _)| snap).unwrap_or_default();
         let (cmds, cmd_rx) = mpsc::channel();
+        let (posts, post_rx) = mpsc::channel();
         let (snap_tx, snaps) = mpsc::channel();
+        // **Two threads over one seat** (bl-2cad): the worker makes every
+        // read, the poster posts every act, and each gesture is a connection
+        // of its own (REMOTE §3) — so neither waits for the other. The poster
+        // starts where the worker does: at the focus the cache resumed.
+        let seat = Arc::new(seat);
+        let aim = kept
+            .as_ref()
+            .map(|(focus, ..)| focus.clone())
+            .unwrap_or_default();
+        let (hand, back) = (Arc::clone(&seat), cmds.clone());
+        let poster = std::thread::spawn(move || {
+            super::poster::run(&hand, aim, &post_rx, &back);
+        });
         // The worker holds a sender of its own for the lanes to hand frames
         // down (§14.1), so the channel never reads as disconnected while it
         // runs: `Stop` is the one way out, and `drop` sends it.
-        let lanes = cmds.clone();
+        let down = super::worker::Down {
+            lanes: cmds.clone(),
+            poster: posts.clone(),
+        };
         let worker = std::thread::spawn(move || {
-            super::worker::run(&seat, cadence, &cache, kept, &cmd_rx, &lanes, &snap_tx);
+            super::worker::run(&seat, cadence, &cache, kept, &cmd_rx, &down, &snap_tx);
         });
         Self {
             cmds,
+            posts,
             snaps,
             last,
             worker: Some(worker),
+            poster: Some(poster),
         }
+    }
+
+    /// **Aim the focus, at both threads** — the poster first, so no act sent
+    /// after this can reach it ahead of the move (`seat::poster`).
+    fn aim(&self, focus: super::Focus) {
+        let _ = self.posts.send(Post::Aim(focus.clone()));
+        let _ = self.cmds.send(Cmd::Aim(focus));
+    }
+
+    /// Say one act: straight to the poster, which posts it at once.
+    fn say(&self, say: super::say::Say) {
+        let _ = self.posts.send(Post::Say(say));
     }
 
     /// The latest published snapshot. Non-blocking: drains whatever the
@@ -89,7 +130,15 @@ impl Model {
 }
 
 impl Drop for Model {
+    /// **The poster first, then the worker.** Every act already said is
+    /// posted before the poster returns, and its receipt is in the worker's
+    /// queue ahead of the `Stop` sent after — so nothing the operator said is
+    /// dropped on the way out, and nothing it earned goes unfolded.
     fn drop(&mut self) {
+        let _ = self.posts.send(Post::Stop);
+        if let Some(poster) = self.poster.take() {
+            let _ = poster.join();
+        }
         let _ = self.cmds.send(Cmd::Stop);
         if let Some(worker) = self.worker.take() {
             let _ = worker.join();

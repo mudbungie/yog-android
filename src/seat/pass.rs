@@ -122,6 +122,10 @@ pub(super) struct Standing {
     /// (§25, bl-82d7), by the name its receipt minted: the focus follows it
     /// when a row answers to that name, and a focus gesture forgets it.
     pub(super) claimed: Option<String>,
+    /// **How many focus gestures this loop has spent** (bl-2cad). The poster
+    /// counts the same gestures off the same handle, so a start's follow can
+    /// say which of them it was made after (`seat::poster`).
+    pub(super) moves: u64,
     /// **The two work-review answers** (DESIGN §13.15), on the same terms
     /// again: each is written only by its own screen's gesture, and each
     /// carries the parameter it was asked with so the paint knows which row
@@ -183,6 +187,7 @@ impl Standing {
             candidates: None,
             clients: None,
             claimed: None,
+            moves: 0,
             files: None,
             work: None,
             config: None,

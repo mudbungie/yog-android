@@ -3,6 +3,11 @@
 //! `model/reads.rs` states: the boundary's grammar is asks and acts, and this
 //! crate reads it that way at four other sites.
 //!
+//! **Every act goes to the poster and leaves at once** (bl-2cad,
+//! `seat::poster`): none waits behind a read. The two handles here that cross
+//! no wire or only read — the offers listing and its closing — are the
+//! worker's, like every read.
+//!
 //! **Not one of these is ever sent twice.** An act is not idempotent (REMOTE
 //! §9.8: two taps of Nudge are two nudges), no idempotency token rides the
 //! envelope, and a reply this end never received leaves the act IN DOUBT — so
@@ -11,19 +16,20 @@
 
 use super::Model;
 use crate::seat::cmd::Cmd;
+use crate::seat::say::Say;
 
 impl Model {
     /// Post the composer's text to the focused conversation. The receipt —
     /// or the refusal — arrives with the next snapshot.
     pub fn deposit(&self, content: String) {
-        let _ = self.cmds.send(Cmd::Deposit(content));
+        self.say(Say::Deposit(content));
     }
 
     /// **Assign the worker role's model** in the focused workspace. One act,
     /// no apply step (§13.2): the tap is the gesture, and the server's
     /// refusal — if it refuses — arrives in the banner.
     pub fn pick_model(&self, provider: String, model: String) {
-        let _ = self.cmds.send(Cmd::Pick(provider, model));
+        self.say(Say::Pick(provider, model));
     }
 
     /// **Sign one provider in** (REMOTE §8.3, §13.19) in the focused
@@ -35,7 +41,7 @@ impl Model {
     /// that may already be going, so a repeat on a lost reply would end a
     /// browser flow the operator is halfway through (`seat::acts::login`).
     pub fn sign_in(&self, provider: String) {
-        let _ = self.cmds.send(Cmd::Login(provider, None));
+        self.say(Say::Login(provider, None));
     }
 
     /// **Hand back the code a waiting sign-in asked for** (REMOTE §8.3,
@@ -44,7 +50,7 @@ impl Model {
     /// it and neither does this seat. The run's own tail says what came of
     /// it. Never re-sent: a code is spent once.
     pub fn hand_code(&self, provider: String, code: String) {
-        let _ = self.cmds.send(Cmd::Login(provider, Some(code)));
+        self.say(Say::Login(provider, Some(code)));
     }
 
     /// **Set the worker's reasoning level** (REMOTE §9.4, bl-dfbb) — how
@@ -52,12 +58,12 @@ impl Model {
     /// absence of a level rather than a fourth one. It takes at the next
     /// step, so it is a mid-conversation act like the model pick.
     pub fn set_effort(&self, level: Option<crate::codec::Effort>) {
-        let _ = self.cmds.send(Cmd::Effort(level));
+        self.say(Say::Effort(level));
     }
 
     /// **Ask the worker's provider for its priority lane**, or stop asking.
     pub fn set_priority(&self, on: bool) {
-        let _ = self.cmds.send(Cmd::Priority(on));
+        self.say(Say::Priority(on));
     }
 
     /// **Stop the focused conversation's in-flight turn** (bl-48fa), and its
@@ -65,7 +71,7 @@ impl Model {
     /// seat never deposits a slash line for it, because a deposit is content
     /// and content starts the driver it was meant to stop.
     pub fn stop_turn(&self, children: bool) {
-        let _ = self.cmds.send(Cmd::StopTurn(children));
+        self.say(Say::StopTurn(children));
     }
 
     /// **Nudge the focused conversation** (§8.2, bl-d09e) — the act for a
@@ -73,7 +79,7 @@ impl Model {
     /// nudges, which is why the control is offered only while the
     /// conversation is at rest.
     pub fn nudge(&self) {
-        let _ = self.cmds.send(Cmd::Nudge);
+        self.say(Say::Nudge);
     }
 
     /// **Answer the parked tool call** in the focused conversation (§13.7,
@@ -84,14 +90,14 @@ impl Model {
     /// Not idempotent and never re-sent: the queue read that no longer carries
     /// the call is what settles a lost one (`seat::acts::held`).
     pub fn answer(&self, verdict: crate::codec::Verdict, scope: crate::codec::Scope) {
-        let _ = self.cmds.send(Cmd::Answer(verdict, scope));
+        self.say(Say::Answer(verdict, scope));
     }
 
     /// **Mint an offer for the next device** (REMOTE §15.1, §13.18) in the
     /// focused workspace, under `name` and at `grade`. Never re-sent: the
     /// pending offers say whether it landed (`seat::acts::offer`).
     pub fn offer(&self, name: String, grade: crate::leaf::Grade) {
-        let _ = self.cmds.send(Cmd::Offer(name, grade));
+        self.say(Say::Offer(name, grade));
     }
 
     /// **Read the focused workspace's pending offers** — what opens the
@@ -102,7 +108,7 @@ impl Model {
 
     /// **Approve or decline the pending offer under `name`.**
     pub fn settle(&self, settle: crate::codec::Settle, name: String) {
-        let _ = self.cmds.send(Cmd::Settle(settle, name));
+        self.say(Say::Settle(settle, name));
     }
 
     /// **Close the offers surface.** It crosses no wire.
@@ -118,7 +124,7 @@ impl Model {
     /// since, and a lost reply becomes the banner's sentence and the read that
     /// settles it (`seat::acts::admin`).
     pub fn admin(&self, act: crate::codec::AdminAct) {
-        let _ = self.cmds.send(Cmd::Admin(act));
+        self.say(Say::Admin(act));
     }
 
     /// **Fork the focused conversation at a picked point** (§13.16), with
@@ -129,7 +135,7 @@ impl Model {
     /// the read that settles a lost one is the spine the gesture was fired
     /// from (`seat::acts::fork`).
     pub fn fork(&self, from: String, goal: String) {
-        let _ = self.cmds.send(Cmd::Fork { from, goal });
+        self.say(Say::Fork { from, goal });
     }
 
     /// **Fire one of the conversation row's acts** (§13.5, bl-f97c) at the
@@ -141,7 +147,7 @@ impl Model {
     /// a lost reply becomes the banner's sentence and the read that settles
     /// it (`seat::acts::row`).
     pub fn row_act(&self, agent: String, act: crate::codec::RowAct) {
-        let _ = self.cmds.send(Cmd::Row(agent, act));
+        self.say(Say::Row(agent, act));
     }
 
     /// **Fire one of the candidates screen's acts** (§13.12) at the obligation
@@ -149,14 +155,14 @@ impl Model {
     /// more worktrees — so nothing here is ever sent twice: a lost reply
     /// becomes the banner's sentence and the listing is what settles it.
     pub fn candidate_act(&self, project: String, ball: String, act: crate::codec::CandidateAct) {
-        let _ = self.cmds.send(Cmd::Candidate(project, ball, act));
+        self.say(Say::Candidate(project, ball, act));
     }
 
     /// **Spread one obligation over `n` candidates and fire each with
     /// `goal`** (§13.12). One handle rather than three: a fan is a chain, and
     /// what the frame knows about it is the count and the instruction.
     pub fn fan(&self, project: String, ball: String, n: usize, goal: String) {
-        let _ = self.cmds.send(Cmd::Fan {
+        self.say(Say::Fan {
             project,
             ball,
             n,
@@ -170,14 +176,14 @@ impl Model {
     /// may already have claimed balls, and the read that settles a lost one is
     /// the board.
     pub fn fleet_act(&self, act: crate::codec::FleetAct) {
-        let _ = self.cmds.send(Cmd::Fleet(act));
+        self.say(Say::Fleet(act));
     }
 
     /// **Acknowledge the trail's alarms** (yog §4.2, §7.3). Not idempotent in
     /// any sense worth relying on and never re-sent: the watermark lands on
     /// the trail as it stood, and the trail read after it is what says so.
     pub fn ack_trail(&self) {
-        let _ = self.cmds.send(Cmd::Ack);
+        self.say(Say::Ack);
     }
 
     /// **Answer the attention queue at the conversation this row names**
@@ -185,7 +191,7 @@ impl Model {
     /// and never re-sent: what says the mark is down is the attention lane's
     /// next frame, which arrives on its own the moment the write lands.
     pub fn seen(&self, workspace: String, agent: String) {
-        let _ = self.cmds.send(Cmd::Seen(workspace, agent));
+        self.say(Say::Seen(workspace, agent));
     }
 
     /// **Fire one of the ball pane's acts** (§13.9) at the ball the control
@@ -197,14 +203,14 @@ impl Model {
     /// lost reply becomes the banner's sentence and the pane's own read is
     /// what settles it (`seat::acts::ball`).
     pub fn ball_act(&self, project: String, act: crate::codec::BallAct) {
-        let _ = self.cmds.send(Cmd::Ball(project, act));
+        self.say(Say::Ball(project, act));
     }
 
     /// **Truncate the trail.** The arming is the control's, not the model's:
     /// a handle that armed itself would be a second authority for what is on
     /// the glass, and this seat's rule is that the tap IS the act (§13.2).
     pub fn clear_trail(&self) {
-        let _ = self.cmds.send(Cmd::ClearTrail);
+        self.say(Say::ClearTrail);
     }
 
     /// Start a new conversation in the focused workspace with `goal` as its
@@ -212,6 +218,6 @@ impl Model {
     /// here because they are one act to the operator; the server's two-step
     /// is the wire's business, not the composer's.
     pub fn start_conversation(&self, goal: String) {
-        let _ = self.cmds.send(Cmd::Start(goal));
+        self.say(Say::Start(goal));
     }
 }

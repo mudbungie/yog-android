@@ -55,14 +55,14 @@ fn the_three_row_acts_address_the_row_and_not_the_focus() {
     // The WORKSPACE is focused and no conversation is: this is the
     // conversation-list screen, which is where a row menu opens.
     model.focus_workspace(Some("home".into()));
-    settle(&mut model, &|s| !s.conversations.is_empty());
+    let mut at = settle(&mut model, &|s| !s.conversations.is_empty()).passed;
     assert_eq!(model.snapshot().focus.agent, None, "nothing is opened");
 
     for act in [interrupting(), RowAct::Retarget, flagging()] {
         model.row_act("a1".into(), act);
-        settle(&mut model, &|s| {
-            s.error.is_none() && !s.conversations.is_empty()
-        });
+        // The pass this act's receipt wakes, not a predicate already true
+        // (bl-2cad): the next act would otherwise cross beside that pass.
+        at = settle(&mut model, &|s| s.passed > at && s.error.is_none()).passed;
     }
 
     drop(model);
@@ -110,11 +110,10 @@ fn the_floor_pair_reads_what_stands_rather_than_what_was_asked() {
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_workspace(Some("home".into()));
-    settle(&mut model, &|s| !s.conversations.is_empty());
+    let before = settle(&mut model, &|s| !s.conversations.is_empty()).passed;
     model.row_act("a1".into(), RowAct::Revoke);
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.conversations.is_empty()
-    });
+    // The pass the receipt wakes, not a predicate already true (bl-2cad).
+    settle(&mut model, &|s| s.passed > before && s.error.is_none());
     model.row_act("a1".into(), RowAct::Restore);
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(

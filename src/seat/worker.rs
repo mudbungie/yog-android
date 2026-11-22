@@ -1,4 +1,7 @@
 //! **The worker's loop**: one pass, one wait, and the gestures that wake it.
+//! Every READ this seat makes is made here or on a lane this loop tends; no
+//! act is (bl-2cad) — `seat::poster` posts those, and what one earned comes
+//! back as a command.
 //! Split from the handle in `model.rs` (bl-dfbb) on the seam the model has
 //! always had — what the frame HOLDS, and what the thread DOES. What one
 //! ANSWER does to the standing is `worker::fold`, split out on the seam this
@@ -12,12 +15,24 @@ use serde_json::Value;
 
 mod after;
 mod fold;
+mod post;
 mod spend;
+
+pub(super) use post::{Fold, post};
 
 use super::cmd::Cmd;
 use super::pass::Standing;
+use super::poster::Post;
 use super::{Focus, Snapshot};
 use crate::transport::Seat;
+
+/// **The two channels the worker writes down**: its own, which every lane's
+/// reader is handed a sender of (§14.1), and the poster's, which is told when
+/// a start's follow moves the focus (`seat::poster`).
+pub(super) struct Down {
+    pub(super) lanes: mpsc::Sender<Cmd>,
+    pub(super) poster: mpsc::Sender<Post>,
+}
 
 pub(super) fn run(
     seat: &Seat,
@@ -25,7 +40,7 @@ pub(super) fn run(
     cache: &std::path::Path,
     kept: Option<(Focus, Snapshot, super::options::Options, Option<Value>)>,
     cmds: &mpsc::Receiver<Cmd>,
-    lanes: &mpsc::Sender<Cmd>,
+    down: &Down,
     out: &mpsc::Sender<Snapshot>,
 ) {
     let (mut focus, mut standing) = match kept {
@@ -40,14 +55,21 @@ pub(super) fn run(
         // An undeliverable snapshot is not a stop signal: `Model::drop` sends
         // `Stop` before the receiver can go away (join precedes field drop),
         // so shutdown always arrives as a command, never as a dead channel.
-        let mut snap = standing.pass(seat, cache, &focus, note.take(), lanes);
+        let mut snap = standing.pass(seat, cache, &focus, note.take(), &down.lanes);
         // **A start shows the conversation it founded** (§25, bl-82d7): once
         // the list carries the name the receipt minted, the focus moves to
         // that row and the pass is taken again, under it.
         if let Some(agent) = founded(standing.claimed.as_deref(), &snap.conversations) {
             standing.claimed = None;
             focus.agent = Some(agent);
-            snap = standing.pass(seat, cache, &focus, None, lanes);
+            // The poster holds the focus the acts are addressed at, and this
+            // is the one move the operator did not make: it is told, with the
+            // count of moves this follows, so a tap it has already heard of
+            // outranks it there exactly as it will here.
+            let _ = down
+                .poster
+                .send(Post::Founded(standing.moves, focus.clone()));
+            snap = standing.pass(seat, cache, &focus, None, &down.lanes);
         }
         let _ = out.send(snap);
         match wait(cmds, cadence, &mut standing, &focus, out) {

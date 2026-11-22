@@ -33,11 +33,11 @@ fn stopping_sends_the_op_and_carries_litanys_verdict() {
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_conversation("home".into(), "a1".into());
-    settle(&mut model, &|s| !s.transcript.is_empty());
+    let before = settle(&mut model, &|s| !s.transcript.is_empty()).passed;
     model.stop_turn(false);
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.transcript.is_empty()
-    });
+    // The pass the receipt wakes, not a predicate already true (bl-2cad): the
+    // second stop would otherwise cross beside that pass.
+    settle(&mut model, &|s| s.passed > before && s.error.is_none());
     model.stop_turn(true);
     let snap = settle(&mut model, &|s| s.error.is_some());
     assert_eq!(

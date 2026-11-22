@@ -5,6 +5,10 @@
 //! not the operator's gesture, they are what makes a gesture's effect
 //! visible."*
 //!
+//! **The acts themselves are not here** (bl-2cad): an act is posted by the
+//! poster, on its own thread, and `worker::post` hands what it earned to the
+//! folds below. Nothing in this file says anything to the server but a read.
+//!
 //! **Every one of them swallows its failure**, and that is the whole of what
 //! they share: losing what the server already gave over an answer it did not
 //! is the defect §13.2's grace exists to prevent, so an act whose follow-up
@@ -30,36 +34,13 @@ pub(super) fn preload(seat: &Seat, focus: &Focus, standing: &mut Standing) {
     }
 }
 
-/// **One ball act, and the read that shows what it did** (§13.9). The pane is
-/// not a standing read, so nothing re-asks it on its own and a filing, a claim
-/// or a close is invisible until the view it happened in is read again — which
-/// is `reread`'s rule, on the pane.
-///
-/// **The `--as` stamp is the focused workspace's own name**, or the empty
-/// string where nothing is focused — which the server refuses in its own
-/// words, and is the right end for that sentence to come from. The pane that
-/// fires these is only ever painted under a focused workspace, so the empty
-/// case is unreachable from the glass and is not a second refusal here.
-pub(super) fn balled(
-    seat: &Seat,
-    focus: &Focus,
-    standing: &mut Standing,
-    project: String,
-    act: crate::codec::BallAct,
-) -> Option<String> {
-    let name = focus.workspace.clone().unwrap_or_default();
-    let note = super::super::acts::ball(seat, project, name, act).note();
-    repane(seat, focus, standing);
-    note
-}
-
 /// **Re-read the pane after an act on it**, swallowing the failure, for
 /// `reread`'s reason exactly: this is not the operator's gesture, it is what
 /// makes the gesture's effect visible, and its absence leaves the rows where
 /// they were. The view re-asked is the one the pane is holding — the act was
 /// fired from it, and a pane holding another view's answer is unpaintable
 /// anyway (§13.9).
-fn repane(seat: &Seat, focus: &Focus, standing: &mut Standing) {
+pub(super) fn repane(seat: &Seat, focus: &Focus, standing: &mut Standing) {
     let Some(view) = standing.pane.as_ref().map(crate::codec::Pane::view) else {
         return;
     };
@@ -68,7 +49,10 @@ fn repane(seat: &Seat, focus: &Focus, standing: &mut Standing) {
     }
 }
 
-/// **One admin act, and the branch a `marks` write answers with** (§13.17).
+/// **What follows one admin act: the branch a `marks` write answered with**
+/// (§13.17), and the listing a settle changed. `marked` is that write's
+/// workspace beside the branch the server re-read; `settled` is whether the
+/// act was the proposal verdict.
 /// Four of the six need no read after them — what a config write did is read
 /// by tapping the destination again, and what a deletion did is that its
 /// subject is gone, which the next pass re-reads — `marks` answers with the
@@ -80,15 +64,11 @@ pub(super) fn administered(
     seat: &Seat,
     focus: &Focus,
     standing: &mut Standing,
-    act: crate::codec::AdminAct,
+    marked: Option<(String, String)>,
+    settled: bool,
+    posted: Posted,
 ) -> Option<String> {
-    let workspace = match &act {
-        crate::codec::AdminAct::Marks { workspace, .. } => Some(workspace.clone()),
-        _ => None,
-    };
-    let settled = matches!(act, crate::codec::AdminAct::Proposal { .. });
-    let (posted, landed) = super::super::acts::admin(seat, act);
-    if let (Some(workspace), Some(branch)) = (workspace, landed) {
+    if let Some((workspace, branch)) = marked {
         standing.marks = Some(crate::codec::Marks { workspace, branch });
     }
     if settled && let Ok(staged) = asks::proposals(seat, focus, None) {
@@ -108,26 +88,14 @@ pub(super) fn offered(
     focus: &Focus,
     standing: &mut Standing,
     name: String,
-    grade: crate::leaf::Grade,
+    posted: Posted,
+    offered: Option<crate::codec::Offered>,
 ) -> Option<String> {
-    let (posted, offered) = super::super::acts::offer(seat, focus, name.clone(), grade);
     let said = pending(seat, focus, standing, posted.note());
     if let (Some(offered), Some(held)) = (offered, standing.offers.as_mut()) {
         held.minted = Some((name, offered));
     }
     said
-}
-
-/// **Approve or decline, and the read behind it** (§13.18).
-pub(super) fn settled(
-    seat: &Seat,
-    focus: &Focus,
-    standing: &mut Standing,
-    settle: crate::codec::Settle,
-    name: String,
-) -> Option<String> {
-    let said = super::super::acts::settle(seat, focus, settle, name).note();
-    pending(seat, focus, standing, said)
 }
 
 /// **Re-read the pending offers** into the surface, keeping the URL it shows
@@ -157,7 +125,7 @@ pub(super) fn pending(
     }
 }
 
-/// **The sign-in, fired and adopted** (§13.19) — `offered`'s shape at the
+/// **The sign-in's answer, adopted** (§13.19) — `offered`'s shape at the
 /// other act whose answer is a value rather than a receipt. The standing it
 /// answered with is the run's whole output so far, which is exactly what the
 /// lane's first frame would carry, so nothing waits a cadence to paint.
@@ -177,14 +145,12 @@ pub(super) fn pending(
 /// goes on being followed and only the receipt's standing fact is taken
 /// (`pass::login::handed`).
 pub(super) fn signed(
-    seat: &Seat,
-    focus: &Focus,
     standing: &mut Standing,
     provider: String,
-    code: Option<String>,
+    finishing: bool,
+    posted: Posted,
+    view: Option<crate::codec::LoginView>,
 ) -> Option<String> {
-    let finishing = code.is_some();
-    let (posted, view) = super::super::acts::login(seat, focus, provider.clone(), code);
     match view {
         Some(view) if finishing => standing.signing.handed(provider, view),
         Some(view) => standing.signing.started(provider, view),

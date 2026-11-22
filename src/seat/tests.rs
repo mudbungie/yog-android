@@ -4,6 +4,15 @@
 //! a race. The requests the server read back are asserted too — the model's
 //! side of the wire is pinned, not assumed.
 //!
+//! **An act is not a pass's neighbour on the wire any more** (bl-2cad): the
+//! poster posts it on its own thread, beside whatever the worker is reading.
+//! So a case that says something waits first for the worker to REST — a
+//! snapshot is published only at the end of a pass or from inside the wait —
+//! and a case that says two things in a row waits for the pass the first one's
+//! receipt woke (`Snapshot::passed`), never for a predicate that was already
+//! true before it. `parallel` is the one file about the moment it is not
+//! resting.
+//!
 //! This file is the scaffolding every case shares — the PKI, the scripted
 //! server, the settle loop and the canned replies. The cases themselves are
 //! split on the seam the model has: [`reads`] is the standing set the seat
@@ -219,6 +228,7 @@ mod held;
 mod live;
 mod loaded;
 mod offer;
+mod parallel;
 mod pick;
 mod proposals;
 mod queue;

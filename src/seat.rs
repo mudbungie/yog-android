@@ -7,8 +7,14 @@
 //! Mirrors the server side's asker/poster split; one connection per ask
 //! (REMOTE §3, "the seat polls") stands until upstream rules otherwise. The
 //! frame renders snapshots and blocks on nothing: every wire crossing
-//! happens on the model's one worker thread, and the two sides talk over
-//! channels — no locks, so rule 7 stays vacuous here.
+//! happens off it, and the sides talk over channels — no locks, so rule 7
+//! stays vacuous here.
+//!
+//! **Reads and acts never wait for each other** (bl-2cad). The worker thread
+//! makes every read — the pass, a gesture's read, the read that shows what an
+//! act did — and tends the held lanes, each a thread of its own; the poster
+//! thread posts every act the moment it is said (`seat::poster`). So a
+//! message leaves at once, whatever read is in flight.
 
 use crate::codec::{
     ConvRow, Entry, Found, LoginView, OpRow, ProviderRow, QueueRow, RoleRow, WsRow,
@@ -227,6 +233,8 @@ mod model;
 mod options;
 mod pass;
 mod posted;
+mod poster;
+mod say;
 mod worker;
 
 pub use model::Model;

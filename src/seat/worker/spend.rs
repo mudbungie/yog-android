@@ -4,14 +4,19 @@
 //! reads as: `run` is the loop and `wait` is its clock, and this is *a command
 //! arrived, now what does the seat do about it*.
 //!
+//! **No act is in this table** (bl-2cad). An act is posted by the poster, on a
+//! thread and a connection of its own (`seat::poster`), so that one never
+//! waits behind whatever read this loop is inside; what comes back here is
+//! `Cmd::Posted`, the fold of what the act earned.
+//!
 //! Every arm answers the same thing — the sentence the gesture earned, or none
 //! — and the two that END the loop stay in `run`, because ending it is the
 //! loop's own business and a table cannot say it.
 
 use super::super::cmd::Cmd;
 use super::super::pass::Standing;
-use super::super::{Focus, acts, asks};
-use super::after::{self, preload, reread};
+use super::super::{Focus, asks};
+use super::after::{self, preload};
 use super::fold::{self, learned, searched};
 use crate::transport::Seat;
 
@@ -24,34 +29,7 @@ pub(super) fn spend(
     standing: &mut Standing,
 ) -> Option<String> {
     match cmd {
-        Cmd::Workspace(workspace) => aimed(
-            seat,
-            focus,
-            standing,
-            Focus {
-                workspace,
-                agent: None,
-            },
-        ),
-        Cmd::Conversation(workspace, agent) => aimed(
-            seat,
-            focus,
-            standing,
-            Focus {
-                workspace: Some(workspace),
-                agent: Some(agent),
-            },
-        ),
-        // The receipt is counted as well as reported: the composer's echo has
-        // no other way to know its message landed (bl-66fb), and since bl-07b1
-        // there are three fates to count rather than two — a lost reply is not
-        // a refusal, and an echo that read it as one would hand the operator
-        // back a draft the server may already have taken.
-        Cmd::Deposit(content) => {
-            let posted = acts::deposit(seat, focus, content);
-            standing.posted(&posted);
-            posted.note()
-        }
+        Cmd::Aim(moved) => aimed(seat, focus, standing, moved),
         // The three selector gestures. A read's answer is learned as the
         // server's own envelope (bl-0267); a failure is a sentence for the
         // banner exactly as an act's is.
@@ -62,11 +40,8 @@ pub(super) fn spend(
             learned(listed, Some(provider), standing)
         }
         Cmd::Options => options(seat, focus, standing),
-        // **The sign-in pair** (§13.19). The act's answer IS the tail's first
-        // frame, so it is adopted rather than reported (`after::signed`); the
-        // watch crosses no wire at all — it is what makes the lane wanted, and
-        // the next pass is what dials it.
-        Cmd::Login(provider, code) => after::signed(seat, focus, standing, provider, code),
+        // **The watch crosses no wire at all** (§13.19) — it is what makes the
+        // sign-in's lane wanted, and the next pass is what dials it.
         Cmd::Watch(provider) => {
             standing.signing.watch(provider);
             None
@@ -85,20 +60,15 @@ pub(super) fn spend(
         Cmd::Balls(view) => fold::paned(asks::balls(seat, focus, view), standing),
         Cmd::Records => fold::recorded(asks::opened(seat, focus), standing),
         Cmd::Step(seq) => fold::drilled(asks::drill(seat, focus, seq), standing),
-        // **The anchored read and the act it informs** (§13.16). The read
-        // folds into the records like the drill-in beside it; the act needs no
-        // read after it — what a fork DID is a child card on the spine, which
-        // the next opening of this screen reads.
+        // **The anchored read** (§13.16) folds into the records like the
+        // drill-in beside it.
         Cmd::Anchor(at) => {
             let read = asks::anchored(seat, focus, at.clone());
             fold::anchored(read, at, standing)
         }
-        Cmd::Fork { from, goal } => acts::fork(seat, focus, from, goal).note(),
         Cmd::Science => fold::spread(asks::science(seat, focus), standing),
         Cmd::Clients => fold::machined(asks::clients(seat, focus), standing),
-        Cmd::Offer(name, grade) => after::offered(seat, focus, standing, name, grade),
         Cmd::Offers => after::pending(seat, focus, standing, None),
-        Cmd::Settle(settle, name) => after::settled(seat, focus, standing, settle, name),
         // Closing is the whole act (§13.18): the surface lives in the standing.
         Cmd::Forget => {
             standing.offers = None;
@@ -107,65 +77,12 @@ pub(super) fn spend(
         Cmd::Config(at) => fold::configured(asks::config(seat, at), standing),
         Cmd::Marks => fold::marked(asks::marks(seat, focus), standing),
         Cmd::Proposals(id) => fold::staged(asks::proposals(seat, focus, id), standing),
-        Cmd::Admin(act) => after::administered(seat, focus, standing, act),
         Cmd::Files(path) => fold::filed(asks::files(seat, focus, path), standing),
         Cmd::Work(file) => fold::worked(asks::work(seat, focus, file), standing),
-        // **Both trail acts are followed by the read that says what they
-        // did**, which is also the read that settles a lost one: the watermark
-        // and the truncation are both invisible until the trail is read again,
-        // so the screen would otherwise stand on what it had before the act.
-        Cmd::Ack => {
-            let note = acts::ack(seat).note();
-            reread(seat, standing);
-            note
-        }
-        Cmd::ClearTrail => {
-            let note = acts::clear_trail(seat).note();
-            reread(seat, standing);
-            note
-        }
-        // **The queue act needs no read after it, and that is the lane's
-        // doing** (§14.1): the acknowledgement's effect arrives as the next
-        // frame, from the one writer, without this seat asking twice.
-        Cmd::Seen(workspace, agent) => acts::seen(seat, workspace, agent).note(),
-        // **An arming needs no read after it** (§13.13): what it did is on the
-        // board, which is a different screen, and its receipt is a sentence
-        // rather than a silence for exactly that reason.
-        Cmd::Fleet(act) => acts::fleet(seat, focus, act).note(),
-        Cmd::StopTurn(children) => acts::stop(seat, focus, children).note(),
-        Cmd::Nudge => acts::nudge(seat, focus).note(),
-        // **An answer, a row act and a start need no read after them**: what
-        // each of them DID lands in the standing set this loop is already
-        // re-asking for — the transcript, the row's flight, the row's
-        // attention mark, the queue row that stops carrying the parked call.
-        // So the gesture wakes the pass and the pass is the recovery.
-        Cmd::Answer(verdict, scope) => acts::answer(seat, focus, verdict, scope).note(),
-        Cmd::Row(agent, act) => acts::row(seat, focus, agent, act).note(),
-        Cmd::Start(goal) => started(seat, focus, standing, goal),
-        // The two aimed screens whose acts ARE invisible until re-read.
-        Cmd::Ball(project, act) => after::balled(seat, focus, standing, project, act),
-        Cmd::Candidate(project, ball, act) => {
-            let posted = acts::candidate(seat, project, ball, act);
-            after::listed(seat, focus, standing, posted)
-        }
-        Cmd::Fan {
-            project,
-            ball,
-            n,
-            goal,
-        } => {
-            let posted = acts::spread(seat, focus, project, ball, n, goal);
-            after::listed(seat, focus, standing, posted)
-        }
-        // A tuning act is followed by the read that makes it true: the control
-        // showed its pick optimistically, and this is what overtakes it
-        // (bl-e9f9).
-        Cmd::Effort(level) => tuned(seat, focus, standing, acts::effort(seat, focus, level)),
-        Cmd::Priority(on) => tuned(seat, focus, standing, acts::priority(seat, focus, on)),
-        Cmd::Pick(provider, model) => {
-            let posted = acts::pick(seat, focus, &provider, &model);
-            tuned(seat, focus, standing, posted)
-        }
+        // **What an act earned** (`worker::post`, bl-2cad): the poster made
+        // the crossing, and the fold — the standing it writes and the read that
+        // makes the act visible — is run here, where every read is.
+        Cmd::Posted(earned) => earned(seat, standing),
         // The two the loop keeps: `Stop` ends it and a lane's frame is adopted
         // inside `wait`, so neither reaches here — and neither has a sentence.
         Cmd::Stop | Cmd::Lane(_) | Cmd::Refresh => None,
@@ -182,6 +99,9 @@ fn aimed(seat: &Seat, focus: &mut Focus, standing: &mut Standing, moved: Focus) 
     *focus = moved;
     // The operator has gone somewhere: a start's claim on the focus is over.
     standing.claimed = None;
+    // And the poster was told of this move by the same handle (`seat::poster`):
+    // counting them is how a start's follow says which move it was made after.
+    standing.moves += 1;
     if was != focus.workspace {
         preload(seat, focus, standing);
     }
@@ -198,26 +118,6 @@ fn options(seat: &Seat, focus: &Focus, standing: &mut Standing) -> Option<String
         standing.options.learned(&workspace, None, envelope);
     }
     None
-}
-
-/// **A start is followed into focus** (§25, bl-82d7): its receipt names the
-/// conversation, and the loop focuses the row that answers to the name.
-fn started(seat: &Seat, focus: &Focus, standing: &mut Standing, goal: String) -> Option<String> {
-    let (posted, named) = acts::started(seat, focus, goal);
-    standing.claimed = named;
-    posted.note()
-}
-
-/// A tuning act and the read that overtakes its optimistic control.
-fn tuned(
-    seat: &Seat,
-    focus: &Focus,
-    standing: &mut Standing,
-    posted: crate::seat::posted::Posted,
-) -> Option<String> {
-    let note = posted.note();
-    preload(seat, focus, standing);
-    note
 }
 
 #[cfg(test)]

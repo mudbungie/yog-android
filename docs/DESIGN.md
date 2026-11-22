@@ -4126,6 +4126,89 @@ have put one line in every script and made every request index a moving
 target. The follow lane is positional, because its dial is the pass's and
 the pass's order is a script.
 
+### 14.2 The poster: an act leaves at once (bl-2cad)
+
+`src/seat/poster.rs`, `src/seat/worker/post.rs`, `src/seat/say.rs`,
+`src/seat/model.rs`.
+
+**The principle** (operator): things really happen on the server, and every
+interface should be able to read its own replica and send in parallel,
+regardless of what else is going on. The wire already says so — a seat's reads
+and acts are each a connection of their own (REMOTE §3) and none excludes
+another; the one exclusive read in the protocol is a tool host's `invocations`
+(§5.1), which no seat asks.
+
+**The defect.** Every wire crossing this seat made, the three held lanes
+aside, ran on the model's one worker thread, as an arm of one command table.
+So a message the operator sent waited in the worker's queue for whatever read
+the worker was inside: a pass of up to four reads, a lane's dial, the five
+reads the records screen opens with, the read that follows another act. Each
+is a fresh connection with a five-second connect bound, so on a slow network
+the gap between the tap and the message leaving was that bound several times
+over — and the composer's echo stood muted the whole while, with nothing on
+the wire.
+
+**The shape is the desktop seat's** (lernie's poster beside its asker: *"on
+its own thread because an act must not wait behind a read that is mid-pass"*).
+Two threads over one `Seat`:
+
+- **The worker makes every read.** The pass, a gesture's read, the read that
+  shows what an act did, and the tending of the held lanes — unchanged.
+- **The poster posts every act**, the moment the handle sends it, on its own
+  connection. `Model`'s act handles (`model/acts.rs`) send down the poster's
+  channel and no longer down the worker's.
+
+**What an act earned goes back to the worker as a command** (`Cmd::Posted`).
+Each act is two halves (`worker::post`): the crossing, which the poster runs,
+and a fold — what the answer does to the standing, and the read that makes the
+act visible (§13.9's re-pane, the trail's re-read, the pending offers, the
+candidates listing, the assignments). The worker owns the standing and makes
+every read, so the fold is run there, and the pass that follows is the
+worker's as it always was. **No lock is added and nothing is shared**: the two
+threads meet at two channels, which is how a lane's frame already arrives.
+
+**Acts are serial among themselves.** The operator said them in an order, and
+a start is two gestures that must stay adjacent (§8.1). What they are not
+serial with is any read — in either direction: a focus move or a refresh does
+not wait behind an act whose reply is slow.
+
+**Where an act is aimed is the poster's own copy of the focus, and the handle
+keeps it right.** The focus used to be the worker's alone, which was sound
+only because the worker spent every command in order. Now the handle builds
+the focus once per focus gesture and sends it to both threads — the poster
+first (`Model::aim`, `Cmd::Aim`, `Post::Aim`) — so *tap a conversation, then
+send* lands where the tap aimed even while the worker is still reading the
+conversation before it. One move is not the operator's: a start is followed
+into the conversation it founded (§25), which the worker does when the list
+first shows the row. It tells the poster (`Post::Founded`) with the count of
+the operator's moves it was made after; both threads count the same gestures
+off the same handle, so a count behind the poster's own means the operator has
+moved since, and the follow is dropped there exactly as that move will
+overwrite it on the worker. A count, not a comparison of places: a tap on the
+place the operator already stood is still a move.
+
+**The read that follows an act is asked at the focus the act was posted at**,
+not wherever the worker stands when the receipt arrives — it is about the
+place the act was fired from.
+
+**Stopping joins the poster first, then the worker.** Every act already said
+is posted before the poster returns, and its receipt is in the worker's queue
+ahead of the stop sent after it — so nothing said is dropped on the way out.
+
+**What this does not change.** No act is ever sent twice (§19.2); the three
+fates and the sentence a lost reply earns are as they were. The cadence, the
+grace (§13.2), the cache (§14) and the lanes (§14.1) are the worker's and
+untouched. The tool host (§6, §18) was always a thread and a connection of its
+own.
+
+**The harness.** The scripted server takes connections in order, so a test
+that says something waits first for the worker to rest, and one that says two
+things in a row waits for the pass the first receipt woke (`Snapshot::passed`)
+rather than for a predicate already true. `seat/tests/parallel.rs` is the one
+case about the moment the worker is not resting: a rendezvous feed tells the
+test a read is at the server and unanswered, and the message must reach the
+next scripted turn while it is.
+
 ## 15. Render-and-see: the headless emulator loop (bl-243b)
 
 An agent working on this app could not look at it. Every verdict was either a
@@ -4637,7 +4720,7 @@ ball, ordered by what each costs:
 | 1 — the paper tools | `device`, `clipboard_set`, `notify`, `open` | no service; `notify` wants the POST_NOTIFICATIONS runtime ask (API 33+); `open` is platform-refused from background (BAL, API 29+) and says so in band | **landed** (bl-f34f) |
 | 1b — the sighted pair | `camera` (a still, answered as a path — the screenshot precedent), `location` (one fix) | CAMERA / ACCESS_FINE_LOCATION runtime asks over the bl-d815 hook; both are foreground-bound at this rung — background camera is OS-refused, background location is a separate settings-trip grant this rung does not ask for | **landed** (bl-b0a9) |
 | 2 — the notification listener | `notifications` (the shade as text) | a NotificationListenerService: the InterfaceService enable class — a settings act, and the restricted-settings block a second time for sideloads | **landed** (bl-5cbd) |
-| 3 — the pocketed foot | no new tool: the host loop is held open by a foreground service, so invocations reach a phone in a pocket | the §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off unless the leaf is foot-grade | **landed** (bl-8bd0, §18) |
+| 3 — the pocketed foot | no new tool: the host loop is held open by a foreground service, so invocations reach a phone in a pocket | the REMOTE §14.2 rung-2 price — a permanent notification, radio wakes, task killers; off unless the leaf is foot-grade | **landed** (bl-8bd0, §18) |
 | net — the network | `http` (one request through the platform's stack), and the packaged `curl`/`busybox` on the shell tool's PATH | no service and no grant: `INTERNET` is a normal permission this app already holds for the wire. The executables cost an installed 5.8 MB per ABI and a NOTICE, nothing else | **landed** (bl-fc4e, bl-f22a) |
 
 **Rung 1's one open platform question is closed, and the answer is in the
@@ -5384,7 +5467,7 @@ where it is painted, and a pocketed phone's roster is not being looked at.
 **The price is stated in both places it is read** (the house rule): the
 channel's description in system settings, which is where a standing cost
 belongs (§17.3's precedent) and which also names the two acts that end it, and
-the notification's own text, which is what the operator actually sees. §14.2
+the notification's own text, which is what the operator actually sees. REMOTE §14.2
 prices this rung as a permanent notification and radio wakes and this says so
 in the operator's own words.
 
@@ -5514,7 +5597,7 @@ fallback.** A phone changes networks, sleeps, and comes back with a dead TCP
 mapping the far end has not noticed; the ladder above is what turns that into a
 one-second gap instead of a dead foot.
 
-**Vendor task killers remain the residual §14.2 named** and no design here can
+**Vendor task killers remain the residual REMOTE §14.2 named** and no design here can
 answer them: an OEM power manager that stops a foreground service is doing what
 Android's own Active-apps switch does, and the app cannot tell them apart.
 
@@ -5555,7 +5638,7 @@ reversed.
 
 **What only a real device can answer**, and none of it is dodged here: whether
 a vendor's power manager leaves the service alone for days; what the hold
-actually costs a battery over that time, which is the number §14.2 prices and
+actually costs a battery over that time, which is the number REMOTE §14.2 prices and
 no emulator can measure; and Doze's real behaviour on a phone that is genuinely
 still, screen off, off charge, for hours — the emulator never enters deep Doze
 on its own. Those are recorded as this rung's real-device residue on bl-8bd0.

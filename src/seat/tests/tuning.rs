@@ -31,20 +31,17 @@ fn the_tuning_gestures_state_the_role_and_the_level_the_wire_spells() {
     ]);
     settle(&mut model, &|s| !s.workspaces.is_empty());
     model.focus_workspace(Some("home".into()));
-    settle(&mut model, &|s| !s.conversations.is_empty());
+    let at = settle(&mut model, &|s| !s.conversations.is_empty()).passed;
 
+    // Each waits for the pass its own receipt wakes (bl-2cad): an act is
+    // posted beside whatever the worker is reading, so the next one said
+    // sooner would cross beside this one's pass.
     model.set_effort(Some(crate::codec::Effort::High));
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.conversations.is_empty()
-    });
+    let at = settle(&mut model, &|s| s.passed > at && s.error.is_none()).passed;
     model.set_effort(None);
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.conversations.is_empty()
-    });
+    let at = settle(&mut model, &|s| s.passed > at && s.error.is_none()).passed;
     model.set_priority(true);
-    settle(&mut model, &|s| {
-        s.error.is_none() && !s.conversations.is_empty()
-    });
+    settle(&mut model, &|s| s.passed > at && s.error.is_none());
 
     drop(model);
     let requests = served.join().unwrap();
