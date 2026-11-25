@@ -528,8 +528,9 @@ One row per module, the same discipline as yog DESIGN §12: anything projected
 | `src/tools.rs` + `tools/{shell,files}.rs` | what this machine can run: the built-in table, its advertisement, and the dispatch | landed (bl-d366) |
 | `src/tools/bridged.rs` | the two-line answer protocol every Java bridge speaks, and the one parser that reads it — pure | landed (bl-f34f, out of `tools/ui.rs`) |
 | `src/foot.rs` | REMOTE §4.2's foot set as a type: the three gestures, and no way to reach a fourth | landed (bl-2040) |
+| `src/host/job.rs` | one job: run it (or refuse its `cwd`), count it, post it on its own connection; the set of ids a pushing host holds, and a swallowed post posted again rather than re-run | landed (bl-1782) |
 | `src/host.rs` | the tool host's handle: what the frame holds, the standing it paints, the three-state health, and whether it is still a host | landed (bl-d366, split bl-8641, `alive` bl-8bd0) |
-| `src/host/serve.rs` | the loop the worker runs: advertise, ride the follow read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never; and a read answered `superseded` ends the host with no dial (bl-83d3) | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0, superseded bl-83d3) |
+| `src/host/serve.rs` | the loop the worker runs: advertise, then — on a server at edition 32 or above — one pushing read held open with `holding`, every frame's job started at once (§6 *Push, not poll*), or below it the serial read, run, complete, re-assert the set — refuse a carried `cwd` (§6), and the redial matrix (§18.5): the wire always, this device's own predecessor after one hold's width, every other refusal never; and a read answered `superseded` ends the host with no dial (bl-83d3) | landed (bl-0ac8, bl-8641, bl-cc54, matrix bl-8bd0, superseded bl-83d3) |
 | `src/state.rs` | the process's one live tool host (§18.1) and the endpoint that worked per identity this run (§21) — the crate's only locks | landed (bl-8bd0; `worked`, bl-eb8e) |
 | `src/pocket.rs` | the pocketed foot's whole decision (§18): which devices hold their lane, and what the shade says in every state — pure, host-tested | landed (bl-8bd0) |
 | `src/shell/boot.rs` (`take`) | android-only: what a host is MADE of, in the one place that makes one — reached by the activity's boot and by the service's door alike (§18.8). The DECISION beside it is `crate::pocket`, under the floor; this is glue, and the nap it hands the ladder is a line no host test takes | landed (bl-d22d, seam corrected bl-996b) |
@@ -781,8 +782,8 @@ that WROTE is said out loud** (bl-cc54, following thrall bl-2d78 and yog
 bl-66d4). Both of REMOTE §5.1's guards over the advertised set stand on this
 client holding a *parked read* — a second follow-class read under one identity
 is refused, and an advertisement that would change the set in force is refused
-while a read is parked. This loop is serial, so for the whole runtime of a
-tool the device holds no read at all and neither guard covers it: a second
+while a read is parked. Below edition 32 this loop is serial, so for the
+whole runtime of a tool the device holds no read at all and neither guard covers it: a second
 connection bearing this device's certificate may replace the set in that
 window. Presenting again after each completion bounds the exposure to one
 tool's runtime instead of forever, and it costs an idle host nothing — no
@@ -819,6 +820,49 @@ that dies inside the preface's own round trip stops the host rather than
 redialling. Narrowing it would be a client amending REMOTE, which §1 forbids;
 the window is one connect away from a dial that just succeeded, and the ladder
 covers everything after it.
+
+**Push, not poll** (bl-1782; REMOTE §5.8, edition 32). The serial loop
+above makes a working phone deaf: it reads, is handed everything queued, and
+does not read again until every job is done. Against a server whose hello
+states edition 32 or above — read off the channel's own advertisement, which
+every channel opens with — the host instead, in this order:
+
+1. presents its set, as every channel does;
+2. opens **one pushing read**, `{"op": "invocations", "holding": [...]}`,
+   naming every job it has taken whose final `complete` the server has not
+   answered (empty on a fresh host), and keeps it open;
+3. starts each pushed job **the moment its frame lands, on its own thread,
+   with no limit**, skipping an id it already holds; it holds no backlog;
+4. posts each result **on its own connection**, from the job's thread; a
+   post that lands or is refused frees the id, and a post the wire swallowed
+   hands its capture back to the loop, which posts it again (never re-runs
+   it) at its next frame or next channel (REMOTE §5.6 Ruling 1);
+5. ignores a heartbeat (a frame with no rows), and treats two minutes with no
+   frame at all as a dead connection;
+6. when the read ends on its own, opens it again with no presentation
+   between — an accepted advertisement would end the read as superseded;
+   when it dies, climbs the ladder, presents, and opens it again with the
+   current `holding`;
+7. on `superseded`, stops for good, as below 32 (bl-83d3). Jobs already
+   running finish and post.
+
+It does **not** re-assert the set after each hand-off: the read is never
+closed while it works, so the window the re-assertion bounded does not exist,
+and the restored notice is a serial host's alone. Below edition 32 nothing
+changes, byte for byte. One loop, one predicate (`host::serve`).
+
+What each phone hazard meets. *The network switching, or the app being
+backgrounded, mid-job*: the read dies (or goes quiet for two minutes) while the
+jobs, on their own threads, keep running; the ladder reconnects and the next
+read's `holding` names them, so the server neither hands them out again nor
+answers them in doubt; a post that failed in the same gap is posted again on
+the next channel. *Android killing the process*: every thread dies with it,
+and REMOTE §5.8.2's restarted host applies — the next read lists nothing,
+work nothing was posted for goes out again, and the lane is at-least-once.
+*The UI thread*: it only ever drains a channel without blocking
+(`Host::standing`); jobs count themselves onto it from their own threads. *The
+seat's poster thread for acts* (bl-2cad) shares nothing with this: the host
+has its own foot connections, one per gesture.
 
 **The deviation, and why it is lawful.** REMOTE §5.2 derives a host's
 advertisement from an operator-authored `<yog-data-root>/tools.json` naming an
@@ -5027,7 +5071,8 @@ one-identity-two-connections shape never does.
 
 **But the guard is not free of a window, and the phone opens it itself**
 (bl-cc54). Both halves of it stand on a parked read, and a foot executing a
-tool holds none: this loop is serial, so for a tool's whole runtime the device
+tool holds none: below edition 32 this loop is serial (§6's *Push, not poll*
+closes the window above it), so for a tool's whole runtime the device
 is absent and its set may be replaced with no refusal. The remedy is §6's —
 re-assert at the end of every hand-off, which bounds the window to one tool's
 runtime, and read the receipt's `wrote` (PROTOCOL 8), which turns a silent

@@ -7,9 +7,13 @@
 use std::path::Path;
 use std::process::Command;
 
+pub mod by_op;
 pub mod serve;
 
-pub use serve::{Turn, serve_lanes, serve_many, serve_once, serve_turns, serve_versioned};
+pub use by_op::serve_by_op;
+pub use serve::{
+    Turn, serve_at, serve_lanes, serve_many, serve_once, serve_turns, serve_versioned,
+};
 
 /// Mint a CA under `dir` as `<name>.pem`/`<name>.key`.
 pub fn mint_ca(dir: &Path, name: &str) {

@@ -3,6 +3,12 @@
   "frames": [
     {
       "op": "invocations"
+    },
+    {
+      "holding": [
+        "inv-7"
+      ],
+      "op": "invocations"
     }
   ],
   "protocol": 19,

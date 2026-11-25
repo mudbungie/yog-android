@@ -38,7 +38,7 @@ fn asked(ask: &Ask) -> Value {
         Ask::Transcript { workspace, agent } => {
             json!({ "op": "transcript", "workspace": workspace, "agent": agent })
         }
-        Ask::Invocations => json!({ "op": "invocations" }),
+        Ask::Invocations { holding } => invocations(holding.as_deref()),
         Ask::Search { text } => json!({ "op": "search", "text": text }),
         Ask::Attention => json!({ "op": "attention" }),
         Ask::Ops { max } => json!({ "op": "ops", "max": max }),
@@ -145,6 +145,16 @@ fn asked(ask: &Ask) -> Value {
             workspace,
             provider,
         } => json!({ "op": "login-tail", "workspace": workspace, "provider": provider }),
+    }
+}
+
+/// The tool host's read: serial with no `holding`, pushing with one — the
+/// key's presence is the whole signal (REMOTE §5.8.1), so it is absent rather
+/// than null for the serial read.
+fn invocations(holding: Option<&[String]>) -> Value {
+    match holding {
+        None => json!({ "op": "invocations" }),
+        Some(held) => json!({ "op": "invocations", "holding": held }),
     }
 }
 

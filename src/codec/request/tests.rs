@@ -91,7 +91,10 @@ fn a_firing_that_states_no_seed_at_all_refuses() {
 fn what_this_codec_emits_decodes_back_to_itself() {
     let gestures = [
         Gesture::Ask(Ask::Workspaces),
-        Gesture::Ask(Ask::Invocations),
+        Gesture::Ask(Ask::Invocations { holding: None }),
+        Gesture::Ask(Ask::Invocations {
+            holding: Some(vec!["inv-7".to_owned()]),
+        }),
         Gesture::Ask(Ask::Conversations {
             workspace: "ws".to_owned(),
         }),

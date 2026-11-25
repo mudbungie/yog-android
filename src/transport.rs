@@ -128,21 +128,23 @@ impl Seat {
     /// [`ask`](Self::ask), which hands back every frame; the fold goes on top
     /// of it.
     pub fn answered(&self, request: &Value) -> Result<Reply, Wire> {
-        let stream = self.ask(request)?;
-        let last = stream
-            .last()
-            .ok_or_else(|| Wire::Unusable(NO_ANSWER.to_owned()))?;
-        // **The decoder already draws this line and it was being collapsed**
-        // (bl-8bd0): its OUTER error is a reply this end cannot read, its
-        // INNER one is the server's own `ok: false` sentence. They are two
-        // different facts about who failed, and the redial matrix needs them
-        // apart — a refusal on the follow read is worth another dial and an
-        // unreadable answer never is.
-        match reply::decode(last) {
-            Err(unreadable) => Err(Wire::Unusable(unreadable)),
-            Ok(Err(refusal)) => Err(Wire::Refused(refusal)),
-            Ok(Ok(reply)) => Ok(reply),
-        }
+        self.stated(request).map(|(reply, _)| reply)
+    }
+
+    /// [`answered`](Self::answered), with **the edition the server stated on
+    /// that connection** beside the reply (REMOTE §3.2) — what a tool host
+    /// reads off its advertisement to decide which read it opens next
+    /// (REMOTE §5.8: push only to a server at or above edition 32).
+    pub(crate) fn stated(&self, request: &Value) -> Result<(Reply, u32), Wire> {
+        let (open, _hangup) = self.read(request)?;
+        let edition = open.edition();
+        let mut last = None;
+        open.each(&mut |frame| {
+            last = Some(frame);
+            true
+        })?;
+        let last = last.ok_or_else(|| Wire::Unusable(NO_ANSWER.to_owned()))?;
+        Ok((decoded(&last)?, edition))
     }
 
     /// Send one request envelope and read its whole reply stream — every
@@ -228,6 +230,21 @@ impl Seat {
             .and_then(|()| frame::write_frame(&mut tls, request.to_string().as_bytes()))
             .map_err(|e| format!("send {}: {e}", at.address))?;
         Ok((tls, hangup))
+    }
+}
+
+/// One reply frame, decoded into the reply or the class of why not.
+///
+/// **The decoder already draws this line and it was being collapsed**
+/// (bl-8bd0): its OUTER error is a reply this end cannot read, its INNER one
+/// is the server's own `ok: false` sentence. They are two different facts
+/// about who failed, and the redial matrix needs them apart — a refusal on the
+/// follow read is worth another dial and an unreadable answer never is.
+pub(crate) fn decoded(frame: &Value) -> Result<Reply, Wire> {
+    match reply::decode(frame) {
+        Err(unreadable) => Err(Wire::Unusable(unreadable)),
+        Ok(Err(refusal)) => Err(Wire::Refused(refusal)),
+        Ok(Ok(reply)) => Ok(reply),
     }
 }
 

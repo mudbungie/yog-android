@@ -1419,6 +1419,8 @@
     },
     "request/invocations": {
       "signature": {
+        "/holding/[]:string": 32,
+        "/holding:array": 32,
         "/op:string": 1,
         ":object": 1
       }

@@ -14,10 +14,14 @@
 //! long as it takes. It runs what comes back and posts each capture as an
 //! ordinary act. The phone opens no listening socket, ever (DESIGN §1).
 //!
-//! **It runs serially**, as upstream does: one invocation at a time, so this
-//! machine is *absent* — holding no connection — for as long as a tool takes.
-//! Nothing in the server treats presence as the routing predicate, which is
-//! exactly why that is safe (REMOTE §5, bl-024b).
+//! **It runs every job at once on a server that pushes, and serially on one
+//! that does not** (REMOTE §5.8, edition 32; bl-1782). Against a server whose
+//! hello states edition 32 or above it holds one pushing read open always,
+//! starts each pushed job on its own thread the moment its frame lands, and
+//! posts each result on its own connection (`host::job`). Below that edition
+//! it is the serial host it always was: one invocation at a time, holding no
+//! connection for as long as a tool takes. One loop, one predicate
+//! (`host::serve`).
 //!
 //! **It redials a broken channel and stops on a refusal** (bl-8641, reversing
 //! the founding ruling). The earlier one — a channel that fails stops the host
@@ -52,12 +56,13 @@
 //! ran wherever this app's uid happened to be — the quiet miss the lane exists
 //! to exclude.
 
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 use std::time::Duration;
 
 use crate::codec::Capture;
 use crate::foot::Foot;
 
+mod job;
 mod serve;
 
 /// **What this device says when a re-assertion actually wrote** (REMOTE §5.1,
@@ -95,8 +100,9 @@ pub const SUPERSEDED: &str = "a newer activation of this device's certificate ad
 
 /// What a host runs an invocation with: the tool's name and the model's own
 /// arguments in, a capture out. Owned and `Send` because it crosses onto the
-/// worker thread and outlives the frame that built it.
-pub type Dispatch = Box<dyn Fn(&str, &serde_json::Value) -> Capture + Send>;
+/// worker thread and outlives the frame that built it; `Sync` because a
+/// pushing host runs it on as many job threads at once as it has jobs.
+pub type Dispatch = Box<dyn Fn(&str, &serde_json::Value) -> Capture + Send + Sync>;
 
 /// **How the worker waits between redials** — a parameter for [`Dispatch`]'s
 /// own reason: the ladder is policy, and a test that had to sleep through it
@@ -147,11 +153,23 @@ pub struct Standing {
     pub health: Health,
 }
 
+/// **What the threads tell the frame.** The worker owns where the host stands
+/// and states it whole; a job counts itself as it finishes, from whichever
+/// thread ran it. Two notes rather than one shared standing, because a lock
+/// would be the only other way and the jobs and the worker meet nowhere else.
+pub(crate) enum Note {
+    /// Everything the worker knows, published whole. Its `served` and `last`
+    /// are not its own and are not read: the jobs say those.
+    Stood(Standing),
+    /// One tool ran, and how it ended (`Standing::last`'s line).
+    Ran(String),
+}
+
 /// The frame's handle on the host thread. Dropping it stops the host at its
 /// next loop boundary; a host waiting on the wire ends when its connection
 /// does, which a dropped process does for it.
 pub struct Host {
-    standings: mpsc::Receiver<Standing>,
+    standings: mpsc::Receiver<Note>,
     last: Standing,
     worker: Option<std::thread::JoinHandle<()>>,
 }
@@ -165,7 +183,9 @@ impl Host {
     /// app's own storage path (`crate::tools::run_in`).
     pub fn start(foot: Foot, tools: Vec<crate::codec::Tool>, run: Dispatch, nap: Nap) -> Self {
         let (tx, standings) = mpsc::channel();
-        let worker = std::thread::spawn(move || serve::serve(&foot, tools, &run, &nap, &tx));
+        let worker = std::thread::spawn(move || {
+            serve::serve(&Arc::new(foot), tools, &Arc::new(run), &nap, &tx);
+        });
         Self {
             standings,
             last: Standing::default(),
@@ -189,8 +209,20 @@ impl Host {
     /// The latest published standing — non-blocking, like the seat model's
     /// snapshot, because the frame paints at its own cadence.
     pub fn standing(&mut self) -> Standing {
-        while let Ok(standing) = self.standings.try_recv() {
-            self.last = standing;
+        while let Ok(note) = self.standings.try_recv() {
+            match note {
+                Note::Stood(standing) => {
+                    self.last = Standing {
+                        served: self.last.served,
+                        last: self.last.last.take(),
+                        ..standing
+                    };
+                }
+                Note::Ran(line) => {
+                    self.last.served += 1;
+                    self.last.last = Some(line);
+                }
+            }
         }
         self.last.clone()
     }
@@ -199,7 +231,7 @@ impl Host {
 impl Drop for Host {
     fn drop(&mut self) {
         // The thread is not joined: it may be parked on a follow-class read
-        // that answers only when there is work, and a frame that blocked on
+        // that answers only when there is work — or, pushing, never ends — and a frame that blocked on
         // that would be the UI freeze this client's whole shape excludes. The
         // process ending is what ends it — and a worker between redials ends
         // at its next publish, which finds the receiver gone.

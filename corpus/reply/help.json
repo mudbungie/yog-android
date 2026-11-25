@@ -559,10 +559,10 @@
           "verb": "attention"
         },
         {
-          "detail": "The routing leg's follow-class read. It does not answer until this machine has an invocation or the server's hold expires — thirty seconds — so a tool host waits here rather than polling, and asks again the moment it is answered. It names nothing: the queue it drains is the one addressed to the certificate this connection presented, which is why a caller inside the world (`yog gesture`, the deposit inbox, the window) is refused rather than handed somebody's work. An empty answer is the ordinary answer of a hold that ended quietly, not a failure — unless it carries `\"superseded\": true`, which says a newer activation of this certificate advertised and took the queue: stop, do not ask again. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run it and post the result with `/complete`.",
+          "detail": "The routing leg's follow-class read. It does not answer until this machine has an invocation or the server's hold expires — thirty seconds — so a tool host waits here rather than polling, and asks again the moment it is answered. It names nothing: the queue it drains is the one addressed to the certificate this connection presented, which is why a caller inside the world (`yog gesture`, the deposit inbox, the window) is refused rather than handed somebody's work. An empty answer is the ordinary answer of a hold that ended quietly, not a failure — unless it carries `\"superseded\": true`, which says a newer activation of this certificate advertised and took the queue: stop, do not ask again. Each row is `{\"invocation\": …, \"tool\": …, \"input\": …}`; run it and post the result with `/complete`. With `--holding` it is a pushing host's read: it stays open, each job is one frame the moment it is queued, a frame with no rows every thirty seconds is a heartbeat, the ids listed are left alone, and anything else this machine was handed and has not finished is taken back.",
           "summary": "a tool host's next work: wait for what this machine has been asked to run",
           "surface": "machine",
-          "usage": "/invocations",
+          "usage": "/invocations [--holding [<invocation>…]]",
           "verb": "invocations"
         },
         {

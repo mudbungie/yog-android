@@ -68,7 +68,29 @@ pub fn serve_turns(
     leaf: &str,
     turns: Vec<Turn>,
 ) -> (String, JoinHandle<Vec<Vec<u8>>>) {
-    scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns, Vec::new())
+    scripted(
+        dir,
+        ca,
+        leaf,
+        (crate::hello::PROTOCOL, None),
+        turns,
+        Vec::new(),
+    )
+}
+
+/// [`serve_turns`], with the server's preface stating `edition` (REMOTE
+/// §3.2) — the one knob a pushing host's tests need: every other entry point
+/// states none, which reads as the floor, so the whole existing suite is a
+/// suite against a server that does not push.
+pub fn serve_at(
+    dir: &Path,
+    ca: &str,
+    leaf: &str,
+    edition: u32,
+    turns: Vec<Turn>,
+) -> (String, JoinHandle<Vec<Vec<u8>>>) {
+    let stated = (crate::hello::PROTOCOL, Some(edition));
+    scripted(dir, ca, leaf, stated, turns, Vec::new())
 }
 
 /// The scripted server with **the attention lane served aside** (DESIGN
@@ -86,7 +108,7 @@ pub fn serve_lanes(
     turns: Vec<Turn>,
     lane: Vec<Turn>,
 ) -> (String, JoinHandle<Vec<Vec<u8>>>) {
-    scripted(dir, ca, leaf, crate::hello::PROTOCOL, turns, lane)
+    scripted(dir, ca, leaf, (crate::hello::PROTOCOL, None), turns, lane)
 }
 
 /// [`serve_many`], with the version this server states made a parameter — the
@@ -105,7 +127,7 @@ pub fn serve_versioned(
         dir,
         ca,
         leaf,
-        protocol,
+        (protocol, None),
         scripts.into_iter().map(Turn::Answer).collect(),
         Vec::new(),
     )
@@ -121,7 +143,10 @@ fn quiet_lane() -> Turn {
 
 /// One connection's turn, played out. A held turn parks on the socket until
 /// the seat hangs up, so its caller runs it on a thread of its own.
-fn play(mut tls: rustls::StreamOwned<rustls::ServerConnection, std::net::TcpStream>, turn: Turn) {
+pub(super) fn play(
+    mut tls: rustls::StreamOwned<rustls::ServerConnection, std::net::TcpStream>,
+    turn: Turn,
+) {
     let script = match turn {
         Turn::Hangup => return,
         Turn::Answer(script) => script,
@@ -155,16 +180,18 @@ fn scripted(
     dir: &Path,
     ca: &str,
     leaf: &str,
-    protocol: u32,
+    (protocol, edition): (u32, Option<u32>),
     turns: Vec<Turn>,
     lane: Vec<Turn>,
 ) -> (String, JoinHandle<Vec<Vec<u8>>>) {
     let config = config(dir, ca, leaf);
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let address = format!("127.0.0.1:{}", listener.local_addr().unwrap().port());
-    let preface = serde_json::json!({ "protocol": protocol })
-        .to_string()
-        .into_bytes();
+    let mut preface = serde_json::json!({ "protocol": protocol });
+    if let Some(edition) = edition {
+        preface["edition"] = edition.into();
+    }
+    let preface = preface.to_string().into_bytes();
     let handle = std::thread::spawn(move || {
         let mut requests = Vec::new();
         let mut turns = turns.into_iter();

@@ -164,5 +164,10 @@ pub enum Ask {
     /// there is some. The ask never inverts (REMOTE §3) — the server speaks
     /// only into a stream this device asked for — so a tool host waits here
     /// rather than listening on a socket it would have to open.
-    Invocations,
+    ///
+    /// **`holding` makes it a pushing read** (REMOTE §5.8.1, edition 32): every
+    /// job this host has taken whose final `complete` the server has not yet
+    /// answered, possibly none. The key's presence is the whole signal, so
+    /// `None` is the serial read — the fact before the field existed.
+    Invocations { holding: Option<Vec<String>> },
 }

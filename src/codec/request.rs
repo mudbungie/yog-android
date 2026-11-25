@@ -26,7 +26,7 @@
 
 use serde_json::{Map, Value};
 
-use super::fields::{opt, str_of};
+use super::fields::{opt, str_of, strings_of};
 use super::{Ask, Gesture};
 
 mod acts;
@@ -59,7 +59,9 @@ fn ask(op: &str, o: &Map<String, Value>) -> Result<Option<Ask>, String> {
             workspace: str_of(o, "workspace")?,
             agent: str_of(o, "agent")?,
         },
-        "invocations" => Ask::Invocations,
+        "invocations" => Ask::Invocations {
+            holding: opt(o, "holding", |o, k| strings_of(o, k, "invocations"))?,
+        },
         "search" => Ask::Search {
             text: str_of(o, "text")?,
         },

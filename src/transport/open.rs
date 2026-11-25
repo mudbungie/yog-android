@@ -42,6 +42,15 @@ impl Open {
         self.edition
     }
 
+    /// **How long this read may go without a frame** before it is a dead
+    /// connection. Every held read starts at the ask's own two minutes; a
+    /// reader with its own bound states it here — the pushing tool host's
+    /// four heartbeat intervals (REMOTE §5.8.1). A timeout that failed to arm
+    /// costs a slow failure, never a wrong one, so the refusal is not read.
+    pub fn quiet(&self, bound: std::time::Duration) {
+        let _ = self.tls.sock.set_read_timeout(Some(bound));
+    }
+
     /// Read every frame up to the terminator, handing each to `adopt` as it
     /// lands. `adopt` answering `false` ends the read here — the connection
     /// is dropped, which is how the server learns its answer has no reader.

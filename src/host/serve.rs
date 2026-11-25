@@ -1,38 +1,48 @@
-//! **The loop the worker runs**: present, wait, run, answer, present again —
-//! and what it does when that stops (bl-8641). Split from the handle in
-//! `host.rs` because the two answer different questions: what the frame holds,
-//! and what the thread does. The reconnect ruling and the class boundary it
-//! stands on are stated there and in [`crate::transport::Wire`]; this file is
-//! the ladder.
+//! **The loop the worker runs**: present, read, run, answer — and what it
+//! does when that stops (bl-8641). Split from the handle in `host.rs` because
+//! the two answer different questions: what the frame holds, and what the
+//! thread does. The reconnect ruling and the class boundary it stands on are
+//! stated there and in [`crate::transport::Wire`]; this file is the ladder.
 //!
-//! **The set is re-asserted at the end of every hand-off** (REMOTE §5.1,
-//! bl-cc54, following thrall's bl-2d78). Both of the server's guards over the
-//! advertised set stand on this client holding a *parked read* — the second
-//! follow-class read is refused, and an advertisement that would change the
-//! set in force is refused while the read is parked — and this loop is serial,
-//! so for the whole runtime of a tool this device holds no read at all and
-//! neither guard covers it. In that window another connection bearing this
-//! device's certificate may replace the set. Re-presenting bounds the damage
-//! to one tool's runtime instead of forever, and it costs an idle host
-//! nothing: no hand-off, no gesture.
+//! **One loop, one predicate** (REMOTE §5.8, bl-1782): whether the server's
+//! hello, read off this channel's own advertisement, states edition 32. Above
+//! it the read states `holding` and is held open; each frame's job starts at
+//! once on its own thread ([`super::job`]); a heartbeat is a frame with no
+//! rows and starts nothing; a read that ends is opened again with no
+//! advertisement between, because an accepted advertisement would end the
+//! read as superseded. Below it the read is serial and every job runs here,
+//! in order, before the next read.
 //!
-//! **And since PROTOCOL 8 it also buys knowing.** The receipt carries `wrote`
-//! (yog bl-66d4), so a re-assertion that WROTE is this device being told the
-//! set it presents was not the set in force — a disarming, healed silently
-//! until the field existed. It is counted onto the standing and painted, which
-//! is the whole remedy ([`super::RESTORED`]). **A `true` on a channel's FIRST
+//! **A serial host re-asserts the set at the end of every hand-off** (REMOTE
+//! §5.1, bl-cc54, following thrall's bl-2d78). Both of the server's guards
+//! over the advertised set stand on this client holding a *parked read*, and
+//! a serial loop holds none for the whole runtime of a tool, so another
+//! connection bearing this device's certificate may replace the set in that
+//! window. Re-presenting bounds the damage to one tool's runtime. **A pushing
+//! host does not, and must not**: its read is never closed while it works, so
+//! the window does not exist, and presenting while the read is open would end
+//! it as superseded (REMOTE §5.8.1).
+//!
+//! **And since PROTOCOL 8 the re-assertion buys knowing.** The receipt carries
+//! `wrote` (yog bl-66d4), so a re-assertion that WROTE is this device being
+//! told the set it presents was not the set in force. It is counted onto the
+//! standing and painted ([`super::RESTORED`]). **A `true` on a channel's FIRST
 //! presentation says nothing** and is discarded: every fresh channel presents
-//! into whatever the server happens to hold, and an ordinary first one writes.
-//! Only a presentation this device made after work it just did can tell a
-//! rival from a beginning.
+//! into whatever the server happens to hold.
 
-use std::sync::mpsc;
+use std::sync::{Arc, mpsc};
 use std::time::Duration;
 
-use super::{Dispatch, Health, Nap, Standing};
-use crate::codec::{Capture, Invocation, Tool};
+use super::job::{Held, execute};
+use super::{Dispatch, Health, Nap, Note, Standing};
+use crate::codec::Tool;
 use crate::foot::Foot;
 use crate::transport::Wire;
+
+/// **The edition at which a server pushes** (REMOTE §5.8.1:
+/// `request/invocations/holding` is stamped 32). Below it the server would
+/// read `holding` as an unknown key and the read as serial.
+const PUSHES: u32 = 32;
 
 /// The first rest after a channel breaks, and the floor the series returns to.
 /// It is short because the ordinary case is a blip that is over by the time it
@@ -119,11 +129,11 @@ enum Stop {
 /// because a dial opens with an advertisement and that would take the queue
 /// back from the activation that replaced this one.
 pub(super) fn serve(
-    foot: &Foot,
+    foot: &Arc<Foot>,
     tools: Vec<Tool>,
-    run: &Dispatch,
+    run: &Arc<Dispatch>,
     nap: &Nap,
-    out: &mpsc::Sender<Standing>,
+    out: &mpsc::Sender<Note>,
 ) {
     let mut standing = Standing {
         tools: tools.iter().map(|t| t.name.clone()).collect(),
@@ -133,14 +143,15 @@ pub(super) fn serve(
     // gone away is caught by the next one, and the host that presents itself
     // once into a void is the shape the suite pins (a worker that returned
     // here would never dial at all).
-    let _ = out.send(standing.clone());
+    let _ = out.send(Note::Stood(standing.clone()));
+    let mut held = Held::new(foot, run, out);
     let mut wait = FIRST;
     loop {
-        let (broke, floor, served) = match hold(foot, tools.clone(), run, out, &mut standing) {
+        let (broke, floor, served) = match hold(foot, &tools, run, out, &mut held, &mut standing) {
             Stop::Gone => return,
             Stop::Superseded => {
                 standing.health = Health::Stopped(super::SUPERSEDED.to_owned());
-                let _ = out.send(standing);
+                let _ = out.send(Note::Stood(standing));
                 return;
             }
             Stop::Wire { why, served, .. } if why.transport() => (why.sentence(), FIRST, served),
@@ -151,7 +162,7 @@ pub(super) fn serve(
             } => (why.sentence(), PREDECESSOR, served),
             Stop::Wire { why, .. } => {
                 standing.health = Health::Stopped(why.sentence());
-                let _ = out.send(standing);
+                let _ = out.send(Note::Stood(standing));
                 return;
             }
         };
@@ -169,7 +180,7 @@ pub(super) fn serve(
         }
         standing.advertised = false;
         standing.health = Health::Redialling(broke);
-        if out.send(standing.clone()).is_err() {
+        if out.send(Note::Stood(standing.clone())).is_err() {
             return;
         }
         nap(wait.max(floor));
@@ -184,34 +195,53 @@ pub(super) fn serve(
 ///
 /// **Every wire crossing in this loop is a [`Foot`] method**, which is the
 /// bl-2040 narrowing: the three gestures REMOTE §4.2 allows a foot are the
-/// three this function can reach, and the general encode-any-gesture door is
-/// not in scope here at all.
+/// three this function can reach.
+///
+/// **A pushing read is answered `served` by any frame**, a heartbeat
+/// included: it is the server holding this device's read, which is the
+/// evidence the ladder resets on. A frame that dies quiet for
+/// [`Foot`]'s silence bound is a dead connection like any other, and the
+/// ladder's redial is the reconnect REMOTE §5.8.1 asks for, `holding` and all.
 fn hold(
     foot: &Foot,
-    tools: Vec<Tool>,
+    tools: &[Tool],
     run: &Dispatch,
-    out: &mpsc::Sender<Standing>,
+    out: &mpsc::Sender<Note>,
+    held: &mut Held,
     standing: &mut Standing,
 ) -> Stop {
     let mut served = false;
     // The first presentation's reading is discarded on purpose: a fresh
     // channel writes whenever the server held something else, and there is no
     // rival in that. Only the re-assertion below can mean one.
-    if let Err(why) = foot.advertise(tools.clone()) {
-        return Stop::Wire {
-            why,
-            read: false,
-            served,
-        };
-    }
+    let edition = match foot.advertise(tools.to_vec()) {
+        Ok((_, edition)) => edition,
+        Err(why) => {
+            return Stop::Wire {
+                why,
+                read: false,
+                served,
+            };
+        }
+    };
+    let pushing = edition >= PUSHES;
     standing.advertised = true;
-    if out.send(standing.clone()).is_err() {
+    if out.send(Note::Stood(standing.clone())).is_err() {
         return Stop::Gone;
     }
     loop {
-        let work = match foot.invocations() {
-            Ok(Some(work)) => work,
-            Ok(None) => return Stop::Superseded,
+        let mut handed = Vec::new();
+        let read = foot.invocations(pushing.then(|| held.list()), &mut |rows| {
+            served = true;
+            if pushing {
+                held.start(rows);
+            } else {
+                handed.extend(rows);
+            }
+        });
+        match read {
+            Ok(false) => {}
+            Ok(true) => return Stop::Superseded,
             Err(why) => {
                 return Stop::Wire {
                     why,
@@ -219,23 +249,17 @@ fn hold(
                     served,
                 };
             }
-        };
-        served = true;
-        for invocation in work {
-            let capture = match &invocation.cwd {
-                None => run(&invocation.tool, &invocation.input),
-                Some(cwd) => unconsented(&invocation.tool, cwd),
-            };
-            standing.served += 1;
-            standing.last = Some(format!("{} → {}", invocation.tool, capture.exit_code));
-            if let Err(why) = answer(foot, &invocation, capture) {
+        }
+        for invocation in handed {
+            let capture = execute(run, &invocation, out);
+            if let Err(why) = foot.complete(invocation.id, capture) {
                 return Stop::Wire {
                     why,
                     read: false,
                     served,
                 };
             }
-            match foot.advertise(tools.clone()) {
+            match foot.advertise(tools.to_vec()) {
                 Err(why) => {
                     return Stop::Wire {
                         why,
@@ -243,42 +267,12 @@ fn hold(
                         served,
                     };
                 }
-                Ok(true) => standing.restored += 1,
-                Ok(false) => {}
+                Ok((true, _)) => standing.restored += 1,
+                Ok((false, _)) => {}
             }
-            if out.send(standing.clone()).is_err() {
+            if out.send(Note::Stood(standing.clone())).is_err() {
                 return Stop::Gone;
             }
         }
     }
-}
-
-/// The refusal a carried `cwd` earns: the capture's three facts, the sentence
-/// on stderr where a tool's diagnostics go, and the key named — because the
-/// reader is a model and the fixer is an operator with another machine. It
-/// says what would run it instead rather than only what will not, which is
-/// REMOTE §5.4's own posture for every miss in this lane.
-fn unconsented(tool: &str, cwd: &str) -> Capture {
-    crate::tools::refused(
-        crate::tools::UNCONSENTED,
-        &format!(
-            "this machine does not run {tool} at a directory an invocation names: \
-             it advertises no \"subject_cwd\" consent, because it dispatches to a \
-             function of its own rather than spawning a program somewhere, and a \
-             phone holds no worktree of this conversation. {cwd} was not entered \
-             and nothing ran. Route this to the box that holds the server's \
-             worktrees, or load this machine's tool by name to run it where this \
-             machine runs things."
-        ),
-    )
-}
-
-/// Post one capture back, quoting the handle it answers. **A lost one is not
-/// re-posted and the next channel does not carry it** — the contract and its
-/// recovery are on [`Foot::complete`] (yog REMOTE §3, bl-07b1). What the
-/// redial re-asserts is the presentation, which is idempotent by design and
-/// says so in its own receipt: two of the three gestures may be repeated, and
-/// the one that may not is this one.
-fn answer(foot: &Foot, invocation: &Invocation, capture: Capture) -> Result<(), Wire> {
-    foot.complete(invocation.id.clone(), capture)
 }

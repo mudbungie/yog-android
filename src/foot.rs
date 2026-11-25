@@ -35,14 +35,25 @@
 //! foot-only case are the same case — REMOTE §12's *"one transport, one code
 //! path, no place to hide the bug"* one component down.
 
+use std::time::Duration;
+
 use crate::codec::reply::Reply;
 use crate::codec::{Act, Ask, Capture, Gesture, Invocation, Tool, encode};
 use crate::material::Material;
-use crate::transport::{Seat, Wire};
+use crate::transport::{NO_ANSWER, Seat, Wire, decoded};
+
+/// **Four heartbeat intervals with no frame** (REMOTE §5.8.1): a pushing read
+/// that has heard nothing for this long is a dead connection, and the host
+/// reconnects. It is §5.1's transport bound, two minutes, and it is the ask's
+/// own bound too, so the serial read waits exactly what it always waited.
+const QUIET: Duration = Duration::from_mins(2);
 
 /// This device's end of a foot channel.
 pub struct Foot {
     seat: Seat,
+    /// How long the `invocations` read may stay silent: [`QUIET`] on the
+    /// device, shorter in a suite that cannot wait two minutes to watch it.
+    quiet: Duration,
 }
 
 impl Foot {
@@ -53,7 +64,15 @@ impl Foot {
     pub fn open(material: &Material) -> Result<Self, String> {
         Ok(Self {
             seat: Seat::open(material)?,
+            quiet: QUIET,
         })
+    }
+
+    /// The same foot with a shorter silence bound — the suite's door onto
+    /// [`QUIET`], which a test cannot sit through.
+    #[cfg(test)]
+    pub(crate) fn hushed(self, quiet: Duration) -> Self {
+        Self { quiet, ..self }
     }
 
     /// The address this foot dials, for the sentence a stopped host publishes.
@@ -77,30 +96,61 @@ impl Foot {
     /// method cannot know — so it reports the reading and the judgement is
     /// [`crate::host`]'s, the only layer that knows whether a channel had
     /// already presented.
-    pub fn advertise(&self, tools: Vec<Tool>) -> Result<bool, Wire> {
-        match self.said(&Gesture::Act(Act::Advertise { tools }))? {
-            Reply::Advertised { wrote } => Ok(wrote),
+    ///
+    /// **Beside it, the edition the server stated on that connection**
+    /// (REMOTE §3.2): the host reads off its own advertisement whether this
+    /// server pushes (REMOTE §5.8, edition 32), because the advertisement is
+    /// what every channel opens with and the read that follows must already
+    /// know which read it is.
+    pub fn advertise(&self, tools: Vec<Tool>) -> Result<(bool, u32), Wire> {
+        let (reply, edition) = self
+            .seat
+            .stated(&encode(&Gesture::Act(Act::Advertise { tools })))?;
+        match reply {
+            Reply::Advertised { wrote } => Ok((wrote, edition)),
             other => Err(wrong(&other)),
         }
     }
 
     /// **`invocations`** (REMOTE §5.3): the follow-class read — this
-    /// machine's next work, answered when there is some. The ask never
-    /// inverts (§3), so this device waits here rather than listening on a
-    /// socket it would have to open. An empty answer is ordinary: a hold that
-    /// ended quietly.
+    /// machine's work, handed to `each` frame by frame as it lands. The ask
+    /// never inverts (§3), so this device waits here rather than listening on
+    /// a socket it would have to open. An empty frame is ordinary: a serial
+    /// hold that ended quietly, or a pushing read's heartbeat.
     ///
-    /// **`None` is the third answer** (REMOTE §5.1, edition 29): the read was
-    /// answered `superseded` — a newer activation of this device's
-    /// certificate advertised and the queue is its now. It is not a failure,
-    /// because the read was answered, and what it means for the host is
-    /// [`crate::host`]'s to say.
-    pub fn invocations(&self) -> Result<Option<Vec<Invocation>>, Wire> {
-        match self.said(&Gesture::Ask(Ask::Invocations))? {
-            Reply::Invocations(rows) => Ok(Some(rows)),
-            Reply::Superseded => Ok(None),
-            other => Err(wrong(&other)),
-        }
+    /// **`holding` decides which read it is** (REMOTE §5.8.1): `None` is the
+    /// serial read, answered once; a list is the pushing read, held open and
+    /// answered one job per frame. Both end at the terminator, and both read
+    /// every frame through the one decoder, so they differ only in how many
+    /// frames come.
+    ///
+    /// **`Ok(true)` is the read answered `superseded`** (REMOTE §5.1, edition
+    /// 29): a newer activation of this device's certificate took the queue.
+    /// It is not a failure, because the read was answered, and what it means
+    /// for the host is [`crate::host`]'s to say. A read that ended with no
+    /// frame at all is [`NO_ANSWER`], as every one-shot ask's is.
+    pub fn invocations(
+        &self,
+        holding: Option<Vec<String>>,
+        each: &mut dyn FnMut(Vec<Invocation>),
+    ) -> Result<bool, Wire> {
+        let request = encode(&Gesture::Ask(Ask::Invocations { holding }));
+        let (open, _hangup) = self.seat.hold(&request)?;
+        open.quiet(self.quiet);
+        let mut ended = Err(Wire::Unusable(NO_ANSWER.to_owned()));
+        open.each(&mut |frame| {
+            ended = match decoded(&frame) {
+                Ok(Reply::Invocations(rows)) => {
+                    each(rows);
+                    Ok(false)
+                }
+                Ok(Reply::Superseded) => Ok(true),
+                Ok(other) => Err(wrong(&other)),
+                Err(why) => Err(why),
+            };
+            ended == Ok(false)
+        })?;
+        ended
     }
 
     /// **`complete`** (REMOTE §5.3): one invocation answered with what running
@@ -112,8 +162,12 @@ impl Foot {
     /// something this device must stop against rather than keep answering
     /// into.
     ///
-    /// **A completion whose reply is lost is never posted again** (yog REMOTE
-    /// §3, bl-d1f1). The capture is moved into the gesture and goes with the
+    /// **On a serial read, a completion whose reply is lost is never posted
+    /// again** (yog REMOTE §3, bl-d1f1). A pushing host is the exception
+    /// REMOTE §5.6 names and §5.8 rests on: its id stays in `holding` until
+    /// the final post is answered, so the read never releases the slot, and
+    /// the capture it still holds is posted again rather than re-run
+    /// (`host::job`). The capture is moved into the gesture and goes with the
     /// channel; the redial that follows presents and reads afresh and carries
     /// nothing over ([`crate::host`]'s ladder). That is the contract and not a
     /// gap in it: an act with no reply is in doubt, and a resent `complete`
