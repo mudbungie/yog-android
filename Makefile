@@ -90,10 +90,14 @@ cargo ndk $(foreach abi,$(ABIS),-t $(abi)) -o android/app/src/main/jniLibs build
 gradle=$$(GRADLE='$(GRADLE)' scripts/gradle.sh) && cd android && "$$gradle" assemble$(1)
 endef
 
+# `DIST`, when set, is where a remote run's outputs come home from
+# (`bl-remote-run apk`): the APK is copied there so a box that does not build
+# can still install and walk the tree it sent.
 apk:
 	$(call assemble,Debug)
 	@python3 scripts/apk-bridges.py --self-test
 	@python3 scripts/apk-bridges.py $(APK_OUT)
+	@if [ -n "$(DIST)" ]; then mkdir -p "$(DIST)" && cp $(APK_OUT) "$(DIST)/"; fi
 	@echo "apk: $(APK_OUT)"
 
 # **The release-signed APK** (bl-7a68, DESIGN §20) — the artifact the channel

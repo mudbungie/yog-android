@@ -198,14 +198,12 @@ impl Shell {
         }
     }
 
-    /// Every pick an overlay's acts address, and the arm beside them. A tail
-    /// followed on one visit is not still followed on the next (§13.19), and
-    /// it is the WORKER that holds which one, so that is a command.
+    /// Every pick an overlay's acts address, and the arm beside them. The
+    /// sign-in being followed is not one of them (§13.19, bl-95f2): a run
+    /// waiting for a code outlives the screen it was started from, so leaving
+    /// keeps the worker's watch and what was pasted, and coming back shows
+    /// the same waiting run.
     fn drop_picks(&mut self) {
-        if let Some(model) = self.model() {
-            model.watch_login(None);
-        }
-        self.pasted.clear();
         self.armed = false;
         self.ball = None;
         self.candidate = None;

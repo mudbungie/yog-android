@@ -7,16 +7,19 @@ import android.text.Selection;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 
 import com.google.androidgamesdk.GameActivity;
 import com.google.androidgamesdk.GtiAccess;
 import com.google.androidgamesdk.gametextinput.InputConnection;
+import com.google.androidgamesdk.gametextinput.Settings;
 
 /**
  * The whole Java surface: GameActivity brings the InputConnection
- * (GameTextInput); the Rust side is everything else — plus the one repair
- * below.
+ * (GameTextInput); the Rust side is everything else — plus the repairs
+ * below, and {@link Pasting} seated in place of the stock connection so an
+ * IME's paste key is answered (bl-95f2).
  *
  * <h2>Why the key listener is replaced (bl-014e; upstream report tracked as
  * bl-2958)</h2>
@@ -171,6 +174,21 @@ public class MainActivity extends GameActivity {
         super.onDestroy();
     }
 
+    /**
+     * The surface view, with {@link Pasting} seated as its connection in place
+     * of the stock one (bl-95f2) — built with exactly the arguments the view's
+     * own constructor used, and before {@code onCreate} hands the connection
+     * to the native side, which therefore only ever sees this one.
+     */
+    @Override
+    protected InputEnabledSurfaceView createSurfaceView() {
+        InputEnabledSurfaceView view = super.createSurfaceView();
+        EditorInfo info = getImeEditorInfo();
+        GtiAccess.connect(view,
+                new Pasting(this, view, new Settings(info, info.inputType == 0)).setListener(this));
+        return view;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -184,6 +202,14 @@ public class MainActivity extends GameActivity {
         mSurfaceView.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_PASTE && ic.getSoftKeyboardActive()) {
+                    // A keyboard's other way of saying paste (bl-95f2): the
+                    // stock key path has no arm for it and drops it.
+                    if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                        Pasting.paste(ic, MainActivity.this);
+                    }
+                    return true;
+                }
                 if (keyCode != KeyEvent.KEYCODE_DEL || !ic.getSoftKeyboardActive()) {
                     return ic.onKey(v, keyCode, event);
                 }

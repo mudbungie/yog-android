@@ -5,8 +5,9 @@
 //! quoted and no real host is named.
 
 use super::{
-    CODE, COPIES, Machine, OPENS, PAGE, PAGE_OPENS, PASTE, Part, Read, SEND, SENDS, copy_word,
-    doors, fact, is_code, page, pasted, starts,
+    CODE, COPIES, FIRST, Machine, OPENS, PAGE, PAGE_OPENS, PASTE, Part, ProviderRow, RESTART, Read,
+    SEND, SENDS, START, copy_word, doors, fact, is_code, page, pasted, standing, start_word,
+    starts,
 };
 
 fn prose(words: &str) -> Part {
@@ -208,4 +209,36 @@ fn the_page_is_opened_over_tls_and_the_paste_goes_back_whole() {
     assert!(PAGE_OPENS.contains("browser") && PAGE_OPENS.contains("long press"));
     assert!(PASTE.starts_with("paste") && SENDS.contains("exactly as"));
     assert_eq!((PAGE, SEND), ("open the sign-in page", "send"));
+}
+
+/// **A row's standing is its own line, and nothing of the name rides in it**
+/// (bl-95f2): the fact alone, or the fact and the reason the row is dark.
+#[test]
+fn a_rows_standing_is_the_fact_and_its_reason_without_the_name() {
+    let mut row = ProviderRow {
+        name: "claude-sub@laptop".to_owned(),
+        fact: "auth oauth2 · not signed in".to_owned(),
+        blocked: None,
+        effort: false,
+        priority: false,
+        on: None,
+    };
+    assert_eq!(standing(&row), "auth oauth2 · not signed in");
+    row.blocked = Some("no sign-in flow".to_owned());
+    assert_eq!(
+        standing(&row),
+        "auth oauth2 · not signed in · no sign-in flow"
+    );
+}
+
+/// **The start says what it does to a waiting run**, and the page's door
+/// says the browser may want its own login before the code (bl-95f2).
+#[test]
+fn the_start_reads_start_over_while_a_code_is_awaited() {
+    assert_eq!(
+        (start_word(false).as_str(), start_word(true).as_str()),
+        (START, RESTART)
+    );
+    assert_eq!((START, RESTART), ("sign in", "start over"));
+    assert!(FIRST.contains("log in first") && FIRST.contains("code comes after"));
 }

@@ -103,6 +103,10 @@ fn aimed(seat: &Seat, focus: &mut Focus, standing: &mut Standing, moved: Focus) 
     // counting them is how a start's follow says which move it was made after.
     standing.moves += 1;
     if was != focus.workspace {
+        // A sign-in is one workspace's run: the watch outlives the screen
+        // (§13.19) and never a move to another workspace, where the same
+        // row name is a different pair.
+        standing.signing.watch(None);
         preload(seat, focus, standing);
     }
     None

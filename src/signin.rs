@@ -35,6 +35,7 @@
 //!
 //! Pure and host-tested: every word on the painted door is spelled here.
 
+use crate::codec::ProviderRow;
 use crate::codec::pick::machine::Machine;
 
 #[cfg(test)]
@@ -61,6 +62,19 @@ pub const COPIES: &str = "copies this code, to paste where the browser asks for 
 pub const PAGE: &str = "open the sign-in page";
 pub const PAGE_OPENS: &str = "opens the page this sign-in is waiting at in the phone's browser; \
      sign in there, then come back and paste what it gave you. A long press copies the address";
+
+/// **The sentence under the page's door** (bl-95f2). A browser holding no
+/// session with the vendor asks for a login of its own before it shows any
+/// code, which reads as the sign-in having failed. This seat cannot know in
+/// advance whether it will, so it says that it may.
+pub const FIRST: &str = "the page may ask you to log in first; the code comes after";
+
+/// The words on a row's start: `sign in`, or — while that row's run is on
+/// the glass waiting for a code — `start over`, because firing it then
+/// replaces the waiting run and the address already opened stops working
+/// (REMOTE §8.3: *only the newest URL can be finished*).
+pub const START: &str = "sign in";
+pub const RESTART: &str = "start over";
 
 /// The paste field's hint, the words on its send, and the send's help.
 pub const PASTE: &str = "paste what the sign-in page gave you";
@@ -165,6 +179,24 @@ pub fn fact(workspace: &str, on: &Machine) -> String {
             format!("signs in {name}, for the model calls {workspace} routes to it")
         }
     }
+}
+
+/// **A row's standing, on a line of its own under its name** (bl-95f2): the
+/// server's credential fact, and its reason when the row cannot be used. Its
+/// own line because a qualified name (`<row>@<machine>`) is long enough to
+/// cut a line that carried both, and what was cut was this.
+#[must_use]
+pub fn standing(row: &ProviderRow) -> String {
+    match &row.blocked {
+        Some(why) => format!("{} · {why}", row.fact),
+        None => row.fact.clone(),
+    }
+}
+
+/// The words on a row's start, by whether its run waits for a code.
+#[must_use]
+pub fn start_word(waiting: bool) -> String {
+    if waiting { RESTART } else { START }.to_owned()
 }
 
 /// The help the `sign in` button tells: which box the run starts on.

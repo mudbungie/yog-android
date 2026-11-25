@@ -41,9 +41,10 @@ pub(super) enum Cmd {
     /// read, so re-reading them is a pass, sooner.
     Refresh,
     /// **Follow one provider's sign-in, or stop** (§13.19). The lane's want,
-    /// and the empty case is the second: leaving the screen crosses no wire,
-    /// so a tail can be closed with the server unreachable — `Cmd::Search`'s
-    /// own shape at the other gesture that turns something off.
+    /// and the empty case is the second: it crosses no wire, so a tail can be
+    /// closed with the server unreachable — `Cmd::Search`'s own shape at the
+    /// other gesture that turns something off. Leaving the screen is not
+    /// such a close (bl-95f2): a waiting run outlives its screen.
     Watch(Option<String>),
     /// **Search the world, or drop the answer being shown** (bl-4c2b). The
     /// empty needle is the second: it crosses no wire, so a search can be

@@ -109,11 +109,12 @@ fn a_settled_run_is_not_dialled_again() {
     );
 }
 
-/// **Leaving the screen drops the tail, and crosses no wire.** The watch is
+/// **Watching nothing drops the tail, and crosses no wire.** The watch is
 /// what makes the lane wanted, so `None` is the whole of closing it — a tail
-/// can be left with the server unreachable.
+/// can be closed with the server unreachable. (Leaving the screen is no
+/// longer such a close, bl-95f2: a waiting run outlives its screen.)
 #[test]
-fn leaving_the_screen_drops_the_tail() {
+fn watching_nothing_drops_the_tail() {
     let (mut model, served) = focused(vec![
         Turn::Answer(vec![frame(&[(true, "opening")], None)]),
         Turn::Answer(vec![ws_reply()]),
@@ -144,6 +145,36 @@ fn leaving_the_screen_drops_the_tail() {
             "workspaces",
             "conversations"
         ]
+    );
+}
+
+/// **A move to another workspace drops the watch** (bl-95f2). The watch
+/// outlives the screen, never the workspace: a run is one workspace's pair,
+/// and the same row name under another workspace is another run.
+#[test]
+fn a_move_to_another_workspace_drops_the_tail() {
+    let (mut model, served) = focused(vec![
+        Turn::Answer(vec![frame(&[(true, "opening")], None)]),
+        Turn::Answer(vec![ws_reply()]),
+        Turn::Answer(vec![conv_reply()]),
+        Turn::Hold(vec![frame(&[], None)]),
+        Turn::Answer(vec![super::super::nothing_set()]),
+        Turn::Answer(vec![ws_reply()]),
+        Turn::Answer(vec![conv_reply()]),
+    ]);
+    model.sign_in("acme".into());
+    settle(&mut model, &|s| s.login.is_some());
+    model.focus_workspace(Some("away".into()));
+    let snap = settle(&mut model, &|s| s.login.is_none());
+    assert!(snap.login.is_none());
+    drop(model);
+    // No second lane: the move asked its roles and its pass, nothing else.
+    assert_eq!(
+        ops(&served.join().unwrap())
+            .iter()
+            .filter(|op| *op == "login-tail")
+            .count(),
+        1
     );
 }
 

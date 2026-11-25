@@ -8,7 +8,9 @@
 //! **The watch is the glass's, the end is the run's.** Opening the sign-in
 //! screen on a row is what makes a lane wanted; the run settling is what makes
 //! it unwanted, and both halves are needed. Without the first, a lane would
-//! stand on a provider nobody is looking at; without the second, a seat would
+//! stand on a provider nobody picked; leaving the screen does not undo the
+//! pick (bl-95f2), because a run waiting for a code outlives the screen and
+//! coming back must find it waiting. Without the second, a seat would
 //! redial a FINISHED sign-in every pass forever — the server's lane ends at
 //! the outcome frame, so the pass that reopened it would replay a settled
 //! buffer and end again, once per cadence, for as long as the screen was open.
@@ -30,7 +32,8 @@ use crate::seat::{Focus, Signing};
 #[derive(Default)]
 pub(in crate::seat) struct SignIn {
     /// Which provider the glass has open, or none. Set by the screen and by
-    /// the act, cleared when the screen is left.
+    /// the act, kept when the screen is left (bl-95f2) and cleared by a move
+    /// to another workspace.
     watching: Option<String>,
     /// The lane whose frames the fold below is following — `None` before one
     /// has spoken, so the next frame from any lane replaces rather than

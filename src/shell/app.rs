@@ -99,7 +99,8 @@ pub(crate) struct Shell {
     /// navigation for its reason exactly.
     pub(crate) step: Option<String>,
     pub(crate) composer: String,
-    /// What a sign-in page handed over, until it is sent (§13.19).
+    /// What a sign-in page handed over, until it is sent or no run on the
+    /// glass waits for it (§13.19, bl-95f2).
     pub(crate) pasted: String,
     /// **What the verb sheet said when a line could not fire** (§22 item 5):
     /// a verb missing its words, or a line naming no verb. Stands on the

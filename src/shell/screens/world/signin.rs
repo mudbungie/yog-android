@@ -88,17 +88,30 @@ impl Shell {
             clip::weak(ui, "nothing read yet");
         }
         let workspace = snap.focus.workspace.as_deref();
+        // **What was pasted lives exactly as long as a run waits for it**
+        // (bl-95f2): it outlives leaving the screen, because the run does,
+        // and goes the moment no run on the glass is waiting.
+        if snap
+            .login
+            .as_ref()
+            .and_then(|held| held.view.awaits())
+            .is_none()
+        {
+            self.pasted.clear();
+        }
         for row in &snap.catalog {
             // Which box this row signs in is the row's own statement
             // (REMOTE §5.7, edition 30) — never a reading of its name.
             let on = Machine::of(row.on.as_ref());
-            self.provider(ui, row, &on);
-            if let Some(signing) = snap.login.as_ref().filter(|held| held.about(&row.name)) {
+            let signing = snap.login.as_ref().filter(|held| held.about(&row.name));
+            let waiting = signing.and_then(|held| held.view.awaits());
+            self.provider(ui, row, &on, waiting.is_some());
+            if let Some(signing) = signing {
                 if let Some(workspace) = workspace {
                     clip::weak(ui, signin::fact(workspace, &on));
                 }
                 self.tail(ui, &signing.view);
-                if let Some(url) = signing.view.awaits() {
+                if let Some(url) = waiting {
                     self.finish(ui, &row.name, &url);
                 }
             }
@@ -106,9 +119,10 @@ impl Shell {
         }
     }
 
-    /// One row: what the server says about it, the tap that follows its run,
-    /// and the act that starts one.
-    fn provider(&mut self, ui: &mut egui::Ui, row: &ProviderRow, on: &Machine) {
+    /// One row: its name, the tap that follows its run and the act that
+    /// starts one on the first line; what the server says about it on its
+    /// own line under them, where a long name cannot cut it (bl-95f2).
+    fn provider(&mut self, ui: &mut egui::Ui, row: &ProviderRow, on: &Machine, waiting: bool) {
         let name = row.name.clone();
         ui.allocate_ui_with_layout(
             egui::vec2(ui.available_width(), TOUCH),
@@ -117,7 +131,7 @@ impl Shell {
                 let start = theme::button_if(
                     ui,
                     row.blocked.is_none(),
-                    "sign in",
+                    signin::start_word(waiting),
                     0.0,
                     &signin::starts(on),
                 );
@@ -129,17 +143,16 @@ impl Shell {
                     && let Some(model) = self.model()
                 {
                     model.sign_in(name.clone());
+                    // A new run mints a new address, and a code from the
+                    // old one is refused: what was pasted goes with it.
+                    self.pasted.clear();
                 }
-                let stated = match &row.blocked {
-                    Some(why) => format!("{} · {} · {why}", row.name, row.fact),
-                    None => format!("{} · {}", row.name, row.fact),
-                };
                 // The words at the row's left edge (STYLE §5, bl-1312): a
                 // growing atom after them takes the slack a full-width
                 // button would otherwise share out either side.
                 let follow = theme::button_led(
                     ui,
-                    stated,
+                    row.name.clone(),
                     ui.available_width(),
                     "shows what this provider's sign-in has said so far",
                 );
@@ -152,6 +165,7 @@ impl Shell {
                 }
             },
         );
+        clip::weak(ui, signin::standing(row));
     }
 
     /// **What one run has said.** The `err` flag is which stream a line came

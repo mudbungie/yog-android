@@ -3716,7 +3716,13 @@ neither, so it is bounded from both ends and needs both.
 
 - **The glass says which run is watched.** A lane on a provider nobody has
   picked would be a held socket for a question nobody asked, so tapping a row
-  is what makes one wanted and leaving the screen is what makes it unwanted.
+  (or starting its run) is what makes one wanted. **Leaving the screen does
+  not make it unwanted** (bl-95f2): a run waiting for a code outlives the
+  screen it was started from, and a back press that dropped the watch dropped
+  the waiting run with it — the only way forward was a restart, which mints
+  a new address and voids a code already fetched. So the watch is kept until
+  another row is picked or the focus moves to another workspace, where the
+  same row name is another pair; a quiet held read is the whole cost.
   The watch lives in the WORKER, beside the lane it governs (§14.1's "one
   reader, one authority"), and the snapshot carries it back with the lines —
   so which row is open has one home and the screen paints rather than
@@ -3797,8 +3803,12 @@ wanted, the next pass redials it, and the replay states the address again. A
 process the platform killed meanwhile has forgotten which row was open;
 opening the screen and tapping the row is the same `login-tail`, and the
 same replay.
-What was pasted and not yet sent stands in the shell until it is sent or the
-screen is left.
+What was pasted and not yet sent stands in the shell until it is sent, until
+`start over` replaces the run it was for, or until no run on the glass is
+waiting for it — never merely because the screen was left (bl-95f2). Coming
+back to the screen therefore shows the same waiting run, its door and its
+paste; no copy of the server's state is held to make that so — the watch is
+which row is open, and the lane replays the rest.
 
 **A code nothing is waiting for is refused in the server's words**, in the
 banner — never started, already settled, or a server that restarted and
@@ -3817,9 +3827,40 @@ with no exit and no field. `crate::ledger::spells` would answer the same
 question from a number the snapshot does not carry, and would be a second
 statement of what the frame already said.
 
-**What this does not solve.** There is no paste *button*: this app can write
-the platform clipboard and cannot read it, so the paste is the keyboard's
-own. A loopback-redirect row's last step is copying an address out of the
+**The finish, as it stands on the glass** (bl-95f2, from driving it on a
+device):
+
+- **A row's standing is its own line under the name**
+  (`signin::standing`). It used to ride after the name on the row's button,
+  and a qualified name (`<row>@<machine>`) is long enough that the line was
+  elided before the state — the two rows that most needed it could not be
+  told signed-in from not.
+- **Under `open the sign-in page`, one sentence** (`signin::FIRST`): *the page
+  may ask you to log in first; the code comes after*. A browser holding no
+  session with the vendor asks for its own login, which otherwise reads as
+  the sign-in having failed; the seat cannot know in advance whether it will.
+- **The start reads `start over` while its row's run waits for a code**
+  (`signin::start_word`), because firing it then replaces that run (REMOTE
+  §8.3: only the newest URL can be finished).
+- **The keyboard does not cover the field or `send`.** The keyboard's inset
+  shrinks the safe area the screen scrolls in, so while the field holds the
+  caret the two are scrolled into view — a no-op when they already show.
+- **The keyboard's own paste key works.** games-activity's connection does
+  not answer an IME's paste action (`performContextMenuAction`), so only a
+  clipboard chip — a plain commit — reached the field. `dev.yog.Pasting` is
+  seated in its place before the native side is handed it and answers paste
+  by committing the clip at the caret; `KEYCODE_PASTE` takes the same path.
+  This mends every mirrored field (the registration door and the needle
+  too), and it is a read the platform grants the app holding input focus.
+
+**What this does not solve.** There is no paste *button* of the app's own:
+the paste is the keyboard's. **A row whose vendor refuses this seat's
+pasted-code flow** — a client registered with no redirect the flow can use —
+fails on the vendor's page, in the vendor's words, and nothing the server
+returns says so in advance: the catalog row states a credential fact and a
+`blocked` reason, the lane states lines and `authorize`, and neither knows
+what the vendor holds for the client. The app does not guess; the run's own
+lines are what it shows. A loopback-redirect row's last step is copying an address out of the
 browser's address bar from a page that did not load — legible, and awkward
 on a phone; that is the row's shape upstream.
 

@@ -14,9 +14,12 @@
 //! this exactly when the fold states one never offers the field to a server
 //! too old to read it — with no edition asked.
 //!
-//! **Leaving for the browser loses nothing.** Which run is followed is the
-//! worker's, the address rides every replay of the lane, and what was
-//! pasted stands in the shell until it is sent or the screen is left.
+//! **Leaving for the browser, or the screen, loses nothing** (bl-95f2).
+//! Which run is followed is the worker's and outlives the screen, the
+//! address rides every replay of the lane, and what was pasted stands in the
+//! shell until it is sent or no run on the glass is waiting for it. The
+//! paste itself is the keyboard's own key as well as its clipboard chip:
+//! the platform's paste action reaches the field through `dev.yog.Pasting`.
 //!
 //! Every word painted is `crate::signin`'s. The walk reaches the door at
 //! `signin-page`, the field at `signin-paste` and the send at `signin-send`.
@@ -25,7 +28,7 @@ use eframe::egui;
 
 use super::SCREEN;
 use crate::shell::app::{PASTED, Shell};
-use crate::shell::theme;
+use crate::shell::{clip, theme};
 use crate::signin;
 
 impl Shell {
@@ -33,6 +36,7 @@ impl Shell {
     pub(super) fn finish(&mut self, ui: &mut egui::Ui, provider: &str, url: &str) {
         if let Some(page) = signin::page(url) {
             self.opens(ui, signin::PAGE, &page, "signin-page", signin::PAGE_OPENS);
+            clip::weak(ui, signin::FIRST);
         }
         let field = ui.add(
             egui::TextEdit::singleline(&mut self.pasted)
@@ -46,6 +50,14 @@ impl Shell {
         let send = theme::button_if(ui, code.is_some(), signin::SEND, 0.0, signin::SENDS);
         crate::shell::act::act(ui, &send, SCREEN);
         self.note_control("signin-send", ui, send.rect);
+        // **The keyboard does not cover what is typed into** (bl-95f2). Its
+        // inset shrinks the safe area this screen scrolls in (`app::pass`),
+        // so the field it came up for can be left under it; while the field
+        // holds the caret, it and its send are scrolled back into view —
+        // a no-op whenever both are already showing.
+        if field.has_focus() {
+            ui.scroll_to_rect(field.rect.union(send.rect), None);
+        }
         if send.clicked()
             && let Some(code) = code
             && let Some(model) = self.model()
